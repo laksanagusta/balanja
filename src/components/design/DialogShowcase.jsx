@@ -1,0 +1,82 @@
+import React from "react";
+import { Button, Dialog, Icon } from "../primitives.jsx";
+
+export default function DialogShowcase() {
+  const [infoOpen, setInfoOpen] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [dangerOpen, setDangerOpen] = React.useState(false);
+
+  return (
+    <div>
+      <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Dialog</h3>
+      <div className="rounded-panel border border-border bg-surface p-4">
+        <p className="mb-3 text-sm text-text-muted">Reusable dialog primitive with size, icon, and footer variants.</p>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => setInfoOpen(true)}>Info dialog</Button>
+          <Button variant="primary" onClick={() => setConfirmOpen(true)}>Confirm dialog</Button>
+          <Button variant="danger" onClick={() => setDangerOpen(true)}>Danger dialog</Button>
+        </div>
+
+        <Dialog
+          open={infoOpen}
+          onClose={() => setInfoOpen(false)}
+          title="Item details"
+          footer={
+            <>
+              <Button onClick={() => setInfoOpen(false)}>Cancel</Button>
+              <Button variant="primary" onClick={() => setInfoOpen(false)}>Add to order</Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            <div className="flex gap-4">
+              <div className="flex size-20 items-center justify-center rounded-card bg-surface-muted text-text-subtle">
+                <Icon name="box" className="size-8" />
+              </div>
+              <div className="grid content-start gap-1">
+                <p className="text-lg font-semibold text-text">Nasi Goreng Spesial</p>
+                <p className="text-sm text-text-muted">Category: Main Course</p>
+                <p className="font-mono text-lg font-semibold tabular-nums text-accent">$ 12.50</p>
+              </div>
+            </div>
+            <div className="rounded-card border border-border bg-surface-muted p-4 text-sm text-text-muted">
+              Notes: Extra spicy, no MSG. Add fried egg on top.
+            </div>
+          </div>
+        </Dialog>
+
+        <Dialog
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          icon="check"
+          iconBg="bg-success-soft text-success"
+          title="Confirm order"
+          footer={
+            <>
+              <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+              <Button variant="primary" onClick={() => setConfirmOpen(false)}>Confirm</Button>
+            </>
+          }
+        >
+          Place order for <strong className="text-text">Table A1</strong>? Items will be sent to the kitchen.
+        </Dialog>
+
+        <Dialog
+          open={dangerOpen}
+          onClose={() => setDangerOpen(false)}
+          icon="x"
+          iconBg="bg-danger-soft text-danger"
+          title="Void this order?"
+          footer={
+            <>
+              <Button onClick={() => setDangerOpen(false)}>Keep order</Button>
+              <Button variant="danger" onClick={() => setDangerOpen(false)}>Yes, void</Button>
+            </>
+          }
+        >
+          This action cannot be undone. All items will be removed from the order.
+        </Dialog>
+      </div>
+    </div>
+  );
+}
