@@ -1,10 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  addSavedProductToCart,
   addProductToCart,
   calculateCartTotals,
-  checkoutCart,
   formatIDR,
+  validateScannedProduct,
   validateProduct,
 } from "./domain.js";
 
@@ -54,6 +55,47 @@ test("validateProduct blocks duplicate active barcodes", () => {
   assert.equal(result.errors.barcode, "Barcode already exists");
 });
 
+test("validateProduct blocks a zero price", () => {
+  const result = validateProduct(
+    {
+      id: "new-product",
+      name: "Beras Baru",
+      barcode: "8991001000999",
+      category: "Sembako",
+      price: 0,
+      stock: 4,
+      unit: "",
+      active: true,
+    },
+    products,
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(result.errors.price, "Price must be at least 1");
+  assert.equal(result.errors.unit, "Unit is required");
+});
+
+test("validateScannedProduct requires a sellable stock quantity and unit", () => {
+  const result = validateScannedProduct(
+    {
+      id: "",
+      name: "Produk Baru",
+      barcode: "8991001000999",
+      category: "Sembako",
+      price: 0,
+      stock: 0,
+      unit: "",
+      active: true,
+    },
+    products,
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(result.errors.price, "Price must be at least 1");
+  assert.equal(result.errors.stock, "Stock must be at least 1 to add this product to cart");
+  assert.equal(result.errors.unit, "Unit is required");
+});
+
 test("addProductToCart adds by barcode and respects stock", () => {
   const result = addProductToCart([], products, "8991001000011");
 
@@ -68,6 +110,24 @@ test("addProductToCart adds by barcode and respects stock", () => {
       stockAtAdd: 3,
     },
   ]);
+});
+
+test("addSavedProductToCart adds a newly saved product without a second lookup", () => {
+  const product = {
+    id: "prod-new-tea",
+    name: "Teh Botol",
+    barcode: "8991001000999",
+    category: "Minuman",
+    price: 4500,
+    stock: 4,
+    unit: "botol",
+    active: true,
+  };
+
+  const result = addSavedProductToCart([], products, product);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.cart[0].productId, "prod-new-tea");
 });
 
 test("addProductToCart blocks out of stock products", () => {
@@ -90,27 +150,3 @@ test("calculateCartTotals applies tax when enabled", () => {
   });
 });
 
-test("checkoutCart records cash change and decrements stock", () => {
-  const result = checkoutCart({
-    cart: [
-      {
-        productId: "prod-rice-5kg",
-        name: "Beras Ramos 5kg",
-        barcode: "8991001000011",
-        price: 72000,
-        qty: 2,
-      },
-    ],
-    products,
-    settings: { taxEnabled: false, taxRate: 0 },
-    payment: { method: "cash", cashReceived: 150000 },
-    cashierName: "Kasir Demo",
-    now: new Date("2026-07-09T10:00:00.000Z"),
-    transactionNumber: "TRX-0001",
-  });
-
-  assert.equal(result.ok, true);
-  assert.equal(result.transaction.total, 144000);
-  assert.equal(result.transaction.changeDue, 6000);
-  assert.equal(result.products.find((item) => item.id === "prod-rice-5kg").stock, 1);
-});

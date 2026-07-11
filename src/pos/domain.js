@@ -17,6 +17,7 @@ export const seedProducts = [
     price: 72000,
     stock: 18,
     unit: "pack",
+    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80",
     active: true,
     createdAt: "2026-07-09T00:00:00.000Z",
     updatedAt: "2026-07-09T00:00:00.000Z",
@@ -29,6 +30,7 @@ export const seedProducts = [
     price: 17500,
     stock: 24,
     unit: "pack",
+    image: "https://images.unsplash.com/photo-1581441363689-1f3c3c414635?auto=format&fit=crop&w=600&q=80",
     active: true,
     createdAt: "2026-07-09T00:00:00.000Z",
     updatedAt: "2026-07-09T00:00:00.000Z",
@@ -41,6 +43,7 @@ export const seedProducts = [
     price: 3500,
     stock: 80,
     unit: "pcs",
+    image: "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=600&q=80",
     active: true,
     createdAt: "2026-07-09T00:00:00.000Z",
     updatedAt: "2026-07-09T00:00:00.000Z",
@@ -53,6 +56,7 @@ export const seedProducts = [
     price: 4000,
     stock: 64,
     unit: "botol",
+    image: "https://images.unsplash.com/photo-1616118132534-381148898bb4?auto=format&fit=crop&w=600&q=80",
     active: true,
     createdAt: "2026-07-09T00:00:00.000Z",
     updatedAt: "2026-07-09T00:00:00.000Z",
@@ -65,6 +69,7 @@ export const seedProducts = [
     price: 5500,
     stock: 36,
     unit: "pcs",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=600&q=80",
     active: true,
     createdAt: "2026-07-09T00:00:00.000Z",
     updatedAt: "2026-07-09T00:00:00.000Z",
@@ -77,6 +82,7 @@ export const seedProducts = [
     price: 18500,
     stock: 20,
     unit: "pack",
+    image: "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=600&q=80",
     active: true,
     createdAt: "2026-07-09T00:00:00.000Z",
     updatedAt: "2026-07-09T00:00:00.000Z",
@@ -108,12 +114,28 @@ export function validateProduct(product, products) {
   if (!barcode) errors.barcode = "Barcode is required";
   if (duplicate) errors.barcode = "Barcode already exists";
   if (!String(product.category || "").trim()) errors.category = "Category is required";
-  if (Number(product.price) < 0 || Number.isNaN(Number(product.price))) {
-    errors.price = "Price must be zero or greater";
+  if (!String(product.unit || "").trim()) errors.unit = "Unit is required";
+  if (Number(product.price) < 1 || Number.isNaN(Number(product.price))) {
+    errors.price = "Price must be at least 1";
   }
   if (Number(product.stock) < 0 || Number.isNaN(Number(product.stock))) {
     errors.stock = "Stock must be zero or greater";
   }
+
+  return { ok: Object.keys(errors).length === 0, errors };
+}
+
+export function validateScannedProduct(product, products) {
+  const result = validateProduct(product, products);
+  const errors = { ...result.errors };
+
+  if (Number(product.price) < 1 || Number.isNaN(Number(product.price))) {
+    errors.price = "Price must be at least 1";
+  }
+  if (Number(product.stock) < 1 || Number.isNaN(Number(product.stock))) {
+    errors.stock = "Stock must be at least 1 to add this product to cart";
+  }
+  if (!String(product.unit || "").trim()) errors.unit = "Unit is required";
 
   return { ok: Object.keys(errors).length === 0, errors };
 }
@@ -152,60 +174,12 @@ export function addProductToCart(cart, products, barcodeOrProductId) {
   return { ok: true, cart: nextCart };
 }
 
+export function addSavedProductToCart(cart, products, product) {
+  return addProductToCart(cart, [...products, product], product.id);
+}
+
 export function calculateCartTotals(cart, settings) {
   const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
   const tax = settings.taxEnabled ? Math.round(subtotal * (Number(settings.taxRate) / 100)) : 0;
   return { subtotal, tax, total: subtotal + tax };
-}
-
-export function checkoutCart({
-  cart,
-  products,
-  settings,
-  payment,
-  cashierName,
-  now = new Date(),
-  transactionNumber,
-}) {
-  if (cart.length === 0) return { ok: false, error: "Cart is empty" };
-
-  for (const item of cart) {
-    const product = products.find((entry) => entry.id === item.productId);
-    if (!product || !product.active) return { ok: false, error: `${item.name} is unavailable` };
-    if (item.qty > product.stock) return { ok: false, error: `${item.name} stock is not enough` };
-  }
-
-  const totals = calculateCartTotals(cart, settings);
-  const method = payment.method;
-  const cashReceived = method === "cash" ? Number(payment.cashReceived) : 0;
-  if (method === "cash" && cashReceived < totals.total) {
-    return { ok: false, error: "Cash received is less than total" };
-  }
-
-  const createdAt = now.toISOString();
-  const transaction = {
-    id: `txn-${createdAt}-${Math.random().toString(36).slice(2, 8)}`,
-    number: transactionNumber,
-    createdAt,
-    cashierName,
-    items: cart.map((item) => ({ ...item })),
-    subtotal: totals.subtotal,
-    tax: totals.tax,
-    total: totals.total,
-    paymentMethod: method,
-    cashReceived: method === "cash" ? cashReceived : 0,
-    changeDue: method === "cash" ? cashReceived - totals.total : 0,
-    status: "completed",
-  };
-
-  const nextProducts = products.map((product) => {
-    const cartItem = cart.find((item) => item.productId === product.id);
-    return cartItem ? { ...product, stock: product.stock - cartItem.qty, updatedAt: createdAt } : product;
-  });
-
-  return { ok: true, transaction, products: nextProducts };
-}
-
-export function createTransactionNumber(count) {
-  return `TRX-${String(count + 1).padStart(4, "0")}`;
 }
