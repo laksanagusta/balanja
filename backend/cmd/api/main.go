@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"balanja/backend/internal/config"
+	"balanja/backend/internal/platform/database"
 	"balanja/backend/internal/platform/httpserver"
 )
 
@@ -25,7 +26,13 @@ func run() error {
 		return err
 	}
 
-	app := httpserver.New(httpserver.Dependencies{})
+	pool, err := database.NewPool(context.Background(), cfg.DatabaseURL, cfg.DBMaxConns)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	app := httpserver.New(httpserver.Dependencies{Ready: pool.Ping})
 	listenErrors := make(chan error, 1)
 	go func() {
 		listenErrors <- app.Listen(":" + cfg.Port)
