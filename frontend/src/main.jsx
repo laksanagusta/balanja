@@ -1,10 +1,11 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { ClerkProvider } from "@clerk/react";
+import { ClerkProvider, useAuth } from "@clerk/react";
 import { Agentation } from "agentation";
 import App from "./App.jsx";
 import "./index.css";
 import { POSStoreProvider } from "./pos/store.jsx";
+import { createAPIClient } from "./pos/api-client.js";
 
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -24,13 +25,27 @@ function MissingClerkConfig() {
   );
 }
 
+function Application() {
+  const { getToken, isSignedIn } = useAuth();
+  const api = React.useMemo(
+    () => createAPIClient({ baseURL: import.meta.env.VITE_API_BASE_URL || "", getToken }),
+    [getToken],
+  );
+
+  return isSignedIn ? (
+    <POSStoreProvider api={api}>
+      <App />
+    </POSStoreProvider>
+  ) : (
+    <App />
+  );
+}
+
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     {clerkKey ? (
       <ClerkProvider publishableKey={clerkKey} afterSignOutUrl="/">
-        <POSStoreProvider>
-          <App />
-        </POSStoreProvider>
+        <Application />
       </ClerkProvider>
     ) : (
       <MissingClerkConfig />

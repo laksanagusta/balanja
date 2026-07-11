@@ -2,19 +2,40 @@ import React from "react";
 import DashboardKpiCard from "../components/dashboard/DashboardKpiCard.jsx";
 import { PaymentMixPanel, RevenueTrendPanel, TopProductsPanel } from "../components/dashboard/DashboardCharts.jsx";
 import LowStockPanel from "../components/dashboard/LowStockPanel.jsx";
-import { buildDashboardAnalytics } from "../dashboard/analytics.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
 
 const periods = [7, 30];
+const emptyAnalytics = {
+  revenue: 0,
+  transactionCount: 0,
+  averageTransactionValue: 0,
+  lowStockCount: 0,
+  comparisons: {
+    revenue: { direction: "neutral", percent: null },
+    transactions: { direction: "neutral", percent: null },
+    average: { direction: "neutral", percent: null },
+  },
+  revenueTrend: [],
+  paymentMix: [],
+  topProducts: [],
+  lowStock: [],
+};
 
 export default function DashboardPage() {
-  const { transactions, products, settings } = usePOSStore();
+  const { settings, getDashboardSummary, setNotice } = usePOSStore();
   const [days, setDays] = React.useState(7);
-  const analytics = React.useMemo(
-    () => buildDashboardAnalytics({ transactions, products, days }),
-    [transactions, products, days],
-  );
+  const [analytics, setAnalytics] = React.useState(emptyAnalytics);
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    getDashboardSummary({ days, signal: controller.signal })
+      .then(setAnalytics)
+      .catch((error) => {
+        if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load dashboard");
+      });
+    return () => controller.abort();
+  }, [days, getDashboardSummary, setNotice]);
 
   return (
     <div className="h-full overflow-auto bg-app-bg">
