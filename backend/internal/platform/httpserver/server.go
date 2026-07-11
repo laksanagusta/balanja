@@ -11,6 +11,7 @@ import (
 
 type Dependencies struct {
 	Ready func(context.Context) error
+	Auth  fiber.Handler
 }
 
 func New(dependencies Dependencies) *fiber.App {
@@ -33,6 +34,13 @@ func New(dependencies Dependencies) *fiber.App {
 		}
 		return c.Status(http.StatusOK).JSON(fiber.Map{"data": fiber.Map{"status": "ready"}})
 	})
+
+	if dependencies.Auth != nil {
+		api := app.Group("/api/v1", dependencies.Auth)
+		api.Get("/identity", func(c fiber.Ctx) error {
+			return c.Status(http.StatusOK).JSON(fiber.Map{"data": fiber.Map{"authenticated": true}})
+		})
+	}
 
 	return app
 }

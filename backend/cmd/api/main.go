@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"balanja/backend/internal/auth"
 	"balanja/backend/internal/config"
 	"balanja/backend/internal/platform/database"
 	"balanja/backend/internal/platform/httpserver"
@@ -32,7 +33,14 @@ func run() error {
 	}
 	defer pool.Close()
 
-	app := httpserver.New(httpserver.Dependencies{Ready: pool.Ping})
+	verifierContext, cancelVerifier := context.WithCancel(context.Background())
+	defer cancelVerifier()
+	verifier, err := auth.NewClerkVerifier(verifierContext, cfg.ClerkIssuerURL, cfg.ClerkAudience)
+	if err != nil {
+		return err
+	}
+
+	app := httpserver.New(httpserver.Dependencies{Ready: pool.Ping, Auth: auth.Middleware(verifier)})
 	listenErrors := make(chan error, 1)
 	go func() {
 		listenErrors <- app.Listen(":" + cfg.Port)
