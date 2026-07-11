@@ -5,14 +5,16 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 )
 
 type Dependencies struct {
-	Ready  func(context.Context) error
-	Auth   fiber.Handler
-	Routes func(fiber.Router)
+	Ready          func(context.Context) error
+	Auth           fiber.Handler
+	Routes         func(fiber.Router)
+	AllowedOrigins []string
 }
 
 func New(dependencies Dependencies) *fiber.App {
@@ -21,6 +23,13 @@ func New(dependencies Dependencies) *fiber.App {
 	})
 	app.Use(recover.New())
 	app.Use(requestid.New())
+	if len(dependencies.AllowedOrigins) > 0 {
+		app.Use(cors.New(cors.Config{
+			AllowOrigins: dependencies.AllowedOrigins,
+			AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+			AllowHeaders: []string{fiber.HeaderAuthorization, fiber.HeaderContentType, "Idempotency-Key"},
+		}))
+	}
 
 	app.Get("/healthz", func(c fiber.Ctx) error {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"data": fiber.Map{"status": "ok"}})

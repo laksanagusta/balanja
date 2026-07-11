@@ -44,6 +44,23 @@ func TestProtectedRoutesAreRegistered(t *testing.T) {
 	}
 }
 
+func TestCORSAllowsConfiguredFrontend(t *testing.T) {
+	t.Parallel()
+
+	app := New(Dependencies{AllowedOrigins: []string{"https://pos.example.com"}})
+	request := httptest.NewRequest(http.MethodOptions, "/api/v1/products", nil)
+	request.Header.Set("Origin", "https://pos.example.com")
+	request.Header.Set("Access-Control-Request-Method", http.MethodGet)
+	response, err := app.Test(request)
+	if err != nil {
+		t.Fatalf("Test() error = %v", err)
+	}
+	defer response.Body.Close()
+	if got := response.Header.Get("Access-Control-Allow-Origin"); got != "https://pos.example.com" {
+		t.Fatalf("allow origin = %q", got)
+	}
+}
+
 func TestReadiness(t *testing.T) {
 	t.Parallel()
 

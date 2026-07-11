@@ -53,8 +53,9 @@ func run() error {
 	dashboardHandler := dashboard.NewHandler(dashboard.NewService(runner, dashboard.PostgresRepository{}))
 	checkoutHandler := checkout.NewHandler(checkout.NewService(runner, checkout.PostgresRepository{}))
 	app := httpserver.New(httpserver.Dependencies{
-		Ready: pool.Ping,
-		Auth:  auth.Middleware(verifier),
+		Ready:          pool.Ping,
+		Auth:           auth.Middleware(verifier),
+		AllowedOrigins: cfg.AllowedOrigins,
 		Routes: func(router fiber.Router) {
 			productHandler.Register(router)
 			settingsHandler.Register(router)
