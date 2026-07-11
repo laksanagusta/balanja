@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"balanja/backend/internal/auth"
+	"balanja/backend/internal/checkout"
 	"balanja/backend/internal/config"
 	"balanja/backend/internal/dashboard"
 	"balanja/backend/internal/platform/database"
@@ -50,6 +51,7 @@ func run() error {
 	settingsHandler := settings.NewHandler(settings.NewService(runner, settings.PostgresRepository{}))
 	transactionHandler := transaction.NewHandler(transaction.NewService(runner, transaction.PostgresRepository{}))
 	dashboardHandler := dashboard.NewHandler(dashboard.NewService(runner, dashboard.PostgresRepository{}))
+	checkoutHandler := checkout.NewHandler(checkout.NewService(runner, checkout.PostgresRepository{}))
 	app := httpserver.New(httpserver.Dependencies{
 		Ready: pool.Ping,
 		Auth:  auth.Middleware(verifier),
@@ -58,6 +60,7 @@ func run() error {
 			settingsHandler.Register(router)
 			transactionHandler.Register(router)
 			dashboardHandler.Register(router)
+			checkoutHandler.Register(router)
 		},
 	})
 	listenErrors := make(chan error, 1)
