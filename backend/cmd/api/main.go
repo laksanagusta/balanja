@@ -10,10 +10,12 @@ import (
 
 	"balanja/backend/internal/auth"
 	"balanja/backend/internal/config"
+	"balanja/backend/internal/dashboard"
 	"balanja/backend/internal/platform/database"
 	"balanja/backend/internal/platform/httpserver"
 	"balanja/backend/internal/product"
 	"balanja/backend/internal/settings"
+	"balanja/backend/internal/transaction"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -46,12 +48,16 @@ func run() error {
 	runner := database.Runner{DB: pool}
 	productHandler := product.NewHandler(product.NewService(runner, product.PostgresRepository{}))
 	settingsHandler := settings.NewHandler(settings.NewService(runner, settings.PostgresRepository{}))
+	transactionHandler := transaction.NewHandler(transaction.NewService(runner, transaction.PostgresRepository{}))
+	dashboardHandler := dashboard.NewHandler(dashboard.NewService(runner, dashboard.PostgresRepository{}))
 	app := httpserver.New(httpserver.Dependencies{
 		Ready: pool.Ping,
 		Auth:  auth.Middleware(verifier),
 		Routes: func(router fiber.Router) {
 			productHandler.Register(router)
 			settingsHandler.Register(router)
+			transactionHandler.Register(router)
+			dashboardHandler.Register(router)
 		},
 	})
 	listenErrors := make(chan error, 1)
