@@ -30,7 +30,7 @@ export default function NumpadShowcase() {
       <div className="grid gap-4 rounded-panel border border-border bg-surface p-4 sm:grid-cols-2">
         <div className="grid gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Price input</p>
-          <div className="rounded-control border border-border bg-surface-muted px-4 py-3 text-right font-mono text-2xl font-bold tabular-nums text-text shadow-inner-soft">
+          <div className="rounded-card border border-border bg-surface-muted px-4 py-3 text-right font-mono text-2xl font-bold tabular-nums text-text shadow-inner-soft">
             $ {value}
           </div>
           <div className="grid gap-2">

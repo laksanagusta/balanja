@@ -1,6 +1,8 @@
 import React from "react";
 import { Show, SignIn } from "@clerk/react";
+import { Toaster } from "sonner";
 import AppShell from "./components/AppShell.jsx";
+import DashboardPage from "./pages/DashboardPage.jsx";
 import DesignSystemPage from "./pages/DesignSystemPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
 import RetailPosPage from "./pages/RetailPosPage.jsx";
@@ -32,6 +34,7 @@ function usePathname() {
 }
 
 function AppPage({ pathname, onNavigate }) {
+  if (pathname === routes.dashboard) return <DashboardPage onNavigate={onNavigate} />;
   if (pathname === routes.products) return <ProductsPage />;
   if (pathname === routes.transactions) return <TransactionsPage />;
   if (pathname === routes.settings) return <SettingsPage />;
@@ -43,6 +46,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-app-bg text-text antialiased">
+      <Toaster
+        position="bottom-right"
+        closeButton
+        richColors
+        visibleToasts={3}
+        duration={2800}
+        offset={24}
+      />
       <Show when="signed-out">
         <main className="grid min-h-screen place-items-center bg-app-bg px-4">
           <div className="w-full max-w-md rounded-panel border border-border bg-surface p-4 shadow-panel">

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --font-sans: Manrope, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Code", "Fira Code", monospace;
@@ -22,10 +24,13 @@
   --color-warning: #ad6a00;
   --color-warning-soft: #fff4da;
   --color-focus: #4a4a4d;
+  --color-chart-cash: #1d1d1f;
+  --color-chart-qris: #168a4a;
+  --color-chart-other: #ad6a00;
 
-  --radius-control: 10px;
+  --radius-control: 8px;
   --radius-card: 12px;
-  --radius-panel: 20px;
+  --radius-panel: 16px;
 
   --shadow-low: 0 1px 2px rgb(0 0 0 / 0.05);
   --shadow-panel: 0 18px 45px rgb(18 18 18 / 0.06);
@@ -63,8 +68,21 @@
     @apply flex h-11 items-center gap-4 rounded-control px-4 text-[15px] font-medium text-text-muted transition hover:bg-surface-muted hover:text-text;
   }
 
-  .category-tab-active {
-    animation: category-pop var(--duration-base) var(--ease-standard);
+  .category-tabs {
+    grid-template-columns: repeat(var(--category-count), minmax(max-content, 1fr));
+  }
+
+  .category-tabs-indicator {
+    position: absolute;
+    inset-block: 5px;
+    left: 5px;
+    width: calc((100% - 10px) / var(--category-count));
+    border-radius: 6px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-low);
+    transform: translateX(calc(var(--category-index) * 100%));
+    transition: transform var(--duration-slow) var(--ease-standard);
+    will-change: transform;
   }
 
   .menu-grid-transition > * {
@@ -76,6 +94,83 @@
     min-width: 1ch;
     font-variant-numeric: tabular-nums;
     animation: number-ticker 220ms var(--ease-standard);
+  }
+
+  .button-label-pop {
+    display: inline-block;
+    animation: button-label-pop 220ms var(--ease-standard);
+  }
+
+  .product-add-button {
+    transition:
+      transform var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-base) var(--ease-standard),
+      box-shadow var(--duration-base) var(--ease-standard);
+  }
+
+  .product-add-button:active {
+    transform: scale(0.97);
+  }
+
+  .product-add-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 2px rgb(22 138 74 / 0.28);
+    animation: product-add-ring 420ms var(--ease-standard) both;
+  }
+
+  .product-add-feedback {
+    animation: product-add-feedback 520ms var(--ease-standard) both;
+    will-change: transform, opacity;
+  }
+
+  .scan-3d {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    transform: translateY(0);
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+    box-shadow:
+      inset 0 1px 1px 0 rgb(255 255 255 / 0.12),
+      0 3px 6px -2px rgb(0 0 0 / 0.28),
+      0 14px 24px -12px rgb(0 0 0 / 0.52),
+      0 0 0 1px rgb(0 0 0 / 0.16);
+  }
+
+  .scan-3d::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0));
+    opacity: 1;
+    transition: opacity var(--duration-base) var(--ease-standard);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .scan-3d:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        inset 0 1px 1px 0 rgb(255 255 255 / 0.16),
+        0 4px 8px -2px rgb(0 0 0 / 0.3),
+        0 16px 28px -12px rgb(0 0 0 / 0.56),
+        0 0 0 1px rgb(0 0 0 / 0.18);
+    }
+
+    .scan-3d:hover::before {
+      opacity: 0;
+    }
+  }
+
+  .scan-3d:active {
+    transform: translateY(1px);
+    box-shadow:
+      inset 0 1px 0.5px 0 rgb(255 255 255 / 0.14),
+      0 1px 1px -1px rgb(0 0 0 / 0.2),
+      0 2.5px 4px -2px rgb(0 0 0 / 0.24),
+      0 0 0 1px rgb(0 0 0 / 0.18);
   }
 
   .checkout-3d {
@@ -145,17 +240,157 @@
   }
 }
 
+@keyframes button-label-pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes product-add-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes product-add-feedback {
+  0% {
+    transform: translateY(4px) scale(0.96);
+    opacity: 0;
+  }
+  35% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-2px) scale(0.98);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .category-tab-active,
   .menu-grid-transition > *,
-  .number-ticker {
+  .number-ticker,
+  .button-label-pop,
+  .product-add-ring,
+  .product-add-feedback {
     animation: none;
   }
 
+  .category-tabs-indicator {
+    transition: none;
+  }
+
   .checkout-3d,
+  .product-add-button,
+  .product-add-button:active,
+  .scan-3d,
+  .scan-3d:hover,
+  .scan-3d:active,
   .checkout-3d:hover,
   .checkout-3d:active {
     transform: none;
     transition: none;
   }
+}
+
+:root {
+  --chart-1: var(--color-chart-cash);
+  --chart-2: var(--color-chart-qris);
+  --chart-3: var(--color-chart-other);
+  --chart-4: #6f6f6f;
+  --chart-5: #d9d9d9;
+  --chart-background: var(--color-surface);
+  --chart-foreground: var(--color-text);
+  --chart-foreground-muted: var(--color-text-muted);
+  --chart-line-primary: var(--chart-1);
+  --chart-line-secondary: var(--color-chart-qris);
+  --chart-bar-primary: var(--color-accent);
+  --chart-crosshair: var(--color-text-muted);
+  --chart-grid: var(--color-border);
+  --chart-brush-border: var(--chart-grid);
+  --chart-tooltip-background: rgb(29 29 31 / 0.94);
+  --chart-tooltip-foreground: #ffffff;
+  --chart-tooltip-muted: #d9d9d9;
+  --chart-marker-background: var(--color-surface-muted);
+  --chart-marker-border: var(--color-border-strong);
+  --chart-marker-foreground: var(--color-text);
+  --chart-label: var(--color-text-muted);
+  --chart-scale-01: oklch(0.98 0.003 106);
+  --chart-scale-02: oklch(0.92 0.008 106);
+  --chart-scale-03: oklch(0.82 0.015 106);
+  --chart-scale-04: oklch(0.68 0.02 106);
+  --chart-scale-05: oklch(0.55 0.025 106);
+  --chart-scale-pattern-color: oklch(0.96 0.005 106);
+}
+
+.dark {
+  --chart-1: oklch(1 0 none);
+  --chart-2: oklch(0.73 0 none);
+  --chart-3: oklch(0.51 0 none);
+  --chart-4: oklch(0.39 0 none);
+  --chart-5: oklch(0.32 0 none);
+  --chart-background: oklch(0.145 0 0);
+  --chart-foreground: oklch(0.45 0 0);
+  --chart-foreground-muted: oklch(0.65 0.01 260);
+  --chart-crosshair: oklch(0.45 0 0);
+  --chart-grid: oklch(0.25 0 0);
+  --chart-brush-border: var(--chart-grid);
+  --chart-marker-background: oklch(0.25 0.01 260);
+  --chart-marker-border: oklch(0.4 0.01 260);
+  --chart-marker-foreground: oklch(0.9 0 0);
+  --chart-label: oklch(0.75 0.01 260);
+  --chart-scale-01: oklch(0.28 0.03 270);
+  --chart-scale-02: oklch(0.38 0.04 270);
+  --chart-scale-03: oklch(0.48 0.05 270);
+  --chart-scale-04: oklch(0.58 0.06 270);
+  --chart-scale-05: oklch(0.68 0.07 270);
+  --chart-scale-pattern-color: oklch(0.145 0 0);
+}
+
+@theme inline {
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-background: var(--chart-background);
+  --color-chart-foreground: var(--chart-foreground);
+  --color-chart-foreground-muted: var(--chart-foreground-muted);
+  --color-chart-crosshair: var(--chart-crosshair);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-tooltip-background: var(--chart-tooltip-background);
+  --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+  --color-chart-tooltip-muted: var(--chart-tooltip-muted);
+  --color-chart-marker-background: var(--chart-marker-background);
+  --color-chart-marker-border: var(--chart-marker-border);
+  --color-chart-marker-foreground: var(--chart-marker-foreground);
+  --color-chart-label: var(--chart-label);
+  --color-chart-scale-01: var(--chart-scale-01);
+  --color-chart-scale-02: var(--chart-scale-02);
+  --color-chart-scale-03: var(--chart-scale-03);
+  --color-chart-scale-04: var(--chart-scale-04);
+  --color-chart-scale-05: var(--chart-scale-05);
+  --color-chart-scale-pattern-color: var(--chart-scale-pattern-color);
 }

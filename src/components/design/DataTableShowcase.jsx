@@ -2,6 +2,14 @@ import React from "react";
 import { Badge, DataTable } from "../primitives.jsx";
 import { transactionData, inventoryData } from "../../data.js";
 
+function formatIDR(value) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(value).replace(/\s+/g, "");
+}
+
 export default function DataTableShowcase() {
   const [sortKey, setSortKey] = React.useState("time");
   const [sortDir, setSortDir] = React.useState("desc");
@@ -36,7 +44,7 @@ export default function DataTableShowcase() {
       label: "Total",
       sortable: true,
       render: (row) => (
-        <span className="font-mono font-semibold tabular-nums">$ {row.total.toFixed(2)}</span>
+        <span className="font-mono font-semibold tabular-nums">{formatIDR(row.total)}</span>
       ),
     },
     { key: "payment", label: "Payment", sortable: true },
@@ -75,7 +83,7 @@ export default function DataTableShowcase() {
       key: "cost",
       label: "Cost",
       render: (row) => (
-        <span className="font-mono tabular-nums text-text-muted">$ {row.cost.toFixed(2)}</span>
+        <span className="font-mono tabular-nums text-text-muted">{formatIDR(row.cost)}</span>
       ),
     },
   ];
@@ -83,10 +91,10 @@ export default function DataTableShowcase() {
   return (
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Data table</h3>
-      <div className="grid gap-4 rounded-panel border border-border bg-surface p-0">
+      <div className="grid rounded-panel border border-border bg-surface p-0">
         <div className="border-b border-border px-4 py-3">
           <p className="text-sm font-semibold text-text">Transaction history</p>
-          <p className="text-xs text-text-muted">Sortable columns with status badges. Click headers to sort.</p>
+          <p className="text-xs text-text-muted">Catalog and history pages share this searchable, sortable table pattern.</p>
         </div>
         <DataTable
           columns={transactionCols}
@@ -94,15 +102,17 @@ export default function DataTableShowcase() {
           sortKey={sortKey}
           sortDir={sortDir}
           onSort={handleSort}
+          paginated
+          pageSize={6}
           className="px-2 pb-2"
         />
       </div>
-      <div className="mt-4 grid gap-4 rounded-panel border border-border bg-surface p-0">
+      <div className="mt-4 grid rounded-panel border border-border bg-surface p-0">
         <div className="border-b border-border px-4 py-3">
-          <p className="text-sm font-semibold text-text">Inventory levels</p>
+          <p className="text-sm font-semibold text-text">Product stock levels</p>
           <p className="text-xs text-text-muted">Low stock items highlighted in red.</p>
         </div>
-        <DataTable columns={inventoryCols} data={inventoryData} className="px-2 pb-2" />
+        <DataTable columns={inventoryCols} data={inventoryData} paginated pageSize={6} className="px-2 pb-2" />
       </div>
     </div>
   );

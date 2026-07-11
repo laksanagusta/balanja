@@ -5,6 +5,7 @@ export default function DialogShowcase() {
   const [infoOpen, setInfoOpen] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [dangerOpen, setDangerOpen] = React.useState(false);
+  const [unknownBarcodeOpen, setUnknownBarcodeOpen] = React.useState(false);
 
   return (
     <div>
@@ -15,6 +16,7 @@ export default function DialogShowcase() {
           <Button onClick={() => setInfoOpen(true)}>Info dialog</Button>
           <Button variant="primary" onClick={() => setConfirmOpen(true)}>Confirm dialog</Button>
           <Button variant="danger" onClick={() => setDangerOpen(true)}>Danger dialog</Button>
+          <Button onClick={() => setUnknownBarcodeOpen(true)}>Unknown barcode</Button>
         </div>
 
         <Dialog
@@ -24,7 +26,7 @@ export default function DialogShowcase() {
           footer={
             <>
               <Button onClick={() => setInfoOpen(false)}>Cancel</Button>
-              <Button variant="primary" onClick={() => setInfoOpen(false)}>Add to order</Button>
+              <Button variant="primary" onClick={() => setInfoOpen(false)}>Add to cart</Button>
             </>
           }
         >
@@ -34,13 +36,13 @@ export default function DialogShowcase() {
                 <Icon name="box" className="size-8" />
               </div>
               <div className="grid content-start gap-1">
-                <p className="text-lg font-semibold text-text">Nasi Goreng Spesial</p>
-                <p className="text-sm text-text-muted">Category: Main Course</p>
-                <p className="font-mono text-lg font-semibold tabular-nums text-accent">$ 12.50</p>
+                <p className="text-lg font-semibold text-text">Beras Premium 5kg</p>
+                <p className="text-sm text-text-muted">Category: Sembako</p>
+                <p className="font-mono text-lg font-semibold tabular-nums text-accent">Rp72.000</p>
               </div>
             </div>
             <div className="rounded-card border border-border bg-surface-muted p-4 text-sm text-text-muted">
-              Notes: Extra spicy, no MSG. Add fried egg on top.
+              Barcode: 8997001230011. Stock: 18 karung.
             </div>
           </div>
         </Dialog>
@@ -50,7 +52,7 @@ export default function DialogShowcase() {
           onClose={() => setConfirmOpen(false)}
           icon="check"
           iconBg="bg-success-soft text-success"
-          title="Confirm order"
+          title="Complete sale"
           footer={
             <>
               <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
@@ -58,7 +60,7 @@ export default function DialogShowcase() {
             </>
           }
         >
-          Place order for <strong className="text-text">Table A1</strong>? Items will be sent to the kitchen.
+          Complete sale for <strong className="text-text">Rp45.500</strong>? Stock will be updated after confirmation.
         </Dialog>
 
         <Dialog
@@ -66,15 +68,32 @@ export default function DialogShowcase() {
           onClose={() => setDangerOpen(false)}
           icon="x"
           iconBg="bg-danger-soft text-danger"
-          title="Void this order?"
+          title="Void this sale?"
           footer={
             <>
-              <Button onClick={() => setDangerOpen(false)}>Keep order</Button>
+              <Button onClick={() => setDangerOpen(false)}>Keep sale</Button>
               <Button variant="danger" onClick={() => setDangerOpen(false)}>Yes, void</Button>
             </>
           }
         >
-          This action cannot be undone. All items will be removed from the order.
+          This action cannot be undone. All items will be removed from the cart.
+        </Dialog>
+
+        <Dialog
+          open={unknownBarcodeOpen}
+          onClose={() => setUnknownBarcodeOpen(false)}
+          title="Barcode not found"
+          footer={
+            <>
+              <Button onClick={() => setUnknownBarcodeOpen(false)}>Cancel</Button>
+              <Button onClick={() => setUnknownBarcodeOpen(false)}>Scan again</Button>
+              <Button variant="primary" onClick={() => setUnknownBarcodeOpen(false)}>Add product</Button>
+            </>
+          }
+        >
+          <p className="mt-4">
+            Barcode <span className="font-mono font-semibold text-text">8997001230011</span> is not in the product catalog.
+          </p>
         </Dialog>
       </div>
     </div>

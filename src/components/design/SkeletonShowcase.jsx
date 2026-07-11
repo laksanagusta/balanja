@@ -6,7 +6,7 @@ export default function SkeletonShowcase() {
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Skeleton & loading</h3>
       <div className="rounded-panel border border-border bg-surface p-4">
-        <p className="mb-3 text-sm text-text-muted">Loading placeholders for menu items, orders, and lists.</p>
+        <p className="mb-3 text-sm text-text-muted">Loading placeholders for product cards, cart rows, and lists.</p>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="grid gap-3 rounded-card border border-border p-3">
             <Skeleton className="aspect-[4/3] w-full" />
@@ -40,7 +40,7 @@ export default function SkeletonShowcase() {
           </div>
         </div>
         <div className="mt-4 grid gap-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Order list skeleton</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Cart list skeleton</p>
           {[0, 1, 2].map((i) => (
             <div key={i} className="flex items-center gap-3 rounded-md bg-surface-muted p-3">
               <Skeleton className="size-12 shrink-0 rounded-md" />

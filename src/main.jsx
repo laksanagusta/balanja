@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { ClerkProvider } from "@clerk/react";
+import { Agentation } from "agentation";
 import App from "./App.jsx";
 import "./index.css";
 import { POSStoreProvider } from "./pos/store.jsx";
@@ -34,5 +35,6 @@ createRoot(document.getElementById("root")).render(
     ) : (
       <MissingClerkConfig />
     )}
+    <Agentation endpoint="http://localhost:4747" />
   </React.StrictMode>,
 );

@@ -2,6 +2,7 @@ import React from "react";
 
 export const routes = {
   login: "/",
+  dashboard: "/dashboard",
   pos: "/pos",
   products: "/products",
   transactions: "/transactions",
@@ -13,6 +14,7 @@ export const navGroups = [
   {
     label: "Retail",
     items: [
+      ["Dashboard", "grid", routes.dashboard],
       ["POS", "receipt", routes.pos],
       ["Products", "box", routes.products],
       ["Transactions", "file", routes.transactions],

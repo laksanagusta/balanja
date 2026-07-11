@@ -1,0 +1,108 @@
+import React from "react";
+import { LineChart, Line } from "../charts/line-chart.jsx";
+import { Grid } from "../charts/grid.jsx";
+import { XAxis } from "../charts/x-axis.jsx";
+import { ChartTooltip } from "../charts/tooltip/index.js";
+import { PieChart } from "../charts/pie-chart.jsx";
+import PieSlice from "../charts/pie-slice.jsx";
+import { PieCenter } from "../charts/pie-center.jsx";
+import { BarChart } from "../charts/bar-chart.jsx";
+import { Bar } from "../charts/bar.jsx";
+import { BarXAxis } from "../charts/bar-x-axis.jsx";
+import { EmptyState } from "../design/EmptyStateShowcase.jsx";
+import { Panel } from "../primitives.jsx";
+import { formatPrice } from "../../shared.jsx";
+
+function ChartPanel({ title, description, badge, children, className = "" }) {
+  return (
+    <Panel className={`min-w-0 overflow-hidden p-4 ${className}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-text">{title}</h2>
+          <p className="mt-1 text-xs leading-5 text-text-muted">{description}</p>
+        </div>
+        {badge ? <span className="shrink-0 rounded-full bg-success-soft px-2 py-1 text-[11px] font-semibold text-success">{badge}</span> : null}
+      </div>
+      {children}
+    </Panel>
+  );
+}
+
+function ChartEmpty({ title, description }) {
+  return <EmptyState icon={null} title={title} description={description} className="mt-4 min-h-[230px]" />;
+}
+
+export function RevenueTrendPanel({ data, hasData, days }) {
+  return (
+    <ChartPanel title="Revenue trend" description={`Daily completed-sales revenue over the last ${days} days.`} badge={`${days} days`}>
+      {hasData ? (
+        <LineChart data={data} xDataKey="date" aspectRatio="2.35 / 1" className="mt-3 min-h-[250px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
+          <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
+          <Line dataKey="revenue" stroke="var(--chart-line-primary)" strokeWidth={2.5} showPoints />
+          <XAxis numTicks={days === 30 ? 6 : 7} />
+          <ChartTooltip />
+        </LineChart>
+      ) : (
+        <ChartEmpty title="No sales in this period" description="Completed transactions will build the revenue trend automatically." />
+      )}
+    </ChartPanel>
+  );
+}
+
+export function PaymentMixPanel({ data }) {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <ChartPanel title="Payment mix" description="Share of completed revenue by payment method.">
+      {data.length ? (
+        <div className="mt-3 grid justify-items-center gap-3">
+          <PieChart data={data} size={230} innerRadius={68} padAngle={0.035} cornerRadius={5} hoverOffset={5}>
+            {data.map((item, index) => (
+              <PieSlice key={item.label} index={index} color={item.color} showGlow={false} hoverEffect="grow" hoverOffset={4} />
+            ))}
+            <PieCenter defaultLabel="Revenue" formatOptions={{ notation: "compact", maximumFractionDigits: 1 }} prefix="Rp" />
+          </PieChart>
+          <div className="grid w-full gap-2">
+            {data.map((item) => (
+              <div key={item.label} className="flex items-center justify-between gap-3 text-xs">
+                <span className="flex min-w-0 items-center gap-2 text-text-muted">
+                  <span className="size-2.5 shrink-0 rounded-sm" style={{ background: item.color }} />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="shrink-0 font-mono font-semibold text-text tabular-nums">
+                  {item.percentage}%
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="sr-only">Total payment revenue {formatPrice(total)}</p>
+        </div>
+      ) : (
+        <ChartEmpty title="No payment data" description="Cash and QRIS shares appear after the first completed sale." />
+      )}
+    </ChartPanel>
+  );
+}
+
+function shortLabel(label) {
+  return label.length > 15 ? `${label.slice(0, 13)}…` : label;
+}
+
+export function TopProductsPanel({ data }) {
+  const chartData = data.map((item) => ({ ...item, chartLabel: shortLabel(item.label) }));
+
+  return (
+    <ChartPanel title="Top products" description="Five products with the highest units sold in this period.">
+      {data.length ? (
+        <BarChart data={chartData} xDataKey="chartLabel" aspectRatio="2.05 / 1" className="mt-3 min-h-[250px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }} barGap={0.38}>
+          <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
+          <Bar dataKey="quantity" fill="var(--chart-bar-primary)" lineCap="round" />
+          <BarXAxis showAllLabels tickerHalfWidth={42} />
+          <ChartTooltip />
+        </BarChart>
+      ) : (
+        <ChartEmpty title="No products sold yet" description="Product rankings appear as completed transactions accumulate." />
+      )}
+    </ChartPanel>
+  );
+}

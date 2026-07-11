@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Dialog, Input, SelectField } from "../primitives.jsx";
 
 export default function ModalFormShowcase() {
-  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [productOpen, setProductOpen] = React.useState(false);
   const [customerOpen, setCustomerOpen] = React.useState(false);
   const [discountOpen, setDiscountOpen] = React.useState(false);
 
@@ -10,30 +10,31 @@ export default function ModalFormShowcase() {
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Modal form</h3>
       <div className="rounded-panel border border-border bg-surface p-4">
-        <p className="mb-3 text-sm text-text-muted">Form dialogs for data entry — add item, customer info, discount.</p>
+        <p className="mb-3 text-sm text-text-muted">Form dialogs for retail data entry — add product, customer info, discount.</p>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => setMenuOpen(true)}>Add menu item</Button>
+          <Button onClick={() => setProductOpen(true)}>Add product</Button>
           <Button onClick={() => setCustomerOpen(true)}>Customer info</Button>
           <Button variant="primary" onClick={() => setDiscountOpen(true)}>Apply discount</Button>
         </div>
 
         <Dialog
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          title="Add menu item"
+          open={productOpen}
+          onClose={() => setProductOpen(false)}
+          title="Add product"
           size="md"
           footer={
             <>
-              <Button onClick={() => setMenuOpen(false)}>Cancel</Button>
-              <Button variant="primary" onClick={() => setMenuOpen(false)}>Save item</Button>
+              <Button onClick={() => setProductOpen(false)}>Cancel</Button>
+              <Button variant="primary" onClick={() => setProductOpen(false)}>Save product</Button>
             </>
           }
         >
           <div className="mt-4 grid gap-4">
-            <Input label="Item name" placeholder="e.g. Nasi Goreng Spesial" inputProps={{ defaultValue: "" }} />
-            <SelectField label="Category" value="Main Course" options={["Appetizers", "Main Course", "Drinks", "Desserts"]} />
-            <Input label="Price" placeholder="0.00" inputProps={{ type: "number", step: "0.01", defaultValue: "" }} />
-            <Input label="Description" placeholder="Optional notes about the item" inputProps={{ defaultValue: "" }} />
+            <Input label="Product name" placeholder="e.g. Beras Premium 5kg" inputProps={{ defaultValue: "" }} />
+            <Input label="Barcode" placeholder="8997001230011" inputProps={{ defaultValue: "" }} />
+            <SelectField label="Category" value="Sembako" options={["Sembako", "Minuman", "Makanan Instan", "Rumah Tangga", "Perawatan"]} />
+            <Input label="Price" placeholder="72000" inputProps={{ type: "number", defaultValue: "" }} />
+            <Input label="Stock" placeholder="18" inputProps={{ type: "number", defaultValue: "" }} />
           </div>
         </Dialog>
 

@@ -1,10 +1,12 @@
 import React from "react";
 import {
+  addSavedProductToCart,
   addProductToCart,
   checkoutCart,
   createTransactionNumber,
   validateProduct,
 } from "./domain.js";
+import { createSavedProduct } from "./product-save.js";
 import { loadPersistedState, resetPersistedState, savePersistedState } from "./storage.js";
 
 const POSStoreContext = React.createContext(null);
@@ -25,22 +27,33 @@ export function POSStoreProvider({ children }) {
   }, []);
 
   const addToCart = React.useCallback((barcodeOrProductId) => {
+    let response = null;
     setState((current) => {
       const result = addProductToCart(current.cart, current.products, barcodeOrProductId);
+      response = result;
       return result.ok
         ? { ...current, cart: result.cart, notice: "" }
         : { ...current, notice: result.error };
     });
+    return response;
   }, []);
 
   const updateCartQty = React.useCallback((productId, qty) => {
+    let response = null;
     setState((current) => {
       const product = current.products.find((item) => item.id === productId);
       const nextQty = Math.max(0, Number(qty));
 
-      if (!product) return { ...current, notice: "Product not found" };
-      if (nextQty > product.stock) return { ...current, notice: "Cart quantity exceeds stock" };
+      if (!product) {
+        response = { ok: false, error: "Product not found" };
+        return { ...current, notice: response.error };
+      }
+      if (nextQty > product.stock) {
+        response = { ok: false, error: "Cart quantity exceeds stock" };
+        return { ...current, notice: response.error };
+      }
 
+      response = { ok: true };
       return {
         ...current,
         cart:
@@ -52,6 +65,7 @@ export function POSStoreProvider({ children }) {
         notice: "",
       };
     });
+    return response;
   }, []);
 
   const clearCart = React.useCallback(() => {
@@ -60,25 +74,40 @@ export function POSStoreProvider({ children }) {
 
   const saveProduct = React.useCallback((product) => {
     setState((current) => {
-      const now = new Date().toISOString();
-      const normalized = {
-        ...product,
-        price: Number(product.price),
-        stock: Number(product.stock),
-        active: product.active !== false,
-        updatedAt: now,
-        createdAt: product.createdAt || now,
-      };
-      const validation = validateProduct(normalized, current.products);
+      const savedProduct = createSavedProduct(product);
+      const validation = validateProduct(savedProduct, current.products);
 
-      if (!validation.ok) return { ...current, notice: Object.values(validation.errors)[0] };
+      if (!validation.ok) {
+        return { ...current, notice: Object.values(validation.errors)[0] };
+      }
 
-      const exists = current.products.some((item) => item.id === normalized.id);
+      const exists = current.products.some((item) => item.id === savedProduct.id);
       return {
         ...current,
         products: exists
-          ? current.products.map((item) => (item.id === normalized.id ? normalized : item))
-          : [...current.products, { ...normalized, id: normalized.id || `prod-${Date.now()}` }],
+          ? current.products.map((item) => (item.id === savedProduct.id ? savedProduct : item))
+          : [...current.products, savedProduct],
+        notice: "",
+      };
+    });
+  }, []);
+
+  const addScannedProductToCart = React.useCallback((product) => {
+    setState((current) => {
+      const savedProduct = createSavedProduct(product);
+      const validation = validateProduct(savedProduct, current.products);
+
+      if (!validation.ok) {
+        return { ...current, notice: Object.values(validation.errors)[0] };
+      }
+
+      const result = addSavedProductToCart(current.cart, current.products, savedProduct);
+      if (!result.ok) return { ...current, notice: result.error };
+
+      return {
+        ...current,
+        products: [...current.products, savedProduct],
+        cart: result.cart,
         notice: "",
       };
     });
@@ -141,6 +170,7 @@ export function POSStoreProvider({ children }) {
     updateCartQty,
     clearCart,
     saveProduct,
+    addScannedProductToCart,
     deactivateProduct,
     checkout,
     updateSettings,

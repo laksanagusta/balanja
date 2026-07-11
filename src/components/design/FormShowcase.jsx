@@ -10,6 +10,8 @@ const tokens = [
 ];
 
 export default function FormShowcase() {
+  const [category, setCategory] = React.useState("Sembako");
+
   return (
     <Panel className="grid gap-6 p-6">
       <div>
@@ -18,8 +20,8 @@ export default function FormShowcase() {
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="grid max-w-md gap-4">
-          <Input label="Input field" placeholder="Placeholder text" rightSlot={<Icon name="search" className="size-4" />} />
-          <SelectField label="Select field" value="Selected option" />
+          <Input label="Input field" placeholder="Placeholder text" error="This field needs attention" rightSlot={<Icon name="search" className="size-4" />} />
+          <SelectField label="Popover select" value={category} options={["Sembako", "Minuman", "Snack"]} onChange={setCategory} />
           <div className="flex items-center justify-between rounded-card border border-border p-4">
             <span className="text-sm font-semibold text-text">Enabled switch</span>
             <Switch checked />

@@ -25,7 +25,7 @@ function TokenList({ group }) {
               )}
               <span className="min-w-0 flex-1 text-sm font-medium text-text">{label}</span>
               <span className="hidden font-mono text-xs text-text-muted sm:block">{name}</span>
-              <span className="shrink-0 font-mono text-xs text-text-subtle">{value}</span>
+              <span className="max-w-[45%] shrink-0 truncate font-mono text-xs text-text-subtle" title={value}>{value}</span>
             </div>
           );
         })}
@@ -36,7 +36,7 @@ function TokenList({ group }) {
 
 export default function TokenGrid() {
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6 [&>*]:min-w-0">
       {tokenGroups.map((group) => (
         <TokenList key={group.name} group={group} />
       ))}

@@ -75,6 +75,15 @@ export function Icon({ name, className = "size-5" }) {
         <path d="M6 5v14M14 5v14" strokeWidth="1" />
       </>
     ),
+    scan: (
+      <g transform="translate(1.5 3.3501)" strokeWidth="1.5">
+        <path d="M21 9.4555H0" />
+        <path d="M19.1299 5.245V3.732C19.1299 1.671 17.4589 0 15.3969 0H14.1919" />
+        <path d="M1.8701 5.245V3.732C1.8701 1.671 3.5411 0 5.6031 0H6.8391" />
+        <path d="M19.1299 9.4545V13.5285C19.1299 15.5905 17.4589 17.2615 15.3969 17.2615H14.1919" />
+        <path d="M1.8701 9.4545V13.5285C1.8701 15.5905 3.5411 17.2615 5.6031 17.2615H6.8391" />
+      </g>
+    ),
     menu: <path d="M4 7h16M4 12h16M4 17h16" />,
     users: (
       <>
@@ -101,10 +110,11 @@ export function Icon({ name, className = "size-5" }) {
       </>
     ),
     settings: (
-      <>
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19 12a7.5 7.5 0 0 0-.1-1.2l2-1.5-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14.2 3h-4.4l-.4 2.7a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.5A7.5 7.5 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 2 1.2l.4 2.7h4.4l.4-2.7a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z" />
-      </>
+      <path
+        fill="currentColor"
+        stroke="none"
+        d="M12.2672 2.0005C12.9832 2.0005 13.6792 2.2945 14.1782 2.8055C14.6762 3.3195 14.9512 4.0245 14.9302 4.7395C14.9322 4.9005 14.9852 5.0865 15.0812 5.2495C15.2402 5.5195 15.4912 5.7095 15.7892 5.7875C16.0872 5.8615 16.3992 5.8215 16.6642 5.6645C17.9442 4.9335 19.5732 5.3715 20.3042 6.6415L20.9272 7.7205C20.9432 7.7495 20.9572 7.7775 20.9692 7.8065C21.6312 9.0575 21.1892 10.6325 19.9592 11.3515C19.7802 11.4545 19.6352 11.5985 19.5352 11.7725C19.3802 12.0415 19.3372 12.3615 19.4152 12.6555C19.4952 12.9555 19.6862 13.2045 19.9552 13.3585C20.5622 13.7075 21.0152 14.2955 21.1962 14.9745C21.3772 15.6525 21.2782 16.3885 20.9252 16.9955L20.2612 18.1015C19.5302 19.3575 17.9012 19.7925 16.6342 19.0605C16.4652 18.9635 16.2702 18.9105 16.0762 18.9055H16.0702C15.7812 18.9055 15.4842 19.0285 15.2682 19.2435C15.0492 19.4625 14.9292 19.7545 14.9312 20.0645C14.9242 21.5335 13.7292 22.7215 12.2672 22.7215H11.0142C9.5452 22.7215 8.3502 21.5275 8.3502 20.0585C8.3482 19.8775 8.2962 19.6895 8.1992 19.5265C8.0422 19.2525 7.7882 19.0565 7.4952 18.9785C7.2042 18.9005 6.8852 18.9435 6.6232 19.0955C5.9952 19.4455 5.2562 19.5305 4.5802 19.3405C3.9052 19.1495 3.3222 18.6855 2.9802 18.0705L2.3552 16.9935C1.6242 15.7255 2.0592 14.1005 3.3252 13.3685C3.6842 13.1615 3.9072 12.7755 3.9072 12.3615C3.9072 11.9475 3.6842 11.5605 3.3252 11.3535C2.0582 10.6175 1.6242 8.9885 2.3542 7.7205L3.0322 6.6075C3.7532 5.3535 5.3832 4.9115 6.6542 5.6415C6.8272 5.7445 7.0152 5.7965 7.2062 5.7985C7.8292 5.7985 8.3502 5.2845 8.3602 4.6525C8.3562 3.9555 8.6312 3.2865 9.1322 2.7815C9.6352 2.2775 10.3032 2.0005 11.0142 2.0005H12.2672ZM12.2672 3.5005H11.0142C10.7042 3.5005 10.4142 3.6215 10.1952 3.8395C9.9772 4.0585 9.8582 4.3495 9.8602 4.6595C9.8392 6.1215 8.6442 7.2985 7.1972 7.2985C6.7332 7.2935 6.2862 7.1685 5.8982 6.9365C5.3532 6.6265 4.6412 6.8175 4.3222 7.3725L3.6452 8.4855C3.3352 9.0235 3.5252 9.7345 4.0772 10.0555C4.8962 10.5295 5.4072 11.4135 5.4072 12.3615C5.4072 13.3095 4.8962 14.1925 4.0752 14.6675C3.5262 14.9855 3.3362 15.6925 3.6542 16.2425L4.2852 17.3305C4.4412 17.6115 4.6962 17.8145 4.9912 17.8975C5.2852 17.9795 5.6092 17.9445 5.8792 17.7945C6.2762 17.5615 6.7382 17.4405 7.2022 17.4405C7.4312 17.4405 7.6602 17.4695 7.8842 17.5295C8.5602 17.7115 9.1472 18.1635 9.4952 18.7705C9.7212 19.1515 9.8462 19.5965 9.8502 20.0505C9.8502 20.7005 10.3722 21.2215 11.0142 21.2215H12.2672C12.9062 21.2215 13.4282 20.7035 13.4312 20.0645C13.4272 19.3585 13.7032 18.6875 14.2082 18.1825C14.7062 17.6845 15.4022 17.3855 16.0982 17.4055C16.5542 17.4165 16.9932 17.5395 17.3802 17.7595C17.9372 18.0785 18.6482 17.8885 18.9702 17.3385L19.6342 16.2315C19.7822 15.9765 19.8252 15.6565 19.7462 15.3615C19.6682 15.0665 19.4722 14.8105 19.2082 14.6595C18.5902 14.3035 18.1492 13.7295 17.9662 13.0415C17.7852 12.3665 17.8842 11.6295 18.2372 11.0225C18.4672 10.6225 18.8042 10.2855 19.2082 10.0535C19.7502 9.7365 19.9402 9.0275 19.6252 8.4755C19.6122 8.4535 19.6002 8.4305 19.5902 8.4065L19.0042 7.3905C18.6852 6.8355 17.9752 6.6445 17.4182 6.9615C16.8162 7.3175 16.1002 7.4195 15.4122 7.2385C14.7252 7.0605 14.1492 6.6255 13.7902 6.0115C13.5602 5.6275 13.4352 5.1805 13.4312 4.7255C13.4402 4.3835 13.3202 4.0765 13.1022 3.8515C12.8852 3.6275 12.5802 3.5005 12.2672 3.5005ZM11.6451 8.9746C13.5121 8.9746 15.0311 10.4946 15.0311 12.3616C15.0311 14.2286 13.5121 15.7466 11.6451 15.7466C9.7781 15.7466 8.2591 14.2286 8.2591 12.3616C8.2591 10.4946 9.7781 8.9746 11.6451 8.9746ZM11.6451 10.4746C10.6051 10.4746 9.7591 11.3216 9.7591 12.3616C9.7591 13.4016 10.6051 14.2466 11.6451 14.2466C12.6851 14.2466 13.5311 13.4016 13.5311 12.3616C13.5311 11.3216 12.6851 10.4746 11.6451 10.4746Z"
+      />
     ),
     moon: <path d="M20 15.5A8 8 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z" />,
     help: (
@@ -151,7 +161,7 @@ export function Icon({ name, className = "size-5" }) {
 export function Button({ children, variant = "secondary", size = "md", className = "", ...props }) {
   const variants = {
     primary:
-      "bg-accent text-white shadow-accent hover:bg-accent-hover",
+      "scan-3d bg-accent text-white hover:bg-accent-hover",
     secondary:
       "border border-border bg-surface text-text shadow-low hover:bg-surface-muted",
     ghost: "text-text-muted hover:bg-surface-muted hover:text-text",
@@ -160,14 +170,17 @@ export function Button({ children, variant = "secondary", size = "md", className
   };
 
   const sizes = {
-    sm: "h-8 gap-1.5 rounded-md px-2.5 text-xs",
-    md: "h-11 gap-2 rounded-control px-4 text-sm",
-    lg: "h-13 gap-3 rounded-xl px-6 text-base",
+    xs: "h-6 gap-1 rounded-control px-2 text-xs",
+    sm: "h-8 gap-1.5 rounded-control px-2.5 text-sm",
+    base: "h-9 gap-2 rounded-control px-3.5 text-sm",
+    md: "h-9 gap-2 rounded-control px-3.5 text-sm",
+    lg: "h-11 gap-2.5 rounded-control px-5 text-lg",
+    xl: "h-13 gap-3 rounded-control px-6 text-xl",
   };
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-semibold transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}
@@ -175,26 +188,33 @@ export function Button({ children, variant = "secondary", size = "md", className
   );
 }
 
-export function Input({ label, placeholder, rightSlot, className = "", inputProps = {} }) {
+export function Input({ label, placeholder, rightSlot, error, className = "", inputProps = {} }) {
   return (
-    <label className={`grid gap-2 text-sm font-semibold text-text ${className}`}>
+    <label className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
       {label}
-      <span className="flex h-[42px] items-center gap-3 rounded-control border border-border bg-surface px-4 text-text-muted shadow-inner-soft focus-within:border-border-strong focus-within:outline-2 focus-within:outline-focus/30">
+      <span
+        className={`flex h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-2 focus-within:outline-focus/30 ${
+          error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
+        }`}
+      >
         <input
-          className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
+          className="w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
           placeholder={placeholder}
+          aria-invalid={Boolean(error)}
           {...inputProps}
         />
         {rightSlot}
       </span>
+      {error && <span className="text-xs font-medium text-danger">{error}</span>}
     </label>
   );
 }
 
-export function SelectField({ label, value, options = [] }) {
+export function SelectField({ label, value, options = [], onChange, error, inline = false }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [selected, setSelected] = React.useState(value);
   const menuOptions = options.length > 0 ? options : [value];
+  const selectedValue = onChange ? value : selected;
 
   return (
     <div className="relative grid gap-2 text-sm font-semibold text-text">
@@ -202,12 +222,13 @@ export function SelectField({ label, value, options = [] }) {
       <button
         type="button"
         aria-expanded={isOpen}
+        aria-invalid={Boolean(error)}
         onClick={() => setIsOpen((open) => !open)}
-        className={`flex h-[42px] items-center justify-between rounded-control border bg-surface px-4 text-left text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
-          isOpen ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
+        className={`flex h-[42px] items-center justify-between rounded-card border bg-surface px-4 text-left text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+          error ? "border-danger" : isOpen ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
         }`}
       >
-        {selected}
+        {selectedValue}
         <Icon
           name="chevron"
           className={`size-4 transition duration-base ease-standard motion-reduce:transition-none ${
@@ -215,34 +236,59 @@ export function SelectField({ label, value, options = [] }) {
           }`}
         />
       </button>
-      <div
-        className={`absolute left-0 right-0 top-[calc(100%+8px)] z-20 origin-top overflow-hidden rounded-control border border-border bg-surface p-1 shadow-panel transition duration-base ease-standard motion-reduce:transition-none ${
-          isOpen
-            ? "translate-y-0 scale-100 opacity-100"
-            : "pointer-events-none -translate-y-1 scale-[0.98] opacity-0"
-        }`}
-      >
-        {menuOptions.map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => {
-              setSelected(option);
-              setIsOpen(false);
-            }}
-            className={`flex h-10 w-full items-center rounded-md px-3 text-left text-sm font-medium transition duration-fast ease-standard hover:bg-surface-muted ${
-              selected === option ? "bg-surface-muted text-text" : "text-text-muted"
-            }`}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
+      {inline ? (
+        isOpen && (
+          <div className="grid gap-1 rounded-card border border-border bg-surface-muted p-1">
+            {menuOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => {
+                  if (onChange) onChange(option);
+                  else setSelected(option);
+                  setIsOpen(false);
+                }}
+                className={`flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard hover:bg-surface ${
+                  selectedValue === option ? "bg-surface text-text shadow-low" : "text-text-muted"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )
+      ) : (
+        <div
+          className={`absolute left-0 right-0 top-[calc(100%+8px)] z-20 origin-top overflow-hidden rounded-card border border-border bg-surface p-1 shadow-panel transition-[opacity,transform] duration-base ease-standard motion-reduce:translate-y-0 motion-reduce:scale-100 motion-reduce:transition-opacity motion-reduce:duration-200 ${
+            isOpen
+              ? "translate-y-0 scale-100 opacity-100"
+              : "pointer-events-none -translate-y-1 scale-[0.98] opacity-0"
+          }`}
+        >
+          {menuOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                if (onChange) onChange(option);
+                else setSelected(option);
+                setIsOpen(false);
+              }}
+              className={`flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard hover:bg-surface-muted ${
+                selectedValue === option ? "bg-surface-muted text-text" : "text-text-muted"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+      {error && <span className="text-xs font-medium text-danger">{error}</span>}
     </div>
   );
 }
 
-export function Badge({ children, tone = "neutral" }) {
+export function Badge({ children, tone = "neutral", className = "" }) {
   const tones = {
     neutral: "border-border bg-surface-muted text-text-muted",
     success: "border-success/20 bg-success-soft text-success",
@@ -253,10 +299,34 @@ export function Badge({ children, tone = "neutral" }) {
 
   return (
     <span
-      className={`inline-flex h-7 items-center rounded-md border px-3 text-xs font-medium ${tones[tone]}`}
+      className={`inline-flex h-7 items-center rounded-control border px-3 text-xs font-medium ${tones[tone]} ${className}`}
     >
       {children}
     </span>
+  );
+}
+
+export function Pill({ children, tone = "neutral", selected = false, className = "", ...props }) {
+  const tones = {
+    neutral: selected
+      ? "border-accent bg-surface text-text shadow-low"
+      : "border-border bg-surface-muted text-text-muted hover:bg-surface hover:text-text",
+    accent: selected
+      ? "border-accent bg-accent text-white shadow-accent"
+      : "border-accent/20 bg-accent-soft text-accent hover:bg-accent-soft/70",
+    success: "border-success/20 bg-success-soft text-success hover:bg-success-soft/70",
+    warning: "border-warning/20 bg-warning-soft text-warning hover:bg-warning-soft/70",
+    danger: "border-danger/20 bg-danger-soft text-danger hover:bg-danger-soft/70",
+  };
+
+  return (
+    <button
+      type="button"
+      className={`inline-flex h-8 min-w-fit items-center justify-center rounded-full border px-3 text-sm font-medium transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${tones[tone]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -268,47 +338,136 @@ export function Panel({ children, className = "" }) {
   );
 }
 
-export function DataTable({ columns, data, sortKey, sortDir, onSort, className = "" }) {
+export function DataTable({
+  columns,
+  data,
+  sortKey,
+  sortDir,
+  onSort,
+  className = "",
+  paginated = false,
+  pageSize = 10,
+  pageSizeOptions = [10, 20, 50, 100],
+}) {
+  const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(pageSize);
+  const limitOptions = React.useMemo(
+    () => [...new Set([pageSize, ...pageSizeOptions])].sort((a, b) => a - b),
+    [pageSize, pageSizeOptions],
+  );
+  const totalPages = paginated ? Math.max(1, Math.ceil(data.length / limit)) : 1;
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * limit;
+  const visibleData = paginated ? data.slice(start, start + limit) : data;
+  const from = data.length === 0 ? 0 : start + 1;
+  const to = Math.min(start + visibleData.length, data.length);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [data.length, sortKey, sortDir, limit]);
+
+  React.useEffect(() => {
+    setLimit(pageSize);
+  }, [pageSize]);
+
   return (
-    <div className={`w-full overflow-auto ${className}`}>
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={`h-10 whitespace-nowrap px-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-text-subtle ${
-                  col.sortable ? "cursor-pointer select-none hover:text-text" : ""
-                }`}
-                onClick={() => col.sortable && onSort?.(col.key)}
-              >
-                <span className="inline-flex items-center gap-1">
-                  {col.label}
-                  {col.sortable && sortKey === col.key && (
-                    <span className="text-accent">{sortDir === "asc" ? "↑" : "↓"}</span>
-                  )}
-                </span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, i) => (
-            <tr
-              key={row.id ?? i}
-              className={`border-b border-border transition hover:bg-surface-muted/60 ${
-                i % 2 === 1 ? "bg-surface-muted/30" : ""
-              }`}
-            >
+    <div className={`w-full ${className}`}>
+      <div className="w-full overflow-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-border">
               {columns.map((col) => (
-                <td key={col.key} className="h-11 px-3 text-text">
-                  {col.render ? col.render(row) : row[col.key]}
-                </td>
+                <th
+                  key={col.key}
+                  className={`h-11 whitespace-nowrap px-3 text-xs font-semibold uppercase tracking-[0.08em] text-text-subtle ${
+                    col.align === "right" ? "text-right" : "text-left"
+                  } ${
+                    col.sortable ? "cursor-pointer select-none hover:text-text" : ""
+                  }`}
+                  onClick={() => col.sortable && onSort?.(col.key)}
+                >
+                  <span
+                    className={`inline-flex w-full items-center gap-1 ${
+                      col.align === "right" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    {col.label}
+                    {col.sortable && sortKey === col.key && (
+                      <span className="text-accent">{sortDir === "asc" ? "↑" : "↓"}</span>
+                    )}
+                  </span>
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {visibleData.map((row, i) => (
+              <tr
+                key={row.id ?? start + i}
+                className={`border-b border-border transition last:border-b-0 hover:bg-surface-muted/60 ${
+                  (start + i) % 2 === 1 ? "bg-surface-muted/30" : ""
+                }`}
+              >
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className={`h-11 px-3 text-text ${col.align === "right" ? "text-right" : "text-left"}`}
+                  >
+                    {col.render ? col.render(row) : row[col.key]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {paginated && (
+        <div className="flex flex-col gap-3 border-t border-border px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-text-muted">
+              Showing <span className="font-mono font-semibold tabular-nums text-text">{from}-{to}</span> of{" "}
+              <span className="font-mono font-semibold tabular-nums text-text">{data.length}</span>
+            </p>
+            <label className="flex h-9 items-center gap-2 rounded-md border border-border bg-surface px-2.5 text-xs font-semibold text-text-muted">
+              Rows
+              <select
+                value={limit}
+                onChange={(event) => setLimit(Number(event.target.value))}
+                className="bg-transparent font-mono text-xs font-semibold text-text outline-none"
+              >
+                {limitOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={safePage <= 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-surface px-3 text-xs font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text disabled:pointer-events-none disabled:opacity-40"
+            >
+              <Icon name="chevron" className="size-3.5 rotate-90" />
+              Prev
+            </button>
+            <span className="min-w-[72px] text-center font-mono text-xs font-semibold tabular-nums text-text-muted">
+              {safePage} / {totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-surface px-3 text-xs font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text disabled:pointer-events-none disabled:opacity-40"
+            >
+              Next
+              <Icon name="chevron" className="size-3.5 -rotate-90" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -342,8 +501,31 @@ export function Toast({ variant = "success", message, onDismiss }) {
   );
 }
 
+export function useDialogPresence(open, duration = 200) {
+  const [isPresent, setIsPresent] = React.useState(open);
+  const [isVisible, setIsVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    if (open) {
+      setIsPresent(true);
+      const frame = requestAnimationFrame(() => setIsVisible(true));
+      return () => cancelAnimationFrame(frame);
+    }
+
+    setIsVisible(false);
+    const timeout = window.setTimeout(() => setIsPresent(false), duration);
+    return () => window.clearTimeout(timeout);
+  }, [open, duration]);
+
+  return { isPresent, isVisible };
+}
+
 export function Dialog({ open, onClose, size = "md", title, icon, iconBg, children, footer }) {
-  if (!open) return null;
+  const { isPresent, isVisible } = useDialogPresence(open);
+  const snap = React.useRef({ children, title, icon, iconBg, footer });
+  if (open) snap.current = { children, title, icon, iconBg, footer };
+
+  if (!isPresent) return null;
 
   const sizes = {
     sm: "max-w-sm",
@@ -351,22 +533,31 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
     lg: "max-w-lg",
   };
 
+  const c = snap.current;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ease-standard motion-reduce:transition-opacity ${
+        isVisible ? "opacity-100" : "pointer-events-none opacity-0"
+      }`}
+      aria-hidden={!isVisible}
+    >
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`relative w-full ${sizes[size]} rounded-panel border border-border bg-surface p-6 shadow-panel ${
-          !footer && !icon ? "text-center" : ""
+        className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-panel border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
+          isVisible ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
+        } ${
+          !c.footer && !c.icon ? "text-center" : ""
         }`}
       >
-        {icon && (
-          <div className={`mb-4 mx-auto flex size-12 items-center justify-center rounded-full ${iconBg || "bg-accent-soft text-accent"}`}>
-            <Icon name={icon} className="size-6" />
+        {c.icon && (
+          <div className={`mb-4 mx-auto flex size-12 items-center justify-center rounded-full ${c.iconBg || "bg-accent-soft text-accent"}`}>
+            <Icon name={c.icon} className="size-6" />
           </div>
         )}
-        {title && (
+        {c.title && (
           <div className="mb-2 flex items-center justify-between">
-            <h4 className="text-lg font-semibold text-text">{title}</h4>
+            <h4 className="text-lg font-semibold text-text">{c.title}</h4>
             {onClose && (
               <button onClick={onClose} className="text-text-muted hover:text-text">
                 <Icon name="x" className="size-5" />
@@ -374,8 +565,8 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
             )}
           </div>
         )}
-        {children && <div className="text-sm text-text-muted">{children}</div>}
-        {footer && <div className="mt-6 flex justify-center gap-2">{footer}</div>}
+        {c.children && <div className="text-sm text-text-muted">{c.children}</div>}
+        {c.footer && <div className="mt-6 flex justify-end gap-2">{c.footer}</div>}
       </div>
     </div>
   );

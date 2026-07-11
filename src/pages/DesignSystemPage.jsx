@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "../components/primitives.jsx";
+import { Button, Icon } from "../components/primitives.jsx";
 import { routes, Logo } from "../shared.jsx";
 import TokenGrid from "../components/design/TokenGrid.jsx";
 import TypographyPanel from "../components/design/TypographyPanel.jsx";
@@ -18,6 +18,8 @@ import CartItemShowcase from "../components/design/CartItemShowcase.jsx";
 import DialogShowcase from "../components/design/DialogShowcase.jsx";
 import ModalFormShowcase from "../components/design/ModalFormShowcase.jsx";
 import KpiCardShowcase from "../components/design/KpiCardShowcase.jsx";
+import PillShowcase from "../components/design/PillShowcase.jsx";
+import DashboardPatternsShowcase from "../components/design/DashboardPatternsShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
@@ -28,10 +30,10 @@ export default function DesignSystemPage({ onNavigate }) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => onNavigate(routes.login)}
+              onClick={() => onNavigate(routes.products)}
               className="h-[42px] rounded-control px-4 text-sm font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
-              Login
+              Products
             </button>
             <Button type="button" onClick={() => onNavigate(routes.pos)} className="h-[42px]">
               Open POS
@@ -39,13 +41,14 @@ export default function DesignSystemPage({ onNavigate }) {
           </div>
         </div>
       </header>
-      <section id="design-system" className="mx-auto grid w-full max-w-[1480px] gap-6 px-4 py-10 sm:px-6">
-        <div className="grid gap-2">
+      <section id="design-system" className="mx-auto grid w-full max-w-[1480px] gap-6 px-4 py-10 sm:px-6 [&>*]:min-w-0">
+        <div className="grid min-w-0 gap-2">
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-accent">Design system</p>
-          <h2 className="text-3xl font-semibold text-text">Balanja POS tokens and components</h2>
+          <h2 className="text-3xl font-semibold text-text">Balanja retail POS tokens and components</h2>
           <p className="max-w-3xl text-base leading-7 text-text-muted">
-            The page above is built from the same primitives shown here: semantic tokens, dense controls,
-            rounded cards, quiet borders, dark purchase actions, and compact operational spacing.
+            Retail POS pages must be built from these primitives and composite patterns: semantic tokens,
+            dense controls, barcode-first product cards, quiet borders, dark checkout actions, and compact
+            operational spacing for UMKM cashier workflows.
           </p>
         </div>
         <TokenGrid />
@@ -54,22 +57,35 @@ export default function DesignSystemPage({ onNavigate }) {
           <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Button sizes</h3>
           <div className="grid gap-4 rounded-panel border border-border bg-surface p-4">
             <div className="flex flex-wrap items-end gap-3">
-              <Button size="sm">Small</Button>
-              <Button size="md">Medium</Button>
-              <Button size="lg">Large</Button>
+              <Button size="xs">text-xs</Button>
+              <Button size="sm">text-sm</Button>
+              <Button size="base">text-base</Button>
+              <Button size="lg">text-lg</Button>
+              <Button size="xl">text-xl</Button>
             </div>
             <div className="flex flex-wrap items-end gap-3">
-              <Button variant="primary" size="sm">Small</Button>
-              <Button variant="primary" size="md">Medium</Button>
-              <Button variant="primary" size="lg">Large</Button>
+              <Button variant="primary" size="xs">text-xs</Button>
+              <Button variant="primary" size="sm">text-sm</Button>
+              <Button variant="primary" size="base">text-base</Button>
+              <Button variant="primary" size="lg">text-lg</Button>
+              <Button variant="primary" size="xl">text-xl</Button>
             </div>
             <div className="flex flex-wrap items-end gap-3">
-              <Button variant="ghost" size="sm">Small</Button>
-              <Button variant="ghost" size="md">Medium</Button>
-              <Button variant="ghost" size="lg">Large</Button>
+              <Button variant="ghost" size="xs">text-xs</Button>
+              <Button variant="ghost" size="sm">text-sm</Button>
+              <Button variant="ghost" size="base">text-base</Button>
+              <Button variant="ghost" size="lg">text-lg</Button>
+              <Button variant="ghost" size="xl">text-xl</Button>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <Button variant="primary" size="base">
+                <Icon name="scan" className="size-4" />
+                Primary 3D button
+              </Button>
             </div>
           </div>
         </div>
+        <PillShowcase />
         <ComponentPrimitives />
         <POSPatterns />
         <MenuCardShowcase />
@@ -85,6 +101,7 @@ export default function DesignSystemPage({ onNavigate }) {
         <DataTableShowcase />
         <EmptyStateShowcase />
         <KpiCardShowcase />
+        <DashboardPatternsShowcase />
       </section>
     </main>
   );

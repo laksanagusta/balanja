@@ -276,7 +276,7 @@ function MenuSection({ onAddToCart }) {
       <div className="shrink-0 grid gap-5 border-b border-border px-6 py-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <h1 className="text-2xl font-semibold text-text">Menu</h1>
-          <div className="flex h-[42px] w-full max-w-[400px] items-center gap-3 rounded-control border border-border bg-surface px-4 shadow-inner-soft">
+          <div className="flex h-[42px] w-full max-w-[400px] items-center gap-3 rounded-card border border-border bg-surface px-4 shadow-inner-soft">
             <Icon name="search" className="size-5 text-text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"

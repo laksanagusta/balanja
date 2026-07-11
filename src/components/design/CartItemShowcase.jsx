@@ -1,60 +1,97 @@
 import React from "react";
 import { Badge, Button, Icon } from "../primitives.jsx";
 
+const cartFallbackImages = {
+  Sembako: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80",
+  Minuman: "https://images.unsplash.com/photo-1616118132534-381148898bb4?auto=format&fit=crop&w=600&q=80",
+  Snack: "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=600&q=80",
+  Perawatan: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=600&q=80",
+  "Rumah Tangga": "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=600&q=80",
+};
+
 const sampleCart = [
   {
-    name: "Chicken Teriyaki Bowl",
-    category: "Main Course",
-    price: 7.99,
+    name: "Mie Instan Goreng",
+    category: "Makanan Instan",
+    price: 3500,
     qty: 2,
-    image: "/images/chicken-teriyaki-bowl.png",
-    addons: ["Extra Chili (+$0.50)", "Add Egg (+$1.00)"],
+    barcode: "8997001230035",
+    image: "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=600&q=80",
   },
   {
-    name: "Hot Americano",
-    category: "Drinks",
-    price: 2.80,
-    qty: 2,
-    image: "/images/hot-americano.png",
-    addons: [],
-  },
-  {
-    name: "BBQ Chicken Wings",
-    category: "Appetizers",
-    price: 7.99,
+    name: "Gula Pasir 1kg",
+    category: "Sembako",
+    price: 16500,
     qty: 1,
-    image: "/images/bbq-chicken-wings.png",
-    addons: ["Extra Dip (+$0.50)"],
+    barcode: "8997001230028",
+    image: "https://images.unsplash.com/photo-1581441363689-1f3c3c414635?auto=format&fit=crop&w=600&q=80",
   },
   {
-    name: "Pad Thai Chicken",
-    category: "Noodles & Rice",
-    price: 4.20,
+    name: "Air Mineral 600ml",
+    category: "Minuman",
+    price: 4000,
     qty: 1,
-    image: "/images/pad-thai-chicken.png",
-    addons: ["Extra Chili (+$0.50)", "Peanuts (+$0.75)"],
+    barcode: "8997001230042",
+    image: "https://images.unsplash.com/photo-1616118132534-381148898bb4?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    name: "Deterjen Bubuk 800g",
+    category: "Rumah Tangga",
+    price: 18000,
+    qty: 1,
+    barcode: "8997001230066",
+    image: "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=600&q=80",
   },
 ];
 
-export function CartRow({ item, subtotal, onUpdateQty, onRemove }) {
+function formatIDR(value) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(value).replace(/\s+/g, "");
+}
+
+function CartImage({ item }) {
+  const fallback = cartFallbackImages[item.category] || cartFallbackImages.Sembako;
+  const [src, setSrc] = React.useState(item.image || fallback);
+
+  React.useEffect(() => {
+    setSrc(item.image || fallback);
+  }, [item.image, fallback]);
+
+  if (!src) {
+    return (
+      <span className="mt-0.5 grid size-14 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-text-muted">
+        <Icon name="barcode" className="size-6" />
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt=""
+      className="mt-0.5 size-14 shrink-0 rounded-lg object-cover"
+      onError={() => setSrc(src === fallback ? "" : fallback)}
+    />
+  );
+}
+
+export function CartRow({ item, subtotal, unitPrice, onUpdateQty, onRemove }) {
   return (
     <div className="flex items-start gap-4 px-4 py-4">
-      {item.image ? (
-        <img
-          src={item.image}
-          alt=""
-          className="mt-0.5 size-14 shrink-0 rounded-lg object-cover"
-        />
-      ) : (
-        <span className="mt-0.5 grid size-14 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-text-muted">
-          <Icon name="barcode" className="size-6" />
-        </span>
-      )}
+      <CartImage item={item} />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-text">{item.name}</p>
-            {item.category && <p className="text-xs text-text-muted">{item.category}</p>}
+            {item.category && <p className="truncate text-xs text-text-muted">{item.category}</p>}
+            {(unitPrice || item.barcode) && (
+              <p className="truncate font-mono text-[11px] text-text-subtle">
+                {unitPrice || item.barcode}
+              </p>
+            )}
           </div>
           {subtotal && (
             <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-text">
@@ -84,7 +121,11 @@ export function CartRow({ item, subtotal, onUpdateQty, onRemove }) {
                 >
                   <Icon name="minus" className="size-3.5" />
                 </button>
-                <span className="min-w-[2ch] text-center text-sm font-semibold text-text">{item.qty}</span>
+                <span className="grid min-w-[2ch] place-items-center overflow-hidden text-center text-sm font-semibold text-text">
+                  <span key={item.qty} className="number-ticker">
+                    {item.qty}
+                  </span>
+                </span>
                 <button
                   onClick={() => onUpdateQty(item.qty + 1)}
                   className="grid size-8 place-items-center text-text-muted transition hover:bg-surface-muted active:scale-90"
@@ -125,7 +166,7 @@ export default function CartItemShowcase() {
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Cart list item</h3>
       <div className="rounded-panel border border-border bg-surface">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <p className="text-sm font-semibold text-text">Order items</p>
+          <p className="text-sm font-semibold text-text">Cart items</p>
           <Badge tone="accent">{items.length} items</Badge>
         </div>
         <div className="divide-y divide-border">
@@ -133,7 +174,7 @@ export default function CartItemShowcase() {
             <CartRow
               key={item.name}
               item={item}
-              subtotal={`$ ${(item.qty * item.price).toFixed(2)}`}
+              subtotal={formatIDR(item.qty * item.price)}
               onUpdateQty={(q) => updateQty(item.name, q)}
               onRemove={() => removeItem(item.name)}
             />
@@ -143,7 +184,7 @@ export default function CartItemShowcase() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-text-muted">Subtotal</span>
             <span className="font-mono font-semibold tabular-nums text-text">
-              $ {items.reduce((s, i) => s + i.price * i.qty, 0).toFixed(2)}
+              {formatIDR(items.reduce((s, i) => s + i.price * i.qty, 0))}
             </span>
           </div>
         </div>
