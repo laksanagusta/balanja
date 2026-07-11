@@ -10,8 +10,9 @@ import (
 )
 
 type Dependencies struct {
-	Ready func(context.Context) error
-	Auth  fiber.Handler
+	Ready  func(context.Context) error
+	Auth   fiber.Handler
+	Routes func(fiber.Router)
 }
 
 func New(dependencies Dependencies) *fiber.App {
@@ -40,6 +41,9 @@ func New(dependencies Dependencies) *fiber.App {
 		api.Get("/identity", func(c fiber.Ctx) error {
 			return c.Status(http.StatusOK).JSON(fiber.Map{"data": fiber.Map{"authenticated": true}})
 		})
+		if dependencies.Routes != nil {
+			dependencies.Routes(api)
+		}
 	}
 
 	return app

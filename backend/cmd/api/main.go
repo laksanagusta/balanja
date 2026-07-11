@@ -12,6 +12,9 @@ import (
 	"balanja/backend/internal/config"
 	"balanja/backend/internal/platform/database"
 	"balanja/backend/internal/platform/httpserver"
+	"balanja/backend/internal/product"
+	"balanja/backend/internal/settings"
+	"github.com/gofiber/fiber/v3"
 )
 
 func main() {
@@ -40,7 +43,17 @@ func run() error {
 		return err
 	}
 
-	app := httpserver.New(httpserver.Dependencies{Ready: pool.Ping, Auth: auth.Middleware(verifier)})
+	runner := database.Runner{DB: pool}
+	productHandler := product.NewHandler(product.NewService(runner, product.PostgresRepository{}))
+	settingsHandler := settings.NewHandler(settings.NewService(runner, settings.PostgresRepository{}))
+	app := httpserver.New(httpserver.Dependencies{
+		Ready: pool.Ping,
+		Auth:  auth.Middleware(verifier),
+		Routes: func(router fiber.Router) {
+			productHandler.Register(router)
+			settingsHandler.Register(router)
+		},
+	})
 	listenErrors := make(chan error, 1)
 	go func() {
 		listenErrors <- app.Listen(":" + cfg.Port)

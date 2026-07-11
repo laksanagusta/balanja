@@ -30,6 +30,12 @@ type Beginner interface {
 	Begin(context.Context) (Tx, error)
 }
 
+type Runner struct{ DB Beginner }
+
+func (r Runner) Run(ctx context.Context, identity Identity, fn func(Tx) error) error {
+	return WithinTenant(ctx, r.DB, identity, fn)
+}
+
 func WithinTenant(ctx context.Context, db Beginner, identity Identity, fn func(Tx) error) error {
 	if identity.OrgID == "" {
 		return fmt.Errorf("organization ID is required")

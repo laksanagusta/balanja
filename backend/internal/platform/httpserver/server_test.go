@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gofiber/fiber/v3"
 )
 
 func TestHealth(t *testing.T) {
@@ -20,6 +22,25 @@ func TestHealth(t *testing.T) {
 
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("status = %d, want %d", response.StatusCode, http.StatusOK)
+	}
+}
+
+func TestProtectedRoutesAreRegistered(t *testing.T) {
+	t.Parallel()
+
+	app := New(Dependencies{
+		Auth: func(c fiber.Ctx) error { return c.Next() },
+		Routes: func(router fiber.Router) {
+			router.Get("/probe", func(c fiber.Ctx) error { return c.SendStatus(http.StatusNoContent) })
+		},
+	})
+	response, err := app.Test(httptest.NewRequest(http.MethodGet, "/api/v1/probe", nil))
+	if err != nil {
+		t.Fatalf("Test() error = %v", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusNoContent {
+		t.Fatalf("status = %d, want %d", response.StatusCode, http.StatusNoContent)
 	}
 }
 
