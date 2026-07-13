@@ -1,7 +1,8 @@
 import React from "react";
 
 export const routes = {
-  login: "/",
+  landing: "/",
+  login: "/login",
   dashboard: "/dashboard",
   pos: "/pos",
   products: "/products",
