@@ -20,6 +20,11 @@ type Product struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+type ListFilter struct {
+	Query string
+	Limit int
+}
+
 type CreateInput struct {
 	Name     string `json:"name"`
 	Barcode  string `json:"barcode"`

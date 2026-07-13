@@ -9,6 +9,8 @@ import (
 
 type PostgresRepository struct{}
 
+const listTransactionsQuery = `select id,number,cashier_user_id,cashier_name,items,subtotal,tax,total,payment_method,cash_received,change_due,status,created_at from transactions where org_id=$1 and ($2::timestamptz is null or (created_at,id)<($2,$3::uuid)) order by created_at desc,id desc limit $4`
+
 func (PostgresRepository) List(ctx context.Context, tx database.Tx, org string, cursor *Cursor, limit int) ([]Transaction, error) {
 	var at any
 	var id any
@@ -16,7 +18,7 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, org string, 
 		at = cursor.CreatedAt
 		id = cursor.ID
 	}
-	rows, err := tx.Query(ctx, `select id,number,cashier_user_id,cashier_name,items,subtotal,tax,total,payment_method,cash_received,change_due,status,created_at from transactions where org_id=$1 and ($2::timestamptz is null or (created_at,id)<($2,$3)) order by created_at desc,id desc limit $4`, org, at, id, limit)
+	rows, err := tx.Query(ctx, listTransactionsQuery, org, at, id, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list transactions: %w", err)
 	}

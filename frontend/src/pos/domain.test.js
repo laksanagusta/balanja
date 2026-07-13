@@ -5,6 +5,7 @@ import {
   addProductToCart,
   calculateCartTotals,
   formatIDR,
+  parseNumberInput,
   validateScannedProduct,
   validateProduct,
 } from "./domain.js";
@@ -75,6 +76,26 @@ test("validateProduct blocks a zero price", () => {
   assert.equal(result.errors.unit, "Unit is required");
 });
 
+test("validateProduct accepts thousand-separated numeric fields", () => {
+  const result = validateProduct(
+    {
+      id: "new-product",
+      name: "Beras Baru",
+      barcode: "8991001000999",
+      category: "Sembako",
+      price: "72.000",
+      stock: "1.250",
+      unit: "pack",
+      active: true,
+    },
+    products,
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(parseNumberInput("72.000"), 72000);
+  assert.equal(parseNumberInput("1.250"), 1250);
+});
+
 test("validateScannedProduct requires a sellable stock quantity and unit", () => {
   const result = validateScannedProduct(
     {
@@ -137,6 +158,20 @@ test("addProductToCart blocks out of stock products", () => {
   assert.equal(result.error, "Product is out of stock");
 });
 
+test("addProductToCart blocks quantities above available stock", () => {
+  const result = addProductToCart(
+    [{ productId: "prod-rice-5kg", name: "Beras Ramos 5kg", barcode: "8991001000011", price: 72000, qty: 3 }],
+    products,
+    "prod-rice-5kg",
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, "Cart quantity exceeds stock");
+  assert.deepEqual(result.cart, [
+    { productId: "prod-rice-5kg", name: "Beras Ramos 5kg", barcode: "8991001000011", price: 72000, qty: 3 },
+  ]);
+});
+
 test("calculateCartTotals applies tax when enabled", () => {
   const totals = calculateCartTotals(
     [{ productId: "prod-rice-5kg", price: 72000, qty: 2 }],
@@ -149,4 +184,3 @@ test("calculateCartTotals applies tax when enabled", () => {
     total: 159840,
   });
 });
-

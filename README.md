@@ -13,7 +13,8 @@ Frontend tidak lagi boleh mengakses database Supabase secara langsung. Semua ope
 - `backend/internal/`: auth, fitur domain, dan akses database.
 - `deploy/compose.yaml`: deployment VPS dengan API + web reverse proxy.
 - `deploy/Caddyfile`: routing `/api`, SPA fallback, dan TLS.
-- `.env.example`: template environment root untuk backend dan build frontend.
+- `backend/.env.example`: template environment backend.
+- `frontend/.env.example`: template environment frontend.
 
 ## Local development
 
@@ -21,6 +22,7 @@ Frontend:
 
 ```bash
 cd /Users/dikalaksana/Engineering/balanja/frontend
+cp .env.example .env
 bun run test
 bun run build
 ```
@@ -29,6 +31,7 @@ Backend:
 
 ```bash
 cd /Users/dikalaksana/Engineering/balanja/backend
+cp .env.example .env
 gofmt -w ./cmd ./internal
 go vet ./...
 go test ./... -race
@@ -37,11 +40,8 @@ go test ./... -race
 Menjalankan API secara lokal:
 
 ```bash
-cd /Users/dikalaksana/Engineering/balanja
-set -a
-source .env
-set +a
-go run ./backend/cmd/api
+cd /Users/dikalaksana/Engineering/balanja/backend
+go run ./cmd/api
 ```
 
 ## Database and auth

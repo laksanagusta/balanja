@@ -14,7 +14,7 @@ export default function POSPatterns() {
       <div>
         <h3 className="text-xl font-semibold text-text">POS composite patterns</h3>
         <p className="mt-1 text-sm text-text-muted">
-          Product card, barcode search, category tabs, and payment summary — built from the primitives above. App-shell panels keep a consistent 8px inset on every outer edge.
+          Product card, barcode search, category tabs, and payment summary — built from the primitives above. App-shell panels keep a consistent 8px inset and use borders without a wrapper shadow across their gap.
         </p>
       </div>
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr_1fr]">

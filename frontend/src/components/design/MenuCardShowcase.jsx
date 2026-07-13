@@ -59,7 +59,8 @@ export function ProductCard({
 
   const handleAdd = () => {
     if (outOfStock || (alreadyInCart && !allowRepeatAdd)) return;
-    onAdd?.();
+    const result = onAdd?.();
+    if (result && result.ok === false) return;
     setAddFeedback(false);
     window.requestAnimationFrame(() => setAddFeedback(true));
   };
@@ -73,8 +74,8 @@ export function ProductCard({
 
   return (
     <article
-      className={`menu-card-enter flex min-h-[304px] flex-col overflow-hidden rounded-card border border-border bg-surface shadow-low transition ${
-        outOfStock ? "opacity-55" : "hover:-translate-y-0.5 hover:shadow-panel"
+      className={`menu-card-enter flex min-h-[304px] flex-col overflow-hidden rounded-card border border-border bg-surface shadow-low transition-transform duration-base ease-standard ${
+        outOfStock ? "opacity-55" : "motion-safe:hover:-translate-y-0.5"
       }`}
     >
       <div className="p-2 pb-0">

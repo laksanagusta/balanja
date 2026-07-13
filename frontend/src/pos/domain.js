@@ -103,22 +103,32 @@ export function normalizeBarcode(value) {
   return String(value || "").trim();
 }
 
+export function parseNumberInput(value) {
+  if (typeof value === "number") return value;
+  const raw = String(value || "").trim();
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return Number.NaN;
+  return raw.startsWith("-") ? -Number(digits) : Number(digits);
+}
+
 export function validateProduct(product, products) {
   const errors = {};
   const barcode = normalizeBarcode(product.barcode);
   const duplicate = products.some(
     (item) => item.active && item.id !== product.id && normalizeBarcode(item.barcode) === barcode,
   );
+  const price = parseNumberInput(product.price);
+  const stock = parseNumberInput(product.stock);
 
   if (!String(product.name || "").trim()) errors.name = "Name is required";
   if (!barcode) errors.barcode = "Barcode is required";
   if (duplicate) errors.barcode = "Barcode already exists";
   if (!String(product.category || "").trim()) errors.category = "Category is required";
   if (!String(product.unit || "").trim()) errors.unit = "Unit is required";
-  if (Number(product.price) < 1 || Number.isNaN(Number(product.price))) {
+  if (price < 1 || Number.isNaN(price)) {
     errors.price = "Price must be at least 1";
   }
-  if (Number(product.stock) < 0 || Number.isNaN(Number(product.stock))) {
+  if (stock < 0 || Number.isNaN(stock)) {
     errors.stock = "Stock must be zero or greater";
   }
 
@@ -129,10 +139,13 @@ export function validateScannedProduct(product, products) {
   const result = validateProduct(product, products);
   const errors = { ...result.errors };
 
-  if (Number(product.price) < 1 || Number.isNaN(Number(product.price))) {
+  const price = parseNumberInput(product.price);
+  const stock = parseNumberInput(product.stock);
+
+  if (price < 1 || Number.isNaN(price)) {
     errors.price = "Price must be at least 1";
   }
-  if (Number(product.stock) < 1 || Number.isNaN(Number(product.stock))) {
+  if (stock < 1 || Number.isNaN(stock)) {
     errors.stock = "Stock must be at least 1 to add this product to cart";
   }
   if (!String(product.unit || "").trim()) errors.unit = "Unit is required";

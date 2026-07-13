@@ -16,6 +16,7 @@ import (
 	"balanja/backend/internal/platform/httpserver"
 	"balanja/backend/internal/product"
 	"balanja/backend/internal/settings"
+	"balanja/backend/internal/stock"
 	"balanja/backend/internal/transaction"
 	"github.com/gofiber/fiber/v3"
 )
@@ -28,6 +29,10 @@ func main() {
 }
 
 func run() error {
+	if err := config.LoadEnvFile(".env"); err != nil {
+		return err
+	}
+
 	cfg, err := config.Load(os.Getenv)
 	if err != nil {
 		return err
@@ -52,6 +57,7 @@ func run() error {
 	transactionHandler := transaction.NewHandler(transaction.NewService(runner, transaction.PostgresRepository{}))
 	dashboardHandler := dashboard.NewHandler(dashboard.NewService(runner, dashboard.PostgresRepository{}))
 	checkoutHandler := checkout.NewHandler(checkout.NewService(runner, checkout.PostgresRepository{}))
+	stockHandler := stock.NewHandler(stock.NewService(runner, stock.PostgresRepository{}))
 	app := httpserver.New(httpserver.Dependencies{
 		Ready:          pool.Ping,
 		Auth:           auth.Middleware(verifier),
@@ -62,6 +68,7 @@ func run() error {
 			transactionHandler.Register(router)
 			dashboardHandler.Register(router)
 			checkoutHandler.Register(router)
+			stockHandler.Register(router)
 		},
 	})
 	listenErrors := make(chan error, 1)

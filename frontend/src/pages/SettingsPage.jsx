@@ -1,43 +1,70 @@
 import React from "react";
 import { toast } from "sonner";
 import { Badge, Button, Icon, Input, Panel } from "../components/primitives.jsx";
+import { SettingsPageSkeleton } from "../components/page-loading.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 
 export default function SettingsPage() {
   const store = usePOSStore();
   const [draft, setDraft] = React.useState(store.settings);
+  const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.settings);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const isInitialLoad = isPageLoading;
+  const isUpdatingSettings = store.loading.settings && store.loaded.settings;
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    if (!store.loaded.settings) setIsPageLoading(true);
+    store.loadSettings({ force: true, signal: controller.signal }).finally(() => {
+      if (!controller.signal.aborted) setIsPageLoading(false);
+    });
+    return () => controller.abort();
+  }, [store.loadSettings]);
 
   React.useEffect(() => {
     setDraft(store.settings);
   }, [store.settings]);
 
-  const save = (event) => {
+  const save = async (event) => {
     event.preventDefault();
-    store.updateSettings({
-      ...draft,
-      taxRate: Number(draft.taxRate) || 0,
-      taxEnabled: Boolean(draft.taxEnabled),
-    });
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const saved = await store.updateSettings({
+        ...draft,
+        taxRate: Number(draft.taxRate) || 0,
+        taxEnabled: Boolean(draft.taxEnabled),
+      });
+      if (saved) toast.success("Settings saved");
+      else toast.error("Failed to save settings");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const resetDemoData = () => {
-    store.resetDemoData();
-    toast.success("Demo data reset");
-  };
+  if (isInitialLoad) {
+    return <SettingsPageSkeleton />;
+  }
 
   return (
-    <div className="min-h-full overflow-auto bg-app-bg">
-      <header className="border-b border-border p-4">
-        <h1 className="text-2xl font-semibold text-text">Settings</h1>
-        <p className="mt-1 text-sm text-text-muted">Store profile, tax, QRIS label, and local demo data.</p>
+    <div className="flex h-full min-h-0 flex-col bg-surface">
+      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto] lg:items-center">
+        <h1 className="text-base font-semibold text-text">Settings</h1>
+        <div className="hidden lg:block" />
+        {isUpdatingSettings && <UpdatingBadge />}
       </header>
 
-      <main className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <main className="grid min-h-0 flex-1 gap-4 overflow-auto p-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Panel className="p-4">
-          <form onSubmit={save} className="grid gap-4">
+          <form onSubmit={save} className={`grid gap-4 ${isUpdatingSettings ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}>
             <div className="border-b border-border pb-3">
-              <p className="text-sm font-semibold text-text">Store profile</p>
-              <p className="text-xs text-text-muted">Used on cashier screens and transaction context.</p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-text">Store profile</p>
+                  <p className="text-xs text-text-muted">Used on cashier screens and transaction context.</p>
+                </div>
+                {isUpdatingSettings && <UpdatingBadge />}
+              </div>
             </div>
 
             <Input
@@ -47,6 +74,7 @@ export default function SettingsPage() {
                 value: draft.storeName,
                 onChange: (event) => setDraft({ ...draft, storeName: event.target.value }),
                 required: true,
+                disabled: isSaving,
               }}
             />
             <Input
@@ -55,6 +83,7 @@ export default function SettingsPage() {
               inputProps={{
                 value: draft.storeAddress,
                 onChange: (event) => setDraft({ ...draft, storeAddress: event.target.value }),
+                disabled: isSaving,
               }}
             />
             <Input
@@ -63,6 +92,7 @@ export default function SettingsPage() {
               inputProps={{
                 value: draft.qrisLabel,
                 onChange: (event) => setDraft({ ...draft, qrisLabel: event.target.value }),
+                disabled: isSaving,
               }}
             />
 
@@ -73,6 +103,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={draft.taxEnabled}
                   onChange={(event) => setDraft({ ...draft, taxEnabled: event.target.checked })}
+                  disabled={isSaving}
                 />
               </label>
               <Input
@@ -82,14 +113,15 @@ export default function SettingsPage() {
                   value: draft.taxRate,
                   onChange: (event) => setDraft({ ...draft, taxRate: event.target.value }),
                   inputMode: "numeric",
+                  disabled: isSaving,
                 }}
               />
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" variant="primary">
+              <Button type="submit" variant="primary" disabled={isSaving}>
                 <Icon name="check" className="size-4" />
-                Save settings
+                {isSaving ? "Saving..." : "Save settings"}
               </Button>
             </div>
           </form>
@@ -119,17 +151,17 @@ export default function SettingsPage() {
             </div>
           </Panel>
 
-          <Panel className="grid gap-3 p-4">
-            <p className="text-sm font-semibold text-text">Demo data</p>
-            <p className="text-sm leading-6 text-text-muted">
-              Reset products, cart, transactions, and settings to the default retail UMKM sample.
-            </p>
-            <Button variant="danger" onClick={resetDemoData}>
-              Reset demo data
-            </Button>
-          </Panel>
         </aside>
       </main>
     </div>
+  );
+}
+
+function UpdatingBadge() {
+  return (
+    <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
+      <span className="size-1.5 animate-pulse rounded-full bg-accent" />
+      Updating
+    </span>
   );
 }

@@ -1,0 +1,2 @@
+-- Forward-fix migration only. The legacy checkout RPC and stock-protection
+-- trigger conflict with the current backend-owned checkout flow.

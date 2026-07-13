@@ -7,6 +7,7 @@ import DesignSystemPage from "./pages/DesignSystemPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
 import RetailPosPage from "./pages/RetailPosPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
+import StockPage from "./pages/StockPage.jsx";
 import TransactionsPage from "./pages/TransactionsPage.jsx";
 import { routes } from "./shared.jsx";
 
@@ -36,6 +37,7 @@ function usePathname() {
 function AppPage({ pathname, onNavigate }) {
   if (pathname === routes.dashboard) return <DashboardPage onNavigate={onNavigate} />;
   if (pathname === routes.products) return <ProductsPage />;
+  if (pathname === routes.stock) return <StockPage />;
   if (pathname === routes.transactions) return <TransactionsPage />;
   if (pathname === routes.settings) return <SettingsPage />;
   return <RetailPosPage />;

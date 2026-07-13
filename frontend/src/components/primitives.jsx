@@ -210,25 +210,29 @@ export function Input({ label, placeholder, rightSlot, error, className = "", in
   );
 }
 
-export function SelectField({ label, value, options = [], onChange, error, inline = false }) {
+export function SelectField({ label, value, options = [], onChange, error, inline = false, hideLabel = false, disabled = false }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [selected, setSelected] = React.useState(value);
   const menuOptions = options.length > 0 ? options : [value];
   const selectedValue = onChange ? value : selected;
+  const getOptionValue = (option) => (typeof option === "object" && option !== null ? option.value : option);
+  const getOptionLabel = (option) => (typeof option === "object" && option !== null ? option.label : option);
+  const selectedLabel = getOptionLabel(menuOptions.find((option) => getOptionValue(option) === selectedValue) ?? selectedValue);
 
   return (
     <div className="relative grid gap-2 text-sm font-semibold text-text">
-      <span>{label}</span>
+      <span className={hideLabel ? "sr-only" : ""}>{label}</span>
       <button
         type="button"
         aria-expanded={isOpen}
         aria-invalid={Boolean(error)}
+        disabled={disabled}
         onClick={() => setIsOpen((open) => !open)}
-        className={`flex h-[42px] items-center justify-between rounded-card border bg-surface px-4 text-left text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+        className={`flex h-9 items-center justify-between rounded-card border bg-surface px-3.5 text-left text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${
           error ? "border-danger" : isOpen ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
         }`}
       >
-        {selectedValue}
+        {selectedLabel}
         <Icon
           name="chevron"
           className={`size-4 transition duration-base ease-standard motion-reduce:transition-none ${
@@ -239,22 +243,26 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
       {inline ? (
         isOpen && (
           <div className="grid gap-1 rounded-card border border-border bg-surface-muted p-1">
-            {menuOptions.map((option) => (
+            {menuOptions.map((option) => {
+              const optionValue = getOptionValue(option);
+              const optionLabel = getOptionLabel(option);
+              return (
               <button
-                key={option}
+                key={optionValue}
                 type="button"
                 onClick={() => {
-                  if (onChange) onChange(option);
-                  else setSelected(option);
+                  if (onChange) onChange(optionValue);
+                  else setSelected(optionValue);
                   setIsOpen(false);
                 }}
                 className={`flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard hover:bg-surface ${
-                  selectedValue === option ? "bg-surface text-text shadow-low" : "text-text-muted"
+                  selectedValue === optionValue ? "bg-surface text-text shadow-low" : "text-text-muted"
                 }`}
               >
-                {option}
+                {optionLabel}
               </button>
-            ))}
+              );
+            })}
           </div>
         )
       ) : (
@@ -265,22 +273,26 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
               : "pointer-events-none -translate-y-1 scale-[0.98] opacity-0"
           }`}
         >
-          {menuOptions.map((option) => (
+          {menuOptions.map((option) => {
+            const optionValue = getOptionValue(option);
+            const optionLabel = getOptionLabel(option);
+            return (
             <button
-              key={option}
+              key={optionValue}
               type="button"
               onClick={() => {
-                if (onChange) onChange(option);
-                else setSelected(option);
+                if (onChange) onChange(optionValue);
+                else setSelected(optionValue);
                 setIsOpen(false);
               }}
               className={`flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard hover:bg-surface-muted ${
-                selectedValue === option ? "bg-surface-muted text-text" : "text-text-muted"
+                selectedValue === optionValue ? "bg-surface-muted text-text" : "text-text-muted"
               }`}
             >
-              {option}
+              {optionLabel}
             </button>
-          ))}
+            );
+          })}
         </div>
       )}
       {error && <span className="text-xs font-medium text-danger">{error}</span>}
@@ -379,23 +391,40 @@ export function DataTable({
               {columns.map((col) => (
                 <th
                   key={col.key}
+                  aria-sort={col.sortable && sortKey === col.key ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
                   className={`h-11 whitespace-nowrap px-3 text-xs font-semibold uppercase tracking-[0.08em] text-text-subtle ${
                     col.align === "right" ? "text-right" : "text-left"
-                  } ${
-                    col.sortable ? "cursor-pointer select-none hover:text-text" : ""
                   }`}
-                  onClick={() => col.sortable && onSort?.(col.key)}
                 >
-                  <span
-                    className={`inline-flex w-full items-center gap-1 ${
-                      col.align === "right" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    {col.label}
-                    {col.sortable && sortKey === col.key && (
-                      <span className="text-accent">{sortDir === "asc" ? "↑" : "↓"}</span>
-                    )}
-                  </span>
+                  {col.sortable ? (
+                    <button
+                      type="button"
+                      onClick={() => onSort?.(col.key)}
+                      className={`inline-flex h-8 w-full items-center gap-1.5 rounded-control px-1.5 font-semibold uppercase tracking-[0.08em] transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.98] ${
+                        sortKey === col.key ? "text-text" : "text-text-subtle"
+                      } ${col.align === "right" ? "justify-end" : "justify-start"}`}
+                    >
+                      <span>{col.label}</span>
+                      <Icon
+                        name="chevron"
+                        className={`size-3.5 shrink-0 transition-transform duration-base ease-standard motion-reduce:transition-none ${
+                          sortKey === col.key
+                            ? sortDir === "asc"
+                              ? "rotate-180 text-accent"
+                              : "rotate-0 text-accent"
+                            : "rotate-0 text-text-subtle opacity-45"
+                        }`}
+                      />
+                    </button>
+                  ) : (
+                    <span
+                      className={`inline-flex h-8 w-full items-center px-1.5 ${
+                        col.align === "right" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {col.label}
+                    </span>
+                  )}
                 </th>
               ))}
             </tr>
@@ -522,8 +551,44 @@ export function useDialogPresence(open, duration = 200) {
 
 export function Dialog({ open, onClose, size = "md", title, icon, iconBg, children, footer }) {
   const { isPresent, isVisible } = useDialogPresence(open);
+  const titleId = React.useId();
+  const dialogRef = React.useRef(null);
   const snap = React.useRef({ children, title, icon, iconBg, footer });
   if (open) snap.current = { children, title, icon, iconBg, footer };
+
+  React.useEffect(() => {
+    if (!isVisible) return undefined;
+    const previousFocus = document.activeElement;
+    dialogRef.current?.focus();
+    return () => previousFocus?.focus?.();
+  }, [isVisible]);
+
+  React.useEffect(() => {
+    if (!isVisible) return undefined;
+    function handleKeyDown(event) {
+      if (event.key === "Escape" && onClose) onClose();
+      if (event.key !== "Tab") return;
+      const focusable = dialogRef.current?.querySelectorAll(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) {
+        event.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isVisible, onClose]);
 
   if (!isPresent) return null;
 
@@ -544,6 +609,11 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
     >
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={c.title ? titleId : undefined}
+        tabIndex={-1}
         className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-panel border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
           isVisible ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
         } ${
@@ -557,9 +627,9 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
         )}
         {c.title && (
           <div className="mb-2 flex items-center justify-between">
-            <h4 className="text-lg font-semibold text-text">{c.title}</h4>
+            <h4 id={titleId} className="text-lg font-semibold text-text">{c.title}</h4>
             {onClose && (
-              <button onClick={onClose} className="text-text-muted hover:text-text">
+              <button type="button" onClick={onClose} className="text-text-muted hover:text-text">
                 <Icon name="x" className="size-5" />
               </button>
             )}
@@ -572,11 +642,13 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
   );
 }
 
-export function Switch({ checked = false }) {
+export function Switch({ checked = false, tone = "accent" }) {
+  const activeTone = tone === "success" ? "bg-success" : "bg-accent";
+
   return (
     <span
       className={`inline-flex h-5 w-9 items-center rounded-full border border-border p-0.5 transition ${
-        checked ? "bg-accent" : "bg-surface-muted"
+        checked ? activeTone : "bg-surface-muted"
       }`}
       role="switch"
       aria-checked={checked}

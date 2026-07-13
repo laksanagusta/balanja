@@ -21,8 +21,18 @@ func scanProduct(row pgx.Row) (Product, error) {
 
 const productColumns = `id,name,barcode,category,price,stock,unit,image,active,created_at,updated_at`
 
-func (PostgresRepository) List(ctx context.Context, tx database.Tx, orgID string) ([]Product, error) {
-	rows, err := tx.Query(ctx, `select `+productColumns+` from products where org_id=$1 order by created_at,id`, orgID)
+func (PostgresRepository) List(ctx context.Context, tx database.Tx, orgID string, filter ListFilter) ([]Product, error) {
+	limit := filter.Limit
+	if limit == 0 {
+		limit = 10000
+	}
+	rows, err := tx.Query(ctx, `
+		select `+productColumns+`
+		from products
+		where org_id=$1
+			and ($2='' or name ilike '%' || $2 || '%' or barcode ilike '%' || $2 || '%' or category ilike '%' || $2 || '%')
+		order by created_at,id
+		limit $3`, orgID, filter.Query, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list products: %w", err)
 	}

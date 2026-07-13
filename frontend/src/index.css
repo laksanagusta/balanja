@@ -85,10 +85,6 @@
     will-change: transform;
   }
 
-  .menu-grid-transition > * {
-    animation: menu-item-enter 260ms var(--ease-standard) both;
-  }
-
   .number-ticker {
     display: inline-block;
     min-width: 1ch;
@@ -104,8 +100,7 @@
   .product-add-button {
     transition:
       transform var(--duration-fast) var(--ease-standard),
-      background-color var(--duration-base) var(--ease-standard),
-      box-shadow var(--duration-base) var(--ease-standard);
+      background-color var(--duration-base) var(--ease-standard);
   }
 
   .product-add-button:active {
@@ -124,6 +119,20 @@
   .product-add-feedback {
     animation: product-add-feedback 520ms var(--ease-standard) both;
     will-change: transform, opacity;
+  }
+
+  .pos-skeleton-sheen {
+    background: linear-gradient(
+      100deg,
+      rgb(255 255 255 / 0) 0%,
+      rgb(255 255 255 / 0.22) 42%,
+      rgb(255 255 255 / 0.52) 50%,
+      rgb(255 255 255 / 0.22) 58%,
+      rgb(255 255 255 / 0) 100%
+    );
+    animation: pos-skeleton-sheen 1.5s linear infinite;
+    transform: translateX(-140%);
+    will-change: transform;
   }
 
   .scan-3d {
@@ -289,12 +298,32 @@
   }
 }
 
+@keyframes pos-skeleton-rise {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pos-skeleton-sheen {
+  0% {
+    transform: translateX(-140%);
+  }
+  100% {
+    transform: translateX(240%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .menu-grid-transition > *,
   .number-ticker,
   .button-label-pop,
   .product-add-ring,
-  .product-add-feedback {
+  .product-add-feedback,
+  .pos-skeleton-sheen {
     animation: none;
   }
 

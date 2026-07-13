@@ -26,6 +26,10 @@ export default function FormShowcase() {
             <span className="text-sm font-semibold text-text">Enabled switch</span>
             <Switch checked />
           </div>
+          <div className="flex items-center justify-between rounded-card border border-border p-4">
+            <span className="text-sm font-semibold text-text">Active product switch</span>
+            <Switch checked tone="success" />
+          </div>
         </div>
         <div className="rounded-card border border-border bg-surface-muted p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Tokens</p>

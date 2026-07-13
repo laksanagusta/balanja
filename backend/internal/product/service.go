@@ -19,7 +19,7 @@ type TenantRunner interface {
 	Run(context.Context, database.Identity, func(database.Tx) error) error
 }
 type Repository interface {
-	List(context.Context, database.Tx, string) ([]Product, error)
+	List(context.Context, database.Tx, string, ListFilter) ([]Product, error)
 	Create(context.Context, database.Tx, string, CreateInput) (Product, error)
 	Update(context.Context, database.Tx, string, uuid.UUID, UpdateInput) (Product, error)
 	Deactivate(context.Context, database.Tx, string, uuid.UUID) (Product, error)
@@ -33,10 +33,14 @@ func NewService(runner TenantRunner, repository Repository) *Service {
 	return &Service{runner: runner, repository: repository}
 }
 
-func (s *Service) List(ctx context.Context, identity database.Identity) (products []Product, err error) {
+func (s *Service) List(ctx context.Context, identity database.Identity, filter ListFilter) (products []Product, err error) {
+	filter.Query = strings.TrimSpace(filter.Query)
+	if filter.Limit < 0 || filter.Limit > 100 {
+		return nil, ErrInvalidProduct
+	}
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
 		var queryErr error
-		products, queryErr = s.repository.List(ctx, tx, identity.OrgID)
+		products, queryErr = s.repository.List(ctx, tx, identity.OrgID, filter)
 		return queryErr
 	})
 	return

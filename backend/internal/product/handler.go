@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"balanja/backend/internal/auth"
 	"balanja/backend/internal/platform/apperror"
@@ -56,7 +57,15 @@ func (h *Handler) list(c fiber.Ctx) error {
 	if err != nil {
 		return respond.Error(c, err)
 	}
-	items, err := h.service.List(c.Context(), id)
+	limit := 0
+	if rawLimit := c.Query("limit"); rawLimit != "" {
+		parsed, parseErr := strconv.Atoi(rawLimit)
+		if parseErr != nil {
+			return respond.Error(c, apperror.New(422, "INVALID_PRODUCT", "product filter is invalid"))
+		}
+		limit = parsed
+	}
+	items, err := h.service.List(c.Context(), id, ListFilter{Query: c.Query("q"), Limit: limit})
 	if err != nil {
 		return productError(c, err)
 	}

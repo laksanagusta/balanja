@@ -106,10 +106,20 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 	if err := tx.QueryRow(ctx, `insert into transactions (org_id,number,cashier_user_id,items,subtotal,tax,total,payment_method,cash_received,change_due) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id,created_at`, id.OrgID, number, id.UserID, rawItems, subtotal, tax, total, input.Payment.Method, cash, change).Scan(&result.Transaction.ID, &result.Transaction.CreatedAt); err != nil {
 		return Result{}, fmt.Errorf("insert transaction: %w", err)
 	}
+	referenceType := "checkout"
 	for _, requested := range input.Items {
+		product := products[requested.ProductID]
+		before := product.Stock
+		after := before - requested.Quantity
+		if after < 0 {
+			return Result{}, ErrInsufficientStock
+		}
 		var stock ProductStock
-		if err := tx.QueryRow(ctx, `update products set stock=stock-$3 where org_id=$1 and id=$2 returning id,stock,updated_at`, id.OrgID, requested.ProductID, requested.Quantity).Scan(&stock.ID, &stock.Stock, &stock.UpdatedAt); err != nil {
-			return Result{}, fmt.Errorf("decrement product stock: %w", err)
+		if err := tx.QueryRow(ctx, `update products set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,stock,updated_at`, id.OrgID, requested.ProductID, after).Scan(&stock.ID, &stock.Stock, &stock.UpdatedAt); err != nil {
+			return Result{}, fmt.Errorf("update product stock: %w", err)
+		}
+		if _, err := tx.Exec(ctx, `insert into stock_movements (org_id,product_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id) values ($1,$2,'sale',$3,$4,$5,$6,$7,$8,$9)`, id.OrgID, requested.ProductID, -requested.Quantity, before, after, "Completed sale "+number, referenceType, result.Transaction.ID, id.UserID); err != nil {
+			return Result{}, fmt.Errorf("insert sale stock movement: %w", err)
 		}
 		result.Products = append(result.Products, stock)
 	}

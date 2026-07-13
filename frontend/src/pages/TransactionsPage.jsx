@@ -1,6 +1,9 @@
 import React from "react";
 import { Badge, Button, DataTable, Dialog, Icon } from "../components/primitives.jsx";
 import { EmptyState } from "../components/design/EmptyStateShowcase.jsx";
+import { TransactionsPageSkeleton } from "../components/page-loading.jsx";
+import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
+import { getNextSortState, sortRows } from "../lib/sorting.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
 
@@ -11,34 +14,49 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+const transactionSortConfig = {
+  number: { type: "string" },
+  createdAt: { type: "date" },
+  paymentMethod: { type: "string" },
+  total: { type: "number" },
+};
+
 export default function TransactionsPage() {
   const store = usePOSStore();
   const [query, setQuery] = React.useState("");
   const [selected, setSelected] = React.useState(null);
   const [sortKey, setSortKey] = React.useState("createdAt");
   const [sortDir, setSortDir] = React.useState("desc");
+  const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.transactions);
+  const debouncedQuery = useDebouncedValue(query, 220);
+  const isInitialLoad = isPageLoading;
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    if (!store.loaded.transactions) setIsPageLoading(true);
+    store.loadTransactions({ force: true, signal: controller.signal }).finally(() => {
+      if (!controller.signal.aborted) setIsPageLoading(false);
+    });
+    return () => controller.abort();
+  }, [store.loadTransactions]);
+
+  if (isInitialLoad) {
+    return <TransactionsPageSkeleton />;
+  }
 
   const handleSort = (key) => {
-    if (sortKey === key) {
-      setSortDir((current) => (current === "asc" ? "desc" : "asc"));
-      return;
-    }
-    setSortKey(key);
-    setSortDir("asc");
+    const next = getNextSortState(sortKey, sortDir, key);
+    setSortKey(next.sortKey);
+    setSortDir(next.sortDir);
   };
 
-  const transactions = store.transactions
-    .filter((transaction) =>
-      `${transaction.number} ${transaction.cashierName} ${transaction.paymentMethod}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
-    )
-    .sort((a, b) => {
-      const dir = sortDir === "asc" ? 1 : -1;
-      if (a[sortKey] < b[sortKey]) return -1 * dir;
-      if (a[sortKey] > b[sortKey]) return 1 * dir;
-      return 0;
-    });
+  const isUpdatingTransactions = store.loading.transactions && store.loaded.transactions;
+  const filteredTransactions = store.transactions.filter((transaction) =>
+    `${transaction.number} ${transaction.cashierName} ${transaction.paymentMethod}`
+      .toLowerCase()
+      .includes(debouncedQuery.toLowerCase()),
+  );
+  const transactions = sortRows(filteredTransactions, sortKey, sortDir, transactionSortConfig);
 
   const columns = [
     { key: "number", label: "Transaction", sortable: true, render: (row) => <span className="font-semibold">{row.number}</span> },
@@ -46,7 +64,7 @@ export default function TransactionsPage() {
     { key: "items", label: "Items", render: (row) => row.items.reduce((sum, item) => sum + item.qty, 0) },
     { key: "paymentMethod", label: "Payment", sortable: true, render: (row) => row.paymentMethod.toUpperCase() },
     { key: "total", label: "Total", sortable: true, render: (row) => <span className="font-mono font-semibold tabular-nums">{formatPrice(row.total)}</span> },
-    { key: "status", label: "Status", sortable: true, render: (row) => <Badge tone="success">{row.status}</Badge> },
+    { key: "status", label: "Status", render: (row) => <Badge tone="success">{row.status}</Badge> },
     {
       key: "actions",
       label: "Actions",
@@ -80,8 +98,13 @@ export default function TransactionsPage() {
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <div className="grid gap-4 rounded-panel border border-border bg-surface p-0">
           <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-semibold text-text">Transaction history</p>
-            <p className="text-xs text-text-muted">Sortable rows with payment method, cashier, and sale total.</p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-text">Transaction history</p>
+                <p className="text-xs text-text-muted">Sortable rows with payment method, cashier, and sale total.</p>
+              </div>
+              {isUpdatingTransactions && <UpdatingBadge />}
+            </div>
           </div>
           {transactions.length ? (
             <DataTable
@@ -92,7 +115,7 @@ export default function TransactionsPage() {
               onSort={handleSort}
               paginated
               pageSize={8}
-              className="px-2 pb-2"
+              className={`px-2 pb-2 ${isUpdatingTransactions ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}
             />
           ) : (
             <EmptyState
@@ -162,5 +185,14 @@ export default function TransactionsPage() {
         )}
       </Dialog>
     </div>
+  );
+}
+
+function UpdatingBadge() {
+  return (
+    <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
+      <span className="size-1.5 animate-pulse rounded-full bg-accent" />
+      Updating
+    </span>
   );
 }

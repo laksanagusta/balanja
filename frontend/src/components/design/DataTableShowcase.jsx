@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge, DataTable } from "../primitives.jsx";
 import { transactionData, inventoryData } from "../../data.js";
+import { getNextSortState, sortRows } from "../../lib/sorting.js";
 
 function formatIDR(value) {
   return new Intl.NumberFormat("id-ID", {
@@ -13,21 +14,33 @@ function formatIDR(value) {
 export default function DataTableShowcase() {
   const [sortKey, setSortKey] = React.useState("time");
   const [sortDir, setSortDir] = React.useState("desc");
+  const [inventorySortKey, setInventorySortKey] = React.useState("stock");
+  const [inventorySortDir, setInventorySortDir] = React.useState("asc");
 
   const handleSort = (key) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
+    const next = getNextSortState(sortKey, sortDir, key);
+    setSortKey(next.sortKey);
+    setSortDir(next.sortDir);
   };
 
-  const sorted = [...transactionData].sort((a, b) => {
-    const dir = sortDir === "asc" ? 1 : -1;
-    if (a[sortKey] < b[sortKey]) return -1 * dir;
-    if (a[sortKey] > b[sortKey]) return 1 * dir;
-    return 0;
+  const handleInventorySort = (key) => {
+    const next = getNextSortState(inventorySortKey, inventorySortDir, key);
+    setInventorySortKey(next.sortKey);
+    setInventorySortDir(next.sortDir);
+  };
+
+  const sorted = sortRows(transactionData, sortKey, sortDir, {
+    id: { type: "string" },
+    time: { type: "string" },
+    items: { type: "number" },
+    total: { type: "number" },
+    payment: { type: "string" },
+  });
+  const sortedInventory = sortRows(inventoryData, inventorySortKey, inventorySortDir, {
+    name: { type: "string" },
+    category: { type: "string" },
+    stock: { type: "number" },
+    cost: { type: "number" },
   });
 
   const statusBadge = (status) => {
@@ -51,19 +64,19 @@ export default function DataTableShowcase() {
     {
       key: "status",
       label: "Status",
-      sortable: true,
       render: (row) => statusBadge(row.status),
     },
-    { key: "cashier", label: "Cashier", sortable: true },
+    { key: "cashier", label: "Cashier" },
   ];
 
   const inventoryCols = [
     { key: "sku", label: "SKU" },
-    { key: "name", label: "Item" },
-    { key: "category", label: "Category" },
+    { key: "name", label: "Item", sortable: true },
+    { key: "category", label: "Category", sortable: true },
     {
       key: "stock",
       label: "Stock",
+      sortable: true,
       render: (row) => {
         const low = row.stock <= row.min;
         return (
@@ -82,6 +95,7 @@ export default function DataTableShowcase() {
     {
       key: "cost",
       label: "Cost",
+      sortable: true,
       render: (row) => (
         <span className="font-mono tabular-nums text-text-muted">{formatIDR(row.cost)}</span>
       ),
@@ -112,7 +126,16 @@ export default function DataTableShowcase() {
           <p className="text-sm font-semibold text-text">Product stock levels</p>
           <p className="text-xs text-text-muted">Low stock items highlighted in red.</p>
         </div>
-        <DataTable columns={inventoryCols} data={inventoryData} paginated pageSize={6} className="px-2 pb-2" />
+        <DataTable
+          columns={inventoryCols}
+          data={sortedInventory}
+          sortKey={inventorySortKey}
+          sortDir={inventorySortDir}
+          onSort={handleInventorySort}
+          paginated
+          pageSize={6}
+          className="px-2 pb-2"
+        />
       </div>
     </div>
   );

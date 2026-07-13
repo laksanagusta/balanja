@@ -14,6 +14,7 @@ export function PaymentSummary({
   onPlaceOrder,
   placed,
   formatPrice,
+  disabled = false,
 }) {
   return (
     <div className="grid gap-4">
@@ -44,6 +45,7 @@ export function PaymentSummary({
           <Pill
             key={m.id}
             selected={paymentMethod === m.id}
+            disabled={disabled}
             onClick={() => onPaymentMethodChange(m.id)}
             className="gap-1.5"
           >

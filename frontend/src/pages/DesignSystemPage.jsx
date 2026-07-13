@@ -99,6 +99,19 @@ export default function DesignSystemPage({ onNavigate }) {
         <DialogShowcase />
         <ModalFormShowcase />
         <DataTableShowcase />
+        <section className="rounded-panel border border-border bg-surface p-4 shadow-low">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-success">Operational pattern</p>
+          <h3 className="mt-2 text-xl font-semibold text-text">Stock movement dialogs</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
+            Stock changes use the shared compact header and table page pattern plus a required reason dialog. Search, movement type,
+            and New movement stay in the page header. Movement forms use a debounced searchable product picker backed by the products
+            API with six results, then preview current stock, signed delta, and stock-after below the fields. Refetches preserve the
+            existing content with a compact updating indicator and softened opacity while keeping controls usable instead of replacing
+            settled content with a skeleton or disabling filters.
+            Page-level search fields keep typing immediate and debounce filtering or API work by roughly 220ms across POS, products,
+            transactions, and stock.
+          </p>
+        </section>
         <EmptyStateShowcase />
         <KpiCardShowcase />
         <DashboardPatternsShowcase />

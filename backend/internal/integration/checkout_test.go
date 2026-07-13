@@ -28,8 +28,18 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 		t.Fatalf("connect admin: %v", err)
 	}
 	defer admin.Close(ctx)
-	if _, err := admin.Exec(ctx, readMigration(t, "000001_init.up.sql")); err != nil {
-		t.Fatalf("apply migration: %v", err)
+	for _, migration := range []string{
+		"000001_init.up.sql",
+		"000002_transactions_cashier_columns.up.sql",
+		"000003_checkout_idempotency.up.sql",
+		"000004_tenant_counters.up.sql",
+		"000005_transactions_cashier_name_nullable.up.sql",
+		"000006_remove_obsolete_checkout_rpc.up.sql",
+		"000007_stock_movements.up.sql",
+	} {
+		if _, err := admin.Exec(ctx, readMigration(t, migration)); err != nil {
+			t.Fatalf("apply migration %s: %v", migration, err)
+		}
 	}
 
 	productID := uuid.New()
@@ -69,5 +79,12 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 	}
 	if success != 1 || insufficient != 1 {
 		t.Fatalf("success=%d insufficient=%d errors=%v", success, insufficient, errorsByRequest)
+	}
+	var saleMovements int
+	if err := admin.QueryRow(ctx, `select count(*) from stock_movements where org_id='org_checkout' and product_id=$1 and type='sale' and quantity_delta=-1 and stock_before=1 and stock_after=0`, productID).Scan(&saleMovements); err != nil {
+		t.Fatalf("count sale movements: %v", err)
+	}
+	if saleMovements != 1 {
+		t.Fatalf("sale movements = %d, want 1", saleMovements)
 	}
 }

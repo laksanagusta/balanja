@@ -61,29 +61,47 @@ DNS:
 
 ## 3. Prepare server files
 
-Salin repo ke VPS lalu buat `.env` dari template:
+Salin repo ke VPS lalu buat file env terpisah:
 
 ```bash
-cp .env.example .env
-chmod 600 .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+chmod 600 backend/.env frontend/.env
 ```
 
 Isi minimal:
 
+`backend/.env`:
+
 ```dotenv
-VITE_CLERK_PUBLISHABLE_KEY=pk_live_xxx
 DATABASE_URL=postgres://balanja_runtime:***@<supavisor-host>:5432/postgres?sslmode=require
 CLERK_ISSUER_URL=https://<your-clerk-issuer>
 CLERK_AUDIENCE=balanja
 ALLOWED_ORIGINS=https://pos.domainkamu.com
 DB_MAX_CONNS=10
 SHUTDOWN_TIMEOUT=10s
-SITE_ADDRESS=pos.domainkamu.com
 ```
 
-`VITE_API_BASE_URL` sengaja dikosongkan di Compose karena web dan API di-serve dari origin yang sama.
+`frontend/.env`:
+
+```dotenv
+VITE_CLERK_PUBLISHABLE_KEY=pk_live_xxx
+VITE_API_BASE_URL=
+```
+
+`SITE_ADDRESS=pos.domainkamu.com` tetap di-export saat menjalankan Compose atau disimpan di env shell/deployment system.
 
 ## 4. First deploy
+
+Sebelum `docker compose`, export value dari dua file env itu ke shell deploy:
+
+```bash
+set -a
+source backend/.env
+source frontend/.env
+export SITE_ADDRESS=pos.domainkamu.com
+set +a
+```
 
 Build image:
 

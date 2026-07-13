@@ -71,7 +71,7 @@ type fakeRepository struct {
 	err    error
 }
 
-func (f *fakeRepository) List(context.Context, database.Tx, string) ([]Product, error) {
+func (f *fakeRepository) List(context.Context, database.Tx, string, ListFilter) ([]Product, error) {
 	return nil, nil
 }
 func (f *fakeRepository) Create(_ context.Context, _ database.Tx, _ string, input CreateInput) (Product, error) {

@@ -51,9 +51,29 @@ export function createAPIClient({
     return envelope;
   }
 
+  function stockMovementQuery(filters = {}) {
+    const params = new URLSearchParams();
+    for (const key of ["q", "type", "productId", "dateFrom", "dateTo", "cursor", "limit"]) {
+      const value = filters[key];
+      if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+    }
+    const query = params.toString();
+    return query ? `?${query}` : "";
+  }
+
+  function productQuery(filters = {}) {
+    const params = new URLSearchParams();
+    for (const key of ["q", "limit"]) {
+      const value = filters[key];
+      if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+    }
+    const query = params.toString();
+    return query ? `?${query}` : "";
+  }
+
   return {
-    async listProducts(options = {}) {
-      return (await request("/api/v1/products", options)).data;
+    async listProducts({ q = "", limit = "", signal } = {}) {
+      return (await request(`/api/v1/products${productQuery({ q, limit })}`, { signal })).data;
     },
     async createProduct(product, options = {}) {
       return (await request("/api/v1/products", { ...options, method: "POST", body: product })).data;
@@ -78,6 +98,13 @@ export function createAPIClient({
     },
     async getDashboardSummary({ days = 7, signal } = {}) {
       return (await request(`/api/v1/dashboard/summary?days=${days}`, { signal })).data;
+    },
+    async listStockMovements(filters = {}, options = {}) {
+      const envelope = await request(`/api/v1/stock/movements${stockMovementQuery(filters)}`, options);
+      return { items: envelope.data, nextCursor: envelope.meta?.nextCursor || "" };
+    },
+    async createStockMovement(input, options = {}) {
+      return (await request("/api/v1/stock/movements", { ...options, method: "POST", body: input })).data;
     },
     async checkout({ cart, payment, idempotencyKey = randomUUID(), signal }) {
       return (await request("/api/v1/checkouts", {

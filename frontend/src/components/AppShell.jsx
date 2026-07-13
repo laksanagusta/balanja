@@ -29,7 +29,7 @@ function productDraft(barcode) {
 export default function AppShell({ children, pathname, onNavigate }) {
   const { user } = useUser();
   const { signOut } = useClerk();
-  const { notice, clearNotice, addScannedProductToCart, addToCart, products } = usePOSStore();
+  const { notice, clearNotice, addScannedProductToCart, addToCart, products, loadProducts } = usePOSStore();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [scannerOpen, setScannerOpen] = React.useState(false);
   const [missingBarcode, setMissingBarcode] = React.useState("");
@@ -78,10 +78,17 @@ export default function AppShell({ children, pathname, onNavigate }) {
     clearNotice();
   }, [notice, clearNotice]);
 
+  React.useEffect(() => {
+    if (!scannerOpen) return;
+    const controller = new AbortController();
+    loadProducts({ signal: controller.signal });
+    return () => controller.abort();
+  }, [loadProducts, scannerOpen]);
+
   return (
     <div className="h-svh overflow-hidden bg-app-bg p-2">
       <div className="flex h-full gap-2 overflow-hidden">
-        <aside className="hidden h-full w-[236px] shrink-0 flex-col rounded-card border border-border bg-surface shadow-panel md:flex">
+        <aside className="hidden h-full w-[236px] shrink-0 flex-col rounded-card border border-border bg-surface md:flex">
           <div className="flex h-14 items-center justify-between px-4">
             <button type="button" onClick={() => go(routes.pos)} className="text-left text-sm font-semibold lowercase text-text">
               balanja
@@ -162,7 +169,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
             </div>
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-border bg-surface shadow-panel">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-border bg-surface">
           <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4 md:hidden">
             <button
               type="button"

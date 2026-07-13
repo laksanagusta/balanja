@@ -1,0 +1,2 @@
+-- Forward-fix migration only. Keep this as a no-op to avoid restoring
+-- a constraint that the current application schema no longer expects.

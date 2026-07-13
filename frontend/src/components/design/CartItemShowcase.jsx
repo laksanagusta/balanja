@@ -78,7 +78,11 @@ function CartImage({ item }) {
   );
 }
 
-export function CartRow({ item, subtotal, unitPrice, onUpdateQty, onRemove }) {
+export function CartRow({ item, subtotal, unitPrice, maxQty, onUpdateQty, onRemove }) {
+  const stockLimit = Number(maxQty);
+  const hasStockLimit = Number.isFinite(stockLimit);
+  const plusDisabled = hasStockLimit && item.qty >= stockLimit;
+
   return (
     <div className="flex items-start gap-4 px-4 py-4">
       <CartImage item={item} />
@@ -116,6 +120,7 @@ export function CartRow({ item, subtotal, unitPrice, onUpdateQty, onRemove }) {
             {onUpdateQty && (
               <div className="flex h-8 items-center rounded-md border border-border bg-surface">
                 <button
+                  type="button"
                   onClick={() => onUpdateQty(Math.max(1, item.qty - 1))}
                   className="grid size-8 place-items-center text-text-muted transition hover:bg-surface-muted active:scale-90"
                 >
@@ -127,8 +132,11 @@ export function CartRow({ item, subtotal, unitPrice, onUpdateQty, onRemove }) {
                   </span>
                 </span>
                 <button
+                  type="button"
                   onClick={() => onUpdateQty(item.qty + 1)}
-                  className="grid size-8 place-items-center text-text-muted transition hover:bg-surface-muted active:scale-90"
+                  disabled={plusDisabled}
+                  title={plusDisabled ? "Stock limit reached" : undefined}
+                  className="grid size-8 place-items-center text-text-muted transition hover:bg-surface-muted active:scale-90 disabled:pointer-events-none disabled:opacity-35"
                 >
                   <Icon name="plus" className="size-3.5" />
                 </button>
@@ -136,6 +144,7 @@ export function CartRow({ item, subtotal, unitPrice, onUpdateQty, onRemove }) {
             )}
             {onRemove && (
               <button
+                type="button"
                 onClick={onRemove}
                 className="flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold text-text-muted transition hover:bg-surface hover:text-danger"
               >

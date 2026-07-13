@@ -1,8 +1,11 @@
 import React from "react";
 import { toast } from "sonner";
 import BarcodeScanner from "../components/BarcodeScanner.jsx";
-import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField } from "../components/primitives.jsx";
-import { retailCategories, validateProduct } from "../pos/domain.js";
+import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField, Switch } from "../components/primitives.jsx";
+import { ProductsPageSkeleton } from "../components/page-loading.jsx";
+import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
+import { getNextSortState, sortRows } from "../lib/sorting.js";
+import { parseNumberInput, retailCategories, validateProduct } from "../pos/domain.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
 import { EmptyState } from "../components/design/EmptyStateShowcase.jsx";
@@ -11,6 +14,25 @@ function emptyProduct() {
   return { id: "", name: "", barcode: "", category: "Sembako", price: "", stock: 0, unit: "pcs", active: true };
 }
 
+function formatNumberInput(value) {
+  const parsed = parseNumberInput(value);
+  if (!Number.isFinite(parsed)) return "";
+  return new Intl.NumberFormat("id-ID").format(parsed);
+}
+
+function normalizeNumberField(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  return digits ? formatNumberInput(digits) : "";
+}
+
+const productSortConfig = {
+  createdAt: { type: "date" },
+  name: { type: "string" },
+  category: { type: "string" },
+  price: { type: "number" },
+  stock: { type: "number" },
+};
+
 export default function ProductsPage() {
   const store = usePOSStore();
   const [query, setQuery] = React.useState("");
@@ -18,39 +40,62 @@ export default function ProductsPage() {
   const [productErrors, setProductErrors] = React.useState({});
   const [deactivating, setDeactivating] = React.useState(null);
   const [scannerOpen, setScannerOpen] = React.useState(false);
-  const [sortKey, setSortKey] = React.useState("name");
-  const [sortDir, setSortDir] = React.useState("asc");
+  const [sortKey, setSortKey] = React.useState("createdAt");
+  const [sortDir, setSortDir] = React.useState("desc");
+  const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.products);
+  const [savingProduct, setSavingProduct] = React.useState(false);
+  const [deactivatingProduct, setDeactivatingProduct] = React.useState(false);
+  const debouncedQuery = useDebouncedValue(query, 220);
+  const isInitialLoad = isPageLoading;
 
-  const products = store.products
-    .filter((product) => `${product.name} ${product.barcode} ${product.category}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => {
-      const dir = sortDir === "asc" ? 1 : -1;
-      if (a[sortKey] < b[sortKey]) return -1 * dir;
-      if (a[sortKey] > b[sortKey]) return 1 * dir;
-      return 0;
+  React.useEffect(() => {
+    const controller = new AbortController();
+    if (!store.loaded.products) setIsPageLoading(true);
+    store.loadProducts({ force: true, signal: controller.signal }).finally(() => {
+      if (!controller.signal.aborted) setIsPageLoading(false);
     });
+    return () => controller.abort();
+  }, [store.loadProducts]);
+
+  if (isInitialLoad) {
+    return <ProductsPageSkeleton />;
+  }
+
+  const isUpdatingProducts = store.loading.products && store.loaded.products;
+  const isProductsMutating = savingProduct || deactivatingProduct;
+  const filteredProducts = store.products.filter((product) =>
+    `${product.name} ${product.barcode} ${product.category}`.toLowerCase().includes(debouncedQuery.toLowerCase()),
+  );
+  const products = sortRows(filteredProducts, sortKey, sortDir, productSortConfig);
 
   const handleSort = (key) => {
-    if (sortKey === key) {
-      setSortDir((current) => (current === "asc" ? "desc" : "asc"));
-      return;
-    }
-    setSortKey(key);
-    setSortDir("asc");
+    const next = getNextSortState(sortKey, sortDir, key);
+    setSortKey(next.sortKey);
+    setSortDir(next.sortDir);
   };
 
-  const save = (event) => {
+  const save = async (event) => {
     event.preventDefault();
+    if (savingProduct) return;
     const validation = validateProduct(editing, store.products);
     setProductErrors(validation.errors);
     if (!validation.ok) return;
 
-    store.saveProduct(editing);
-    toast.success(editing.id ? "Product updated" : "Product added", {
-      description: editing.name,
-    });
-    setEditing(null);
-    setProductErrors({});
+    setSavingProduct(true);
+    try {
+      const saved = await store.saveProduct(editing);
+      if (!saved) {
+        toast.error("Failed to save product");
+        return;
+      }
+      toast.success(editing.id ? "Product updated" : "Product added", {
+        description: saved.name,
+      });
+      setEditing(null);
+      setProductErrors({});
+    } finally {
+      setSavingProduct(false);
+    }
   };
 
   const updateEditing = (field, value) => {
@@ -64,17 +109,27 @@ export default function ProductsPage() {
     }
   };
 
-  const deactivate = () => {
-    store.deactivateProduct(deactivating.id);
-    toast.success("Product deactivated", {
-      description: deactivating.name,
-    });
-    setDeactivating(null);
+  const deactivate = async () => {
+    if (!deactivating || deactivatingProduct) return;
+    setDeactivatingProduct(true);
+    try {
+      const result = await store.deactivateProduct(deactivating.id);
+      if (result.ok) {
+        toast.success("Product deactivated", {
+          description: deactivating.name,
+        });
+        setDeactivating(null);
+      } else {
+        toast.error(result.error || "Failed to deactivate product");
+      }
+    } finally {
+      setDeactivatingProduct(false);
+    }
   };
 
   const columns = [
     { key: "name", label: "Product", sortable: true, render: (product) => <span className="font-semibold">{product.name}</span> },
-    { key: "barcode", label: "Barcode", sortable: true, render: (product) => <span className="font-mono text-xs text-text-muted">{product.barcode}</span> },
+    { key: "barcode", label: "Barcode", render: (product) => <span className="font-mono text-xs text-text-muted">{product.barcode}</span> },
     { key: "category", label: "Category", sortable: true },
     { key: "price", label: "Price", sortable: true, render: (product) => <span className="font-mono font-semibold tabular-nums">{formatPrice(product.price)}</span> },
     {
@@ -83,22 +138,22 @@ export default function ProductsPage() {
       sortable: true,
       render: (product) => (
         <span className={`font-mono tabular-nums ${product.stock <= 5 ? "font-semibold text-warning" : "text-text"}`}>
-          {product.stock}
+          {formatNumberInput(product.stock)}
           <span className="text-text-subtle"> {product.unit}</span>
         </span>
       ),
     },
-    { key: "active", label: "Status", sortable: true, render: (product) => <Badge tone={product.active ? "success" : "danger"}>{product.active ? "Active" : "Inactive"}</Badge> },
+    { key: "active", label: "Status", render: (product) => <Badge tone={product.active ? "success" : "danger"}>{product.active ? "Active" : "Inactive"}</Badge> },
     {
       key: "actions",
       label: "Actions",
       align: "right",
       render: (product) => (
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" size="sm" onClick={() => setEditing(product)}>
+          <Button variant="secondary" size="sm" disabled={isProductsMutating} onClick={() => setEditing(product)}>
             Edit
           </Button>
-          <Button variant="danger" size="sm" onClick={() => setDeactivating(product)}>
+          <Button variant="danger" size="sm" disabled={isProductsMutating} onClick={() => setDeactivating(product)}>
             Deactivate
           </Button>
         </div>
@@ -121,7 +176,7 @@ export default function ProductsPage() {
             />
           </div>
         </div>
-        <Button variant="primary" className="whitespace-nowrap lg:justify-self-end" onClick={() => setEditing(emptyProduct())}>
+        <Button variant="secondary" className="whitespace-nowrap lg:justify-self-end" disabled={isProductsMutating} onClick={() => setEditing(emptyProduct())}>
           <Icon name="plus" className="size-4" />
           Add product
         </Button>
@@ -130,8 +185,13 @@ export default function ProductsPage() {
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <div className="grid rounded-panel border border-border bg-surface p-0">
           <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-semibold text-text">Product catalog</p>
-            <p className="text-xs text-text-muted">Sortable retail product rows with stock and barcode visibility.</p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-text">Product catalog</p>
+                <p className="text-xs text-text-muted">Sortable retail product rows with stock and barcode visibility.</p>
+              </div>
+              {isUpdatingProducts && <UpdatingBadge />}
+            </div>
           </div>
           {products.length ? (
             <DataTable
@@ -142,14 +202,14 @@ export default function ProductsPage() {
               onSort={handleSort}
               paginated
               pageSize={8}
-              className="px-2 pb-2"
+              className={`px-2 pb-2 ${isUpdatingProducts ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}
             />
           ) : (
             <EmptyState
               icon="search"
               title="No products found"
               description="Try a different name, barcode, or category."
-              action={<Button size="sm" variant="ghost" onClick={() => setQuery("")}>Clear search</Button>}
+              action={<Button size="sm" variant="ghost" disabled={isProductsMutating} onClick={() => setQuery("")}>Clear search</Button>}
               className="m-4 min-h-[240px]"
             />
           )}
@@ -159,6 +219,7 @@ export default function ProductsPage() {
       <Dialog
         open={Boolean(editing)}
         onClose={() => {
+          if (savingProduct) return;
           setEditing(null);
           setProductErrors({});
         }}
@@ -166,11 +227,11 @@ export default function ProductsPage() {
         size="lg"
         footer={
           <>
-            <Button type="button" onClick={() => { setEditing(null); setProductErrors({}); }}>
+            <Button type="button" disabled={savingProduct} onClick={() => { setEditing(null); setProductErrors({}); }}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" form="product-form">
-              Save product
+            <Button type="submit" variant="primary" form="product-form" disabled={savingProduct}>
+              {savingProduct ? "Saving..." : "Save product"}
             </Button>
           </>
         }
@@ -185,6 +246,7 @@ export default function ProductsPage() {
                 value: editing.name,
                 onChange: (event) => updateEditing("name", event.target.value),
                 required: true,
+                disabled: savingProduct,
               }}
             />
 
@@ -197,9 +259,10 @@ export default function ProductsPage() {
                   value: editing.barcode,
                   onChange: (event) => updateEditing("barcode", event.target.value),
                   required: true,
+                  disabled: savingProduct,
                 }}
               />
-              <Button type="button" variant="secondary" onClick={() => setScannerOpen(true)}>
+              <Button type="button" variant="secondary" disabled={savingProduct} onClick={() => setScannerOpen(true)}>
                 <Icon name="barcode" className="size-4" />
                 Scan
               </Button>
@@ -210,6 +273,7 @@ export default function ProductsPage() {
               value={editing.category}
               options={retailCategories.filter((item) => item !== "Semua")}
               onChange={(category) => updateEditing("category", category)}
+              disabled={savingProduct}
               error={productErrors.category}
             />
 
@@ -219,23 +283,30 @@ export default function ProductsPage() {
                 placeholder="72000"
                 error={productErrors.price}
                 inputProps={{
-                  value: editing.price,
-                  onChange: (event) => updateEditing("price", event.target.value),
+                  value: formatNumberInput(editing.price),
+                  onChange: (event) => updateEditing("price", normalizeNumberField(event.target.value)),
                   inputMode: "numeric",
                   required: true,
+                  disabled: savingProduct,
                 }}
               />
               <Input
                 label="Stock"
-                placeholder="18"
+                placeholder={editing.id ? "Managed by sales and stock adjustments" : "18"}
                 error={productErrors.stock}
                 inputProps={{
-                  value: editing.stock,
-                  onChange: (event) => updateEditing("stock", event.target.value),
+                  value: formatNumberInput(editing.stock),
+                  onChange: editing.id ? undefined : (event) => updateEditing("stock", normalizeNumberField(event.target.value)),
                   inputMode: "numeric",
                   required: true,
+                  disabled: Boolean(editing.id) || savingProduct,
                 }}
               />
+              {editing.id && (
+                <p className="sm:col-span-2 -mt-1 rounded-control bg-surface-muted px-3 py-2 text-xs font-medium leading-5 text-text-muted">
+                  Stock is updated by checkout activity. Direct stock edits are intentionally disabled on existing products.
+                </p>
+              )}
               <Input
                 label="Unit"
                 className="sm:col-span-2"
@@ -245,30 +316,36 @@ export default function ProductsPage() {
                   value: editing.unit,
                   onChange: (event) => updateEditing("unit", event.target.value),
                   required: true,
+                  disabled: savingProduct,
                 }}
               />
             </div>
 
-            <label className="flex items-center gap-3 text-sm font-semibold">
-              <input
-                type="checkbox"
-                checked={editing.active}
-                onChange={(event) => updateEditing("active", event.target.checked)}
-              />
-              Active
-            </label>
+            <button
+              type="button"
+              disabled={savingProduct}
+              onClick={() => updateEditing("active", !editing.active)}
+              className="flex h-10 items-center justify-between rounded-card border border-border bg-surface px-3.5 text-sm font-semibold text-text shadow-inner-soft transition hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+            >
+              <span>Active</span>
+              <Switch checked={editing.active} tone="success" />
+            </button>
           </form>
         )}
       </Dialog>
 
       <Dialog
         open={Boolean(deactivating)}
-        onClose={() => setDeactivating(null)}
+        onClose={() => {
+          if (!deactivatingProduct) setDeactivating(null);
+        }}
         title="Deactivate product?"
         footer={
           <>
-            <Button type="button" onClick={() => setDeactivating(null)}>Keep active</Button>
-            <Button type="button" variant="danger" onClick={deactivate}>Deactivate</Button>
+            <Button type="button" disabled={deactivatingProduct} onClick={() => setDeactivating(null)}>Keep active</Button>
+            <Button type="button" variant="danger" disabled={deactivatingProduct} onClick={deactivate}>
+              {deactivatingProduct ? "Deactivating..." : "Deactivate"}
+            </Button>
           </>
         }
       >
@@ -288,5 +365,14 @@ export default function ProductsPage() {
         }}
       />
     </div>
+  );
+}
+
+function UpdatingBadge() {
+  return (
+    <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
+      <span className="size-1.5 animate-pulse rounded-full bg-accent" />
+      Updating
+    </span>
   );
 }

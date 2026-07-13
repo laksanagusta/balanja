@@ -2,6 +2,7 @@ import React from "react";
 import DashboardKpiCard from "../components/dashboard/DashboardKpiCard.jsx";
 import { PaymentMixPanel, RevenueTrendPanel, TopProductsPanel } from "../components/dashboard/DashboardCharts.jsx";
 import LowStockPanel from "../components/dashboard/LowStockPanel.jsx";
+import { DashboardPageSkeleton } from "../components/page-loading.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
 
@@ -23,19 +24,40 @@ const emptyAnalytics = {
 };
 
 export default function DashboardPage() {
-  const { settings, getDashboardSummary, setNotice } = usePOSStore();
+  const store = usePOSStore();
+  const { settings, getDashboardSummary, setNotice } = store;
   const [days, setDays] = React.useState(7);
-  const [analytics, setAnalytics] = React.useState(emptyAnalytics);
+  const [analytics, setAnalytics] = React.useState(null);
+  const [isSummaryLoading, setIsSummaryLoading] = React.useState(true);
 
   React.useEffect(() => {
     const controller = new AbortController();
+    store.loadSettings({ force: true, signal: controller.signal });
+    return () => controller.abort();
+  }, [store.loadSettings]);
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    setIsSummaryLoading(true);
     getDashboardSummary({ days, signal: controller.signal })
       .then(setAnalytics)
       .catch((error) => {
         if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load dashboard");
+        setAnalytics(emptyAnalytics);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsSummaryLoading(false);
       });
     return () => controller.abort();
   }, [days, getDashboardSummary, setNotice]);
+
+  const visibleAnalytics = analytics ?? emptyAnalytics;
+  const shouldShowSkeleton = isSummaryLoading && !analytics;
+  const isUpdatingSummary = isSummaryLoading && Boolean(analytics);
+
+  if (shouldShowSkeleton) {
+    return <DashboardPageSkeleton />;
+  }
 
   return (
     <div className="h-full overflow-auto bg-app-bg">
@@ -44,49 +66,61 @@ export default function DashboardPage() {
           <h1 className="text-base font-semibold text-text">Dashboard</h1>
           <p className="mt-0.5 truncate text-xs text-text-muted">Operational overview for {settings.storeName}</p>
         </div>
-        <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1" aria-label="Dashboard period">
-          {periods.map((period) => (
-            <button
-              key={period}
-              type="button"
-              aria-pressed={days === period}
-              onClick={() => setDays(period)}
-              className={`h-8 rounded-md px-3 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
-                days === period ? "bg-surface text-text shadow-low" : "text-text-muted hover:text-text"
-              }`}
-            >
-              {period} days
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          {isUpdatingSummary && <UpdatingBadge />}
+          <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1" aria-label="Dashboard period">
+            {periods.map((period) => (
+              <button
+                key={period}
+                type="button"
+                aria-pressed={days === period}
+                onClick={() => setDays(period)}
+                className={`h-8 rounded-md px-3 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                  days === period ? "bg-surface text-text shadow-low" : "text-text-muted hover:text-text"
+                }`}
+              >
+                {period} days
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
-      <main className="grid gap-4 p-4">
+      <main className={`grid gap-4 p-4 ${isUpdatingSummary ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}>
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key performance indicators">
-          <DashboardKpiCard label="Revenue" value={formatPrice(analytics.revenue)} icon="cash" comparison={analytics.comparisons.revenue} tone="success" />
-          <DashboardKpiCard label="Completed transactions" value={analytics.transactionCount.toLocaleString("id-ID")} icon="receipt" comparison={analytics.comparisons.transactions} />
-          <DashboardKpiCard label="Average transaction" value={formatPrice(analytics.averageTransactionValue)} icon="ticket" comparison={analytics.comparisons.average} />
-          <DashboardKpiCard label="Low-stock products" value={analytics.lowStockCount.toLocaleString("id-ID")} icon="package" tone={analytics.lowStockCount ? "warning" : "success"} supportingText={analytics.lowStockCount ? "Needs restocking attention" : "Inventory levels look healthy"} />
+          <DashboardKpiCard label="Revenue" value={formatPrice(visibleAnalytics.revenue)} icon="cash" comparison={visibleAnalytics.comparisons.revenue} tone="success" />
+          <DashboardKpiCard label="Completed transactions" value={visibleAnalytics.transactionCount.toLocaleString("id-ID")} icon="receipt" comparison={visibleAnalytics.comparisons.transactions} />
+          <DashboardKpiCard label="Average transaction" value={formatPrice(visibleAnalytics.averageTransactionValue)} icon="ticket" comparison={visibleAnalytics.comparisons.average} />
+          <DashboardKpiCard label="Low-stock products" value={visibleAnalytics.lowStockCount.toLocaleString("id-ID")} icon="package" tone={visibleAnalytics.lowStockCount ? "warning" : "success"} supportingText={visibleAnalytics.lowStockCount ? "Needs restocking attention" : "Inventory levels look healthy"} />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-12">
           <div className="min-w-0 xl:col-span-8 grid grid-rows-1">
-            <RevenueTrendPanel data={analytics.revenueTrend} hasData={analytics.transactionCount > 0} days={days} />
+            <RevenueTrendPanel data={visibleAnalytics.revenueTrend} hasData={visibleAnalytics.transactionCount > 0} days={days} />
           </div>
           <div className="min-w-0 xl:col-span-4 grid grid-rows-1">
-            <PaymentMixPanel data={analytics.paymentMix} />
+            <PaymentMixPanel data={visibleAnalytics.paymentMix} />
           </div>
         </section>
 
         <section className="grid gap-4 xl:grid-cols-12">
           <div className="min-w-0 xl:col-span-7 grid grid-rows-1">
-            <TopProductsPanel data={analytics.topProducts} />
+            <TopProductsPanel data={visibleAnalytics.topProducts} />
           </div>
           <div className="min-w-0 xl:col-span-5 grid grid-rows-1">
-            <LowStockPanel products={analytics.lowStock} />
+            <LowStockPanel products={visibleAnalytics.lowStock} />
           </div>
         </section>
       </main>
     </div>
+  );
+}
+
+function UpdatingBadge() {
+  return (
+    <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
+      <span className="size-1.5 animate-pulse rounded-full bg-accent" />
+      Updating
+    </span>
   );
 }

@@ -26,10 +26,14 @@ function MissingClerkConfig() {
 }
 
 function Application() {
-  const { getToken, isSignedIn } = useAuth();
+  const { getToken, isSignedIn, orgId } = useAuth();
   const api = React.useMemo(
-    () => createAPIClient({ baseURL: import.meta.env.VITE_API_BASE_URL || "", getToken }),
-    [getToken],
+    () =>
+      createAPIClient({
+        baseURL: import.meta.env.VITE_API_BASE_URL || "",
+        getToken: () => getToken({ template: "balanja", organizationId: orgId || undefined }),
+      }),
+    [getToken, orgId],
   );
 
   return isSignedIn ? (

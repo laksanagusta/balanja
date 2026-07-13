@@ -10,7 +10,7 @@ Go Fiber API untuk Balanja. Backend ini menjadi satu-satunya jalur baca/tulis da
 
 ## Environment variables
 
-Semua value diambil dari root `.env`.
+Semua value dibaca dari `backend/.env` atau environment shell yang sudah di-export.
 
 | Variable | Required | Notes |
 | --- | --- | --- |
@@ -48,21 +48,57 @@ Semua route `/api/v1/*` butuh Clerk Bearer token yang valid dan memiliki `org_id
 Skema aktif ada di [000001_init.up.sql](/Users/dikalaksana/Engineering/balanja/backend/migrations/000001_init.up.sql). Sebelum API dipakai, jalankan migration sebagai owner database:
 
 ```bash
-cd /Users/dikalaksana/Engineering/balanja
-set -a
-source .env
-set +a
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f backend/migrations/000001_init.up.sql
+cd /Users/dikalaksana/Engineering/balanja/backend
+make migrate-up
 ```
 
 Untuk rollback development penuh:
 
 ```bash
-cd /Users/dikalaksana/Engineering/balanja
-set -a
-source .env
-set +a
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f backend/migrations/000001_init.down.sql
+cd /Users/dikalaksana/Engineering/balanja/backend
+make migrate-down
+```
+
+Untuk forward fix kolom transaksi yang sempat hilang di database lama:
+
+```bash
+cd /Users/dikalaksana/Engineering/balanja/backend
+make migrate-fix-0002
+```
+
+Untuk forward fix tabel idempotency checkout yang sempat hilang di database lama:
+
+```bash
+cd /Users/dikalaksana/Engineering/balanja/backend
+make migrate-fix-0003
+```
+
+Untuk forward fix tabel counter nomor transaksi yang sempat hilang di database lama:
+
+```bash
+cd /Users/dikalaksana/Engineering/balanja/backend
+make migrate-fix-0004
+```
+
+Untuk forward fix constraint `cashier_name` yang sempat `not null` di database lama:
+
+```bash
+cd /Users/dikalaksana/Engineering/balanja/backend
+make migrate-fix-0005
+```
+
+Untuk forward fix object checkout lama dari Supabase RPC/Edge Function path:
+
+```bash
+cd /Users/dikalaksana/Engineering/balanja/backend
+make migrate-fix-0006
+```
+
+Untuk forward fix tabel ledger stock movement:
+
+```bash
+cd /Users/dikalaksana/Engineering/balanja/backend
+make migrate-fix-0007
 ```
 
 ## Runtime role provisioning
@@ -82,10 +118,12 @@ Gunakan credential `balanja_runtime` untuk `DATABASE_URL` runtime. Jangan pakai 
 
 ```bash
 cd /Users/dikalaksana/Engineering/balanja/backend
-gofmt -w ./cmd ./internal
-go vet ./...
+cp .env.example .env
+make run
 go test ./... -race
 ```
+
+`make` akan memuat `backend/.env` otomatis kalau file itu ada, jadi Anda tidak perlu `source .env` manual untuk target-target di atas.
 
 Integration tests butuh environment tambahan:
 
