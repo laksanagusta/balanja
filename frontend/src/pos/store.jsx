@@ -1,7 +1,7 @@
 import React from "react";
 import { addProductToCart, addSavedProductToCart, validateProduct } from "./domain.js";
 import { loadCart, saveCart, clearCartStorage } from "./cart-storage.js";
-import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, loadStockMovements as fetchStockMovements, loadTransactions as fetchTransactions, toProductPayload } from "./store-data.js";
+import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, loadStockMovements as fetchStockMovements, loadTransactions as fetchTransactions, searchProducts as fetchProductSearch, toProductPayload } from "./store-data.js";
 
 const POSStoreContext = React.createContext(null);
 const defaultSettings = { storeName: "Toko Balanja", storeAddress: "", taxEnabled: false, taxRate: 11, qrisLabel: "QRIS Toko Balanja" };
@@ -60,7 +60,7 @@ export function POSStoreProvider({ children, api }) {
 
   const searchProducts = React.useCallback(async ({ q = "", limit = 6, signal } = {}) => {
     try {
-      return await fetchProducts(api, { q, limit, signal });
+      return await fetchProductSearch(api, { q, limit, signal });
     } catch (error) {
       if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to search products");
       return [];
@@ -263,7 +263,7 @@ export function POSStoreProvider({ children, api }) {
   const isLoading = loading.products || loading.transactions || loading.settings || loading.stockMovements;
 
   const value = React.useMemo(() => ({
-    products, activeProducts, cart, transactions, stockMovements, stockMovementCursor, settings, notice, isLoading, loading, loaded,
+    api, products, activeProducts, cart, transactions, stockMovements, stockMovementCursor, settings, notice, isLoading, loading, loaded,
     addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout,
     createStockMovement, updateSettings, getDashboardSummary: api.getDashboardSummary,
     loadProducts, loadTransactions, loadSettings, loadStockMovements, searchProducts,

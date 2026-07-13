@@ -1,8 +1,18 @@
 import { parseNumberInput } from "./domain.js";
 
 export async function loadProducts(api, options = {}) {
-  const page = await api.listProducts(options);
-  return page.items;
+  const products = [];
+  let cursor = "";
+  do {
+    const page = await api.listProducts({ ...options, limit: 100, cursor });
+    products.push(...page.items);
+    cursor = page.hasNextPage ? page.nextCursor : "";
+  } while (cursor);
+  return products;
+}
+
+export async function searchProducts(api, options = {}) {
+  return (await api.listProducts(options)).items;
 }
 
 export async function loadTransactions(api, options = {}) {

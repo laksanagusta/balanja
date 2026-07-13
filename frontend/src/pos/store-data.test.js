@@ -1,14 +1,44 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyCheckoutResult, loadProducts, loadSettings, loadStockMovementPage, loadStockMovements, loadTransactionPage, loadTransactions, toProductPayload } from "./store-data.js";
+import { readFile } from "node:fs/promises";
+import { applyCheckoutResult, loadProducts, loadSettings, loadStockMovementPage, loadStockMovements, loadTransactionPage, loadTransactions, searchProducts, toProductPayload } from "./store-data.js";
+
+test("catalog page loading does not replace the shared POS products", async () => {
+  const source = await readFile(new URL("../pages/ProductsPage.jsx", import.meta.url), "utf8");
+  assert.match(source, /useCursorTable/);
+  assert.match(source, /store\.api\.listProducts/);
+  assert.doesNotMatch(source, /store\.loadProducts\(\{ force: true/);
+});
 
 test("loads products without fetching unrelated POS resources", async () => {
   const calls = [];
-	const api = {
-		listProducts: async () => { calls.push("products"); return { items: [{ id: "p1" }], nextCursor: "", hasNextPage: false }; },
+  const api = {
+    listProducts: async (options) => {
+      calls.push(options);
+      if (!options.cursor) return { items: [{ id: "p1" }], nextCursor: "products-next", hasNextPage: true };
+      return { items: [{ id: "p2" }], nextCursor: "", hasNextPage: false };
+    },
   };
   const result = await loadProducts(api);
-  assert.deepEqual(calls, ["products"]);
+  assert.deepEqual(calls, [
+    { limit: 100, cursor: "" },
+    { limit: 100, cursor: "products-next" },
+  ]);
+  assert.deepEqual(result, [{ id: "p1" }, { id: "p2" }]);
+});
+
+test("product picker search unwraps only its requested page", async () => {
+  const calls = [];
+  const api = {
+    listProducts: async (options) => {
+      calls.push(options);
+      return { items: [{ id: "p1" }], nextCursor: "products-next", hasNextPage: true };
+    },
+  };
+
+  const result = await searchProducts(api, { q: "tea", limit: 6 });
+
+  assert.deepEqual(calls, [{ q: "tea", limit: 6 }]);
   assert.deepEqual(result, [{ id: "p1" }]);
 });
 

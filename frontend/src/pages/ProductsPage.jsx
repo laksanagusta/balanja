@@ -1,10 +1,11 @@
 import React from "react";
 import { toast } from "sonner";
 import BarcodeScanner from "../components/BarcodeScanner.jsx";
+import { TablePagination } from "../components/TablePagination.jsx";
 import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField, Switch } from "../components/primitives.jsx";
 import { ProductsPageSkeleton } from "../components/page-loading.jsx";
+import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
-import { getNextSortState, sortRows } from "../lib/sorting.js";
 import { parseNumberInput, retailCategories, validateProduct } from "../pos/domain.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
@@ -25,54 +26,40 @@ function normalizeNumberField(value) {
   return digits ? formatNumberInput(digits) : "";
 }
 
-const productSortConfig = {
-  createdAt: { type: "date" },
-  name: { type: "string" },
-  category: { type: "string" },
-  price: { type: "number" },
-  stock: { type: "number" },
-};
-
 export default function ProductsPage() {
   const store = usePOSStore();
+  const { loadProducts } = store;
   const [query, setQuery] = React.useState("");
+  const [category, setCategory] = React.useState("");
+  const [status, setStatus] = React.useState("");
   const [editing, setEditing] = React.useState(null);
   const [productErrors, setProductErrors] = React.useState({});
   const [deactivating, setDeactivating] = React.useState(null);
   const [scannerOpen, setScannerOpen] = React.useState(false);
-  const [sortKey, setSortKey] = React.useState("createdAt");
-  const [sortDir, setSortDir] = React.useState("desc");
-  const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.products);
   const [savingProduct, setSavingProduct] = React.useState(false);
   const [deactivatingProduct, setDeactivatingProduct] = React.useState(false);
   const debouncedQuery = useDebouncedValue(query, 220);
-  const isInitialLoad = isPageLoading;
+  const productFilters = React.useMemo(() => ({
+    q: debouncedQuery.trim(),
+    category,
+    active: status ? status === "active" : undefined,
+  }), [category, debouncedQuery, status]);
+  const fetchProductPage = React.useCallback(
+    (request) => store.api.listProducts(request),
+    [store.api],
+  );
+  const table = useCursorTable({
+    fetchPage: fetchProductPage,
+    filters: productFilters,
+    initialSortKey: "createdAt",
+    initialSortDir: "desc",
+  });
 
-  React.useEffect(() => {
-    const controller = new AbortController();
-    if (!store.loaded.products) setIsPageLoading(true);
-    store.loadProducts({ force: true, signal: controller.signal }).finally(() => {
-      if (!controller.signal.aborted) setIsPageLoading(false);
-    });
-    return () => controller.abort();
-  }, [store.loadProducts]);
-
-  if (isInitialLoad) {
+  if (table.isInitialLoading) {
     return <ProductsPageSkeleton />;
   }
 
-  const isUpdatingProducts = store.loading.products && store.loaded.products;
   const isProductsMutating = savingProduct || deactivatingProduct;
-  const filteredProducts = store.products.filter((product) =>
-    `${product.name} ${product.barcode} ${product.category}`.toLowerCase().includes(debouncedQuery.toLowerCase()),
-  );
-  const products = sortRows(filteredProducts, sortKey, sortDir, productSortConfig);
-
-  const handleSort = (key) => {
-    const next = getNextSortState(sortKey, sortDir, key);
-    setSortKey(next.sortKey);
-    setSortDir(next.sortDir);
-  };
 
   const save = async (event) => {
     event.preventDefault();
@@ -93,6 +80,7 @@ export default function ProductsPage() {
       });
       setEditing(null);
       setProductErrors({});
+      await Promise.all([table.refresh(), loadProducts({ force: true })]);
     } finally {
       setSavingProduct(false);
     }
@@ -119,6 +107,7 @@ export default function ProductsPage() {
           description: deactivating.name,
         });
         setDeactivating(null);
+        await Promise.all([table.refresh(), loadProducts({ force: true })]);
       } else {
         toast.error(result.error || "Failed to deactivate product");
       }
@@ -163,9 +152,9 @@ export default function ProductsPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
-      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto] lg:items-center">
+      <header className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
         <h1 className="text-base font-semibold text-text">Products</h1>
-        <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
+        <div className="flex min-w-[220px] flex-1 lg:ml-auto lg:max-w-[420px]">
           <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
@@ -176,7 +165,32 @@ export default function ProductsPage() {
             />
           </div>
         </div>
-        <Button variant="secondary" className="whitespace-nowrap lg:justify-self-end" disabled={isProductsMutating} onClick={() => setEditing(emptyProduct())}>
+        <div className="w-[160px]">
+          <SelectField
+            label="Category"
+            hideLabel
+            value={category}
+            options={[
+              { value: "", label: "All categories" },
+              ...retailCategories.filter((item) => item !== "Semua").map((item) => ({ value: item, label: item })),
+            ]}
+            onChange={setCategory}
+          />
+        </div>
+        <div className="w-[130px]">
+          <SelectField
+            label="Status"
+            hideLabel
+            value={status}
+            options={[
+              { value: "", label: "All statuses" },
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+            ]}
+            onChange={setStatus}
+          />
+        </div>
+        <Button variant="secondary" className="whitespace-nowrap" disabled={isProductsMutating} onClick={() => setEditing(emptyProduct())}>
           <Icon name="plus" className="size-4" />
           Add product
         </Button>
@@ -190,29 +204,48 @@ export default function ProductsPage() {
                 <p className="text-sm font-semibold text-text">Product catalog</p>
                 <p className="text-xs text-text-muted">Sortable retail product rows with stock and barcode visibility.</p>
               </div>
-              {isUpdatingProducts && <UpdatingBadge />}
+              {table.isUpdating && <UpdatingBadge />}
             </div>
           </div>
-          {products.length ? (
+          {table.rows.length ? (
             <DataTable
               columns={columns}
-              data={products}
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSort={handleSort}
-              paginated
-              pageSize={8}
-              className={`px-2 pb-2 ${isUpdatingProducts ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}
+              data={table.rows}
+              sortKey={table.sortKey}
+              sortDir={table.sortDir}
+              onSort={table.sortBy}
+              className={`px-2 ${table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}
             />
           ) : (
             <EmptyState
               icon="search"
-              title="No products found"
-              description="Try a different name, barcode, or category."
-              action={<Button size="sm" variant="ghost" disabled={isProductsMutating} onClick={() => setQuery("")}>Clear search</Button>}
+              title={table.error ? "Products could not be loaded" : "No products found"}
+              description={table.error ? table.error.message : "Try a different name, barcode, category, or status."}
+              action={table.error ? (
+                <Button size="sm" variant="secondary" onClick={table.retry}>Retry</Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isProductsMutating}
+                  onClick={() => { setQuery(""); setCategory(""); setStatus(""); }}
+                >
+                  Clear filters
+                </Button>
+              )}
               className="m-4 min-h-[240px]"
             />
           )}
+          <TablePagination
+            {...table.range}
+            pageSize={table.pageSize}
+            canPrevious={table.canPrevious}
+            canNext={table.canNext}
+            onPrevious={table.previous}
+            onNext={table.next}
+            onPageSizeChange={table.setPageSize}
+            loading={table.loading}
+          />
         </div>
       </div>
 
