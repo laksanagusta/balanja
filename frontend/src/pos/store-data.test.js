@@ -18,6 +18,13 @@ test("transactions use a page-local cursor query", async () => {
   assert.doesNotMatch(source, /sortRows/);
 });
 
+test("stock history uses server cursor sorting", async () => {
+  const source = await readFile(new URL("../pages/StockPage.jsx", import.meta.url), "utf8");
+  assert.match(source, /useCursorTable/);
+  assert.doesNotMatch(source, /sortRows/);
+  assert.doesNotMatch(source, /loadStockMovements/);
+});
+
 test("loads products without fetching unrelated POS resources", async () => {
   const calls = [];
   const api = {

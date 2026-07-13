@@ -1,10 +1,12 @@
 import React from "react";
 import { toast } from "sonner";
+import { TablePagination } from "../components/TablePagination.jsx";
 import { Badge, Button, DataTable, Dialog, Icon, Input, Panel, SelectField } from "../components/primitives.jsx";
 import { StockPageSkeleton } from "../components/page-loading.jsx";
+import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
-import { getNextSortState, sortRows } from "../lib/sorting.js";
 import { usePOSStore } from "../pos/store.jsx";
+import { loadStockMovementPage } from "../pos/store-data.js";
 import { calculateStockPreview, parseQuantityInput } from "../stock/movement-preview.js";
 
 const movementOptions = ["Restock", "Reduce", "Set exact stock"];
@@ -40,73 +42,36 @@ function normalizeQuantityField(value) {
   return digits ? formatQuantityInput(digits) : "";
 }
 
-const stockMovementSortConfig = {
-  createdAt: { type: "date" },
-  product: { accessor: (row) => row.productName, type: "string" },
-  type: { type: "string" },
-  quantityDelta: { type: "number" },
-  stockAfter: { type: "number" },
-};
-
 export default function StockPage() {
-  const {
-    activeProducts,
-    stockMovements,
-    loading,
-    loaded,
-    loadProducts,
-    loadStockMovements,
-    searchProducts,
-    createStockMovement,
-  } = usePOSStore();
+  const store = usePOSStore();
+  const { activeProducts, loading, loaded, loadProducts, searchProducts, createStockMovement } = store;
   const [query, setQuery] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState("All movements");
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [sortKey, setSortKey] = React.useState("createdAt");
-  const [sortDir, setSortDir] = React.useState("desc");
   const debouncedQuery = useDebouncedValue(query, 220);
-  const stockSearchController = React.useRef(null);
-  const hasMountedFilters = React.useRef(false);
+  const movementFilters = React.useMemo(() => ({
+    q: debouncedQuery.trim(),
+    type: movementFilterValue[typeFilter],
+  }), [debouncedQuery, typeFilter]);
+  const fetchMovementPage = React.useCallback(
+    (request) => loadStockMovementPage(store.api, request),
+    [store.api],
+  );
+  const table = useCursorTable({
+    fetchPage: fetchMovementPage,
+    filters: movementFilters,
+    initialSortKey: "createdAt",
+    initialSortDir: "desc",
+  });
 
   React.useEffect(() => {
-    const controller = new AbortController();
     loadProducts();
-    loadStockMovements({ force: true, signal: controller.signal });
-    return () => controller.abort();
-  }, [loadProducts, loadStockMovements]);
-
-  React.useEffect(() => () => stockSearchController.current?.abort(), []);
-
-  const fetchFilteredStockMovements = React.useCallback((nextQuery, nextTypeLabel) => {
-    stockSearchController.current?.abort();
-    const controller = new AbortController();
-    stockSearchController.current = controller;
-    loadStockMovements({
-      force: true,
-      q: nextQuery,
-      type: movementFilterValue[nextTypeLabel],
-      signal: controller.signal,
-    });
-  }, [loadStockMovements]);
-
-  React.useEffect(() => {
-    if (!hasMountedFilters.current) {
-      hasMountedFilters.current = true;
-      return;
-    }
-    fetchFilteredStockMovements(debouncedQuery, typeFilter);
-  }, [debouncedQuery, fetchFilteredStockMovements, typeFilter]);
-
-  const handleSort = (key) => {
-    const next = getNextSortState(sortKey, sortDir, key);
-    setSortKey(next.sortKey);
-    setSortDir(next.sortDir);
-  };
+  }, [loadProducts]);
 
   const columns = React.useMemo(() => [
     { key: "createdAt", label: "Date", sortable: true, render: (row) => formatDate(row.createdAt) },
     {
-      key: "product",
+      key: "productName",
       label: "Product",
       sortable: true,
       render: (row) => (
@@ -142,13 +107,7 @@ export default function StockPage() {
     { key: "createdByUserId", label: "User", render: (row) => <span className="text-xs text-text-muted">{row.createdByUserId}</span> },
     { key: "referenceType", label: "Reference", render: (row) => row.referenceType || "Manual" },
   ], []);
-  const sortedStockMovements = React.useMemo(
-    () => sortRows(stockMovements, sortKey, sortDir, stockMovementSortConfig),
-    [sortDir, sortKey, stockMovements],
-  );
-  const isUpdatingMovements = loading.stockMovements && loaded.stockMovements;
-
-  if (loading.products || (loading.stockMovements && !loaded.stockMovements)) return <StockPageSkeleton />;
+  if ((loading.products && !loaded.products) || table.isInitialLoading) return <StockPageSkeleton />;
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
@@ -188,7 +147,7 @@ export default function StockPage() {
                 <h2 className="text-base font-semibold text-text">Movement history</h2>
                 <p className="text-sm text-text-muted">Semua perubahan stock tercatat append-only.</p>
               </div>
-              {isUpdatingMovements && (
+              {table.isUpdating && (
                 <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
                   <span className="size-1.5 animate-pulse rounded-full bg-accent" />
                   Updating
@@ -196,24 +155,35 @@ export default function StockPage() {
               )}
             </div>
           </div>
-          {sortedStockMovements.length === 0 ? (
+          {table.rows.length === 0 ? (
             <div className="grid place-items-center gap-2 px-4 py-12 text-center">
-              <Icon name="package" className="size-9 text-text-subtle" />
-              <p className="font-semibold text-text">No stock movements yet</p>
-              <p className="max-w-md text-sm text-text-muted">Buat manual movement atau complete sale untuk mengisi history.</p>
+              <Icon name={table.error ? "help" : "package"} className="size-9 text-text-subtle" />
+              <p className="font-semibold text-text">{table.error ? "Stock movements could not be loaded" : "No stock movements yet"}</p>
+              <p className="max-w-md text-sm text-text-muted">
+                {table.error ? table.error.message : "Buat manual movement atau complete sale untuk mengisi history."}
+              </p>
+              {table.error && <Button size="sm" variant="secondary" onClick={table.retry}>Retry</Button>}
             </div>
           ) : (
             <DataTable
               columns={columns}
-              data={sortedStockMovements}
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSort={handleSort}
-              paginated
-              pageSize={20}
-              className={isUpdatingMovements ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}
+              data={table.rows}
+              sortKey={table.sortKey}
+              sortDir={table.sortDir}
+              onSort={table.sortBy}
+              className={table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}
             />
           )}
+          <TablePagination
+            {...table.range}
+            pageSize={table.pageSize}
+            canPrevious={table.canPrevious}
+            canNext={table.canNext}
+            onPrevious={table.previous}
+            onNext={table.next}
+            onPageSizeChange={table.setPageSize}
+            loading={table.loading}
+          />
         </Panel>
       </main>
 
@@ -225,6 +195,7 @@ export default function StockPage() {
           onSubmit={async (input) => {
             const result = await createStockMovement(input);
             if (result) {
+              await table.refresh();
               toast.success("Stock movement saved");
               setDialogOpen(false);
             }

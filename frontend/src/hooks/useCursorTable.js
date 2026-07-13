@@ -20,7 +20,7 @@ export function useCursorTable({
   const [sortKey, setSortKey] = React.useState(initialSortKey);
   const [sortDir, setSortDir] = React.useState(initialSortDir);
   const [pageSize, setPageSizeState] = React.useState(initialPageSize);
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
   const [hasSettled, setHasSettled] = React.useState(false);
   const [error, setError] = React.useState(null);
 
@@ -28,7 +28,7 @@ export function useCursorTable({
   const filtersRef = React.useRef(filters);
   const queryRef = React.useRef({ sortKey, sortDir, pageSize });
   const cursorStateRef = React.useRef(cursorState);
-  const loadingRef = React.useRef(false);
+  const loadingRef = React.useRef(true);
   const requestRef = React.useRef({ id: 0, controller: null });
 
   fetchPageRef.current = fetchPage;

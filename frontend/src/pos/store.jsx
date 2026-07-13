@@ -1,34 +1,26 @@
 import React from "react";
 import { addProductToCart, addSavedProductToCart, validateProduct } from "./domain.js";
 import { loadCart, saveCart, clearCartStorage } from "./cart-storage.js";
-import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, loadStockMovements as fetchStockMovements, searchProducts as fetchProductSearch, toProductPayload } from "./store-data.js";
+import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, searchProducts as fetchProductSearch, toProductPayload } from "./store-data.js";
 
 const POSStoreContext = React.createContext(null);
 const defaultSettings = { storeName: "Toko Balanja", storeAddress: "", taxEnabled: false, taxRate: 11, qrisLabel: "QRIS Toko Balanja" };
 
 export function POSStoreProvider({ children, api }) {
   const [products, setProducts] = React.useState([]);
-  const [stockMovements, setStockMovements] = React.useState([]);
-  const [stockMovementCursor, setStockMovementCursor] = React.useState("");
-  const [stockMovementFilters, setStockMovementFilters] = React.useState({});
   const [settings, setSettings] = React.useState(defaultSettings);
   const [cart, setCart] = React.useState(() => loadCart());
   const [notice, setNotice] = React.useState("");
-  const [loading, setLoading] = React.useState({ products: false, settings: false, stockMovements: false });
-  const [loaded, setLoaded] = React.useState({ products: false, settings: false, stockMovements: false });
-  const lastLoadedAt = React.useRef({ products: 0, settings: 0, stockMovements: 0 });
+  const [loading, setLoading] = React.useState({ products: false, settings: false });
+  const [loaded, setLoaded] = React.useState({ products: false, settings: false });
+  const lastLoadedAt = React.useRef({ products: 0, settings: 0 });
   const productsRef = React.useRef(products);
-  const stockMovementsRef = React.useRef(stockMovements);
-  const stockMovementFiltersRef = React.useRef(stockMovementFilters);
   const settingsRef = React.useRef(settings);
   const loadingRef = React.useRef(loading);
   const loadedRef = React.useRef(loaded);
-  const stockMovementRequestRef = React.useRef(0);
 
   React.useEffect(() => { saveCart(cart); }, [cart]);
   React.useEffect(() => { productsRef.current = products; }, [products]);
-  React.useEffect(() => { stockMovementsRef.current = stockMovements; }, [stockMovements]);
-  React.useEffect(() => { stockMovementFiltersRef.current = stockMovementFilters; }, [stockMovementFilters]);
   React.useEffect(() => { settingsRef.current = settings; }, [settings]);
   React.useEffect(() => { loadingRef.current = loading; }, [loading]);
   React.useEffect(() => { loadedRef.current = loaded; }, [loaded]);
@@ -86,44 +78,11 @@ export function POSStoreProvider({ children, api }) {
     }
   }, [api]);
 
-  const loadStockMovements = React.useCallback(async ({ force = false, signal, append = false, ...filters } = {}) => {
-    const cacheKey = JSON.stringify(filters);
-    const currentKey = JSON.stringify(stockMovementFiltersRef.current);
-    if (!force && !append && cacheKey === currentKey && (loadedRef.current.stockMovements || loadingRef.current.stockMovements)) return stockMovementsRef.current;
-    const requestId = stockMovementRequestRef.current + 1;
-    stockMovementRequestRef.current = requestId;
-    loadingRef.current = { ...loadingRef.current, stockMovements: true };
-    setLoading((current) => ({ ...current, stockMovements: true }));
-    try {
-      const result = await fetchStockMovements(api, { ...filters, signal });
-      if (requestId !== stockMovementRequestRef.current) return result;
-      const nextItems = append ? [...stockMovementsRef.current, ...result.items] : result.items;
-      stockMovementsRef.current = nextItems;
-      loadedRef.current = { ...loadedRef.current, stockMovements: true };
-      setStockMovements(nextItems);
-      setStockMovementCursor(result.nextCursor);
-      stockMovementFiltersRef.current = filters;
-      setStockMovementFilters(filters);
-      setLoaded((current) => ({ ...current, stockMovements: true }));
-      lastLoadedAt.current.stockMovements = Date.now();
-      setNotice("");
-      return result;
-    } catch (error) {
-      if (requestId === stockMovementRequestRef.current && error.code !== "REQUEST_TIMEOUT" && error.name !== "AbortError") setNotice(error.message || "Failed to load stock movements");
-      return null;
-    } finally {
-      if (requestId !== stockMovementRequestRef.current) return;
-      loadingRef.current = { ...loadingRef.current, stockMovements: false };
-      setLoading((current) => ({ ...current, stockMovements: false }));
-    }
-  }, [api]);
-
   const refreshLoadedResources = React.useCallback(() => {
     const now = Date.now();
     if (loadedRef.current.products && now - lastLoadedAt.current.products >= 30_000) loadProducts({ force: true });
     if (loadedRef.current.settings && now - lastLoadedAt.current.settings >= 30_000) loadSettings({ force: true });
-    if (loadedRef.current.stockMovements && now - lastLoadedAt.current.stockMovements >= 30_000) loadStockMovements({ force: true, ...stockMovementFiltersRef.current });
-  }, [loadProducts, loadSettings, loadStockMovements]);
+  }, [loadProducts, loadSettings]);
 
   React.useEffect(() => {
     const refetchStaleData = () => {
@@ -210,14 +169,13 @@ export function POSStoreProvider({ children, api }) {
       const result = await api.createStockMovement(input);
       setProducts((current) => applyProductStock(current, result.product));
       productsRef.current = applyProductStock(productsRef.current, result.product);
-      await loadStockMovements({ force: true, ...stockMovementFiltersRef.current });
       setNotice("Stock movement saved");
       return result;
     } catch (error) {
       setNotice(error.message || "Failed to save stock movement");
       return null;
     }
-  }, [api, loadStockMovements]);
+  }, [api]);
 
   const updateSettings = React.useCallback(async (input) => {
     try {
@@ -233,15 +191,15 @@ export function POSStoreProvider({ children, api }) {
   }, [api]);
 
   const activeProducts = React.useMemo(() => products.filter((item) => item.active), [products]);
-  const isLoading = loading.products || loading.settings || loading.stockMovements;
+  const isLoading = loading.products || loading.settings;
 
   const value = React.useMemo(() => ({
-    api, products, activeProducts, cart, stockMovements, stockMovementCursor, settings, notice, isLoading, loading, loaded,
+    api, products, activeProducts, cart, settings, notice, isLoading, loading, loaded,
     addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout,
     createStockMovement, updateSettings, getDashboardSummary: api.getDashboardSummary,
-    loadProducts, loadSettings, loadStockMovements, searchProducts,
+    loadProducts, loadSettings, searchProducts,
     setNotice, clearNotice: () => setNotice(""),
-  }), [products, activeProducts, cart, stockMovements, stockMovementCursor, settings, notice, isLoading, loading, loaded, addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout, createStockMovement, updateSettings, api, loadProducts, loadSettings, loadStockMovements, searchProducts]);
+  }), [products, activeProducts, cart, settings, notice, isLoading, loading, loaded, addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout, createStockMovement, updateSettings, api, loadProducts, loadSettings, searchProducts]);
 
   return <POSStoreContext.Provider value={value}>{children}</POSStoreContext.Provider>;
 }
