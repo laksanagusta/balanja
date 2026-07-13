@@ -98,6 +98,11 @@ export function Icon({ name, className = "size-5" }) {
         <path d="m16 16 4 4" />
       </>
     ),
+    filter: (
+      <>
+        <path d="M4 5h16l-6.5 7.2V19l-3 1.5v-8.3z" />
+      </>
+    ),
     eye: (
       <>
         <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
@@ -357,31 +362,7 @@ export function DataTable({
   sortDir,
   onSort,
   className = "",
-  paginated = false,
-  pageSize = 10,
-  pageSizeOptions = [10, 20, 50, 100],
 }) {
-  const [page, setPage] = React.useState(1);
-  const [limit, setLimit] = React.useState(pageSize);
-  const limitOptions = React.useMemo(
-    () => [...new Set([pageSize, ...pageSizeOptions])].sort((a, b) => a - b),
-    [pageSize, pageSizeOptions],
-  );
-  const totalPages = paginated ? Math.max(1, Math.ceil(data.length / limit)) : 1;
-  const safePage = Math.min(page, totalPages);
-  const start = (safePage - 1) * limit;
-  const visibleData = paginated ? data.slice(start, start + limit) : data;
-  const from = data.length === 0 ? 0 : start + 1;
-  const to = Math.min(start + visibleData.length, data.length);
-
-  React.useEffect(() => {
-    setPage(1);
-  }, [data.length, sortKey, sortDir, limit]);
-
-  React.useEffect(() => {
-    setLimit(pageSize);
-  }, [pageSize]);
-
   return (
     <div className={`w-full ${className}`}>
       <div className="w-full overflow-auto">
@@ -430,11 +411,11 @@ export function DataTable({
             </tr>
           </thead>
           <tbody>
-            {visibleData.map((row, i) => (
+            {data.map((row, i) => (
               <tr
-                key={row.id ?? start + i}
+                key={row.id ?? i}
                 className={`border-b border-border transition last:border-b-0 hover:bg-surface-muted/60 ${
-                  (start + i) % 2 === 1 ? "bg-surface-muted/30" : ""
+                  i % 2 === 1 ? "bg-surface-muted/30" : ""
                 }`}
               >
                 {columns.map((col) => (
@@ -450,53 +431,6 @@ export function DataTable({
           </tbody>
         </table>
       </div>
-      {paginated && (
-        <div className="flex flex-col gap-3 border-t border-border px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-text-muted">
-              Showing <span className="font-mono font-semibold tabular-nums text-text">{from}-{to}</span> of{" "}
-              <span className="font-mono font-semibold tabular-nums text-text">{data.length}</span>
-            </p>
-            <label className="flex h-9 items-center gap-2 rounded-md border border-border bg-surface px-2.5 text-xs font-semibold text-text-muted">
-              Rows
-              <select
-                value={limit}
-                onChange={(event) => setLimit(Number(event.target.value))}
-                className="bg-transparent font-mono text-xs font-semibold text-text outline-none"
-              >
-                {limitOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={safePage <= 1}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-surface px-3 text-xs font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text disabled:pointer-events-none disabled:opacity-40"
-            >
-              <Icon name="chevron" className="size-3.5 rotate-90" />
-              Prev
-            </button>
-            <span className="min-w-[72px] text-center font-mono text-xs font-semibold tabular-nums text-text-muted">
-              {safePage} / {totalPages}
-            </span>
-            <button
-              type="button"
-              disabled={safePage >= totalPages}
-              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-surface px-3 text-xs font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text disabled:pointer-events-none disabled:opacity-40"
-            >
-              Next
-              <Icon name="chevron" className="size-3.5 -rotate-90" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
