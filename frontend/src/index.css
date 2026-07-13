@@ -210,6 +210,23 @@
       0 4px 0 #0b0b0c,
       0 12px 20px rgb(29 29 31 / 0.2);
   }
+
+  .marketing-reveal {
+    animation: marketing-reveal 560ms var(--ease-standard) both;
+    animation-delay: var(--reveal-delay, 0ms);
+    will-change: transform, opacity;
+  }
+}
+
+@keyframes marketing-reveal {
+  0% {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes category-pop {
@@ -323,8 +340,13 @@
   .button-label-pop,
   .product-add-ring,
   .product-add-feedback,
-  .pos-skeleton-sheen {
+  .pos-skeleton-sheen,
+  .marketing-reveal {
     animation: none;
+  }
+
+  html:focus-within {
+    scroll-behavior: auto;
   }
 
   .category-tabs-indicator {

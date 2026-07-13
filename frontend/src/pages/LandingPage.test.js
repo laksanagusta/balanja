@@ -43,3 +43,10 @@ test("hero uses the faithful POS mockup over the generated retail image", async 
   assert.match(mockup, /Total Payment/);
   assert.match(mockup, /Complete sale/);
 });
+
+test("marketing motion has an explicit reduced-motion fallback", async () => {
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+
+  assert.match(css, /\.marketing-reveal/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
