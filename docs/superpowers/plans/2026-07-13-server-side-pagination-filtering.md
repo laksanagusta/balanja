@@ -301,7 +301,7 @@ func (r *capturingRepository) List(_ context.Context, _ database.Tx, _ string, f
 func boolPtr(value bool) *bool { return &value }
 ```
 
-Run: `cd backend && go test ./internal/product -run 'TestPostgresRepositoryList' -v`
+Run: `cd backend && go test ./internal/product -run 'TestResolveProductOrder|TestServiceListUsesLastVisibleDuplicateAsNextCursor' -v`
 
 Expected: FAIL against the old fixed `created_at,id` query.
 
@@ -310,14 +310,21 @@ Expected: FAIL against the old fixed `created_at,id` query.
 Use a switch, never raw request values:
 
 ```go
-func productOrder(sort string) (column string, value func(Product) any) {
+type listOrder struct { Column, Operator, Direction string }
+
+func resolveProductOrder(sort, direction string) (listOrder, error) {
+	operator := ">"
+	if direction == "desc" { operator = "<" }
+	var column string
 	switch sort {
-	case "name": return "p.name", func(p Product) any { return p.Name }
-	case "category": return "p.category", func(p Product) any { return p.Category }
-	case "price": return "p.price", func(p Product) any { return p.Price }
-	case "stock": return "p.stock", func(p Product) any { return p.Stock }
-	default: return "p.created_at", func(p Product) any { return p.CreatedAt }
+	case "name": column = "p.name"
+	case "category": column = "p.category"
+	case "price": column = "p.price"
+	case "stock": column = "p.stock"
+	case "createdAt": column = "p.created_at"
+	default: return listOrder{}, ErrInvalidProduct
 	}
+	return listOrder{Column: column, Operator: operator, Direction: direction}, nil
 }
 ```
 
@@ -432,7 +439,7 @@ func TestResolveTransactionOrder(t *testing.T) {
 
 Add a service test whose fake repository captures `ListFilter` and returns three rows with the same `Total` for limit 2. Decode `NextCursor` and assert its ID is the second returned row, not the extra detection row. Add a handler test that sends `q`, `paymentMethod`, `dateFrom`, and `dateTo` and asserts the captured normalized filter contains all four values.
 
-Run: `cd backend && go test ./internal/transaction -run 'TestPostgresRepositoryList' -v`
+Run: `cd backend && go test ./internal/transaction -run 'TestResolveTransactionOrder|TestServiceListUsesLastVisibleDuplicateAsNextCursor|TestHandlerListFilters' -v`
 
 Expected: FAIL against the current created-at-only query.
 
@@ -526,7 +533,7 @@ func TestResolveStockOrder(t *testing.T) {
 
 Add a service test whose fake repository returns three movements with duplicate `ProductName` for limit 2. Decode the next cursor and assert it contains the second movement's normalized product name and ID.
 
-Run: `cd backend && go test ./internal/stock -run 'TestPostgresRepositoryList' -v`
+Run: `cd backend && go test ./internal/stock -run 'TestResolveStockOrder|TestServiceListUsesLastVisibleDuplicateAsNextCursor' -v`
 
 Expected: FAIL against the current fixed `sm.created_at desc, sm.id desc` query.
 
@@ -635,7 +642,7 @@ test("listProducts preserves cursor metadata and serializes catalog filters", as
   const requests = [];
   const api = createAPIClient({ getToken: async () => "token", fetchImpl: async (url) => {
     requests.push(url);
-    return jsonResponse({ data: [{ id: "p1" }], meta: { nextCursor: "next", hasNextPage: true } });
+    return new Response(JSON.stringify({ data: [{ id: "p1" }], meta: { nextCursor: "next", hasNextPage: true } }), { status: 200 });
   }});
   const page = await api.listProducts({ q: "tea", category: "Drinks", active: true, limit: 20, sort: "name", dir: "asc", cursor: "current" });
   assert.match(requests[0], /q=tea/);
