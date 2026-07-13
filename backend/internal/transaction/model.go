@@ -2,8 +2,9 @@ package transaction
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Transaction struct {
@@ -21,11 +22,21 @@ type Transaction struct {
 	Status        string          `json:"status"`
 	CreatedAt     time.Time       `json:"createdAt"`
 }
-type Cursor struct {
-	CreatedAt time.Time `json:"createdAt"`
-	ID        uuid.UUID `json:"id"`
+type ListFilter struct {
+	Query         string
+	PaymentMethod string
+	DateFrom      *time.Time
+	DateTo        *time.Time
+	Limit         int
+	Sort          string
+	Direction     string
+	Cursor        string
+	CursorValue   any
+	CursorID      uuid.UUID
 }
+
 type Page struct {
-	Items      []Transaction `json:"items"`
-	NextCursor string        `json:"nextCursor,omitempty"`
+	Items       []Transaction `json:"items"`
+	NextCursor  string        `json:"nextCursor,omitempty"`
+	HasNextPage bool          `json:"hasNextPage"`
 }
