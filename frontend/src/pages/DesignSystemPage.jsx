@@ -105,11 +105,10 @@ export default function DesignSystemPage({ onNavigate }) {
           <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
             Stock changes use the shared compact header and table page pattern plus a required reason dialog. Search, movement type,
             and New movement stay in the page header. Movement forms use a debounced searchable product picker backed by the products
-            API with six results, then preview current stock, signed delta, and stock-after below the fields. Refetches preserve the
-            existing content with a compact updating indicator and softened opacity while keeping controls usable instead of replacing
-            settled content with a skeleton or disabling filters.
-            Page-level search fields keep typing immediate and debounce filtering or API work by roughly 220ms across POS, products,
-            transactions, and stock.
+            API with six results, then preview current stock, signed delta, and stock-after below the fields. Operational tables use
+            server cursor pages with Previous and Next, page sizes 20, 50, and 100, and no unverified total. Refetches preserve the
+            existing rows with a compact updating indicator and softened opacity. Page-level search fields keep typing immediate and
+            debounce API work by roughly 220ms across POS, products, transactions, and stock.
           </p>
         </section>
         <EmptyStateShowcase />
