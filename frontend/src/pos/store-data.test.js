@@ -10,6 +10,14 @@ test("catalog page loading does not replace the shared POS products", async () =
   assert.doesNotMatch(source, /store\.loadProducts\(\{ force: true/);
 });
 
+test("transactions use a page-local cursor query", async () => {
+  const source = await readFile(new URL("../pages/TransactionsPage.jsx", import.meta.url), "utf8");
+  assert.match(source, /useCursorTable/);
+  assert.match(source, /TableFilterPopover/);
+  assert.doesNotMatch(source, /store\.transactions\.filter/);
+  assert.doesNotMatch(source, /sortRows/);
+});
+
 test("loads products without fetching unrelated POS resources", async () => {
   const calls = [];
   const api = {

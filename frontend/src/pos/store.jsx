@@ -1,25 +1,23 @@
 import React from "react";
 import { addProductToCart, addSavedProductToCart, validateProduct } from "./domain.js";
 import { loadCart, saveCart, clearCartStorage } from "./cart-storage.js";
-import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, loadStockMovements as fetchStockMovements, loadTransactions as fetchTransactions, searchProducts as fetchProductSearch, toProductPayload } from "./store-data.js";
+import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, loadStockMovements as fetchStockMovements, searchProducts as fetchProductSearch, toProductPayload } from "./store-data.js";
 
 const POSStoreContext = React.createContext(null);
 const defaultSettings = { storeName: "Toko Balanja", storeAddress: "", taxEnabled: false, taxRate: 11, qrisLabel: "QRIS Toko Balanja" };
 
 export function POSStoreProvider({ children, api }) {
   const [products, setProducts] = React.useState([]);
-  const [transactions, setTransactions] = React.useState([]);
   const [stockMovements, setStockMovements] = React.useState([]);
   const [stockMovementCursor, setStockMovementCursor] = React.useState("");
   const [stockMovementFilters, setStockMovementFilters] = React.useState({});
   const [settings, setSettings] = React.useState(defaultSettings);
   const [cart, setCart] = React.useState(() => loadCart());
   const [notice, setNotice] = React.useState("");
-  const [loading, setLoading] = React.useState({ products: false, transactions: false, settings: false, stockMovements: false });
-  const [loaded, setLoaded] = React.useState({ products: false, transactions: false, settings: false, stockMovements: false });
-  const lastLoadedAt = React.useRef({ products: 0, transactions: 0, settings: 0, stockMovements: 0 });
+  const [loading, setLoading] = React.useState({ products: false, settings: false, stockMovements: false });
+  const [loaded, setLoaded] = React.useState({ products: false, settings: false, stockMovements: false });
+  const lastLoadedAt = React.useRef({ products: 0, settings: 0, stockMovements: 0 });
   const productsRef = React.useRef(products);
-  const transactionsRef = React.useRef(transactions);
   const stockMovementsRef = React.useRef(stockMovements);
   const stockMovementFiltersRef = React.useRef(stockMovementFilters);
   const settingsRef = React.useRef(settings);
@@ -29,7 +27,6 @@ export function POSStoreProvider({ children, api }) {
 
   React.useEffect(() => { saveCart(cart); }, [cart]);
   React.useEffect(() => { productsRef.current = products; }, [products]);
-  React.useEffect(() => { transactionsRef.current = transactions; }, [transactions]);
   React.useEffect(() => { stockMovementsRef.current = stockMovements; }, [stockMovements]);
   React.useEffect(() => { stockMovementFiltersRef.current = stockMovementFilters; }, [stockMovementFilters]);
   React.useEffect(() => { settingsRef.current = settings; }, [settings]);
@@ -64,28 +61,6 @@ export function POSStoreProvider({ children, api }) {
     } catch (error) {
       if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to search products");
       return [];
-    }
-  }, [api]);
-
-  const loadTransactions = React.useCallback(async ({ force = false, signal } = {}) => {
-    if (!force && (loadedRef.current.transactions || loadingRef.current.transactions)) return transactionsRef.current;
-    loadingRef.current = { ...loadingRef.current, transactions: true };
-    setLoading((current) => ({ ...current, transactions: true }));
-    try {
-      const result = await fetchTransactions(api, { signal });
-      transactionsRef.current = result;
-      loadedRef.current = { ...loadedRef.current, transactions: true };
-      setTransactions(result);
-      setLoaded((current) => ({ ...current, transactions: true }));
-      lastLoadedAt.current.transactions = Date.now();
-      setNotice("");
-      return result;
-    } catch (error) {
-      if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load transactions");
-      return null;
-    } finally {
-      loadingRef.current = { ...loadingRef.current, transactions: false };
-      setLoading((current) => ({ ...current, transactions: false }));
     }
   }, [api]);
 
@@ -146,10 +121,9 @@ export function POSStoreProvider({ children, api }) {
   const refreshLoadedResources = React.useCallback(() => {
     const now = Date.now();
     if (loadedRef.current.products && now - lastLoadedAt.current.products >= 30_000) loadProducts({ force: true });
-    if (loadedRef.current.transactions && now - lastLoadedAt.current.transactions >= 30_000) loadTransactions({ force: true });
     if (loadedRef.current.settings && now - lastLoadedAt.current.settings >= 30_000) loadSettings({ force: true });
     if (loadedRef.current.stockMovements && now - lastLoadedAt.current.stockMovements >= 30_000) loadStockMovements({ force: true, ...stockMovementFiltersRef.current });
-  }, [loadProducts, loadSettings, loadStockMovements, loadTransactions]);
+  }, [loadProducts, loadSettings, loadStockMovements]);
 
   React.useEffect(() => {
     const refetchStaleData = () => {
@@ -223,7 +197,6 @@ export function POSStoreProvider({ children, api }) {
     if (cart.length === 0) { setNotice("Cart is empty"); return { ok: false, error: "Cart is empty" }; }
     try {
       const result = await api.checkout({ cart, payment });
-      setTransactions((current) => [result.transaction, ...current.filter((item) => item.id !== result.transaction.id)]);
       setProducts((current) => applyCheckoutResult(current, result));
       setCart([]);
       clearCartStorage();
@@ -260,15 +233,15 @@ export function POSStoreProvider({ children, api }) {
   }, [api]);
 
   const activeProducts = React.useMemo(() => products.filter((item) => item.active), [products]);
-  const isLoading = loading.products || loading.transactions || loading.settings || loading.stockMovements;
+  const isLoading = loading.products || loading.settings || loading.stockMovements;
 
   const value = React.useMemo(() => ({
-    api, products, activeProducts, cart, transactions, stockMovements, stockMovementCursor, settings, notice, isLoading, loading, loaded,
+    api, products, activeProducts, cart, stockMovements, stockMovementCursor, settings, notice, isLoading, loading, loaded,
     addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout,
     createStockMovement, updateSettings, getDashboardSummary: api.getDashboardSummary,
-    loadProducts, loadTransactions, loadSettings, loadStockMovements, searchProducts,
+    loadProducts, loadSettings, loadStockMovements, searchProducts,
     setNotice, clearNotice: () => setNotice(""),
-  }), [products, activeProducts, cart, transactions, stockMovements, stockMovementCursor, settings, notice, isLoading, loading, loaded, addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout, createStockMovement, updateSettings, api, loadProducts, loadTransactions, loadSettings, loadStockMovements, searchProducts]);
+  }), [products, activeProducts, cart, stockMovements, stockMovementCursor, settings, notice, isLoading, loading, loaded, addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout, createStockMovement, updateSettings, api, loadProducts, loadSettings, loadStockMovements, searchProducts]);
 
   return <POSStoreContext.Provider value={value}>{children}</POSStoreContext.Provider>;
 }

@@ -1,10 +1,13 @@
 import React from "react";
-import { Badge, Button, DataTable, Dialog, Icon } from "../components/primitives.jsx";
+import { TableFilterPopover } from "../components/TableFilterPopover.jsx";
+import { TablePagination } from "../components/TablePagination.jsx";
+import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField } from "../components/primitives.jsx";
 import { EmptyState } from "../components/design/EmptyStateShowcase.jsx";
 import { TransactionsPageSkeleton } from "../components/page-loading.jsx";
+import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
-import { getNextSortState, sortRows } from "../lib/sorting.js";
 import { usePOSStore } from "../pos/store.jsx";
+import { loadTransactionPage } from "../pos/store-data.js";
 import { formatPrice } from "../shared.jsx";
 
 function formatDate(value) {
@@ -14,49 +17,43 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
-const transactionSortConfig = {
-  number: { type: "string" },
-  createdAt: { type: "date" },
-  paymentMethod: { type: "string" },
-  total: { type: "number" },
-};
+function dateBoundary(value, endOfDay = false) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day, endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0);
+  return date.toISOString();
+}
 
 export default function TransactionsPage() {
   const store = usePOSStore();
   const [query, setQuery] = React.useState("");
   const [selected, setSelected] = React.useState(null);
-  const [sortKey, setSortKey] = React.useState("createdAt");
-  const [sortDir, setSortDir] = React.useState("desc");
-  const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.transactions);
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [paymentMethod, setPaymentMethod] = React.useState("");
+  const [dateFrom, setDateFrom] = React.useState("");
+  const [dateTo, setDateTo] = React.useState("");
   const debouncedQuery = useDebouncedValue(query, 220);
-  const isInitialLoad = isPageLoading;
+  const transactionFilters = React.useMemo(() => ({
+    q: debouncedQuery.trim(),
+    paymentMethod,
+    dateFrom: dateBoundary(dateFrom),
+    dateTo: dateBoundary(dateTo, true),
+  }), [dateFrom, dateTo, debouncedQuery, paymentMethod]);
+  const fetchTransactionPage = React.useCallback(
+    (request) => loadTransactionPage(store.api, request),
+    [store.api],
+  );
+  const table = useCursorTable({
+    fetchPage: fetchTransactionPage,
+    filters: transactionFilters,
+    initialSortKey: "createdAt",
+    initialSortDir: "desc",
+  });
+  const activeFilterCount = [paymentMethod, dateFrom, dateTo].filter(Boolean).length;
 
-  React.useEffect(() => {
-    const controller = new AbortController();
-    if (!store.loaded.transactions) setIsPageLoading(true);
-    store.loadTransactions({ force: true, signal: controller.signal }).finally(() => {
-      if (!controller.signal.aborted) setIsPageLoading(false);
-    });
-    return () => controller.abort();
-  }, [store.loadTransactions]);
-
-  if (isInitialLoad) {
+  if (table.isInitialLoading) {
     return <TransactionsPageSkeleton />;
   }
-
-  const handleSort = (key) => {
-    const next = getNextSortState(sortKey, sortDir, key);
-    setSortKey(next.sortKey);
-    setSortDir(next.sortDir);
-  };
-
-  const isUpdatingTransactions = store.loading.transactions && store.loaded.transactions;
-  const filteredTransactions = store.transactions.filter((transaction) =>
-    `${transaction.number} ${transaction.cashierName} ${transaction.paymentMethod}`
-      .toLowerCase()
-      .includes(debouncedQuery.toLowerCase()),
-  );
-  const transactions = sortRows(filteredTransactions, sortKey, sortDir, transactionSortConfig);
 
   const columns = [
     { key: "number", label: "Transaction", sortable: true, render: (row) => <span className="font-semibold">{row.number}</span> },
@@ -80,9 +77,9 @@ export default function TransactionsPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
-      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr] lg:items-center">
+      <header className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
         <h1 className="text-base font-semibold text-text">Transactions</h1>
-        <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
+        <div className="flex min-w-[220px] flex-1 lg:ml-auto lg:max-w-[420px]">
           <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
@@ -93,38 +90,92 @@ export default function TransactionsPage() {
             />
           </div>
         </div>
+        <TableFilterPopover
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          activeCount={activeFilterCount}
+        >
+          <SelectField
+            label="Payment method"
+            value={paymentMethod}
+            options={[
+              { value: "", label: "All methods" },
+              { value: "cash", label: "Cash" },
+              { value: "qris", label: "QRIS" },
+            ]}
+            onChange={setPaymentMethod}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="Date from"
+              inputProps={{
+                type: "date",
+                value: dateFrom,
+                max: dateTo || undefined,
+                onChange: (event) => setDateFrom(event.target.value),
+              }}
+            />
+            <Input
+              label="Date to"
+              inputProps={{
+                type: "date",
+                value: dateTo,
+                min: dateFrom || undefined,
+                onChange: (event) => setDateTo(event.target.value),
+              }}
+            />
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={activeFilterCount === 0}
+            onClick={() => { setPaymentMethod(""); setDateFrom(""); setDateTo(""); }}
+          >
+            Clear filters
+          </Button>
+        </TableFilterPopover>
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
-        <div className="grid gap-4 rounded-panel border border-border bg-surface p-0">
+        <div className="grid rounded-panel border border-border bg-surface p-0">
           <div className="border-b border-border px-4 py-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-text">Transaction history</p>
                 <p className="text-xs text-text-muted">Sortable rows with payment method, cashier, and sale total.</p>
               </div>
-              {isUpdatingTransactions && <UpdatingBadge />}
+              {table.isUpdating && <UpdatingBadge />}
             </div>
           </div>
-          {transactions.length ? (
+          {table.rows.length ? (
             <DataTable
               columns={columns}
-              data={transactions}
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSort={handleSort}
-              paginated
-              pageSize={8}
-              className={`px-2 pb-2 ${isUpdatingTransactions ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}
+              data={table.rows}
+              sortKey={table.sortKey}
+              sortDir={table.sortDir}
+              onSort={table.sortBy}
+              className={`px-2 ${table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}
             />
           ) : (
             <EmptyState
-              icon={query ? "search" : "receipt"}
-              title={query ? "No transactions found" : "No transactions yet"}
-              description={query ? "Try a different transaction, cashier, or payment method." : "Completed sales will appear here."}
+              icon={query || activeFilterCount ? "search" : "receipt"}
+              title={table.error ? "Transactions could not be loaded" : query || activeFilterCount ? "No transactions found" : "No transactions yet"}
+              description={table.error ? table.error.message : query || activeFilterCount ? "Try a different search or filter set." : "Completed sales will appear here."}
+              action={table.error ? <Button size="sm" variant="secondary" onClick={table.retry}>Retry</Button> : undefined}
               className="m-4 min-h-[240px]"
             />
           )}
+          <TablePagination
+            {...table.range}
+            pageSize={table.pageSize}
+            canPrevious={table.canPrevious}
+            canNext={table.canNext}
+            onPrevious={table.previous}
+            onNext={table.next}
+            onPageSizeChange={table.setPageSize}
+            loading={table.loading}
+          />
         </div>
       </div>
 
