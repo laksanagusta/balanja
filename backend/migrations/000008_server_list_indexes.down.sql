@@ -1,0 +1,9 @@
+drop index if exists stock_movements_org_stock_after_id_idx;
+drop index if exists stock_movements_org_quantity_delta_id_idx;
+drop index if exists transactions_org_total_id_idx;
+drop index if exists transactions_org_payment_method_id_idx;
+drop index if exists transactions_org_number_id_idx;
+drop index if exists products_org_stock_id_idx;
+drop index if exists products_org_price_id_idx;
+drop index if exists products_org_category_id_idx;
+drop index if exists products_org_name_id_idx;
