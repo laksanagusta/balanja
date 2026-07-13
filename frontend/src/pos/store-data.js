@@ -1,12 +1,17 @@
 import { parseNumberInput } from "./domain.js";
 
 export async function loadProducts(api, options = {}) {
-  return api.listProducts(options);
+  const page = await api.listProducts(options);
+  return page.items;
 }
 
 export async function loadTransactions(api, options = {}) {
-  const transactionPage = await api.listTransactions({ limit: 50, ...options });
-  return normalizeTransactions(transactionPage.items);
+  return (await loadTransactionPage(api, { limit: 50, ...options })).items;
+}
+
+export async function loadTransactionPage(api, options = {}) {
+  const page = await api.listTransactions(options);
+  return { ...page, items: normalizeTransactions(page.items) };
 }
 
 export async function loadSettings(api, options = {}) {
@@ -14,10 +19,16 @@ export async function loadSettings(api, options = {}) {
 }
 
 export async function loadStockMovements(api, { signal, ...filters } = {}) {
-  const page = await api.listStockMovements(filters, { signal });
+  return loadStockMovementPage(api, filters, { signal });
+}
+
+export async function loadStockMovementPage(api, filters = {}, options = {}) {
+  const page = await api.listStockMovements(filters, options);
   return {
+    ...page,
     items: Array.isArray(page.items) ? page.items.map(normalizeStockMovement) : [],
     nextCursor: page.nextCursor || "",
+    hasNextPage: page.hasNextPage === true,
   };
 }
 

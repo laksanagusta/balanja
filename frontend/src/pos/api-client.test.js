@@ -13,8 +13,8 @@ test("attaches a fresh Clerk token and parses the data envelope", async () => {
     },
   });
 
-  const products = await api.listProducts();
-  assert.deepEqual(products, [{ id: "product-1" }]);
+	const products = await api.listProducts();
+	assert.deepEqual(products, { items: [{ id: "product-1" }], nextCursor: "", hasNextPage: false });
   assert.equal(request.url, "https://api.example.com/api/v1/products");
   assert.equal(request.options.headers.Authorization, "Bearer clerk-token");
 });
@@ -33,6 +33,53 @@ test("listProducts sends product search filters", async () => {
   await api.listProducts({ q: "tea", limit: 6 });
 
   assert.equal(requestURL, "/api/v1/products?q=tea&limit=6");
+});
+
+test("listProducts preserves cursor metadata and serializes catalog filters", async () => {
+  const requests = [];
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async (url) => {
+      requests.push(url);
+      return new Response(JSON.stringify({ data: [{ id: "p1" }], meta: { nextCursor: "next", hasNextPage: true } }), { status: 200 });
+    },
+  });
+
+  const page = await api.listProducts({ q: "tea", category: "Drinks", active: true, limit: 20, sort: "name", dir: "asc", cursor: "current" });
+
+  assert.equal(requests[0], "/api/v1/products?q=tea&category=Drinks&active=true&limit=20&sort=name&dir=asc&cursor=current");
+  assert.deepEqual(page, { items: [{ id: "p1" }], nextCursor: "next", hasNextPage: true });
+});
+
+test("listTransactions serializes server filters and sorting", async () => {
+  let requestURL;
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async (url) => {
+      requestURL = url;
+      return new Response(JSON.stringify({ data: [], meta: { nextCursor: "", hasNextPage: false } }), { status: 200 });
+    },
+  });
+
+  await api.listTransactions({ q: "TRX", paymentMethod: "cash", dateFrom: "2026-07-01T00:00:00Z", dateTo: "2026-07-13T23:59:59Z", limit: 20, sort: "total", dir: "desc", cursor: "c1" });
+
+  assert.equal(requestURL, "/api/v1/transactions?q=TRX&paymentMethod=cash&dateFrom=2026-07-01T00%3A00%3A00Z&dateTo=2026-07-13T23%3A59%3A59Z&limit=20&sort=total&dir=desc&cursor=c1");
+});
+
+test("listStockMovements preserves server pagination metadata", async () => {
+  let requestURL;
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async (url) => {
+      requestURL = url;
+      return new Response(JSON.stringify({ data: [], meta: { nextCursor: "n2", hasNextPage: true } }), { status: 200 });
+    },
+  });
+
+  const page = await api.listStockMovements({ q: "tea", type: "restock", limit: 20, sort: "stockAfter", dir: "asc", cursor: "c1" });
+
+  assert.equal(requestURL, "/api/v1/stock/movements?q=tea&type=restock&limit=20&sort=stockAfter&dir=asc&cursor=c1");
+  assert.deepEqual(page, { items: [], nextCursor: "n2", hasNextPage: true });
 });
 
 test("throws a stable APIError from an error envelope", async () => {
@@ -96,8 +143,8 @@ test("listStockMovements sends stock movement filters", async () => {
     limit: 25,
   });
 
-  assert.equal(requestURL, "/api/v1/stock/movements?q=tea&type=restock&productId=product-1&dateFrom=2026-07-01T00%3A00%3A00Z&dateTo=2026-07-13T23%3A59%3A59Z&cursor=cursor-1&limit=25");
-  assert.deepEqual(page, { items: [], nextCursor: "next" });
+	assert.equal(requestURL, "/api/v1/stock/movements?q=tea&type=restock&productId=product-1&dateFrom=2026-07-01T00%3A00%3A00Z&dateTo=2026-07-13T23%3A59%3A59Z&limit=25&cursor=cursor-1");
+	assert.deepEqual(page, { items: [], nextCursor: "next", hasNextPage: false });
 });
 
 test("createStockMovement posts manual movement payload", async () => {

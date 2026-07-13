@@ -6,6 +6,24 @@ export class APIError extends Error {
   }
 }
 
+function normalizePage(envelope) {
+  return {
+    items: Array.isArray(envelope?.data) ? envelope.data : [],
+    nextCursor: envelope?.meta?.nextCursor || "",
+    hasNextPage: envelope?.meta?.hasNextPage === true,
+  };
+}
+
+function listQuery(filters, keys) {
+  const params = new URLSearchParams();
+  for (const key of keys) {
+    const value = filters[key];
+    if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+  }
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 export function createAPIClient({
   baseURL = "",
   getToken,
@@ -51,29 +69,10 @@ export function createAPIClient({
     return envelope;
   }
 
-  function stockMovementQuery(filters = {}) {
-    const params = new URLSearchParams();
-    for (const key of ["q", "type", "productId", "dateFrom", "dateTo", "cursor", "limit"]) {
-      const value = filters[key];
-      if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
-    }
-    const query = params.toString();
-    return query ? `?${query}` : "";
-  }
-
-  function productQuery(filters = {}) {
-    const params = new URLSearchParams();
-    for (const key of ["q", "limit"]) {
-      const value = filters[key];
-      if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
-    }
-    const query = params.toString();
-    return query ? `?${query}` : "";
-  }
-
   return {
-    async listProducts({ q = "", limit = "", signal } = {}) {
-      return (await request(`/api/v1/products${productQuery({ q, limit })}`, { signal })).data;
+    async listProducts({ signal, ...filters } = {}) {
+      const query = listQuery(filters, ["q", "category", "active", "limit", "sort", "dir", "cursor"]);
+      return normalizePage(await request(`/api/v1/products${query}`, { signal }));
     },
     async createProduct(product, options = {}) {
       return (await request("/api/v1/products", { ...options, method: "POST", body: product })).data;
@@ -84,11 +83,9 @@ export function createAPIClient({
     async deactivateProduct(id, options = {}) {
       return (await request(`/api/v1/products/${encodeURIComponent(id)}`, { ...options, method: "DELETE" })).data;
     },
-    async listTransactions({ limit = 50, cursor = "", signal } = {}) {
-      const params = new URLSearchParams({ limit: String(limit) });
-      if (cursor) params.set("cursor", cursor);
-      const envelope = await request(`/api/v1/transactions?${params}`, { signal });
-      return { items: envelope.data, nextCursor: envelope.meta?.nextCursor || "" };
+    async listTransactions({ signal, ...filters } = {}) {
+      const query = listQuery(filters, ["q", "paymentMethod", "dateFrom", "dateTo", "limit", "sort", "dir", "cursor"]);
+      return normalizePage(await request(`/api/v1/transactions${query}`, { signal }));
     },
     async getSettings(options = {}) {
       return (await request("/api/v1/settings", options)).data;
@@ -100,8 +97,9 @@ export function createAPIClient({
       return (await request(`/api/v1/dashboard/summary?days=${days}`, { signal })).data;
     },
     async listStockMovements(filters = {}, options = {}) {
-      const envelope = await request(`/api/v1/stock/movements${stockMovementQuery(filters)}`, options);
-      return { items: envelope.data, nextCursor: envelope.meta?.nextCursor || "" };
+      const { signal = options.signal, ...queryFilters } = filters;
+      const query = listQuery(queryFilters, ["q", "type", "productId", "dateFrom", "dateTo", "limit", "sort", "dir", "cursor"]);
+      return normalizePage(await request(`/api/v1/stock/movements${query}`, { ...options, signal }));
     },
     async createStockMovement(input, options = {}) {
       return (await request("/api/v1/stock/movements", { ...options, method: "POST", body: input })).data;

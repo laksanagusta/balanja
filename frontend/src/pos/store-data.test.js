@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyCheckoutResult, loadProducts, loadSettings, loadStockMovements, loadTransactions, toProductPayload } from "./store-data.js";
+import { applyCheckoutResult, loadProducts, loadSettings, loadStockMovementPage, loadStockMovements, loadTransactionPage, loadTransactions, toProductPayload } from "./store-data.js";
 
 test("loads products without fetching unrelated POS resources", async () => {
   const calls = [];
-  const api = {
-    listProducts: async () => { calls.push("products"); return [{ id: "p1" }]; },
+	const api = {
+		listProducts: async () => { calls.push("products"); return { items: [{ id: "p1" }], nextCursor: "", hasNextPage: false }; },
   };
   const result = await loadProducts(api);
   assert.deepEqual(calls, ["products"]);
@@ -28,6 +28,24 @@ test("loads transactions without fetching products or settings", async () => {
   ]);
 });
 
+test("normalizes transaction page items without losing pagination metadata", async () => {
+  const api = {
+    listTransactions: async () => ({
+      items: [{ id: "t1", items: [{ productId: "p1", quantity: 2 }] }],
+      nextCursor: "transactions-next",
+      hasNextPage: true,
+    }),
+  };
+
+  const page = await loadTransactionPage(api, { limit: 20 });
+
+  assert.deepEqual(page, {
+    items: [{ id: "t1", items: [{ productId: "p1", quantity: 2, qty: 2 }] }],
+    nextCursor: "transactions-next",
+    hasNextPage: true,
+  });
+});
+
 test("loads settings without fetching products or transactions", async () => {
   const calls = [];
   const api = {
@@ -44,7 +62,7 @@ test("loads stock movements without fetching unrelated resources", async () => {
   const api = {
     listStockMovements: async (filters, options) => {
       calls.push(["stock", filters, options]);
-      return { items: [{ id: "m1", quantityDelta: "5", stockBefore: "10", stockAfter: "15" }], nextCursor: "next" };
+			return { items: [{ id: "m1", quantityDelta: "5", stockBefore: "10", stockAfter: "15" }], nextCursor: "next", hasNextPage: true };
     },
   };
   const result = await loadStockMovements(api, { q: "tea", signal });
@@ -67,8 +85,26 @@ test("loads stock movements without fetching unrelated resources", async () => {
       createdByUserId: "",
       createdAt: undefined,
     }],
-    nextCursor: "next",
-  });
+		nextCursor: "next",
+		hasNextPage: true,
+	});
+});
+
+test("normalizes stock movement page items without losing pagination metadata", async () => {
+  const api = {
+    listStockMovements: async () => ({
+      items: [{ id: "m1", quantityDelta: "5", stockAfter: "15" }],
+      nextCursor: "stock-next",
+      hasNextPage: true,
+    }),
+  };
+
+  const page = await loadStockMovementPage(api, { limit: 20 });
+
+  assert.equal(page.items[0].quantityDelta, 5);
+  assert.equal(page.items[0].stockAfter, 15);
+  assert.equal(page.nextCursor, "stock-next");
+  assert.equal(page.hasNextPage, true);
 });
 
 test("applies authoritative checkout stock returned by server", () => {
