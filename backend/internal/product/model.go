@@ -21,8 +21,21 @@ type Product struct {
 }
 
 type ListFilter struct {
-	Query string
-	Limit int
+	Query       string
+	Category    string
+	Active      *bool
+	Limit       int
+	Sort        string
+	Direction   string
+	Cursor      string
+	CursorValue any
+	CursorID    uuid.UUID
+}
+
+type Page struct {
+	Items       []Product
+	NextCursor  string
+	HasNextPage bool
 }
 
 type CreateInput struct {

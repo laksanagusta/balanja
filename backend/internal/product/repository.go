@@ -13,6 +13,37 @@ import (
 
 type PostgresRepository struct{}
 
+type listOrder struct {
+	Column    string
+	Operator  string
+	Direction string
+}
+
+func resolveProductOrder(sort, direction string) (listOrder, error) {
+	operator := ">"
+	if direction == "desc" {
+		operator = "<"
+	} else if direction != "asc" {
+		return listOrder{}, ErrInvalidProduct
+	}
+	var column string
+	switch sort {
+	case "name":
+		column = "p.name"
+	case "category":
+		column = "p.category"
+	case "price":
+		column = "p.price"
+	case "stock":
+		column = "p.stock"
+	case "createdAt":
+		column = "p.created_at"
+	default:
+		return listOrder{}, ErrInvalidProduct
+	}
+	return listOrder{Column: column, Operator: operator, Direction: direction}, nil
+}
+
 func scanProduct(row pgx.Row) (Product, error) {
 	var p Product
 	err := row.Scan(&p.ID, &p.Name, &p.Barcode, &p.Category, &p.Price, &p.Stock, &p.Unit, &p.Image, &p.Active, &p.CreatedAt, &p.UpdatedAt)
@@ -20,19 +51,29 @@ func scanProduct(row pgx.Row) (Product, error) {
 }
 
 const productColumns = `id,name,barcode,category,price,stock,unit,image,active,created_at,updated_at`
+const productSelectColumns = `p.id,p.name,p.barcode,p.category,p.price,p.stock,p.unit,p.image,p.active,p.created_at,p.updated_at`
 
 func (PostgresRepository) List(ctx context.Context, tx database.Tx, orgID string, filter ListFilter) ([]Product, error) {
-	limit := filter.Limit
-	if limit == 0 {
-		limit = 10000
+	order, err := resolveProductOrder(filter.Sort, filter.Direction)
+	if err != nil {
+		return nil, err
 	}
-	rows, err := tx.Query(ctx, `
-		select `+productColumns+`
-		from products
-		where org_id=$1
-			and ($2='' or name ilike '%' || $2 || '%' or barcode ilike '%' || $2 || '%' or category ilike '%' || $2 || '%')
-		order by created_at,id
-		limit $3`, orgID, filter.Query, limit)
+	query := fmt.Sprintf(`
+		select %s
+		from products p
+		where p.org_id=$1
+			and ($2='' or p.name ilike '%%' || $2 || '%%' or p.barcode ilike '%%' || $2 || '%%' or p.category ilike '%%' || $2 || '%%')
+			and ($3='' or p.category=$3)
+			and ($4::boolean is null or p.active=$4)
+			and (not $5::boolean or (%s,p.id) %s ($6,$7::uuid))
+		order by %s %s,p.id %s
+		limit $8`, productSelectColumns, order.Column, order.Operator, order.Column, order.Direction, order.Direction)
+	var active any
+	if filter.Active != nil {
+		active = *filter.Active
+	}
+	hasCursor := filter.CursorID != uuid.Nil
+	rows, err := tx.Query(ctx, query, orgID, filter.Query, filter.Category, active, hasCursor, filter.CursorValue, filter.CursorID, filter.Limit)
 	if err != nil {
 		return nil, fmt.Errorf("list products: %w", err)
 	}

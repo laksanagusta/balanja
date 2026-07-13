@@ -41,6 +41,9 @@ func decode[T any](c fiber.Ctx) (T, error) {
 	return value, nil
 }
 func productError(c fiber.Ctx, err error) error {
+	if errors.Is(err, ErrInvalidCursor) {
+		return respond.Error(c, apperror.New(400, "INVALID_CURSOR", "product cursor is invalid"))
+	}
 	if errors.Is(err, ErrInvalidProduct) {
 		return respond.Error(c, apperror.New(422, "INVALID_PRODUCT", "product is invalid"))
 	}
@@ -65,11 +68,25 @@ func (h *Handler) list(c fiber.Ctx) error {
 		}
 		limit = parsed
 	}
-	items, err := h.service.List(c.Context(), id, ListFilter{Query: c.Query("q"), Limit: limit})
+	var active *bool
+	if rawActive := c.Query("active"); rawActive != "" {
+		parsed, parseErr := strconv.ParseBool(rawActive)
+		if parseErr != nil {
+			return respond.Error(c, apperror.New(422, "INVALID_PRODUCT", "product filter is invalid"))
+		}
+		active = &parsed
+	}
+	page, err := h.service.List(c.Context(), id, ListFilter{
+		Query: c.Query("q"), Category: c.Query("category"), Active: active, Limit: limit,
+		Sort: c.Query("sort"), Direction: c.Query("dir"), Cursor: c.Query("cursor"),
+	})
 	if err != nil {
 		return productError(c, err)
 	}
-	return c.JSON(fiber.Map{"data": items})
+	return c.JSON(fiber.Map{
+		"data": page.Items,
+		"meta": fiber.Map{"nextCursor": page.NextCursor, "hasNextPage": page.HasNextPage},
+	})
 }
 func (h *Handler) create(c fiber.Ctx) error {
 	id, err := identity(c)
