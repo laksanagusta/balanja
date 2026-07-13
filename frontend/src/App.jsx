@@ -1,35 +1,43 @@
 import React from "react";
-import { Show, SignIn } from "@clerk/react";
+import { Show, useAuth } from "@clerk/react";
 import { Toaster } from "sonner";
 import AppShell from "./components/AppShell.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import DesignSystemPage from "./pages/DesignSystemPage.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
 import RetailPosPage from "./pages/RetailPosPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import StockPage from "./pages/StockPage.jsx";
 import TransactionsPage from "./pages/TransactionsPage.jsx";
 import { routes } from "./shared.jsx";
+import { normalizePath } from "./routing.js";
 
-function normalizePath(pathname) {
-  return Object.values(routes).includes(pathname) ? pathname : routes.pos;
-}
-
-function usePathname() {
-  const [pathname, setPathname] = React.useState(() => normalizePath(window.location.pathname));
+function usePathname(isSignedIn, isAuthLoaded) {
+  const [pathname, setPathname] = React.useState(() =>
+    normalizePath(window.location.pathname, isSignedIn, isAuthLoaded),
+  );
 
   React.useEffect(() => {
-    const handlePopState = () => setPathname(normalizePath(window.location.pathname));
+    const handlePopState = () =>
+      setPathname(normalizePath(window.location.pathname, isSignedIn, isAuthLoaded));
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [isAuthLoaded, isSignedIn]);
+
+  React.useEffect(() => {
+    const nextPath = normalizePath(window.location.pathname, isSignedIn, isAuthLoaded);
+    if (nextPath !== window.location.pathname) window.history.replaceState({}, "", nextPath);
+    setPathname(nextPath);
+  }, [isAuthLoaded, isSignedIn]);
 
   const navigate = React.useCallback((path) => {
-    const nextPath = normalizePath(path);
+    const nextPath = normalizePath(path, isSignedIn, isAuthLoaded);
     window.history.pushState({}, "", nextPath);
     setPathname(nextPath);
     window.scrollTo(0, 0);
-  }, []);
+  }, [isAuthLoaded, isSignedIn]);
 
   return [pathname, navigate];
 }
@@ -44,7 +52,20 @@ function AppPage({ pathname, onNavigate }) {
 }
 
 export default function App() {
-  const [pathname, navigate] = usePathname();
+  const { isLoaded, isSignedIn } = useAuth();
+  const [pathname, navigate] = usePathname(Boolean(isSignedIn), isLoaded);
+
+  if (pathname === routes.landing) {
+    return <LandingPage isSignedIn={Boolean(isSignedIn)} onNavigate={navigate} />;
+  }
+
+  if (pathname === routes.login) {
+    return <LoginPage isSignedIn={Boolean(isSignedIn)} onNavigate={navigate} />;
+  }
+
+  if (!isLoaded) {
+    return <div className="min-h-screen bg-app-bg" aria-busy="true" />;
+  }
 
   return (
     <div className="min-h-screen bg-app-bg text-text antialiased">
@@ -56,13 +77,6 @@ export default function App() {
         duration={2800}
         offset={24}
       />
-      <Show when="signed-out">
-        <main className="grid min-h-screen place-items-center bg-app-bg px-4">
-          <div className="w-full max-w-md rounded-panel border border-border bg-surface p-4 shadow-panel">
-            <SignIn routing="hash" afterSignInUrl="/pos" />
-          </div>
-        </main>
-      </Show>
       <Show when="signed-in">
         {pathname === routes.designSystem ? (
           <DesignSystemPage onNavigate={navigate} />
