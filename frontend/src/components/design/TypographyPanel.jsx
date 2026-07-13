@@ -2,6 +2,12 @@ import React from "react";
 
 const styles = [
   {
+    label: "Marketing",
+    sample: "Balanja untuk UMKM",
+    className: "text-[42px] font-semibold leading-[0.98] tracking-[-0.055em] sm:text-[56px] lg:text-[72px]",
+    note: "Manrope 600 / 42–72px",
+  },
+  {
     label: "Display",
     sample: "Balanja POS",
     className: "text-3xl font-bold",

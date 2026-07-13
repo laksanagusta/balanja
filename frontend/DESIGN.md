@@ -64,6 +64,16 @@ Use semantic tokens and existing primitives before adding raw Tailwind values. K
 
 New pages should reuse the same sidebar, panel borders, form field height, card radius, and button variants unless there is a concrete product reason to diverge.
 
+## Public Marketing Pages
+
+The public landing page lives at `/`; Clerk sign-in lives at `/login`. Public pages may use the spacious editorial composition documented by the Marketing page patterns showcase. Marketing rules do not apply to operational screens.
+
+Marketing display headings use 40px to 48px on mobile and 64px to 72px on wide screens, with a tight 0.98 to 1.04 line height. Keep hero headlines to two or three lines. Major section spacing scales from 80px on mobile to 112px on tablet and 144px on wide screens.
+
+Use the existing semantic palette, 8px/12px/16px radius hierarchy, soft borders, near-black primary CTA, and bordered secondary CTA. Product visuals may use real current Balanja screenshots or faithful UI mockups built from the same tokens and information architecture. Hero mockups use a stable landscape frame, may sit over a restrained retail photograph, and must preserve readable product hierarchy without inventing capabilities. When a manual screenshot replaces a mockup, include intrinsic dimensions, descriptive alt text, and a muted failure fallback.
+
+Public navigation keeps the logo and authentication action visible on mobile; secondary anchor links may collapse or hide below the medium breakpoint. Marketing compositions stay open and flat—do not introduce nested cards or apply enlarged typography and spacing to POS, dashboard, catalog, stock, transactions, settings, or dialogs.
+
 ## Verification
 
 Run `npm run build` from `frontend/`. For visual work, inspect desktop and mobile widths, and confirm no product card, button, nav item, cart row, or table text overflows its container.

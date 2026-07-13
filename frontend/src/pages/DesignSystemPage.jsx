@@ -20,6 +20,7 @@ import ModalFormShowcase from "../components/design/ModalFormShowcase.jsx";
 import KpiCardShowcase from "../components/design/KpiCardShowcase.jsx";
 import PillShowcase from "../components/design/PillShowcase.jsx";
 import DashboardPatternsShowcase from "../components/design/DashboardPatternsShowcase.jsx";
+import MarketingPatternsShowcase from "../components/design/MarketingPatternsShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
@@ -53,6 +54,7 @@ export default function DesignSystemPage({ onNavigate }) {
         </div>
         <TokenGrid />
         <TypographyPanel />
+        <MarketingPatternsShowcase />
         <div>
           <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Button sizes</h3>
           <div className="grid gap-4 rounded-panel border border-border bg-surface p-4">
