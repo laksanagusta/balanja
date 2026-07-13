@@ -31,14 +31,14 @@ func (h *Handler) list(c fiber.Ctx) error {
 	if err != nil {
 		return respond.Error(c, apperror.New(422, "INVALID_STOCK_MOVEMENT", "stock movement filter is invalid"))
 	}
-	page, err := h.service.List(c.Context(), identity, filter, c.Query("cursor"))
+	page, err := h.service.List(c.Context(), identity, filter)
 	if errors.Is(err, ErrInvalidCursor) {
 		return respond.Error(c, apperror.New(400, "INVALID_CURSOR", "stock movement cursor is invalid"))
 	}
 	if err != nil {
 		return stockError(c, err)
 	}
-	return c.JSON(fiber.Map{"data": page.Items, "meta": fiber.Map{"nextCursor": page.NextCursor}})
+	return c.JSON(fiber.Map{"data": page.Items, "meta": fiber.Map{"nextCursor": page.NextCursor, "hasNextPage": page.HasNextPage}})
 }
 
 func (h *Handler) create(c fiber.Ctx) error {
@@ -67,8 +67,11 @@ func requestIdentity(c fiber.Ctx) (database.Identity, error) {
 
 func parseFilter(c fiber.Ctx) (ListFilter, error) {
 	filter := ListFilter{
-		Type:  MovementType(c.Query("type")),
-		Query: c.Query("q"),
+		Type:      MovementType(c.Query("type")),
+		Query:     c.Query("q"),
+		Sort:      c.Query("sort"),
+		Direction: c.Query("dir"),
+		Cursor:    c.Query("cursor"),
 	}
 	if raw := c.Query("productId"); raw != "" {
 		id, err := uuid.Parse(raw)

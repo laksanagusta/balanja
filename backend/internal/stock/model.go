@@ -60,24 +60,24 @@ type CreateResult struct {
 	Product  ProductStock `json:"product"`
 }
 
-type Cursor struct {
-	CreatedAt time.Time `json:"createdAt"`
-	ID        uuid.UUID `json:"id"`
-}
-
 type ListFilter struct {
-	ProductID *uuid.UUID
-	Type      MovementType
-	Query     string
-	DateFrom  *time.Time
-	DateTo    *time.Time
-	Cursor    *Cursor
-	Limit     int
+	ProductID   *uuid.UUID
+	Type        MovementType
+	Query       string
+	DateFrom    *time.Time
+	DateTo      *time.Time
+	Limit       int
+	Sort        string
+	Direction   string
+	Cursor      string
+	CursorValue any
+	CursorID    uuid.UUID
 }
 
 type Page struct {
-	Items      []Movement `json:"items"`
-	NextCursor string     `json:"nextCursor,omitempty"`
+	Items       []Movement `json:"items"`
+	NextCursor  string     `json:"nextCursor,omitempty"`
+	HasNextPage bool       `json:"hasNextPage"`
 }
 
 type LockedProduct struct {

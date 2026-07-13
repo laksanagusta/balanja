@@ -1,8 +1,10 @@
 package stock
 
 import (
+	listcursor "balanja/backend/internal/platform/cursor"
 	"balanja/backend/internal/platform/database"
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -62,6 +64,64 @@ func TestServiceRejectsInactiveProduct(t *testing.T) {
 	}
 }
 
+func TestServiceListDefaultsToNewestStockMovement(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeRepository{}
+	page, err := NewService(fakeRunner{}, repository).List(context.Background(), database.Identity{OrgID: "org-1"}, ListFilter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repository.filter.Sort != "createdAt" || repository.filter.Direction != "desc" || repository.filter.Limit != 21 {
+		t.Fatalf("filter = %#v", repository.filter)
+	}
+	if page.Items == nil || page.HasNextPage {
+		t.Fatalf("page = %#v", page)
+	}
+}
+
+func TestServiceListRejectsUnsupportedStockSort(t *testing.T) {
+	t.Parallel()
+
+	_, err := NewService(fakeRunner{}, &fakeRepository{}).List(context.Background(), database.Identity{OrgID: "org-1"}, ListFilter{
+		Sort: "reason", Direction: "asc", Limit: 20,
+	})
+	if !errors.Is(err, ErrInvalidStockMovement) {
+		t.Fatalf("List() error = %v, want ErrInvalidStockMovement", err)
+	}
+}
+
+func TestServiceListUsesLastVisibleDuplicateAsNextCursor(t *testing.T) {
+	t.Parallel()
+
+	firstID, secondID, extraID := uuid.New(), uuid.New(), uuid.New()
+	repository := &fakeRepository{rows: []Movement{
+		{ID: firstID, ProductName: "Tea"},
+		{ID: secondID, ProductName: "Tea"},
+		{ID: extraID, ProductName: "Tea"},
+	}}
+	page, err := NewService(fakeRunner{}, repository).List(context.Background(), database.Identity{OrgID: "org-1"}, ListFilter{
+		Limit: 2, Sort: "productName", Direction: "asc",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(page.Items) != 2 || !page.HasNextPage {
+		t.Fatalf("page = %#v", page)
+	}
+	payload, err := listcursor.Decode(page.NextCursor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var productName string
+	if err := json.Unmarshal(payload.Value, &productName); err != nil {
+		t.Fatal(err)
+	}
+	if payload.ID != secondID || productName != "Tea" {
+		t.Fatalf("cursor payload = %#v, productName = %q", payload, productName)
+	}
+}
+
 type fakeRunner struct{}
 
 func (fakeRunner) Run(ctx context.Context, identity database.Identity, fn func(database.Tx) error) error {
@@ -70,6 +130,8 @@ func (fakeRunner) Run(ctx context.Context, identity database.Identity, fn func(d
 
 type fakeRepository struct {
 	product LockedProduct
+	rows    []Movement
+	filter  ListFilter
 }
 
 func (f *fakeRepository) Create(ctx context.Context, tx database.Tx, identity database.Identity, input CreateInput) (CreateResult, error) {
@@ -97,5 +159,6 @@ func (f *fakeRepository) Create(ctx context.Context, tx database.Tx, identity da
 }
 
 func (f *fakeRepository) List(ctx context.Context, tx database.Tx, identity database.Identity, filter ListFilter) ([]Movement, error) {
-	return nil, nil
+	f.filter = filter
+	return f.rows, nil
 }

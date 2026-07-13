@@ -12,6 +12,37 @@ import (
 
 type PostgresRepository struct{}
 
+type listOrder struct {
+	Column    string
+	Operator  string
+	Direction string
+}
+
+func resolveStockOrder(sort, direction string) (listOrder, error) {
+	operator := ">"
+	if direction == "desc" {
+		operator = "<"
+	} else if direction != "asc" {
+		return listOrder{}, ErrInvalidStockMovement
+	}
+	var column string
+	switch sort {
+	case "createdAt":
+		column = "sm.created_at"
+	case "productName":
+		column = "coalesce(p.name, '')"
+	case "type":
+		column = "sm.type"
+	case "quantityDelta":
+		column = "sm.quantity_delta"
+	case "stockAfter":
+		column = "sm.stock_after"
+	default:
+		return listOrder{}, ErrInvalidStockMovement
+	}
+	return listOrder{Column: column, Operator: operator, Direction: direction}, nil
+}
+
 func (PostgresRepository) Create(ctx context.Context, tx database.Tx, identity database.Identity, input CreateInput) (CreateResult, error) {
 	product, err := lockProduct(ctx, tx, identity.OrgID, input.ProductID)
 	if err != nil {
@@ -47,13 +78,11 @@ func (PostgresRepository) Create(ctx context.Context, tx database.Tx, identity d
 }
 
 func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity database.Identity, filter ListFilter) ([]Movement, error) {
-	var cursorAt any
-	var cursorID any
-	if filter.Cursor != nil {
-		cursorAt = filter.Cursor.CreatedAt
-		cursorID = filter.Cursor.ID
+	order, err := resolveStockOrder(filter.Sort, filter.Direction)
+	if err != nil {
+		return nil, err
 	}
-	rows, err := tx.Query(ctx, `
+	query := fmt.Sprintf(`
 		select sm.id, sm.product_id, coalesce(p.name, ''), coalesce(p.barcode, ''),
 			coalesce(p.category, ''), coalesce(p.unit, ''), sm.type, sm.quantity_delta,
 			sm.stock_before, sm.stock_after, sm.reason, sm.reference_type, sm.reference_id,
@@ -63,13 +92,15 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 		where sm.org_id = $1
 			and ($2::uuid is null or sm.product_id = $2)
 			and ($3::text = '' or sm.type = $3)
-			and ($4::text = '' or p.name ilike '%' || $4 || '%' or p.barcode ilike '%' || $4 || '%' or p.category ilike '%' || $4 || '%')
+			and ($4::text = '' or p.name ilike '%%' || $4 || '%%' or p.barcode ilike '%%' || $4 || '%%' or p.category ilike '%%' || $4 || '%%')
 			and ($5::timestamptz is null or sm.created_at >= $5)
 			and ($6::timestamptz is null or sm.created_at <= $6)
-			and ($7::timestamptz is null or (sm.created_at, sm.id) < ($7, $8::uuid))
-		order by sm.created_at desc, sm.id desc
-		limit $9
-	`, identity.OrgID, filter.ProductID, string(filter.Type), filter.Query, filter.DateFrom, filter.DateTo, cursorAt, cursorID, filter.Limit+1)
+			and (not $7::boolean or (%s,sm.id) %s ($8,$9::uuid))
+		order by %s %s,sm.id %s
+		limit $10
+	`, order.Column, order.Operator, order.Column, order.Direction, order.Direction)
+	hasCursor := filter.CursorID != uuid.Nil
+	rows, err := tx.Query(ctx, query, identity.OrgID, filter.ProductID, string(filter.Type), filter.Query, filter.DateFrom, filter.DateTo, hasCursor, filter.CursorValue, filter.CursorID, filter.Limit)
 	if err != nil {
 		return nil, fmt.Errorf("list stock movements: %w", err)
 	}

@@ -1,12 +1,22 @@
 package stock
 
 import (
+	listcursor "balanja/backend/internal/platform/cursor"
 	"balanja/backend/internal/platform/database"
 	"context"
-	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"strings"
+	"time"
 )
+
+var stockSorts = map[string]struct{}{
+	"createdAt":     {},
+	"productName":   {},
+	"type":          {},
+	"quantityDelta": {},
+	"stockAfter":    {},
+}
 
 type Runner interface {
 	Run(context.Context, database.Identity, func(database.Tx) error) error
@@ -26,31 +36,100 @@ func NewService(runner Runner, repository Repository) *Service {
 	return &Service{runner: runner, repository: repository}
 }
 
-func normalizeLimit(limit int) int {
-	if limit <= 0 {
-		return 50
+func normalizeListFilter(filter ListFilter) (ListFilter, error) {
+	filter.Query = strings.TrimSpace(filter.Query)
+	if filter.DateFrom != nil && filter.DateTo != nil && filter.DateFrom.After(*filter.DateTo) {
+		return ListFilter{}, ErrInvalidStockMovement
 	}
-	if limit > 100 {
-		return 100
+	if filter.Type != "" && filter.Type != MovementTypeSale && filter.Type != MovementTypeRestock && filter.Type != MovementTypeReduce && filter.Type != MovementTypeSetExact {
+		return ListFilter{}, ErrInvalidStockMovement
 	}
-	return limit
+	if filter.Limit == 0 {
+		filter.Limit = 20
+	}
+	if filter.Limit < 1 || filter.Limit > 100 {
+		return ListFilter{}, ErrInvalidStockMovement
+	}
+	if filter.Sort == "" {
+		filter.Sort = "createdAt"
+	}
+	if filter.Direction == "" {
+		filter.Direction = "desc"
+	}
+	if _, ok := stockSorts[filter.Sort]; !ok || (filter.Direction != "asc" && filter.Direction != "desc") {
+		return ListFilter{}, ErrInvalidStockMovement
+	}
+	return filter, nil
 }
 
-func encodeCursor(cursor Cursor) string {
-	value, _ := json.Marshal(cursor)
-	return base64.RawURLEncoding.EncodeToString(value)
+func stockFingerprint(filter ListFilter) string {
+	productID, dateFrom, dateTo := "", "", ""
+	if filter.ProductID != nil {
+		productID = filter.ProductID.String()
+	}
+	if filter.DateFrom != nil {
+		dateFrom = filter.DateFrom.UTC().Format(time.RFC3339Nano)
+	}
+	if filter.DateTo != nil {
+		dateTo = filter.DateTo.UTC().Format(time.RFC3339Nano)
+	}
+	return listcursor.Fingerprint(
+		"stock-movements",
+		"productId="+productID,
+		"type="+string(filter.Type),
+		"q="+filter.Query,
+		"dateFrom="+dateFrom,
+		"dateTo="+dateTo,
+		fmt.Sprintf("limit=%d", filter.Limit),
+		"sort="+filter.Sort,
+		"dir="+filter.Direction,
+	)
 }
 
-func decodeCursor(raw string) (Cursor, error) {
-	var cursor Cursor
-	value, err := base64.RawURLEncoding.DecodeString(raw)
+func decodeStockCursor(filter *ListFilter, fingerprint string) error {
+	if filter.Cursor == "" {
+		return nil
+	}
+	payload, err := listcursor.Decode(filter.Cursor)
+	if err != nil || listcursor.Compatible(payload, filter.Sort, filter.Direction, fingerprint) != nil {
+		return ErrInvalidCursor
+	}
+	var value any
+	switch filter.Sort {
+	case "createdAt":
+		var typed time.Time
+		err = json.Unmarshal(payload.Value, &typed)
+		value = typed
+	case "productName", "type":
+		var typed string
+		err = json.Unmarshal(payload.Value, &typed)
+		value = typed
+	case "quantityDelta", "stockAfter":
+		var typed int
+		err = json.Unmarshal(payload.Value, &typed)
+		value = typed
+	}
 	if err != nil {
-		return cursor, ErrInvalidCursor
+		return ErrInvalidCursor
 	}
-	if err = json.Unmarshal(value, &cursor); err != nil || cursor.ID == [16]byte{} || cursor.CreatedAt.IsZero() {
-		return Cursor{}, ErrInvalidCursor
+	filter.CursorValue = value
+	filter.CursorID = payload.ID
+	return nil
+}
+
+func stockCursorValue(movement Movement, sort string) any {
+	switch sort {
+	case "productName":
+		return movement.ProductName
+	case "type":
+		return movement.Type
+	case "quantityDelta":
+		return movement.QuantityDelta
+	case "stockAfter":
+		return movement.StockAfter
+	default:
+		return movement.CreatedAt
 	}
-	return cursor, nil
 }
 
 func (s *Service) Create(ctx context.Context, identity database.Identity, input CreateInput) (created CreateResult, err error) {
@@ -76,17 +155,18 @@ func (s *Service) Create(ctx context.Context, identity database.Identity, input 
 	return
 }
 
-func (s *Service) List(ctx context.Context, identity database.Identity, filter ListFilter, rawCursor string) (page Page, err error) {
-	filter.Limit = normalizeLimit(filter.Limit)
-	filter.Query = strings.TrimSpace(filter.Query)
-	if rawCursor != "" {
-		cursor, decodeErr := decodeCursor(rawCursor)
-		if decodeErr != nil {
-			return Page{}, decodeErr
-		}
-		filter.Cursor = &cursor
+func (s *Service) List(ctx context.Context, identity database.Identity, filter ListFilter) (page Page, err error) {
+	filter, err = normalizeListFilter(filter)
+	if err != nil {
+		return Page{}, err
+	}
+	fingerprint := stockFingerprint(filter)
+	if err = decodeStockCursor(&filter, fingerprint); err != nil {
+		return Page{}, err
 	}
 
+	requestedLimit := filter.Limit
+	filter.Limit++
 	var rows []Movement
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
 		var listErr error
@@ -96,13 +176,26 @@ func (s *Service) List(ctx context.Context, identity database.Identity, filter L
 	if err != nil {
 		return Page{}, err
 	}
-	if len(rows) > filter.Limit {
-		rows = rows[:filter.Limit]
-		last := rows[len(rows)-1]
-		page.NextCursor = encodeCursor(Cursor{CreatedAt: last.CreatedAt, ID: last.ID})
+	if rows == nil {
+		rows = []Movement{}
+	}
+	if len(rows) > requestedLimit {
+		page.HasNextPage = true
+		rows = rows[:requestedLimit]
 	}
 	page.Items = rows
-	return page, nil
+	if page.HasNextPage {
+		last := rows[len(rows)-1]
+		value, marshalErr := json.Marshal(stockCursorValue(last, filter.Sort))
+		if marshalErr != nil {
+			return Page{}, marshalErr
+		}
+		page.NextCursor, err = listcursor.Encode(listcursor.Payload{
+			Version: listcursor.CurrentVersion, Sort: filter.Sort, Direction: filter.Direction,
+			Fingerprint: fingerprint, Value: value, ID: last.ID,
+		})
+	}
+	return page, err
 }
 
 func ResolveManualMovement(movementType MovementType, currentStock, quantity int) (int, int, error) {
