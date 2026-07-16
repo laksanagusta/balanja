@@ -15,6 +15,7 @@ import (
 	"balanja/backend/internal/platform/database"
 	"balanja/backend/internal/platform/httpserver"
 	"balanja/backend/internal/product"
+	"balanja/backend/internal/report"
 	"balanja/backend/internal/settings"
 	"balanja/backend/internal/stock"
 	"balanja/backend/internal/transaction"
@@ -58,6 +59,7 @@ func run() error {
 	dashboardHandler := dashboard.NewHandler(dashboard.NewService(runner, dashboard.PostgresRepository{}))
 	checkoutHandler := checkout.NewHandler(checkout.NewService(runner, checkout.PostgresRepository{}))
 	stockHandler := stock.NewHandler(stock.NewService(runner, stock.PostgresRepository{}))
+	reportHandler := report.NewHandler(report.NewService(runner, report.PostgresRepository{}))
 	app := httpserver.New(httpserver.Dependencies{
 		Ready:          pool.Ping,
 		Auth:           auth.Middleware(verifier),
@@ -69,6 +71,7 @@ func run() error {
 			dashboardHandler.Register(router)
 			checkoutHandler.Register(router)
 			stockHandler.Register(router)
+			reportHandler.Register(router)
 		},
 	})
 	listenErrors := make(chan error, 1)
