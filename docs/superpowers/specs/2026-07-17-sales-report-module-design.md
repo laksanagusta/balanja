@@ -114,11 +114,13 @@ The report reuses the established Balanja chart components and chart palette. It
 
 The report includes:
 
-- top 10 products by total received, also showing quantity sold;
+- top 10 products by net item sales (`snapshot price × quantity`), also showing quantity sold;
 - all payment methods present in the period, showing transaction count and total received;
 - all cashiers present in the period, showing completed transaction count, item count, net sales, tax, and total received.
 
 Product grouping uses the transaction snapshot's product ID, name, price, and quantity. It does not join the current product category because that would rewrite historical meaning when a product changes category.
+
+Product-level value is net item sales, not total received. Tax exists only at transaction level, so the report must not invent a per-product tax allocation that cannot be reconciled to stored item snapshots.
 
 Cashier grouping uses `cashier_user_id` as the stable key. `cashier_name` is display metadata. Missing names render as `Pengguna <short-id>` and remain visibly identifiable as a fallback rather than being silently guessed.
 
