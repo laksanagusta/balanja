@@ -150,6 +150,59 @@ test("listStockMovements sends stock movement filters", async () => {
 	assert.deepEqual(page, { items: [], nextCursor: "next", hasNextPage: false });
 });
 
+test("sales report JSON serializes filters and propagates a signal", async () => {
+  let request;
+  const controller = new AbortController();
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return new Response(JSON.stringify({ data: { metrics: { totalReceived: 11000 } } }), { status: 200 });
+    },
+  });
+
+  const report = await api.getSalesReport({
+    dateFrom: "2026-07-01",
+    dateTo: "2026-07-17",
+    paymentMethod: "cash",
+    cashierUserId: "user 1",
+    signal: controller.signal,
+  });
+
+  assert.equal(request.url, "/api/v1/reports/sales?dateFrom=2026-07-01&dateTo=2026-07-17&paymentMethod=cash&cashierUserId=user+1");
+  assert.ok(request.options.signal instanceof AbortSignal);
+  assert.equal(report.metrics.totalReceived, 11000);
+});
+
+test("sales report CSV uses a safe attachment filename", async () => {
+  const responses = [
+    new Response("csv-body", { headers: { "Content-Disposition": 'attachment; filename="laporan-penjualan-harian-2026-07-01_2026-07-17.csv"' } }),
+    new Response("csv-body", { headers: { "Content-Disposition": 'attachment; filename="../../evil.csv"' } }),
+  ];
+  const api = createAPIClient({ getToken: async () => "token", fetchImpl: async () => responses.shift() });
+
+  const file = await api.downloadSalesReport({ dateFrom: "2026-07-01", dateTo: "2026-07-17" }, "daily");
+  assert.equal(file.filename, "laporan-penjualan-harian-2026-07-01_2026-07-17.csv");
+  assert.equal(await file.blob.text(), "csv-body");
+  const sanitized = await api.downloadSalesReport({ dateFrom: "2026-07-01", dateTo: "2026-07-17" }, "daily");
+  assert.equal(sanitized.filename, "evil.csv");
+});
+
+test("sales report CSV parses JSON error envelopes", async () => {
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async () => new Response(JSON.stringify({ error: { code: "INVALID_REPORT_FILTER", message: "Bad range" } }), {
+      status: 422,
+      headers: { "Content-Type": "application/json" },
+    }),
+  });
+  await assert.rejects(api.downloadSalesReport({ dateFrom: "bad", dateTo: "bad" }), (error) => {
+    assert.equal(error.code, "INVALID_REPORT_FILTER");
+    assert.equal(error.status, 422);
+    return true;
+  });
+});
+
 test("createStockMovement posts manual movement payload", async () => {
   let request;
   const api = createAPIClient({
