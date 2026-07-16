@@ -71,7 +71,11 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
           <ProductImage product={product} />
           {addFeedback && <span className="product-add-ring" aria-hidden="true" />}
           {addFeedback && (
-            <span className="product-add-feedback absolute left-3 top-3 rounded-md bg-surface/95 px-2.5 py-1 text-xs font-semibold text-success shadow-low">
+            <span
+              role="status"
+              aria-live="polite"
+              className="product-add-feedback absolute left-3 top-3 rounded-md bg-surface/95 px-2.5 py-1 text-xs font-semibold text-success shadow-low"
+            >
               Added
             </span>
           )}
@@ -112,6 +116,7 @@ export function ProductCard({ product, onAdd, onDecrease }) {
         <div className="grid h-10 min-w-0 grid-cols-3 items-center rounded-md border border-border bg-surface text-center text-base font-semibold text-text">
           <button
             type="button"
+            aria-label="Decrease quantity"
             className="grid h-full place-items-center text-text-muted transition hover:bg-surface-muted disabled:opacity-35"
             disabled={qty <= 0}
             onClick={onDecrease}
@@ -123,6 +128,7 @@ export function ProductCard({ product, onAdd, onDecrease }) {
           </span>
           <button
             type="button"
+            aria-label="Increase quantity"
             className="grid h-full place-items-center text-text-muted transition hover:bg-surface-muted disabled:opacity-35"
             disabled={outOfStock}
             onClick={handleAdd}

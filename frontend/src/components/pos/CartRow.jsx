@@ -71,6 +71,7 @@ export function CartRow({ item, subtotal, unitPrice, maxQty, onUpdateQty, onRemo
               <div className="flex h-8 items-center rounded-md border border-border bg-surface">
                 <button
                   type="button"
+                  aria-label="Decrease quantity"
                   onClick={() => onUpdateQty(Math.max(1, item.qty - 1))}
                   className="grid size-8 place-items-center text-text-muted transition hover:bg-surface-muted active:scale-90"
                 >
@@ -81,6 +82,7 @@ export function CartRow({ item, subtotal, unitPrice, maxQty, onUpdateQty, onRemo
                 </span>
                 <button
                   type="button"
+                  aria-label="Increase quantity"
                   onClick={() => onUpdateQty(item.qty + 1)}
                   disabled={plusDisabled}
                   title={plusDisabled ? "Stock limit reached" : undefined}

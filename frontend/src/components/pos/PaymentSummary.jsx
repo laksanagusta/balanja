@@ -42,6 +42,7 @@ export function PaymentSummary({
           <Pill
             key={method.id}
             selected={paymentMethod === method.id}
+            aria-pressed={paymentMethod === method.id}
             disabled={disabled}
             onClick={() => onPaymentMethodChange(method.id)}
             className="gap-1.5"
