@@ -122,7 +122,7 @@ test("checkout sends only product identifiers and quantities with an idempotency
     payment: { method: "cash", cashReceived: 10000 },
     cashierName: "Ayu Pratiwi",
   });
-	assert.equal(JSON.parse(request.body).cashierUserId, undefined);
+  assert.equal(JSON.parse(request.body).cashierUserId, undefined);
 });
 
 test("listStockMovements sends stock movement filters", async () => {

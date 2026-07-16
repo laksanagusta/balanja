@@ -27,7 +27,7 @@ function MissingClerkConfig() {
 
 function Application() {
   const { getToken, isSignedIn, orgId } = useAuth();
-	const { user } = useUser();
+  const { user } = useUser();
   const api = React.useMemo(
     () =>
       createAPIClient({

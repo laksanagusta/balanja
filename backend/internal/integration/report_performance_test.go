@@ -30,12 +30,12 @@ func TestSalesReportPerformance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("connect admin: %v", err)
 	}
-	defer admin.Close(ctx)
 	orgID := fmt.Sprintf("org_report_perf_%d", time.Now().UnixNano())
 	t.Cleanup(func() {
 		if _, cleanupErr := admin.Exec(context.Background(), `delete from transactions where org_id=$1`, orgID); cleanupErr != nil {
 			t.Errorf("cleanup performance tenant: %v", cleanupErr)
 		}
+		_ = admin.Close(context.Background())
 	})
 
 	location := report.WIBLocation()

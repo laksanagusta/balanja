@@ -86,7 +86,12 @@ export function createAPIClient({
   function attachmentFilename(response, filters, kind) {
     const disposition = response.headers.get("Content-Disposition") || "";
     const match = disposition.match(/filename\*?=(?:UTF-8''|)["']?([^"';]+)["']?/i);
-    const candidate = match?.[1] ? decodeURIComponent(match[1]) : "";
+    let candidate = "";
+    try {
+      candidate = match?.[1] ? decodeURIComponent(match[1]) : "";
+    } catch {
+      candidate = "";
+    }
     const basename = candidate.split(/[\\/]/).pop()?.replace(/[^\w.()-]/g, "-") || "";
     if (basename.toLowerCase().endsWith(".csv")) return basename;
     const label = kind === "transactions" ? "transaksi" : "harian";
@@ -146,7 +151,7 @@ export function createAPIClient({
         body: {
           items: cart.map((item) => ({ productId: item.productId, quantity: item.qty })),
           payment,
-		  ...(cashierName ? { cashierName } : {}),
+          ...(cashierName ? { cashierName } : {}),
         },
       })).data;
     },
