@@ -113,13 +113,16 @@ test("checkout sends only product identifiers and quantities with an idempotency
   await api.checkout({
     cart: [{ productId: "product-1", name: "Untrusted", price: 1, qty: 2 }],
     payment: { method: "cash", cashReceived: 10000 },
+    cashierName: "Ayu Pratiwi",
   });
 
   assert.equal(request.headers["Idempotency-Key"], "checkout-request-id");
   assert.deepEqual(JSON.parse(request.body), {
     items: [{ productId: "product-1", quantity: 2 }],
     payment: { method: "cash", cashReceived: 10000 },
+    cashierName: "Ayu Pratiwi",
   });
+	assert.equal(JSON.parse(request.body).cashierUserId, undefined);
 });
 
 test("listStockMovements sends stock movement filters", async () => {

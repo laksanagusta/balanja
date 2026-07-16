@@ -104,7 +104,7 @@ export function createAPIClient({
     async createStockMovement(input, options = {}) {
       return (await request("/api/v1/stock/movements", { ...options, method: "POST", body: input })).data;
     },
-    async checkout({ cart, payment, idempotencyKey = randomUUID(), signal }) {
+    async checkout({ cart, payment, cashierName = "", idempotencyKey = randomUUID(), signal }) {
       return (await request("/api/v1/checkouts", {
         method: "POST",
         signal,
@@ -112,6 +112,7 @@ export function createAPIClient({
         body: {
           items: cart.map((item) => ({ productId: item.productId, quantity: item.qty })),
           payment,
+		  ...(cashierName ? { cashierName } : {}),
         },
       })).data;
     },
