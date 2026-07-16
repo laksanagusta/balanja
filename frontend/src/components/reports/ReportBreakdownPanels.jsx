@@ -15,19 +15,25 @@ function ReportTablePanel({ title, description, columns, data, emptyTitle }) {
   );
 }
 
-export default function ReportBreakdownPanels({ products = [], payments = [], cashiers = [], voids = {}, formatMoney, formatCount }) {
+export function VoidReportPanel({ voids = {}, formatMoney, formatCount }) {
+  return (
+    <Panel className="flex flex-wrap items-center justify-between gap-4 border-danger/20 bg-danger-soft/30 p-4 shadow-none">
+      <div>
+        <h2 className="text-sm font-semibold text-text">Transaksi void</h2>
+        <p className="mt-1 text-xs text-text-muted">Dipisahkan dari seluruh metrik penjualan selesai.</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <Badge tone="danger">{formatCount(voids.count || 0)} transaksi</Badge>
+        <span className="font-mono text-sm font-semibold tabular-nums text-danger">{formatMoney(voids.originalValue || 0)}</span>
+      </div>
+    </Panel>
+  );
+}
+
+export default function ReportBreakdownPanels({ products = [], payments = [], cashiers = [], voids = {}, showVoids = true, formatMoney, formatCount }) {
   return (
     <>
-      <Panel className="flex flex-wrap items-center justify-between gap-4 border-danger/20 bg-danger-soft/30 p-4 shadow-none">
-        <div>
-          <h2 className="text-sm font-semibold text-text">Transaksi void</h2>
-          <p className="mt-1 text-xs text-text-muted">Dipisahkan dari seluruh metrik penjualan selesai.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Badge tone="danger">{formatCount(voids.count || 0)} transaksi</Badge>
-          <span className="font-mono text-sm font-semibold tabular-nums text-danger">{formatMoney(voids.originalValue || 0)}</span>
-        </div>
-      </Panel>
+      {showVoids && <VoidReportPanel voids={voids} formatMoney={formatMoney} formatCount={formatCount} />}
       <div className="grid gap-4 xl:grid-cols-2">
         <ReportTablePanel
           title="Produk teratas"

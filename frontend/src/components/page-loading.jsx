@@ -280,6 +280,27 @@ export function DashboardPageSkeleton() {
   );
 }
 
+export function SalesReportPageSkeleton() {
+  return (
+    <div className="h-full overflow-auto bg-app-bg" aria-busy="true">
+      <header className="border-b border-border bg-surface px-4 py-3">
+        <Skeleton className="h-5 w-40 bg-surface-muted/80" />
+        <Skeleton className="mt-2 h-3.5 w-72 bg-surface-muted/80" />
+      </header>
+      <div className="grid gap-3 border-b border-border bg-surface p-4">
+        <div className="flex flex-wrap gap-2">{Array.from({ length: 5 }, (_, index) => <Skeleton key={index} className="h-8 w-24 bg-surface-muted/80" />)}</div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-16 w-full bg-surface-muted/80" />)}</div>
+      </div>
+      <main className="grid gap-4 p-4">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }, (_, index) => <DashboardMetricSkeleton key={index} delay={index * 50} />)}</section>
+        <Panel className="p-4"><Skeleton className="h-16 w-full bg-danger-soft/40" /></Panel>
+        <ChartPanelSkeleton chartHeight="h-[260px]" titleWidth="w-36" />
+        <section className="grid gap-4 xl:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <ChartPanelSkeleton key={index} chartHeight="h-[220px]" titleWidth="w-28" delay={index * 70} />)}</section>
+      </main>
+    </div>
+  );
+}
+
 export function TablePageSkeleton({
   titleWidth = "w-24",
   subtitleWidth = "w-72",
