@@ -56,7 +56,7 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 	}
 	defer pool.Close()
 	service := checkout.NewService(database.Runner{DB: pool}, checkout.PostgresRepository{})
-	input := checkout.Input{Items: []checkout.ItemInput{{ProductID: productID, Quantity: 1}}, Payment: checkout.PaymentInput{Method: "qris"}}
+	input := checkout.Input{Items: []checkout.ItemInput{{ProductID: productID, Quantity: 1}}, Payment: checkout.PaymentInput{Method: "qris"}, CashierName: "  Ayu  "}
 
 	errorsByRequest := make([]error, 2)
 	var wait sync.WaitGroup
@@ -86,5 +86,13 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 	}
 	if saleMovements != 1 {
 		t.Fatalf("sale movements = %d, want 1", saleMovements)
+	}
+	var cashierUserID string
+	var cashierName *string
+	if err := admin.QueryRow(ctx, `select cashier_user_id,cashier_name from transactions where org_id='org_checkout' limit 1`).Scan(&cashierUserID, &cashierName); err != nil {
+		t.Fatalf("load cashier snapshot: %v", err)
+	}
+	if cashierUserID != "user" || cashierName == nil || *cashierName != "Ayu" {
+		t.Fatalf("cashier user=%q name=%v", cashierUserID, cashierName)
 	}
 }

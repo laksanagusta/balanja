@@ -33,7 +33,11 @@ type Service struct {
 
 func NewService(r Runner, repo Repository) *Service { return &Service{runner: r, repository: repo} }
 func (s *Service) Checkout(ctx context.Context, id database.Identity, key string, input Input) (result Result, err error) {
+	input.CashierName = strings.TrimSpace(input.CashierName)
 	if !validKey(key) || len(input.Items) == 0 || (input.Payment.Method != "cash" && input.Payment.Method != "qris") {
+		return Result{}, ErrInvalidCheckout
+	}
+	if len(input.CashierName) > 120 {
 		return Result{}, ErrInvalidCheckout
 	}
 	quantities := map[string]ItemInput{}
