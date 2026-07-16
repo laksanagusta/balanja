@@ -79,4 +79,26 @@ func TestSalesReportAggregatesTenantData(t *testing.T) {
 	if len(got.Trend) != 3 || got.Trend[1].TotalReceived != 0 {
 		t.Fatalf("trend=%#v", got.Trend)
 	}
+	if len(got.TopProducts) != 1 || got.TopProducts[0].Quantity != 3 || got.TopProducts[0].NetSales != 30000 {
+		t.Fatalf("products=%#v", got.TopProducts)
+	}
+	if len(got.PaymentMethods) != 1 || got.PaymentMethods[0].PaymentMethod != "cash" || got.PaymentMethods[0].TotalReceived != 33000 {
+		t.Fatalf("payments=%#v", got.PaymentMethods)
+	}
+	if len(got.Cashiers) != 1 || got.Cashiers[0].CashierUserID != "user-a" || got.Cashiers[0].Label != "Ayu" {
+		t.Fatalf("cashiers=%#v", got.Cashiers)
+	}
+
+	unknown, err := service.Report(ctx, database.Identity{OrgID: "org_report_a", UserID: "reader-a"}, report.FilterInput{
+		DateFrom: "2026-07-14", DateTo: "2026-07-16", CashierProvided: true, CashierUserID: "user-b",
+	}, time.Date(2026, 7, 17, 9, 0, 0, 0, report.WIBLocation()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unknown.Metrics.TotalReceived != 0 || len(unknown.TopProducts) != 0 || len(unknown.PaymentMethods) != 0 || len(unknown.Cashiers) != 0 {
+		t.Fatalf("cross-tenant filter leaked data: %#v", unknown)
+	}
+	if len(unknown.CashierOptions) != 1 || unknown.CashierOptions[0].CashierUserID != "user-a" {
+		t.Fatalf("cashier options=%#v", unknown.CashierOptions)
+	}
 }
