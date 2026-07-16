@@ -56,7 +56,7 @@ The login page lives at `/`, the production POS surface lives at `/pos`, and the
 
 The operational dashboard lives at `/dashboard` inside the shared app shell. It uses four compact KPI cards, a wide-primary/narrow-secondary chart row, then a top-products and low-stock row. Use rolling 7-day and 30-day periods; calculate metrics only from completed local POS transactions and show the established empty-state pattern when a period has no sales. Low stock means an active product with 10 units or fewer.
 
-Dashboard charts must use the installed BKLIT registry components (`@bklit/line-chart`, `@bklit/pie-chart`, and `@bklit/bar-chart`) rather than hand-written SVG charts. Chart colors come from semantic variables such as `--chart-line-primary`, `--chart-bar-primary`, `--color-chart-cash`, `--color-chart-qris`, and `--color-chart-other`. Labels, legends, and supporting text must keep the data understandable without relying on color alone.
+Dashboard charts must use the installed BKLIT registry components (`@bklit/line-chart`, `@bklit/pie-chart`, and `@bklit/bar-chart`) rather than hand-written SVG charts. Use the Balanced Vivid chart palette only on data marks: violet (`--color-chart-violet`) for the revenue line and Cash, green (`--color-chart-green`) for top-product bars, mint (`--color-chart-mint`) for QRIS, and amber (`--color-chart-amber`) for Other. Keep panels white, grids neutral, and tooltips dark; do not add colored panel tints, gradients, glow, or decorative area fills. Labels, legends, markers, and supporting values must keep the data understandable without relying on color alone.
 
 ## Adding New UI
 

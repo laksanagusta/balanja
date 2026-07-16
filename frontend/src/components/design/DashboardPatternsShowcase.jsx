@@ -27,7 +27,10 @@ export default function DashboardPatternsShowcase() {
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Dashboard patterns</h3>
       <div className="grid gap-4 rounded-panel border border-border bg-app-bg p-4">
-        <p className="text-sm leading-6 text-text-muted">Production BKLIT chart components using Balanja semantic tokens and compact operational panels.</p>
+        <p className="text-sm leading-6 text-text-muted">
+          Production BKLIT charts use Balanja semantic tokens on calm white panels. Revenue uses violet, top products use green,
+          and payment methods use violet, mint, and amber. Legends, markers, labels and values keep every chart readable without color.
+        </p>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardKpiCard label="Revenue" value="Rp786.000" icon="cash" comparison={{ direction: "up", percent: 12.4 }} tone="success" />
           <DashboardKpiCard label="Completed transactions" value="28" icon="receipt" comparison={{ direction: "up", percent: 7.7 }} />
