@@ -32,6 +32,7 @@ These are Balanja-owned semantic colors inspired by the overall Origin Financial
 - Replace the near-black bars with chart green.
 - Keep the rounded line caps, neutral grid, axis labels, and tooltip values.
 - All bars in this ranking remain one semantic series color; do not assign arbitrary colors per product.
+- On compact charts, cap each axis label to the nearest bar-center spacing and show an ellipsis instead of allowing adjacent product names to overlap. Keep the full label available to assistive technology and the chart tooltip.
 
 ### Payment Mix
 
@@ -68,7 +69,7 @@ The reviewed `DashboardPage.jsx` structure has no blocking Web Interface Guideli
 
 ## Data and Behavior
 
-No analytics calculations, API requests, chart geometry, interactions, empty states, responsive layout, or loading behavior change. The existing server-provided data and payment labels remain the source of truth.
+No analytics calculations, API requests, chart geometry, interactions, empty states, or loading behavior change. The existing server-provided data and payment labels remain the source of truth. The only responsive adjustment is width-aware visual truncation for crowded bar-axis labels.
 
 ## Testing and Verification
 
@@ -83,5 +84,5 @@ No analytics calculations, API requests, chart geometry, interactions, empty sta
 - Copying Origin Financial's complete brand identity.
 - Adding dark mode or changing existing dark-theme chart fallbacks.
 - Adding gradients, area fills, glow effects, or new chart animations.
-- Changing chart types, layout, data aggregation, labels, or tooltip behavior.
+- Changing chart types, panel layout, data aggregation, full label content, or tooltip behavior.
 - Recoloring KPI cards, status colors, navigation, or primary actions.
