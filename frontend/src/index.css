@@ -24,9 +24,13 @@
   --color-warning: #ad6a00;
   --color-warning-soft: #fff4da;
   --color-focus: #4a4a4d;
-  --color-chart-cash: #1d1d1f;
-  --color-chart-qris: #168a4a;
-  --color-chart-other: #ad6a00;
+  --color-chart-violet: #7867e6;
+  --color-chart-green: #36a875;
+  --color-chart-mint: #5bbf9a;
+  --color-chart-amber: #e7a83e;
+  --color-chart-cash: var(--color-chart-violet);
+  --color-chart-qris: var(--color-chart-mint);
+  --color-chart-other: var(--color-chart-amber);
 
   --radius-control: 8px;
   --radius-card: 12px;
@@ -367,17 +371,17 @@
 }
 
 :root {
-  --chart-1: var(--color-chart-cash);
-  --chart-2: var(--color-chart-qris);
-  --chart-3: var(--color-chart-other);
-  --chart-4: #6f6f6f;
+  --chart-1: var(--color-chart-violet);
+  --chart-2: var(--color-chart-mint);
+  --chart-3: var(--color-chart-amber);
+  --chart-4: var(--color-chart-green);
   --chart-5: #d9d9d9;
   --chart-background: var(--color-surface);
   --chart-foreground: var(--color-text);
   --chart-foreground-muted: var(--color-text-muted);
-  --chart-line-primary: var(--chart-1);
-  --chart-line-secondary: var(--color-chart-qris);
-  --chart-bar-primary: var(--color-accent);
+  --chart-line-primary: var(--color-chart-violet);
+  --chart-line-secondary: var(--color-chart-mint);
+  --chart-bar-primary: var(--color-chart-green);
   --chart-crosshair: var(--color-text-muted);
   --chart-grid: var(--color-border);
   --chart-brush-border: var(--chart-grid);
