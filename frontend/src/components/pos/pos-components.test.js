@@ -34,3 +34,14 @@ test("product add feedback is announced without exposing decoration", async () =
   assert.match(product, /role="status"/);
   assert.match(product, /aria-live="polite"/);
 });
+
+test("product catalog defers filtering and contains off-screen cards", async () => {
+  const catalog = await readFile(new URL("./ProductCatalog.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../../index.css", import.meta.url), "utf8");
+
+  assert.match(catalog, /React\.memo/);
+  assert.match(catalog, /React\.useDeferredValue/);
+  assert.match(catalog, /React\.useMemo/);
+  assert.match(catalog, /<PosProductCard/);
+  assert.match(css, /\.pos-product-card[\s\S]*content-visibility:\s*auto/);
+});
