@@ -9,6 +9,91 @@ import (
 
 type PostgresRepository struct{}
 
+func (PostgresRepository) Daily(ctx context.Context, tx database.Tx, orgID string, query Query) ([]DailyRow, error) {
+	const sql = `
+		with buckets as (
+			select generate_series($2::timestamptz, $3::timestamptz - interval '1 day', interval '1 day') bucket_start
+		), totals as (
+			select date_trunc('day', t.created_at at time zone 'Asia/Jakarta') local_bucket,
+				count(*) filter (where t.status='completed') completed_transactions,
+				coalesce(sum(i.item_count) filter (where t.status='completed'),0) items_sold,
+				coalesce(sum(t.subtotal) filter (where t.status='completed'),0) net_sales,
+				coalesce(sum(t.tax) filter (where t.status='completed'),0) tax,
+				coalesce(sum(t.total) filter (where t.status='completed'),0) total_received,
+				count(*) filter (where t.status='voided') void_count,
+				coalesce(sum(t.total) filter (where t.status='voided'),0) void_original_value
+			from transactions t
+			left join lateral (
+				select coalesce(sum((item->>'qty')::bigint),0) item_count
+				from jsonb_array_elements(t.items) item
+			) i on true
+			where t.org_id=$1 and t.created_at >= $2 and t.created_at < $3
+				and ($4='' or t.payment_method=$4)
+				and ($5='' or t.cashier_user_id=$5)
+			group by 1
+		)
+		select b.bucket_start, coalesce(t.completed_transactions,0), coalesce(t.items_sold,0),
+			coalesce(t.net_sales,0), coalesce(t.tax,0), coalesce(t.total_received,0),
+			coalesce(t.void_count,0), coalesce(t.void_original_value,0)
+		from buckets b
+		left join totals t on t.local_bucket = date_trunc('day', b.bucket_start at time zone 'Asia/Jakarta')
+		order by b.bucket_start`
+	rows, err := tx.Query(ctx, sql, orgID, query.Current.Start, query.Current.End, query.PaymentMethod, query.CashierUserID)
+	if err != nil {
+		return nil, fmt.Errorf("load report daily export: %w", err)
+	}
+	defer rows.Close()
+	values := make([]DailyRow, 0, query.Current.Days)
+	for rows.Next() {
+		var bucket time.Time
+		var value DailyRow
+		if err := rows.Scan(&bucket, &value.CompletedTransactions, &value.ItemsSold, &value.NetSales, &value.Tax, &value.TotalReceived, &value.VoidCount, &value.VoidOriginalValue); err != nil {
+			return nil, fmt.Errorf("scan report daily export: %w", err)
+		}
+		value.Date = bucket.In(WIBLocation()).Format(dateLayout)
+		values = append(values, value)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate report daily export: %w", err)
+	}
+	return values, nil
+}
+
+func (PostgresRepository) StreamTransactions(ctx context.Context, tx database.Tx, orgID string, query Query, yield func(TransactionRow) error) error {
+	const sql = `
+		select t.number, t.created_at, coalesce(nullif(btrim(t.cashier_name),''),''), t.cashier_user_id,
+			t.payment_method, coalesce(i.item_count,0), t.subtotal, t.tax, t.total, t.status
+		from transactions t
+		left join lateral (
+			select coalesce(sum((item->>'qty')::bigint),0) item_count
+			from jsonb_array_elements(t.items) item
+		) i on true
+		where t.org_id=$1 and t.created_at >= $2 and t.created_at < $3
+			and ($4='' or t.payment_method=$4)
+			and ($5='' or t.cashier_user_id=$5)
+		order by t.created_at, t.id`
+	rows, err := tx.Query(ctx, sql, orgID, query.Current.Start, query.Current.End, query.PaymentMethod, query.CashierUserID)
+	if err != nil {
+		return fmt.Errorf("load report transaction export: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var row TransactionRow
+		var cashierName string
+		if err := rows.Scan(&row.Number, &row.CreatedAt, &cashierName, &row.CashierUserID, &row.PaymentMethod, &row.ItemCount, &row.Subtotal, &row.Tax, &row.Total, &row.Status); err != nil {
+			return fmt.Errorf("scan report transaction export: %w", err)
+		}
+		row.CashierLabel = cashierLabel(cashierName, row.CashierUserID)
+		if err := yield(row); err != nil {
+			return err
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate report transaction export: %w", err)
+	}
+	return nil
+}
+
 func (PostgresRepository) Load(ctx context.Context, tx database.Tx, orgID string, query Query) (ReportData, error) {
 	currentMetrics, voids, err := loadSummary(ctx, tx, orgID, query.Current, query.PaymentMethod, query.CashierUserID)
 	if err != nil {

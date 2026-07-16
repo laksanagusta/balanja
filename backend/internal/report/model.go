@@ -105,3 +105,27 @@ type Report struct {
 	CashierOptions   []CashierOption       `json:"cashierOptions"`
 	GeneratedAt      time.Time             `json:"generatedAt"`
 }
+
+type DailyRow struct {
+	Date                  string
+	CompletedTransactions int64
+	ItemsSold             int64
+	NetSales              int64
+	Tax                   int64
+	TotalReceived         int64
+	VoidCount             int64
+	VoidOriginalValue     int64
+}
+
+type TransactionRow struct {
+	Number        string
+	CreatedAt     time.Time
+	CashierLabel  string
+	CashierUserID string
+	PaymentMethod string
+	ItemCount     int64
+	Subtotal      int64
+	Tax           int64
+	Total         int64
+	Status        string
+}

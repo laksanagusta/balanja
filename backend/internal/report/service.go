@@ -3,6 +3,7 @@ package report
 import (
 	"balanja/backend/internal/platform/database"
 	"context"
+	"io"
 	"math"
 	"time"
 )
@@ -13,6 +14,45 @@ type Runner interface {
 
 type Repository interface {
 	Load(context.Context, database.Tx, string, Query) (ReportData, error)
+	Daily(context.Context, database.Tx, string, Query) ([]DailyRow, error)
+	StreamTransactions(context.Context, database.Tx, string, Query, func(TransactionRow) error) error
+}
+
+func (s *Service) Prepare(input FilterInput, now time.Time) (Query, error) {
+	return NormalizeFilter(input, now)
+}
+
+func (s *Service) ExportDaily(ctx context.Context, id database.Identity, input FilterInput, now time.Time, w io.Writer) error {
+	query, err := s.Prepare(input, now)
+	if err != nil {
+		return err
+	}
+	var rows []DailyRow
+	if err := s.runner.Run(ctx, id, func(tx database.Tx) error {
+		var loadErr error
+		rows, loadErr = s.repository.Daily(ctx, tx, id.OrgID, query)
+		return loadErr
+	}); err != nil {
+		return err
+	}
+	return WriteDailyCSV(w, rows)
+}
+
+func (s *Service) ExportTransactions(ctx context.Context, id database.Identity, input FilterInput, now time.Time, w io.Writer) error {
+	query, err := s.Prepare(input, now)
+	if err != nil {
+		return err
+	}
+	encoder, err := newTransactionCSVEncoder(w)
+	if err != nil {
+		return err
+	}
+	if err := s.runner.Run(ctx, id, func(tx database.Tx) error {
+		return s.repository.StreamTransactions(ctx, tx, id.OrgID, query, encoder.write)
+	}); err != nil {
+		return err
+	}
+	return encoder.flush()
 }
 
 type Service struct {

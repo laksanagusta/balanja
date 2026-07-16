@@ -5,8 +5,12 @@ package integration
 import (
 	"balanja/backend/internal/platform/database"
 	"balanja/backend/internal/report"
+	"bytes"
 	"context"
+	"encoding/csv"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -101,4 +105,52 @@ func TestSalesReportAggregatesTenantData(t *testing.T) {
 	if len(unknown.CashierOptions) != 1 || unknown.CashierOptions[0].CashierUserID != "user-a" {
 		t.Fatalf("cashier options=%#v", unknown.CashierOptions)
 	}
+
+	identity := database.Identity{OrgID: "org_report_a", UserID: "reader-a"}
+	filters := report.FilterInput{DateFrom: "2026-07-14", DateTo: "2026-07-16"}
+	var daily bytes.Buffer
+	if err := service.ExportDaily(ctx, identity, filters, time.Date(2026, 7, 17, 9, 0, 0, 0, report.WIBLocation()), &daily); err != nil {
+		t.Fatal(err)
+	}
+	dailyRecords, err := csv.NewReader(strings.NewReader(strings.TrimPrefix(daily.String(), "\ufeff"))).ReadAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var dailyCompleted, dailyVoids int64
+	for _, row := range dailyRecords[1:] {
+		dailyCompleted += parseCSVInt(t, row[5])
+		dailyVoids += parseCSVInt(t, row[7])
+	}
+	if dailyCompleted != got.Metrics.TotalReceived || dailyVoids != got.Voids.OriginalValue {
+		t.Fatalf("daily completed=%d voids=%d", dailyCompleted, dailyVoids)
+	}
+
+	var detail bytes.Buffer
+	if err := service.ExportTransactions(ctx, identity, filters, time.Date(2026, 7, 17, 9, 0, 0, 0, report.WIBLocation()), &detail); err != nil {
+		t.Fatal(err)
+	}
+	detailRecords, err := csv.NewReader(strings.NewReader(strings.TrimPrefix(detail.String(), "\ufeff"))).ReadAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var detailCompleted, detailVoids int64
+	for _, row := range detailRecords[1:] {
+		if row[9] == "completed" {
+			detailCompleted += parseCSVInt(t, row[8])
+		} else if row[9] == "voided" {
+			detailVoids += parseCSVInt(t, row[8])
+		}
+	}
+	if detailCompleted != got.Metrics.TotalReceived || detailVoids != got.Voids.OriginalValue {
+		t.Fatalf("detail completed=%d voids=%d", detailCompleted, detailVoids)
+	}
+}
+
+func parseCSVInt(t *testing.T, value string) int64 {
+	t.Helper()
+	parsed, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		t.Fatalf("parse CSV integer %q: %v", value, err)
+	}
+	return parsed
 }

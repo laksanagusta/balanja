@@ -2,7 +2,9 @@ package report
 
 import (
 	"balanja/backend/internal/platform/database"
+	"bytes"
 	"context"
+	"strings"
 	"testing"
 	"time"
 )
@@ -19,9 +21,26 @@ func (r *fakeRunner) Run(ctx context.Context, id database.Identity, fn func(data
 }
 
 type fakeRepository struct {
-	data  ReportData
-	query Query
-	calls int
+	data         ReportData
+	daily        []DailyRow
+	transactions []TransactionRow
+	query        Query
+	calls        int
+}
+
+func (r *fakeRepository) Daily(_ context.Context, _ database.Tx, _ string, query Query) ([]DailyRow, error) {
+	r.query = query
+	return r.daily, nil
+}
+
+func (r *fakeRepository) StreamTransactions(_ context.Context, _ database.Tx, _ string, query Query, yield func(TransactionRow) error) error {
+	r.query = query
+	for _, row := range r.transactions {
+		if err := yield(row); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *fakeRepository) Load(_ context.Context, _ database.Tx, _ string, query Query) (ReportData, error) {
@@ -87,3 +106,33 @@ func TestComparisonRoundsAndSetsDirection(t *testing.T) {
 }
 
 func floatPointer(value float64) *float64 { return &value }
+
+func TestServiceExportsValidatedCSV(t *testing.T) {
+	t.Parallel()
+	runner := &fakeRunner{}
+	repo := &fakeRepository{
+		daily:        []DailyRow{{Date: "2026-07-17", CompletedTransactions: 1}},
+		transactions: []TransactionRow{{Number: "TRX-1", CreatedAt: time.Date(2026, 7, 17, 2, 0, 0, 0, time.UTC), CashierUserID: "u", CashierLabel: "Ayu"}},
+	}
+	service := NewService(runner, repo)
+	input := FilterInput{DateFrom: "2026-07-17", DateTo: "2026-07-17"}
+	now := time.Date(2026, 7, 17, 9, 0, 0, 0, WIBLocation())
+	var daily bytes.Buffer
+	if err := service.ExportDaily(context.Background(), database.Identity{OrgID: "o", UserID: "u"}, input, now, &daily); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(daily.String(), "2026-07-17,1") {
+		t.Fatalf("daily=%q", daily.String())
+	}
+	var detail bytes.Buffer
+	if err := service.ExportTransactions(context.Background(), database.Identity{OrgID: "o", UserID: "u"}, input, now, &detail); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(detail.String(), "TRX-1") {
+		t.Fatalf("detail=%q", detail.String())
+	}
+	before := runner.calls
+	if err := service.ExportDaily(context.Background(), database.Identity{}, FilterInput{DateFrom: "bad", DateTo: "bad"}, now, &daily); err == nil || runner.calls != before {
+		t.Fatalf("validation err=%v runner calls=%d", err, runner.calls)
+	}
+}
