@@ -197,7 +197,7 @@ The response data contains:
 
 Breakdowns describe the selected period only. Prior-period comparison is limited to summary metrics and the trend series so the response stays understandable and bounded.
 
-Cashier filter options are computed from both completed and voided transactions in the selected date range. They are independent of the current payment/cashier selection so applying a filter does not remove other valid choices from the control. The backend does not attempt organization-membership validation for an opaque cashier ID because the current schema has no membership table. The tenant predicate remains authoritative: an unknown or cross-tenant ID produces an empty report and reveals no external identity information.
+Cashier filter options are computed from both completed and voided transactions in the selected date range. They are independent of the current payment/cashier selection so applying a filter does not remove other valid choices from the control. The backend does not attempt organization-membership validation for an opaque cashier ID because the current schema has no membership table. The tenant predicate remains authoritative: an unknown or cross-tenant ID produces zero metrics and breakdowns and reveals no external identity information, while same-tenant cashier options for the selected date range may remain visible.
 
 ### CSV endpoint
 
