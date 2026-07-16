@@ -105,6 +105,18 @@ func TestSalesReportAggregatesTenantData(t *testing.T) {
 	if len(unknown.CashierOptions) != 1 || unknown.CashierOptions[0].CashierUserID != "user-a" {
 		t.Fatalf("cashier options=%#v", unknown.CashierOptions)
 	}
+	qrisOnly, err := service.Report(ctx, database.Identity{OrgID: "org_report_a", UserID: "reader-a"}, report.FilterInput{
+		DateFrom: "2026-07-14", DateTo: "2026-07-16", PaymentMethod: "qris",
+	}, time.Date(2026, 7, 17, 9, 0, 0, 0, report.WIBLocation()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if qrisOnly.Metrics.TotalReceived != 0 || qrisOnly.PreviousMetrics.TotalReceived != 0 || len(qrisOnly.TopProducts) != 0 {
+		t.Fatalf("payment filter did not apply consistently: %#v", qrisOnly)
+	}
+	if len(qrisOnly.CashierOptions) != 1 || qrisOnly.CashierOptions[0].CashierUserID != "user-a" {
+		t.Fatalf("payment filter collapsed cashier options: %#v", qrisOnly.CashierOptions)
+	}
 
 	identity := database.Identity{OrgID: "org_report_a", UserID: "reader-a"}
 	filters := report.FilterInput{DateFrom: "2026-07-14", DateTo: "2026-07-16"}

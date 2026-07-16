@@ -20,4 +20,11 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
   assert.match(toolbar, /CSV harian/);
   assert.match(toolbar, /CSV transaksi/);
   assert.match(toolbar, /filter aktif/);
+	assert.match(toolbar, /label="Tanggal dari"/);
+	assert.match(toolbar, /error=\{error\}/);
+	assert.match(toolbar, /aria-label="Ekspor ringkasan harian CSV"/);
+	assert.match(toolbar, /aria-label="Ekspor detail transaksi CSV"/);
+	const primitives = await readFile(new URL("../primitives.jsx", import.meta.url), "utf8");
+	assert.match(primitives, /aria-expanded=\{isOpen\}/);
+	assert.match(primitives, /focus-visible:outline-2/);
 });
