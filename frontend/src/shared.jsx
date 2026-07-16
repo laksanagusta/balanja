@@ -8,6 +8,7 @@ export const routes = {
   products: "/products",
   stock: "/stock",
   transactions: "/transactions",
+  reportsSales: "/reports/sales",
   settings: "/settings",
   designSystem: "/design-system",
 };
@@ -23,6 +24,10 @@ export const navGroups = [
       ["Transactions", "file", routes.transactions],
       ["Settings", "settings", routes.settings],
     ],
+  },
+  {
+    label: "Analisis",
+    items: [["Laporan Penjualan", "file", routes.reportsSales]],
   },
 ];
 

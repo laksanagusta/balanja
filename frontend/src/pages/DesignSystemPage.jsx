@@ -20,6 +20,7 @@ import ModalFormShowcase from "../components/design/ModalFormShowcase.jsx";
 import KpiCardShowcase from "../components/design/KpiCardShowcase.jsx";
 import PillShowcase from "../components/design/PillShowcase.jsx";
 import DashboardPatternsShowcase from "../components/design/DashboardPatternsShowcase.jsx";
+import ReportPatternsShowcase from "../components/design/ReportPatternsShowcase.jsx";
 import MarketingPatternsShowcase from "../components/design/MarketingPatternsShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
@@ -116,6 +117,7 @@ export default function DesignSystemPage({ onNavigate }) {
         <EmptyStateShowcase />
         <KpiCardShowcase />
         <DashboardPatternsShowcase />
+        <ReportPatternsShowcase />
       </section>
     </main>
   );

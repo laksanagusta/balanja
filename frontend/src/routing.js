@@ -6,6 +6,7 @@ const PRIVATE_PATHS = new Set([
   "/products",
   "/stock",
   "/transactions",
+  "/reports/sales",
   "/settings",
   "/design-system",
 ]);

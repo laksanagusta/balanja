@@ -75,6 +75,16 @@ Use the existing semantic palette, 8px/12px/16px radius hierarchy, soft borders,
 
 Public navigation keeps the logo and authentication action visible on mobile; secondary anchor links may collapse or hide below the medium breakpoint. Marketing compositions stay open and flat—do not introduce nested cards or apply enlarged typography and spacing to POS, dashboard, catalog, stock, transactions, settings, or dialogs.
 
+## Sales reports
+
+Sales reports use inclusive local calendar dates in WIB and compare every selected period with the immediately preceding period of equal length. Presets cover Hari ini, 7 hari, 30 hari, and Bulan ini; custom ranges allow at most 366 days and expose validation beside the date control.
+
+The report workspace retains settled content during refetch, softens only the affected report panels, and announces `Memperbarui` through a polite status region. Initial loading mirrors the final layout with six metric blocks, a separate void block, a wide trend, and three breakdown panels. Mobile layouts stack controls, metrics, charts, and tables without hiding information.
+
+The six primary metrics are Penjualan bersih, Pajak, Total diterima, Transaksi selesai, Item terjual, and Rata-rata transaksi. Each includes an equal-period comparison; a zero prior value reads `Tidak ada data pembanding`. Voided transactions are always separate and never contribute to completed-sale metrics.
+
+Product breakdown value is penjualan bersih from harga snapshot × kuantitas. Transaction-level tax must never be allocated to products. Cashier rows group by stable user id, show the latest nonblank snapshot name, and fall back visibly to `Pengguna <short-id>`. Daily and transaction CSV actions have unique accessible names, preserve the current filters, remain keyboard reachable with visible focus, and disable only the export currently in progress.
+
 ## Verification
 
 Run `npm run build` from `frontend/`. For visual work, inspect desktop and mobile widths, and confirm no product card, button, nav item, cart row, or table text overflows its container.

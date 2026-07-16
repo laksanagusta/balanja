@@ -9,6 +9,7 @@ import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { loadTransactionPage } from "../pos/store-data.js";
 import { formatPrice } from "../shared.jsx";
+import { dateBoundaryWIB, readTransactionFilters } from "../transactions/transaction-filters.js";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("id-ID", {
@@ -17,27 +18,21 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
-function dateBoundary(value, endOfDay = false) {
-  if (!value) return "";
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day, endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0);
-  return date.toISOString();
-}
-
 export default function TransactionsPage() {
   const store = usePOSStore();
+  const initialFilters = React.useRef(readTransactionFilters(window.location.search)).current;
   const [query, setQuery] = React.useState("");
   const [selected, setSelected] = React.useState(null);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
-  const [paymentMethod, setPaymentMethod] = React.useState("");
-  const [dateFrom, setDateFrom] = React.useState("");
-  const [dateTo, setDateTo] = React.useState("");
+  const [paymentMethod, setPaymentMethod] = React.useState(initialFilters.paymentMethod);
+  const [dateFrom, setDateFrom] = React.useState(initialFilters.dateFrom);
+  const [dateTo, setDateTo] = React.useState(initialFilters.dateTo);
   const debouncedQuery = useDebouncedValue(query, 220);
   const transactionFilters = React.useMemo(() => ({
     q: debouncedQuery.trim(),
     paymentMethod,
-    dateFrom: dateBoundary(dateFrom),
-    dateTo: dateBoundary(dateTo, true),
+    dateFrom: dateBoundaryWIB(dateFrom),
+    dateTo: dateBoundaryWIB(dateTo, true),
   }), [dateFrom, dateTo, debouncedQuery, paymentMethod]);
   const fetchTransactionPage = React.useCallback(
     (request) => loadTransactionPage(store.api, request),
