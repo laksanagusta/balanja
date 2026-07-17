@@ -7,6 +7,7 @@ import {
   defaultReportFilters,
   downloadBlob,
   presetRange,
+  sameReportFilters,
   transactionHandoff,
   validateCustomRange,
 } from "./report-utils.js";
@@ -17,6 +18,13 @@ test("report presets use the WIB calendar at UTC boundaries", () => {
   assert.deepEqual(presetRange("today", now), { dateFrom: "2026-07-17", dateTo: "2026-07-17" });
   assert.deepEqual(presetRange("month", now), { dateFrom: "2026-07-01", dateTo: "2026-07-17" });
   assert.equal(defaultReportFilters(now).preset, "30d");
+});
+
+test("report filter equality ignores presentation presets but protects resolved query values", () => {
+  const resolved = { preset: "30d", dateFrom: "2026-06-18", dateTo: "2026-07-17", paymentMethod: "", cashierUserId: "" };
+  assert.equal(sameReportFilters(resolved, { ...resolved, preset: "custom" }), true);
+  assert.equal(sameReportFilters(resolved, { ...resolved, paymentMethod: "cash" }), false);
+  assert.equal(sameReportFilters(resolved, { ...resolved, dateFrom: "2026-07-01" }), false);
 });
 
 test("custom report ranges enforce 366 inclusive days", () => {

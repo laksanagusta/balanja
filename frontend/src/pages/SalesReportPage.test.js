@@ -11,9 +11,15 @@ test("sales report page owns fetch, retained update, export, and handoff lifecyc
   assert.match(source, /isUpdating=\{loading && Boolean\(report\)\}/);
   assert.match(source, /CSV berhasil dibuat/);
   assert.match(source, /CSV gagal dibuat/);
-  assert.match(source, /transactionHandoff\(appliedFilters\)/);
+  assert.match(source, /reportSnapshot/);
+  assert.match(source, /filters: \{ \.\.\.appliedFilters \}/);
+  assert.match(source, /resolvedFilters/);
+  assert.match(source, /transactionHandoff\(resolvedFilters\)/);
+  assert.match(source, /downloadSalesReport\(resolvedFilters, kind\)/);
+  assert.match(source, /refreshError/);
+  assert.match(source, /hasUnappliedChanges/);
+  assert.doesNotMatch(source, /opacity-60/);
   assert.doesNotMatch(source, /components\/design/);
 	assert.match(source, /aria-busy=\{loading\}/);
-	assert.match(source, /motion-reduce:transition-none/);
 	assert.match(source, /Laporan gagal dimuat/);
 });

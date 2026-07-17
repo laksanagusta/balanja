@@ -1,5 +1,6 @@
 const WIB_TIME_ZONE = "Asia/Jakarta";
 const DAY_MS = 24 * 60 * 60 * 1000;
+const REPORT_FILTER_KEYS = ["dateFrom", "dateTo", "paymentMethod", "cashierUserId"];
 
 export function defaultReportFilters(now = new Date()) {
   return { preset: "30d", paymentMethod: "", cashierUserId: "", ...presetRange("30d", now) };
@@ -21,6 +22,10 @@ export function validateCustomRange(dateFrom, dateTo, today = dateInWIB(new Date
   if (dateTo > today) return { valid: false, error: "Tanggal laporan tidak boleh melewati hari ini." };
   if ((end - start) / DAY_MS + 1 > 366) return { valid: false, error: "Rentang laporan maksimal 366 hari." };
   return { valid: true, error: "" };
+}
+
+export function sameReportFilters(left = {}, right = {}) {
+  return REPORT_FILTER_KEYS.every((key) => (left[key] || "") === (right[key] || ""));
 }
 
 export function alignTrend(current = [], previous = []) {

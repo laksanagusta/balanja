@@ -9,7 +9,7 @@ import { Button } from "../components/primitives.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
-import { defaultReportFilters, downloadBlob, presetRange, transactionHandoff, validateCustomRange } from "../reports/report-utils.js";
+import { defaultReportFilters, downloadBlob, presetRange, sameReportFilters, transactionHandoff, validateCustomRange } from "../reports/report-utils.js";
 
 const formatCount = (value) => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(Number(value) || 0);
 
@@ -18,9 +18,10 @@ export default function SalesReportPage({ onNavigate }) {
   const initial = React.useMemo(() => defaultReportFilters(), []);
   const [filters, setFilters] = React.useState(initial);
   const [appliedFilters, setAppliedFilters] = React.useState(initial);
-  const [report, setReport] = React.useState(null);
+  const [reportSnapshot, setReportSnapshot] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
+  const [refreshError, setRefreshError] = React.useState("");
   const [rangeError, setRangeError] = React.useState("");
   const [exporting, setExporting] = React.useState("");
   const [retryKey, setRetryKey] = React.useState(0);
@@ -33,11 +34,15 @@ export default function SalesReportPage({ onNavigate }) {
     api.getSalesReport({ ...appliedFilters, signal: controller.signal })
       .then((value) => {
         hasReport.current = true;
-        setReport(value);
+        setReportSnapshot({ data: value, filters: { ...appliedFilters } });
+        setRefreshError("");
       })
       .catch((requestError) => {
         if (controller.signal.aborted) return;
-        if (hasReport.current) toast.error("Laporan gagal diperbarui");
+        if (hasReport.current) {
+          setRefreshError("Filter baru gagal dimuat. Data terakhir yang berhasil tetap ditampilkan.");
+          toast.error("Laporan gagal diperbarui");
+        }
         else setError(requestError);
       })
       .finally(() => {
@@ -69,9 +74,11 @@ export default function SalesReportPage({ onNavigate }) {
     setAppliedFilters(next);
   }, []);
   const exportCSV = React.useCallback(async (kind) => {
+    const resolvedFilters = reportSnapshot?.filters;
+    if (!resolvedFilters) return;
     setExporting(kind);
     try {
-      const file = await api.downloadSalesReport(appliedFilters, kind);
+      const file = await api.downloadSalesReport(resolvedFilters, kind);
       downloadBlob(file);
       toast.success("CSV berhasil dibuat");
     } catch {
@@ -79,7 +86,11 @@ export default function SalesReportPage({ onNavigate }) {
     } finally {
       setExporting("");
     }
-  }, [api, appliedFilters]);
+  }, [api, reportSnapshot]);
+
+  const report = reportSnapshot?.data || null;
+  const resolvedFilters = reportSnapshot?.filters || null;
+  const hasUnappliedChanges = Boolean(resolvedFilters && !sameReportFilters(filters, resolvedFilters));
 
   if (!report && loading) return <SalesReportPageSkeleton />;
   if (!report && error) {
@@ -108,15 +119,18 @@ export default function SalesReportPage({ onNavigate }) {
         cashierOptions={report?.cashierOptions || []}
         error={rangeError}
         exporting={exporting}
+        refreshError={refreshError}
+        hasUnappliedChanges={hasUnappliedChanges}
+        actionsDisabled={!resolvedFilters || hasUnappliedChanges}
         isUpdating={loading && Boolean(report)}
         onChange={updateFilters}
         onPreset={applyPreset}
         onApply={apply}
         onReset={reset}
         onExport={exportCSV}
-        onHandoff={() => onNavigate(transactionHandoff(appliedFilters))}
+        onHandoff={() => resolvedFilters && onNavigate(transactionHandoff(resolvedFilters))}
       />
-      <main className={`min-h-0 flex-1 overflow-auto p-4 transition-opacity duration-base ease-standard motion-reduce:transition-none ${loading ? "opacity-60" : "opacity-100"}`} aria-busy={loading}>
+      <main className="min-h-0 flex-1 overflow-auto p-4" aria-busy={loading}>
         <div className="grid gap-4">
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Metrik laporan penjualan">
             {cards.map(([label, value, key, formatter]) => <ReportMetricCard key={key} label={label} value={value} comparison={comparisons[key]} formatAbsolute={formatter} />)}
