@@ -20,6 +20,7 @@ const settingsTabs = [
 
 export default function SettingsPage({ search = "", onTabChange = () => {} }) {
   const store = usePOSStore();
+  const { loadCategories, loadSettings, loadUnits } = store;
   const tab = normalizeTab(search);
   const [draft, setDraft] = React.useState(store.settings);
   const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.settings);
@@ -32,19 +33,19 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
     const controller = new AbortController();
     if (tab === "profile") {
       if (!store.loaded.settings) setIsPageLoading(true);
-      store.loadSettings({ force: true, signal: controller.signal }).finally(() => {
+      loadSettings({ force: true, signal: controller.signal }).finally(() => {
         if (!controller.signal.aborted) setIsPageLoading(false);
       });
       return () => controller.abort();
     }
     if (tab === "categories") {
-      store.loadCategories({ includeArchived: true, force: true, signal: controller.signal });
+      loadCategories({ includeArchived: true, force: true, signal: controller.signal });
     }
     if (tab === "units") {
-      store.loadUnits({ includeArchived: true, force: true, signal: controller.signal });
+      loadUnits({ includeArchived: true, force: true, signal: controller.signal });
     }
     return () => controller.abort();
-  }, [store, tab]);
+  }, [loadCategories, loadSettings, loadUnits, tab]);
 
   React.useEffect(() => {
     setDraft(store.settings);

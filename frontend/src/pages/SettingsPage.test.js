@@ -14,4 +14,7 @@ test("settings tabs use query parameters with profile fallback", async () => {
   assert.match(source, /max-w-3xl/);
   assert.doesNotMatch(source, /Current store/);
   assert.doesNotMatch(source, /Local MVP/);
+  assert.match(source, /const \{ loadCategories, loadSettings, loadUnits \} = store;/);
+  assert.match(source, /\[loadCategories, loadSettings, loadUnits, tab\]/);
+  assert.doesNotMatch(source, /\[store, tab\]/);
 });
