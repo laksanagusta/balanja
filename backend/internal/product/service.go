@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
 
 	listcursor "balanja/backend/internal/platform/cursor"
 	"balanja/backend/internal/platform/database"
+	"balanja/backend/internal/platform/objectstore"
 	"github.com/google/uuid"
 )
 
@@ -41,10 +43,30 @@ type Repository interface {
 type Service struct {
 	runner     TenantRunner
 	repository Repository
+	images     objectstore.Store
+	logger     *slog.Logger
 }
 
-func NewService(runner TenantRunner, repository Repository) *Service {
-	return &Service{runner: runner, repository: repository}
+type ServiceOption func(*Service)
+
+func WithImageStore(images objectstore.Store) ServiceOption {
+	return func(service *Service) { service.images = images }
+}
+
+func WithLogger(logger *slog.Logger) ServiceOption {
+	return func(service *Service) {
+		if logger != nil {
+			service.logger = logger
+		}
+	}
+}
+
+func NewService(runner TenantRunner, repository Repository, options ...ServiceOption) *Service {
+	service := &Service{runner: runner, repository: repository, logger: slog.Default()}
+	for _, option := range options {
+		option(service)
+	}
+	return service
 }
 
 func normalizeListFilter(filter ListFilter) (ListFilter, error) {
@@ -175,31 +197,100 @@ func (s *Service) List(ctx context.Context, identity database.Identity, filter L
 	}
 	return page, err
 }
-func (s *Service) Create(ctx context.Context, identity database.Identity, input CreateInput) (created Product, err error) {
+func (s *Service) Create(ctx context.Context, identity database.Identity, input CreateInput, uploads ...*ImageUpload) (created Product, err error) {
 	input.Name, input.Barcode, input.Category, input.Unit, input.Image = strings.TrimSpace(input.Name), strings.TrimSpace(input.Barcode), strings.TrimSpace(input.Category), strings.TrimSpace(input.Unit), strings.TrimSpace(input.Image)
 	if input.Name == "" || input.Barcode == "" || input.Category == "" || input.Unit == "" || input.Price < 1 || input.Stock < 0 {
 		return Product{}, ErrInvalidProduct
+	}
+	var newImageKey string
+	if len(uploads) > 0 && uploads[0] != nil {
+		if s.images == nil {
+			return Product{}, ErrStorageDisabled
+		}
+		validated, validateErr := validateProductImage(*uploads[0])
+		if validateErr != nil {
+			return Product{}, validateErr
+		}
+		stored, uploadErr := s.images.Put(ctx, objectstore.PutInput{Key: productImageKey(identity.OrgID, validated.Extension), ContentType: validated.ContentType, Body: validated.Data})
+		if uploadErr != nil {
+			return Product{}, fmt.Errorf("upload product image: %w", uploadErr)
+		}
+		input.Image, input.ImageKey, newImageKey = stored.URL, stored.Key, stored.Key
 	}
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
 		var createErr error
 		created, createErr = s.repository.Create(ctx, tx, identity.OrgID, input)
 		return createErr
 	})
+	if err != nil && newImageKey != "" {
+		s.deleteImage(ctx, newImageKey, "compensate failed product create")
+	}
 	return
 }
-func (s *Service) Update(ctx context.Context, identity database.Identity, id uuid.UUID, input UpdateInput) (updated Product, err error) {
+func (s *Service) Update(ctx context.Context, identity database.Identity, id uuid.UUID, input UpdateInput, mutations ...ImageMutation) (updated Product, err error) {
 	input.Name, input.Barcode, input.Category, input.Unit, input.Image = strings.TrimSpace(input.Name), strings.TrimSpace(input.Barcode), strings.TrimSpace(input.Category), strings.TrimSpace(input.Unit), strings.TrimSpace(input.Image)
 	if input.Name == "" || input.Barcode == "" || input.Category == "" || input.Unit == "" || input.Price < 1 {
 		return Product{}, ErrInvalidProduct
 	}
+	mutation := ImageMutation{Mode: ImageReference}
+	if len(mutations) > 0 {
+		mutation = mutations[0]
+	}
+	var newImageKey string
+	switch mutation.Mode {
+	case ImagePreserve:
+		input.PreserveImage = true
+	case ImageReference:
+		input.ImageKey = ""
+	case ImageRemove:
+		input.Image, input.ImageKey = "", ""
+	case ImageReplace:
+		if mutation.Upload == nil {
+			return Product{}, ErrInvalidImage
+		}
+		if s.images == nil {
+			return Product{}, ErrStorageDisabled
+		}
+		validated, validateErr := validateProductImage(*mutation.Upload)
+		if validateErr != nil {
+			return Product{}, validateErr
+		}
+		stored, uploadErr := s.images.Put(ctx, objectstore.PutInput{
+			Key: productImageKey(identity.OrgID, validated.Extension), ContentType: validated.ContentType, Body: validated.Data,
+		})
+		if uploadErr != nil {
+			return Product{}, fmt.Errorf("upload product image: %w", uploadErr)
+		}
+		input.Image, input.ImageKey, newImageKey = stored.URL, stored.Key, stored.Key
+	default:
+		return Product{}, ErrInvalidImage
+	}
+	var result UpdateResult
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
 		var updateErr error
-		var result UpdateResult
 		result, updateErr = s.repository.Update(ctx, tx, identity.OrgID, id, input)
 		updated = result.Product
 		return updateErr
 	})
+	if err != nil {
+		if newImageKey != "" {
+			s.deleteImage(ctx, newImageKey, "compensate failed product update")
+		}
+		return Product{}, err
+	}
+	if result.PreviousImageKey != "" && result.PreviousImageKey != updated.ImageKey {
+		s.deleteImage(ctx, result.PreviousImageKey, "delete replaced product image")
+	}
 	return
+}
+
+func (s *Service) deleteImage(ctx context.Context, key, operation string) {
+	if s.images == nil || key == "" {
+		return
+	}
+	if err := s.images.Delete(ctx, key); err != nil {
+		s.logger.Warn(operation, "imageKey", key, "error", err)
+	}
 }
 func (s *Service) Deactivate(ctx context.Context, identity database.Identity, id uuid.UUID) (updated Product, err error) {
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
