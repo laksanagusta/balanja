@@ -6,7 +6,9 @@ Product forms use one controlled photo field with a visible label, a slightly se
 
 ### Master data
 
-Settings uses query-backed neutral tabs for `profile`, `categories`, and `units`. Master-data lists keep active rows visible during mutations, archive is reversible, and no master-data flow hard-deletes records. Finite product selectors offer inline create, current archived values remain visible but cannot be newly assigned, and category/unit lists stay alphabetical.
+Settings uses query-backed navigation for `profile`, `categories`, and `units`. At the medium content breakpoint and above, navigation is a quiet 14rem vertical rail and the active surface is centered in the remaining area with a 48rem maximum width. Compact widths use the same navigation items in a horizontal overflow-safe row with targets at least 44px tall. Selection uses a neutral muted surface and `aria-current="page"`, never the primary action treatment. Do not add a redundant store-summary aside beside the editable profile form.
+
+Master-data lists keep active rows visible during mutations, archive is reversible, and no master-data flow hard-deletes records. Finite product selectors offer inline create, current archived values remain visible but cannot be newly assigned, and category/unit lists stay alphabetical. The master-data manager is the primary bordered surface and must not be wrapped in another decorative panel.
 
 ## Product Surface
 
