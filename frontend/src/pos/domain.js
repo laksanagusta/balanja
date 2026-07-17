@@ -123,8 +123,8 @@ export function validateProduct(product, products) {
   if (!String(product.name || "").trim()) errors.name = "Name is required";
   if (!barcode) errors.barcode = "Barcode is required";
   if (duplicate) errors.barcode = "Barcode already exists";
-  if (!String(product.category || "").trim()) errors.category = "Category is required";
-  if (!String(product.unit || "").trim()) errors.unit = "Unit is required";
+  if (!String(product.categoryId || "").trim()) errors.categoryId = "Category is required";
+  if (!String(product.unitId || "").trim()) errors.unitId = "Unit is required";
   if (price < 1 || Number.isNaN(price)) {
     errors.price = "Price must be at least 1";
   }
@@ -148,7 +148,7 @@ export function validateScannedProduct(product, products) {
   if (stock < 1 || Number.isNaN(stock)) {
     errors.stock = "Stock must be at least 1 to add this product to cart";
   }
-  if (!String(product.unit || "").trim()) errors.unit = "Unit is required";
+  if (!String(product.unitId || "").trim()) errors.unitId = "Unit is required";
 
   return { ok: Object.keys(errors).length === 0, errors };
 }

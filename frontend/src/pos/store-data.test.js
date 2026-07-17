@@ -161,21 +161,29 @@ test("applies authoritative checkout stock returned by server", () => {
 });
 
 test("product update payload never contains stock", () => {
-  const payload = toProductPayload({ name: "Tea", barcode: "1", category: "Drink", price: 10, stock: 99, unit: "pcs", image: "", active: true }, false);
+  const payload = toProductPayload({ name: "Tea", barcode: "1", categoryId: "cat-1", price: 10, stock: 99, unitId: "unit-1", image: "", active: true }, false);
   assert.equal("stock" in payload, false);
   assert.equal(payload.active, true);
 });
 
 test("product create payload never contains active", () => {
-  const payload = toProductPayload({ name: "Tea", barcode: "1", category: "Drink", price: 10, stock: 99, unit: "pcs", image: "", active: false }, true);
+  const payload = toProductPayload({ name: "Tea", barcode: "1", categoryId: "cat-1", price: 10, stock: 99, unitId: "unit-1", image: "", active: false }, true);
   assert.equal(payload.stock, 99);
   assert.equal("active" in payload, false);
 });
 
 test("product payload converts thousand-separated inputs to numbers", () => {
-  const payload = toProductPayload({ name: "Tea", barcode: "1", category: "Drink", price: "72.000", stock: "1.250", unit: "pcs", image: "" }, true);
+  const payload = toProductPayload({ name: "Tea", barcode: "1", categoryId: "cat-1", price: "72.000", stock: "1.250", unitId: "unit-1", image: "" }, true);
   assert.equal(payload.price, 72000);
   assert.equal(payload.stock, 1250);
+});
+
+test("product payload emits categoryId and unitId instead of labels", () => {
+  const payload = toProductPayload({ name: "Tea", barcode: "1", categoryId: "cat-1", price: 10, stock: 5, unitId: "unit-1", image: "" }, true);
+  assert.equal(payload.categoryId, "cat-1");
+  assert.equal(payload.unitId, "unit-1");
+  assert.equal("category" in payload, false);
+  assert.equal("unit" in payload, false);
 });
 
 test("product form data carries one photo and create-only stock", () => {

@@ -6,16 +6,18 @@ import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField, Switch } fr
 import { ProductsPageSkeleton } from "../components/page-loading.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
-import { parseNumberInput, retailCategories, validateProduct } from "../pos/domain.js";
+import { parseNumberInput, validateProduct } from "../pos/domain.js";
+import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import { ProductThumbnail } from "../components/product/ProductImage.jsx";
+import MasterDataSelectField from "../components/product/MasterDataSelectField.jsx";
 import { ProductPhotoField } from "../components/product/ProductPhotoField.jsx";
 import { validateProductPhoto } from "../components/product/product-photo.js";
 
-function emptyProduct() {
-  return { id: "", name: "", barcode: "", category: "Sembako", price: "", stock: 0, unit: "pcs", image: "", imageFile: null, removeImage: false, active: true };
+function emptyProduct(categoryId = "", unitId = "") {
+  return { id: "", name: "", barcode: "", categoryId, unitId, price: "", stock: 0, image: "", imageFile: null, removeImage: false, active: true };
 }
 
 function formatNumberInput(value) {
@@ -31,9 +33,9 @@ function normalizeNumberField(value) {
 
 export default function ProductsPage() {
   const store = usePOSStore();
-  const { loadProducts } = store;
+  const { loadCategories, loadProducts, loadUnits } = store;
   const [query, setQuery] = React.useState("");
-  const [category, setCategory] = React.useState("");
+  const [categoryId, setCategoryId] = React.useState("");
   const [status, setStatus] = React.useState("");
   const [editing, setEditing] = React.useState(null);
   const [productErrors, setProductErrors] = React.useState({});
@@ -45,9 +47,19 @@ export default function ProductsPage() {
   const debouncedQuery = useDebouncedValue(query, 220);
   const productFilters = React.useMemo(() => ({
     q: debouncedQuery.trim(),
-    category,
+    categoryId,
     active: status ? status === "active" : undefined,
-  }), [category, debouncedQuery, status]);
+  }), [categoryId, debouncedQuery, status]);
+  const categoryOptions = React.useMemo(
+    () => [{ value: "", label: "Semua kategori" }, ...activeMasterOptions(store.categories)],
+    [store.categories],
+  );
+  const unitOptions = React.useMemo(
+    () => activeMasterOptions(store.units),
+    [store.units],
+  );
+  const defaultCategoryId = categoryOptions[1]?.value || "";
+  const defaultUnitId = unitOptions[0]?.value || "";
   const fetchProductPage = React.useCallback(
     (request) => store.api.listProducts(request),
     [store.api],
@@ -62,6 +74,11 @@ export default function ProductsPage() {
   React.useEffect(() => () => {
     if (photoPreviewURL) URL.revokeObjectURL(photoPreviewURL);
   }, [photoPreviewURL]);
+
+  React.useEffect(() => {
+    loadCategories();
+    loadUnits();
+  }, [loadCategories, loadUnits]);
 
   if (table.isInitialLoading) {
     return <ProductsPageSkeleton />;
@@ -173,7 +190,12 @@ export default function ProductsPage() {
       ),
     },
     { key: "barcode", label: "Barcode", render: (product) => <span className="font-mono text-xs text-text-muted">{product.barcode}</span> },
-    { key: "category", label: "Kategori", sortable: true },
+    {
+      key: "category",
+      label: "Kategori",
+      sortable: true,
+      render: (product) => resolveMasterName(store.categories, product.categoryId, product.category),
+    },
     { key: "price", label: "Harga", sortable: true, render: (product) => <span className="font-mono font-semibold tabular-nums">{formatPrice(product.price)}</span> },
     {
       key: "stock",
@@ -182,7 +204,7 @@ export default function ProductsPage() {
       render: (product) => (
         <span className={`font-mono tabular-nums ${product.stock <= 5 ? "font-semibold text-warning" : "text-text"}`}>
           {formatNumberInput(product.stock)}
-          <span className="text-text-subtle"> {product.unit}</span>
+          <span className="text-text-subtle"> {resolveMasterName(store.units, product.unitId, product.unit)}</span>
         </span>
       ),
     },
@@ -223,12 +245,9 @@ export default function ProductsPage() {
           <SelectField
             label="Kategori"
             hideLabel
-            value={category}
-            options={[
-              { value: "", label: "Semua kategori" },
-              ...retailCategories.filter((item) => item !== "Semua").map((item) => ({ value: item, label: item })),
-            ]}
-            onChange={setCategory}
+            value={categoryId}
+            options={categoryOptions}
+            onChange={setCategoryId}
           />
         </div>
         <div className="w-[130px]">
@@ -244,7 +263,7 @@ export default function ProductsPage() {
             onChange={setStatus}
           />
         </div>
-        <Button variant="secondary" className="whitespace-nowrap" disabled={isProductsMutating} onClick={() => openEditor(emptyProduct())}>
+        <Button variant="secondary" className="whitespace-nowrap" disabled={isProductsMutating} onClick={() => openEditor(emptyProduct(defaultCategoryId, defaultUnitId))}>
           <Icon name="plus" className="size-4" />
           Tambah produk
         </Button>
@@ -274,7 +293,7 @@ export default function ProductsPage() {
                   size="sm"
                   variant="ghost"
                   disabled={isProductsMutating}
-                  onClick={() => { setQuery(""); setCategory(""); setStatus(""); }}
+                  onClick={() => { setQuery(""); setCategoryId(""); setStatus(""); }}
                 >
                   Atur ulang filter
                 </Button>
@@ -356,13 +375,15 @@ export default function ProductsPage() {
               </Button>
             </div>
 
-            <SelectField
-              label="Kategori"
-              value={editing.category}
-              options={retailCategories.filter((item) => item !== "Semua")}
-              onChange={(category) => updateEditing("category", category)}
+            <MasterDataSelectField
+              entityLabel="Kategori"
+              value={editing.categoryId}
+              items={store.categories}
+              onChange={(nextCategoryId) => updateEditing("categoryId", nextCategoryId)}
+              onCreate={store.createCategory}
+              onRestore={store.restoreCategory}
               disabled={savingProduct}
-              error={productErrors.category}
+              error={productErrors.categoryId}
             />
 
             <div className="grid min-w-0 gap-3 sm:grid-cols-2">
@@ -395,18 +416,18 @@ export default function ProductsPage() {
                   Stok diperbarui oleh aktivitas transaksi. Pengubahan stok langsung memang dinonaktifkan pada produk yang sudah ada.
                 </p>
               )}
-              <Input
-                label="Satuan"
-                className="sm:col-span-2"
-                placeholder="pcs"
-                error={productErrors.unit}
-                inputProps={{
-                  value: editing.unit,
-                  onChange: (event) => updateEditing("unit", event.target.value),
-                  required: true,
-                  disabled: savingProduct,
-                }}
-              />
+              <div className="sm:col-span-2">
+                <MasterDataSelectField
+                  entityLabel="Satuan"
+                  value={editing.unitId}
+                  items={store.units}
+                  onChange={(nextUnitId) => updateEditing("unitId", nextUnitId)}
+                  onCreate={store.createUnit}
+                  onRestore={store.restoreUnit}
+                  disabled={savingProduct}
+                  error={productErrors.unitId}
+                />
+              </div>
             </div>
 
             <button

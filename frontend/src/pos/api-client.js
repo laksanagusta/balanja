@@ -1,8 +1,8 @@
 export class APIError extends Error {
-  constructor({ code = "UNKNOWN_ERROR", message = "Request failed", requestId = "", status = 0 }) {
+  constructor({ code = "UNKNOWN_ERROR", message = "Request failed", requestId = "", status = 0, details = {} }) {
     super(message);
     this.name = "APIError";
-    Object.assign(this, { code, requestId, status });
+    Object.assign(this, { code, requestId, status, details });
   }
 }
 
@@ -101,7 +101,7 @@ export function createAPIClient({
 
   return {
     async listProducts({ signal, ...filters } = {}) {
-      const query = listQuery(filters, ["q", "category", "active", "limit", "sort", "dir", "cursor"]);
+      const query = listQuery(filters, ["q", "categoryId", "active", "limit", "sort", "dir", "cursor"]);
       return normalizePage(await request(`/api/v1/products${query}`, { signal }));
     },
     async createProduct(product, options = {}) {
@@ -112,6 +112,38 @@ export function createAPIClient({
     },
     async deactivateProduct(id, options = {}) {
       return (await request(`/api/v1/products/${encodeURIComponent(id)}`, { ...options, method: "DELETE" })).data;
+    },
+    async listCategories({ includeArchived = false, signal } = {}) {
+      const query = listQuery({ includeArchived }, ["includeArchived"]);
+      return (await request(`/api/v1/categories${query}`, { signal })).data;
+    },
+    async createCategory(input, options = {}) {
+      return (await request("/api/v1/categories", { ...options, method: "POST", body: input })).data;
+    },
+    async renameCategory(id, input, options = {}) {
+      return (await request(`/api/v1/categories/${encodeURIComponent(id)}`, { ...options, method: "PUT", body: input })).data;
+    },
+    async archiveCategory(id, options = {}) {
+      return (await request(`/api/v1/categories/${encodeURIComponent(id)}/archive`, { ...options, method: "POST" })).data;
+    },
+    async restoreCategory(id, options = {}) {
+      return (await request(`/api/v1/categories/${encodeURIComponent(id)}/restore`, { ...options, method: "POST" })).data;
+    },
+    async listUnits({ includeArchived = false, signal } = {}) {
+      const query = listQuery({ includeArchived }, ["includeArchived"]);
+      return (await request(`/api/v1/units${query}`, { signal })).data;
+    },
+    async createUnit(input, options = {}) {
+      return (await request("/api/v1/units", { ...options, method: "POST", body: input })).data;
+    },
+    async renameUnit(id, input, options = {}) {
+      return (await request(`/api/v1/units/${encodeURIComponent(id)}`, { ...options, method: "PUT", body: input })).data;
+    },
+    async archiveUnit(id, options = {}) {
+      return (await request(`/api/v1/units/${encodeURIComponent(id)}/archive`, { ...options, method: "POST" })).data;
+    },
+    async restoreUnit(id, options = {}) {
+      return (await request(`/api/v1/units/${encodeURIComponent(id)}/restore`, { ...options, method: "POST" })).data;
     },
     async listTransactions({ signal, ...filters } = {}) {
       const query = listQuery(filters, ["q", "paymentMethod", "dateFrom", "dateTo", "limit", "sort", "dir", "cursor"]);

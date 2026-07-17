@@ -4,6 +4,10 @@
 
 Product forms use one controlled photo field with a visible label, a slightly separated fieldset legend, preview, inline status text, JPG/PNG/WebP helper text, 5 MB limit, replace/remove actions, and inline error. Do not add a second filename caption below the field. Product tables place a 40px rounded thumbnail before the product name. Empty or broken URLs use the same category fallback as POS cards; images remain decorative when adjacent text already names the product.
 
+### Master data
+
+Settings uses query-backed neutral tabs for `profile`, `categories`, and `units`. Master-data lists keep active rows visible during mutations, archive is reversible, and no master-data flow hard-deletes records. Finite product selectors offer inline create, current archived values remain visible but cannot be newly assigned, and category/unit lists stay alphabetical.
+
 ## Product Surface
 
 Balanja is a retail point-of-sale surface for Indonesian UMKM shops. The interface should stay simple, dense, quiet, and fast for repeated cashier work: white surfaces, soft borders, compact controls, product-image cards, clear stock signals, and near-black primary checkout actions.

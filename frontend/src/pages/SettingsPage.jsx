@@ -2,24 +2,48 @@ import React from "react";
 import { toast } from "sonner";
 import { Badge, Button, Icon, Input, Panel } from "../components/primitives.jsx";
 import { SettingsPageSkeleton } from "../components/page-loading.jsx";
+import MasterDataManager from "../components/settings/MasterDataManager.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 
-export default function SettingsPage() {
+function normalizeTab(search) {
+  const tab = new URLSearchParams(search || "").get("tab");
+  if (tab === "categories" || tab === "units") return tab;
+  return "profile";
+}
+
+const settingsTabs = [
+  { id: "profile", label: "Profil toko", href: "?tab=profile" },
+  { id: "categories", label: "Kategori", href: "?tab=categories" },
+  { id: "units", label: "Satuan", href: "?tab=units" },
+];
+
+export default function SettingsPage({ search = "", onTabChange = () => {} }) {
   const store = usePOSStore();
+  const tab = normalizeTab(search);
   const [draft, setDraft] = React.useState(store.settings);
   const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.settings);
   const [isSaving, setIsSaving] = React.useState(false);
-  const isInitialLoad = isPageLoading;
+  const isInitialLoad = tab === "profile" ? isPageLoading : !store.loaded[tab];
   const isUpdatingSettings = store.loading.settings && store.loaded.settings;
+  const isUpdatingMasterData = tab !== "profile" && store.loading[tab];
 
   React.useEffect(() => {
     const controller = new AbortController();
-    if (!store.loaded.settings) setIsPageLoading(true);
-    store.loadSettings({ force: true, signal: controller.signal }).finally(() => {
-      if (!controller.signal.aborted) setIsPageLoading(false);
-    });
+    if (tab === "profile") {
+      if (!store.loaded.settings) setIsPageLoading(true);
+      store.loadSettings({ force: true, signal: controller.signal }).finally(() => {
+        if (!controller.signal.aborted) setIsPageLoading(false);
+      });
+      return () => controller.abort();
+    }
+    if (tab === "categories") {
+      store.loadCategories({ includeArchived: true, force: true, signal: controller.signal });
+    }
+    if (tab === "units") {
+      store.loadUnits({ includeArchived: true, force: true, signal: controller.signal });
+    }
     return () => controller.abort();
-  }, [store.loadSettings]);
+  }, [store, tab]);
 
   React.useEffect(() => {
     setDraft(store.settings);
@@ -49,18 +73,33 @@ export default function SettingsPage() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
       <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto] lg:items-center">
-        <h1 className="text-base font-semibold text-text">Settings</h1>
+        <h1 className="text-base font-semibold text-text">Pengaturan</h1>
         <div className="hidden lg:block" />
-        {isUpdatingSettings && <UpdatingBadge />}
+        {(isUpdatingSettings || isUpdatingMasterData) && <UpdatingBadge />}
       </header>
 
       <main className="grid min-h-0 flex-1 gap-4 overflow-auto p-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-4">
+          <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1">
+            {settingsTabs.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onTabChange(item.id)}
+                data-href={item.href}
+                className={`rounded-control px-3 py-2 text-sm font-semibold transition ${tab === item.id ? "bg-surface text-text shadow-low" : "text-text-muted hover:bg-surface hover:text-text"}`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          {tab === "profile" ? (
         <Panel className="p-4">
           <form onSubmit={save} className={`grid gap-4 ${isUpdatingSettings ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}>
             <div className="border-b border-border pb-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-text">Store profile</p>
+                  <p className="text-sm font-semibold text-text">Profil toko</p>
                   <p className="text-xs text-text-muted">Used on cashier screens and transaction context.</p>
                 </div>
                 {isUpdatingSettings && <UpdatingBadge />}
@@ -126,6 +165,32 @@ export default function SettingsPage() {
             </div>
           </form>
         </Panel>
+          ) : null}
+          {tab === "categories" ? (
+            <MasterDataManager
+              singularLabel="Kategori"
+              pluralLabel="Kategori"
+              items={store.categories}
+              loading={store.loading.categories}
+              onCreate={store.createCategory}
+              onRename={store.renameCategory}
+              onArchive={store.archiveCategory}
+              onRestore={store.restoreCategory}
+            />
+          ) : null}
+          {tab === "units" ? (
+            <MasterDataManager
+              singularLabel="Satuan"
+              pluralLabel="Satuan"
+              items={store.units}
+              loading={store.loading.units}
+              onCreate={store.createUnit}
+              onRename={store.renameUnit}
+              onArchive={store.archiveUnit}
+              onRestore={store.restoreUnit}
+            />
+          ) : null}
+        </div>
 
         <aside className="grid content-start gap-4">
           <Panel className="grid gap-3 p-4">
