@@ -9,7 +9,7 @@ import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { parseNumberInput, retailCategories, validateProduct } from "../pos/domain.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
-import { EmptyState } from "../components/design/EmptyStateShowcase.jsx";
+import { EmptyState } from "../components/feedback/EmptyState.jsx";
 
 function emptyProduct() {
   return { id: "", name: "", barcode: "", category: "Sembako", price: "", stock: 0, unit: "pcs", active: true };

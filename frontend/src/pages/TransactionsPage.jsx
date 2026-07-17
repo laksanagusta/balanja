@@ -2,7 +2,7 @@ import React from "react";
 import { TableFilterPopover } from "../components/TableFilterPopover.jsx";
 import { TablePagination } from "../components/TablePagination.jsx";
 import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField } from "../components/primitives.jsx";
-import { EmptyState } from "../components/design/EmptyStateShowcase.jsx";
+import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import { TransactionsPageSkeleton } from "../components/page-loading.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";

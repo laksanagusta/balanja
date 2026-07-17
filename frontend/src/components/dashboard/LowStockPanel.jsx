@@ -1,5 +1,5 @@
 import React from "react";
-import { EmptyState } from "../design/EmptyStateShowcase.jsx";
+import { EmptyState } from "../feedback/EmptyState.jsx";
 import { Badge, Panel } from "../primitives.jsx";
 
 export default function LowStockPanel({ products }) {

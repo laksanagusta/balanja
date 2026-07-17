@@ -1,10 +1,10 @@
 import React from "react";
 import { useUser } from "@clerk/react";
 import { toast } from "sonner";
-import { CartRow } from "../components/design/CartItemShowcase.jsx";
-import { EmptyState } from "../components/design/EmptyStateShowcase.jsx";
-import { ProductCard } from "../components/design/MenuCardShowcase.jsx";
-import { PaymentSummary } from "../components/design/PaymentShowcase.jsx";
+import { CartRow } from "../components/pos/CartRow.jsx";
+import { EmptyState } from "../components/feedback/EmptyState.jsx";
+import { ProductCard } from "../components/pos/ProductCard.jsx";
+import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { Badge, Button, Dialog, Icon, Input } from "../components/primitives.jsx";
 import { RetailPosSkeleton } from "../components/page-loading.jsx";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";

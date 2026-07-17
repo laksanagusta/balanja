@@ -9,7 +9,7 @@ import { PieCenter } from "../charts/pie-center.jsx";
 import { BarChart } from "../charts/bar-chart.jsx";
 import { Bar } from "../charts/bar.jsx";
 import { BarXAxis } from "../charts/bar-x-axis.jsx";
-import { EmptyState } from "../design/EmptyStateShowcase.jsx";
+import { EmptyState } from "../feedback/EmptyState.jsx";
 import { Panel } from "../primitives.jsx";
 import { formatPrice } from "../../shared.jsx";
 import { localizedTrendTitle } from "../charts/trend-tooltip-title.js";
