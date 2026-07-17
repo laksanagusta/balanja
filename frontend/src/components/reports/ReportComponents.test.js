@@ -22,7 +22,7 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
   assert.match(toolbar, /<form/);
   assert.match(toolbar, /onSubmit/);
   assert.match(toolbar, /type="submit"/);
-  assert.match(toolbar, /compactVisual/);
+  assert.match(toolbar, /h-11 md:h-8/);
   assert.match(toolbar, /Perubahan belum diterapkan/);
   assert.match(toolbar, /refreshError/);
   assert.match(toolbar, /actionsDisabled/);
@@ -35,5 +35,13 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
 	assert.match(toolbar, /aria-label="Ekspor detail transaksi CSV"/);
 	const primitives = await readFile(new URL("../primitives.jsx", import.meta.url), "utf8");
 	assert.match(primitives, /aria-expanded=\{isOpen\}/);
+	assert.match(primitives, /aria-haspopup="listbox"/);
+	assert.match(primitives, /aria-controls=\{listboxId\}/);
+	assert.match(primitives, /role="listbox"/);
+	assert.match(primitives, /role="option"/);
+	assert.match(primitives, /aria-selected/);
+	assert.match(primitives, /document\.addEventListener\("pointerdown"/);
+	assert.match(primitives, /event\.key === "Escape"/);
+	assert.match(primitives, /h-11 md:h-9/);
 	assert.match(primitives, /focus-visible:outline-2/);
 });
