@@ -25,6 +25,7 @@ export function validateCustomRange(dateFrom, dateTo, today = dateInWIB(new Date
 
 export function alignTrend(current = [], previous = []) {
   return Array.from({ length: Math.max(current.length, previous.length) }, (_, index) => ({
+    date: current[index]?.bucket || previous[index]?.bucket || "",
     label: current[index]?.label || previous[index]?.label || "",
     current: current[index]?.totalReceived || 0,
     previous: previous[index]?.totalReceived || 0,

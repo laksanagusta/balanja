@@ -12,6 +12,8 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
   assert.match(metric, /comparisonCopy/);
   assert.match(trend, /dataKey="current"/);
   assert.match(trend, /dataKey="previous"/);
+  assert.match(trend, /xDataKey="date"/);
+  assert.doesNotMatch(trend, /showMarkers/);
   assert.match(trend, /Periode sebelumnya/);
   assert.match(breakdowns, /Penjualan bersih/);
   assert.match(breakdowns, /Transaksi void/);

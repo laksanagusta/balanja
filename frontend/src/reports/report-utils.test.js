@@ -26,13 +26,15 @@ test("custom report ranges enforce 366 inclusive days", () => {
 });
 
 test("aligns current and comparison trends by relative position", () => {
-  assert.deepEqual(alignTrend(
-    [{ bucket: "c1", label: "1 Jul", totalReceived: 10 }],
-    [{ bucket: "p1", label: "1 Jun", totalReceived: 5 }, { bucket: "p2", label: "2 Jun", totalReceived: 8 }],
-  ), [
-    { label: "1 Jul", current: 10, previous: 5, currentBucket: "c1", previousBucket: "p1" },
-    { label: "2 Jun", current: 0, previous: 8, currentBucket: "", previousBucket: "p2" },
+  const aligned = alignTrend(
+    [{ bucket: "2026-07-17", label: "17 Jul", totalReceived: 10 }],
+    [{ bucket: "2026-07-16", label: "16 Jul", totalReceived: 5 }, { bucket: "2026-07-15", label: "15 Jul", totalReceived: 8 }],
+  );
+  assert.deepEqual(aligned, [
+    { date: "2026-07-17", label: "17 Jul", current: 10, previous: 5, currentBucket: "2026-07-17", previousBucket: "2026-07-16" },
+    { date: "2026-07-15", label: "15 Jul", current: 0, previous: 8, currentBucket: "", previousBucket: "2026-07-15" },
   ]);
+  assert.equal(Number.isFinite(new Date(aligned[0].date).getTime()), true);
 });
 
 test("builds transaction handoff without unsupported cashier filter", () => {

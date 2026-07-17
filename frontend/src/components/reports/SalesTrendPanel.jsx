@@ -22,9 +22,9 @@ export default function SalesTrendPanel({ current = [], previous = [] }) {
         </div>
       </div>
       {data.some((point) => point.current || point.previous) ? (
-        <LineChart data={data} xDataKey="label" aspectRatio="2.8 / 1" className="mt-4 min-h-[260px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
+        <LineChart data={data} xDataKey="date" aspectRatio="2.8 / 1" className="mt-4 min-h-[260px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
           <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
-          <Line dataKey="current" stroke="var(--chart-line-primary)" strokeWidth={2.5} showMarkers />
+          <Line dataKey="current" stroke="var(--chart-line-primary)" strokeWidth={2.5} />
           <Line dataKey="previous" stroke="var(--color-text-muted)" strokeWidth={1.75} />
           <XAxis numTicks={Math.min(data.length, 7)} />
           <ChartTooltip />
