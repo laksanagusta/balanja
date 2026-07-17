@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"balanja/backend/internal/auth"
+	"balanja/backend/internal/category"
 	"balanja/backend/internal/checkout"
 	"balanja/backend/internal/config"
 	"balanja/backend/internal/dashboard"
@@ -20,6 +21,7 @@ import (
 	"balanja/backend/internal/settings"
 	"balanja/backend/internal/stock"
 	"balanja/backend/internal/transaction"
+	"balanja/backend/internal/unit"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -65,24 +67,28 @@ func run() error {
 		}
 	}
 	productHandler := product.NewHandler(product.NewService(runner, product.PostgresRepository{}, product.WithImageStore(imageStore), product.WithLogger(slog.Default())))
+	categoryHandler := category.NewHandler(category.NewService(runner, category.PostgresRepository{}))
 	settingsHandler := settings.NewHandler(settings.NewService(runner, settings.PostgresRepository{}))
 	transactionHandler := transaction.NewHandler(transaction.NewService(runner, transaction.PostgresRepository{}))
 	dashboardHandler := dashboard.NewHandler(dashboard.NewService(runner, dashboard.PostgresRepository{}))
 	checkoutHandler := checkout.NewHandler(checkout.NewService(runner, checkout.PostgresRepository{}))
 	stockHandler := stock.NewHandler(stock.NewService(runner, stock.PostgresRepository{}))
 	reportHandler := report.NewHandler(report.NewService(runner, report.PostgresRepository{}))
+	unitHandler := unit.NewHandler(unit.NewService(runner, unit.PostgresRepository{}))
 	app := httpserver.New(httpserver.Dependencies{
 		Ready:          pool.Ping,
 		Auth:           auth.Middleware(verifier),
 		AllowedOrigins: cfg.AllowedOrigins,
 		Routes: func(router fiber.Router) {
 			productHandler.Register(router)
+			categoryHandler.Register(router)
 			settingsHandler.Register(router)
 			transactionHandler.Register(router)
 			dashboardHandler.Register(router)
 			checkoutHandler.Register(router)
 			stockHandler.Register(router)
 			reportHandler.Register(router)
+			unitHandler.Register(router)
 		},
 	})
 	listenErrors := make(chan error, 1)

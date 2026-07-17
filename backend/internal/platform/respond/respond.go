@@ -30,11 +30,13 @@ func Error(c fiber.Ctx, err error) error {
 			"error", err,
 		)
 	}
-	return c.Status(public.Status).JSON(fiber.Map{
-		"error": fiber.Map{
-			"code":      public.Code,
-			"message":   public.Message,
-			"requestId": requestID,
-		},
-	})
+	envelope := fiber.Map{
+		"code":      public.Code,
+		"message":   public.Message,
+		"requestId": requestID,
+	}
+	if len(public.Details) > 0 {
+		envelope["details"] = public.Details
+	}
+	return c.Status(public.Status).JSON(fiber.Map{"error": envelope})
 }
