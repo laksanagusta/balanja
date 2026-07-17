@@ -23,7 +23,6 @@ import {
 } from "./chart-child-passthrough";
 import { ChartProvider } from "./chart-context";
 import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
-import { shortDateFmt } from "./chart-formatters";
 import { DEFAULT_CHART_STATUS, DEFAULT_Y_DOMAIN_TWEEN_MS, isChartInteractionPhase } from "./chart-phase";
 import { ChartRevealClip } from "./chart-reveal-clip";
 import {
@@ -50,6 +49,7 @@ import { useStaticChartPreview } from "./static-chart-preview-context";
 import { useAnimatedYDomains } from "./use-animated-y-domains";
 import { useChartInteraction } from "./use-chart-interaction";
 import { useChartPhaseOrchestrator } from "./use-chart-phase-orchestrator";
+import { resolveTimeSeriesLabels } from "./time-series-labels";
 import {
   buildYScalesFromDomains,
   DEFAULT_Y_AXIS_ID,
@@ -145,6 +145,7 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   yDomainTweenDuration = DEFAULT_Y_DOMAIN_TWEEN_MS,
   xDomain,
   xDomainSlotCount,
+  xLabelKey,
   tweenYDomainOnXDomainChange = false,
   onPhaseChange
 }) {
@@ -310,8 +311,8 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   );
 
   const dateLabels = useMemo(
-    () => visiblePlotData.map((d) => shortDateFmt.format(xAccessor(d))),
-    [visiblePlotData, xAccessor]
+    () => resolveTimeSeriesLabels(visiblePlotData, xAccessor, xLabelKey),
+    [visiblePlotData, xAccessor, xLabelKey]
   );
 
   const canInteract = isLoaded && isChartInteractionPhase(chartPhase);

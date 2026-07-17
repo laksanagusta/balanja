@@ -6,7 +6,7 @@ import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, 
 const POSStoreContext = React.createContext(null);
 const defaultSettings = { storeName: "Toko Balanja", storeAddress: "", taxEnabled: false, taxRate: 11, qrisLabel: "QRIS Toko Balanja" };
 
-export function POSStoreProvider({ children, api }) {
+export function POSStoreProvider({ children, api, cashierName = "" }) {
   const [products, setProducts] = React.useState([]);
   const [settings, setSettings] = React.useState(defaultSettings);
   const [cart, setCart] = React.useState(() => loadCart());
@@ -155,14 +155,14 @@ export function POSStoreProvider({ children, api }) {
   const checkout = React.useCallback(async (payment) => {
     if (cart.length === 0) { setNotice("Cart is empty"); return { ok: false, error: "Cart is empty" }; }
     try {
-      const result = await api.checkout({ cart, payment });
+      const result = await api.checkout({ cart, payment, cashierName });
       setProducts((current) => applyCheckoutResult(current, result));
       setCart([]);
       clearCartStorage();
       setNotice("Transaction completed");
       return { ok: true, transaction: result.transaction };
     } catch (error) { setNotice(error.message || "Checkout failed"); return { ok: false, error: error.message || "Checkout failed" }; }
-  }, [api, cart]);
+  }, [api, cart, cashierName]);
 
   const createStockMovement = React.useCallback(async (input) => {
     try {

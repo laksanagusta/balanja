@@ -102,8 +102,12 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 		return Result{}, fmt.Errorf("encode transaction items: %w", err)
 	}
 	var result Result
-	result.Transaction = Transaction{Number: number, CashierUserID: id.UserID, Items: items, Subtotal: subtotal, Tax: tax, Total: total, PaymentMethod: input.Payment.Method, CashReceived: cash, ChangeDue: change, Status: "completed"}
-	if err := tx.QueryRow(ctx, `insert into transactions (org_id,number,cashier_user_id,items,subtotal,tax,total,payment_method,cash_received,change_due) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id,created_at`, id.OrgID, number, id.UserID, rawItems, subtotal, tax, total, input.Payment.Method, cash, change).Scan(&result.Transaction.ID, &result.Transaction.CreatedAt); err != nil {
+	var cashierName *string
+	if input.CashierName != "" {
+		cashierName = &input.CashierName
+	}
+	result.Transaction = Transaction{Number: number, CashierUserID: id.UserID, CashierName: cashierName, Items: items, Subtotal: subtotal, Tax: tax, Total: total, PaymentMethod: input.Payment.Method, CashReceived: cash, ChangeDue: change, Status: "completed"}
+	if err := tx.QueryRow(ctx, `insert into transactions (org_id,number,cashier_user_id,cashier_name,items,subtotal,tax,total,payment_method,cash_received,change_due) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning id,created_at`, id.OrgID, number, id.UserID, cashierName, rawItems, subtotal, tax, total, input.Payment.Method, cash, change).Scan(&result.Transaction.ID, &result.Transaction.CreatedAt); err != nil {
 		return Result{}, fmt.Errorf("insert transaction: %w", err)
 	}
 	referenceType := "checkout"

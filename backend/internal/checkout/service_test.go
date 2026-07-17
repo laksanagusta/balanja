@@ -21,6 +21,7 @@ func TestServiceRejectsInvalidCheckout(t *testing.T) {
 		{name: "empty cart", key: "checkout-key", input: Input{Payment: PaymentInput{Method: "qris"}}},
 		{name: "zero quantity", key: "checkout-key", input: Input{Items: []ItemInput{{ProductID: productID}}, Payment: PaymentInput{Method: "qris"}}},
 		{name: "bad payment", key: "checkout-key", input: Input{Items: []ItemInput{{ProductID: productID, Quantity: 1}}, Payment: PaymentInput{Method: "card"}}},
+		{name: "cashier name too long", key: "checkout-key", input: Input{Items: []ItemInput{{ProductID: productID, Quantity: 1}}, Payment: PaymentInput{Method: "qris"}, CashierName: string(make([]byte, 121))}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -30,6 +31,23 @@ func TestServiceRejectsInvalidCheckout(t *testing.T) {
 				t.Fatalf("Checkout() error=%v, want ErrInvalidCheckout", err)
 			}
 		})
+	}
+}
+
+func TestServiceNormalizesCashierNameBeforeFingerprinting(t *testing.T) {
+	t.Parallel()
+	repository := &fakeCheckoutRepository{}
+	input := Input{
+		Items:       []ItemInput{{ProductID: uuid.New(), Quantity: 1}},
+		Payment:     PaymentInput{Method: "qris"},
+		CashierName: "  Ayu Pratiwi  ",
+	}
+	_, err := NewService(fakeCheckoutRunner{}, repository).Checkout(context.Background(), database.Identity{OrgID: "org", UserID: "user"}, "checkout-key", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repository.input.CashierName != "Ayu Pratiwi" {
+		t.Fatalf("cashier name=%q", repository.input.CashierName)
 	}
 }
 

@@ -2,13 +2,19 @@ import React from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { Icon, useDialogPresence } from "./primitives.jsx";
 
-export default function BarcodeScanner({ open, title = "Scan barcode", onDetected, onClose }) {
+export default function BarcodeScanner({ open, title = "Pindai barcode", onDetected, onClose }) {
   const { isPresent, isVisible } = useDialogPresence(open);
   const videoRef = React.useRef(null);
   const controlsRef = React.useRef(null);
+  const onDetectedRef = React.useRef(onDetected);
+  const lastDetectionRef = React.useRef({ code: "", at: 0 });
   const [manualCode, setManualCode] = React.useState("");
   const [error, setError] = React.useState("");
   const [scanning, setScanning] = React.useState(false);
+
+  React.useEffect(() => {
+    onDetectedRef.current = onDetected;
+  }, [onDetected]);
 
   React.useEffect(() => {
     if (!open) return undefined;
@@ -26,13 +32,16 @@ export default function BarcodeScanner({ open, title = "Scan barcode", onDetecte
       setScanning(true);
 
       try {
-        const controls = await reader.decodeFromVideoDevice(undefined, videoRef.current, (result, err, ctrl) => {
+        const controls = await reader.decodeFromVideoDevice(undefined, videoRef.current, (result, err) => {
           if (result) {
             const text = result.getText();
-            ctrl.stop();
-            controlsRef.current = null;
-            setScanning(false);
-            onDetected(text);
+            const now = Date.now();
+            const duplicate = lastDetectionRef.current.code === text;
+            lastDetectionRef.current = { code: text, at: now };
+            if (duplicate) return;
+            onDetectedRef.current(text);
+          } else if (err && Date.now() - lastDetectionRef.current.at >= 750) {
+            lastDetectionRef.current = { code: "", at: 0 };
           }
         });
 
@@ -44,7 +53,7 @@ export default function BarcodeScanner({ open, title = "Scan barcode", onDetecte
         controlsRef.current = controls;
       } catch {
         if (!cancelled) {
-          setError("Camera unavailable. Enter barcode manually.");
+          setError("Kamera tidak tersedia. Masukkan barcode secara manual.");
           setScanning(false);
         }
       }
@@ -61,39 +70,39 @@ export default function BarcodeScanner({ open, title = "Scan barcode", onDetecte
       controlsRef.current = null;
       setScanning(false);
     };
-  }, [open, onDetected]);
+  }, [open]);
 
   if (!isPresent) return null;
 
   const submitManual = (event) => {
     event.preventDefault();
     const code = manualCode.trim();
-    if (code) onDetected(code);
+    if (!code) return;
+    setManualCode("");
+    onDetectedRef.current(code);
   };
 
   return (
     <div
-      className={`fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 transition-opacity duration-200 ease-standard motion-reduce:transition-opacity ${
+      className={`fixed inset-0 z-50 bg-black transition-opacity duration-200 ease-standard motion-reduce:transition-opacity ${
         isVisible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
       aria-hidden={!isVisible}
     >
       <section
-        className={`relative aspect-[9/16] w-full max-w-sm overflow-hidden rounded-2xl bg-black shadow-[0_24px_80px_rgba(0,0,0,0.55)] transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
-          isVisible ? "scale-100 opacity-100" : "scale-[0.96] opacity-0"
-        }`}
+        className="relative h-full w-full overflow-hidden bg-black"
       >
         <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" muted playsInline autoPlay />
 
         <div className="absolute inset-0 z-[1] grid place-items-center pointer-events-none">
-          <div className="size-52 rounded-2xl border border-white/20" />
+          <div className="h-[min(48vw,21rem)] w-[min(74vw,28rem)] rounded-[28px] border border-white/20 sm:h-[min(42vw,24rem)] sm:w-[min(62vw,32rem)]" />
         </div>
 
         <header className="absolute inset-x-0 top-0 z-10 flex items-start justify-between bg-gradient-to-b from-black/60 via-black/25 to-transparent px-5 pb-6 pt-5">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>
             <p className="text-sm text-white/70">
-              {scanning ? "Point camera at a barcode." : "Camera fallback is ready."}
+              {scanning ? "Arahkan kamera ke barcode." : "Mode input manual siap digunakan."}
             </p>
           </div>
           <button
@@ -116,14 +125,14 @@ export default function BarcodeScanner({ open, title = "Scan barcode", onDetecte
               value={manualCode}
               onChange={(event) => setManualCode(event.target.value)}
               inputMode="numeric"
-              placeholder="Manual barcode"
+              placeholder="Masukkan barcode manual"
               className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/12 px-4 py-2.5 text-sm font-medium text-white placeholder:text-white/35 backdrop-blur-xl outline-none transition focus:border-white/30 focus:bg-white/20"
             />
             <button
               type="submit"
               className="shrink-0 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#1d1d1f] shadow-sm transition active:bg-white/80"
             >
-              Use code
+              Gunakan kode
             </button>
           </form>
         </div>

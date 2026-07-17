@@ -1,5 +1,5 @@
 "use client";;
-import { curveNatural } from "@visx/curve";
+import { curveMonotoneX } from "@visx/curve";
 import { useMemo } from "react";
 import {
   DEFAULT_SKELETON_DATA_KEY,
@@ -57,7 +57,7 @@ export function LineChartLoading({
         shimmerSync={gridShimmerSync}
         stroke={gridStroke} />
       <Line
-        curve={curveNatural}
+        curve={curveMonotoneX}
         dataKey={LOADING_DATA_KEY}
         fadeEdges={false}
         loadingStroke={stroke}

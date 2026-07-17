@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { ClerkProvider, useAuth } from "@clerk/react";
+import { ClerkProvider, useAuth, useUser } from "@clerk/react";
 import { Agentation } from "agentation";
 import App from "./App.jsx";
 import "./index.css";
@@ -27,6 +27,7 @@ function MissingClerkConfig() {
 
 function Application() {
   const { getToken, isSignedIn, orgId } = useAuth();
+  const { user } = useUser();
   const api = React.useMemo(
     () =>
       createAPIClient({
@@ -37,7 +38,7 @@ function Application() {
   );
 
   return isSignedIn ? (
-    <POSStoreProvider api={api}>
+    <POSStoreProvider api={api} cashierName={user?.fullName || ""}>
       <App />
     </POSStoreProvider>
   ) : (

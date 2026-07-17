@@ -14,8 +14,9 @@ type PaymentInput struct {
 	CashReceived int    `json:"cashReceived"`
 }
 type Input struct {
-	Items   []ItemInput  `json:"items"`
-	Payment PaymentInput `json:"payment"`
+	Items       []ItemInput  `json:"items"`
+	Payment     PaymentInput `json:"payment"`
+	CashierName string       `json:"cashierName,omitempty"`
 }
 type Item struct {
 	ProductID uuid.UUID `json:"productId"`

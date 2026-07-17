@@ -4,12 +4,14 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { useChart, useChartStable } from "./chart-context";
+import { getBarXAxisLabelMaxWidth } from "./bar-x-axis-layout";
 
 function BarXAxisLabel({
   label,
   x,
   crosshairX,
   isHovering,
+  labelMaxWidth,
   tickerHalfWidth
 }) {
   const fadeBuffer = 20;
@@ -38,8 +40,9 @@ function BarXAxisLabel({
       }}>
       <motion.span
         animate={{ opacity }}
-        className={cn("whitespace-nowrap text-chart-label text-xs")}
+        className={cn("block shrink-0 overflow-hidden text-ellipsis whitespace-nowrap text-chart-label text-xs")}
         initial={{ opacity: 1 }}
+        style={{ width: labelMaxWidth }}
         transition={{ duration: 0.4, ease: "easeInOut" }}>
         {label}
       </motion.span>
@@ -110,6 +113,10 @@ const BarXAxisInner = memo(function BarXAxisInner({
 
   const isHovering = tooltipData !== null;
   const crosshairX = tooltipData ? tooltipData.x + margin.left : null;
+  const labelMaxWidth = useMemo(
+    () => getBarXAxisLabelMaxWidth(labelsToShow),
+    [labelsToShow],
+  );
 
   return createPortal(<div className="pointer-events-none absolute inset-0">
     {labelsToShow.map((item) => (
@@ -118,6 +125,7 @@ const BarXAxisInner = memo(function BarXAxisInner({
         isHovering={isHovering}
         key={`${item.label}-${item.x}`}
         label={item.label}
+        labelMaxWidth={labelMaxWidth}
         tickerHalfWidth={tickerHalfWidth}
         x={item.x} />
     ))}

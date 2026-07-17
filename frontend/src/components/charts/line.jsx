@@ -1,5 +1,5 @@
 "use client";;
-import { curveNatural } from "@visx/curve";
+import { curveMonotoneX } from "@visx/curve";
 import { LinePath } from "@visx/shape";
 
 import { useCallback, useId, useMemo, useRef, useState } from "react";
@@ -24,6 +24,7 @@ function LineSeriesStroke({
   getY,
   pathRef,
   renderData,
+  strokeDasharray,
   strokeWidth,
   useDataTransitionPath,
   visibleStroke,
@@ -37,6 +38,7 @@ function LineSeriesStroke({
         fill="none"
         ref={pathRef}
         stroke={visibleStroke}
+        strokeDasharray={strokeDasharray}
         strokeLinecap="round"
         strokeWidth={strokeWidth} />
     );
@@ -48,6 +50,7 @@ function LineSeriesStroke({
       data={renderData}
       innerRef={pathRef}
       stroke={visibleStroke}
+      strokeDasharray={strokeDasharray}
       strokeLinecap="round"
       strokeWidth={strokeWidth}
       x={(d) => xScale(xAccessor(d)) ?? 0}
@@ -104,7 +107,7 @@ export function Line({
   yAxisId,
   stroke = chartCssVars.linePrimary,
   strokeWidth = 2.5,
-  curve = curveNatural,
+  curve = curveMonotoneX,
   animate = true,
   fadeEdges = true,
   showHighlight = true,
@@ -112,6 +115,7 @@ export function Line({
   markers,
   dashFromIndex,
   dashArray = "6,4",
+  strokeDasharray,
   loading,
   loadingStroke = chartCssVars.foreground,
   loadingStrokeOpacity = 0.5,
@@ -231,6 +235,7 @@ export function Line({
           getY={getY}
           pathRef={pathRef}
           renderData={renderData}
+          strokeDasharray={strokeDasharray}
           strokeWidth={strokeWidth}
           useDataTransitionPath={useDataTransitionPath}
           visibleStroke={visibleStroke}

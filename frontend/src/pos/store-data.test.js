@@ -68,8 +68,8 @@ test("loads transactions without fetching products or settings", async () => {
   const result = await loadTransactions(api);
   assert.deepEqual(calls, ["transactions"]);
   assert.deepEqual(result, [
-    { id: "t1", items: [{ productId: "p1", quantity: 2, qty: 2 }] },
-    { id: "t2", items: [] },
+    { id: "t1", items: [{ productId: "p1", quantity: 2, qty: 2 }], cashierName: "", cashierUserId: "" },
+    { id: "t2", items: [], cashierName: "", cashierUserId: "" },
   ]);
 });
 
@@ -85,7 +85,7 @@ test("normalizes transaction page items without losing pagination metadata", asy
   const page = await loadTransactionPage(api, { limit: 20 });
 
   assert.deepEqual(page, {
-    items: [{ id: "t1", items: [{ productId: "p1", quantity: 2, qty: 2 }] }],
+    items: [{ id: "t1", items: [{ productId: "p1", quantity: 2, qty: 2 }], cashierName: "", cashierUserId: "" }],
     nextCursor: "transactions-next",
     hasNextPage: true,
   });
@@ -128,6 +128,7 @@ test("loads stock movements without fetching unrelated resources", async () => {
       referenceType: "",
       referenceId: "",
       createdByUserId: "",
+      createdByUserName: "",
       createdAt: undefined,
     }],
 		nextCursor: "next",

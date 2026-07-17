@@ -1,4 +1,5 @@
 import React from "react";
+import { nextSelectIndex } from "./select-field-navigation.js";
 
 export function Icon({ name, className = "size-5" }) {
   const common = {
@@ -163,15 +164,15 @@ export function Icon({ name, className = "size-5" }) {
   return <svg {...common}>{paths[name]}</svg>;
 }
 
-export function Button({ children, variant = "secondary", size = "md", className = "", ...props }) {
+export function Button({ children, variant = "secondary", size = "md", compactVisual = false, className = "", ...props }) {
   const variants = {
     primary:
       "scan-3d bg-accent text-white hover:bg-accent-hover",
     secondary:
-      "border border-border bg-surface text-text shadow-low hover:bg-surface-muted",
-    ghost: "text-text-muted hover:bg-surface-muted hover:text-text",
+      "border border-border bg-surface text-text shadow-low hover:bg-surface-muted active:scale-[0.97] motion-reduce:active:scale-100",
+    ghost: "text-text-muted hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100",
     danger:
-      "bg-danger-soft text-danger hover:bg-danger-soft/80 border border-transparent",
+      "bg-danger-soft text-danger hover:bg-danger-soft/80 border border-transparent active:scale-[0.97] motion-reduce:active:scale-100",
   };
 
   const sizes = {
@@ -185,32 +186,47 @@ export function Button({ children, variant = "secondary", size = "md", className
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${compactVisual ? "h-11 rounded-control bg-transparent px-1.5 text-sm" : `${variants[variant]} ${sizes[size]}`} ${className}`}
       {...props}
     >
-      {children}
+      {compactVisual ? (
+        <span className={`header-compact-action-surface pointer-events-none inline-flex items-center justify-center ${variants[variant]} ${sizes[size]}`}>
+          {children}
+        </span>
+      ) : children}
     </button>
   );
 }
 
 export function Input({ label, placeholder, rightSlot, error, className = "", inputProps = {} }) {
+  const generatedId = React.useId();
+  const {
+    id = generatedId,
+    "aria-describedby": describedBy,
+    ...restInputProps
+  } = inputProps;
+  const errorId = `${id}-error`;
+  const descriptionIds = [describedBy, error ? errorId : ""].filter(Boolean).join(" ") || undefined;
+
   return (
-    <label className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
+    <label htmlFor={id} className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
       {label}
       <span
-        className={`flex h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-2 focus-within:outline-focus/30 ${
+        className={`flex h-11 md:h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-2 focus-within:outline-focus/30 ${
           error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
         }`}
       >
         <input
+          id={id}
           className="w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
-          {...inputProps}
+          aria-describedby={descriptionIds}
+          {...restInputProps}
         />
         {rightSlot}
       </span>
-      {error && <span className="text-xs font-medium text-danger">{error}</span>}
+      {error && <span id={errorId} aria-live="polite" className="text-xs font-medium text-danger">{error}</span>}
     </label>
   );
 }
@@ -218,22 +234,96 @@ export function Input({ label, placeholder, rightSlot, error, className = "", in
 export function SelectField({ label, value, options = [], onChange, error, inline = false, hideLabel = false, disabled = false }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [selected, setSelected] = React.useState(value);
+  const [activeIndex, setActiveIndex] = React.useState(-1);
+  const generatedId = React.useId().replaceAll(":", "");
+  const containerRef = React.useRef(null);
+  const triggerRef = React.useRef(null);
+  const optionRefs = React.useRef([]);
+  const labelId = `${generatedId}-label`;
+  const listboxId = `${generatedId}-listbox`;
   const menuOptions = options.length > 0 ? options : [value];
   const selectedValue = onChange ? value : selected;
   const getOptionValue = (option) => (typeof option === "object" && option !== null ? option.value : option);
   const getOptionLabel = (option) => (typeof option === "object" && option !== null ? option.label : option);
   const selectedLabel = getOptionLabel(menuOptions.find((option) => getOptionValue(option) === selectedValue) ?? selectedValue);
+  const selectedIndex = Math.max(0, menuOptions.findIndex((option) => getOptionValue(option) === selectedValue));
+
+  const focusOption = (index) => {
+    setActiveIndex(index);
+    requestAnimationFrame(() => optionRefs.current[index]?.focus());
+  };
+
+  const openListbox = (index = selectedIndex) => {
+    setIsOpen(true);
+    focusOption(index);
+  };
+
+  const closeListbox = (restoreFocus = false) => {
+    setIsOpen(false);
+    setActiveIndex(-1);
+    if (restoreFocus) requestAnimationFrame(() => triggerRef.current?.focus());
+  };
+
+  const selectOption = (optionValue) => {
+    if (onChange) onChange(optionValue);
+    else setSelected(optionValue);
+    closeListbox(true);
+  };
+
+  React.useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!containerRef.current?.contains(event.target)) closeListbox();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isOpen]);
+
+  const handleTriggerKeyDown = (event) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const startIndex = event.key === "ArrowUp" ? menuOptions.length - 1 : selectedIndex;
+    openListbox(event.key === "Home" ? 0 : event.key === "End" ? menuOptions.length - 1 : startIndex);
+  };
+
+  const handleOptionKeyDown = (event, optionValue) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeListbox(true);
+      return;
+    }
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      selectOption(optionValue);
+      return;
+    }
+    if (event.key === "Tab") {
+      closeListbox();
+      return;
+    }
+    const nextIndex = nextSelectIndex(activeIndex, menuOptions.length, event.key);
+    if (nextIndex === activeIndex || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    focusOption(nextIndex);
+  };
 
   return (
-    <div className="relative grid gap-2 text-sm font-semibold text-text">
-      <span className={hideLabel ? "sr-only" : ""}>{label}</span>
+    <div ref={containerRef} className="relative grid gap-2 text-sm font-semibold text-text">
+      <span id={labelId} className={hideLabel ? "sr-only" : ""}>{label}</span>
       <button
+        ref={triggerRef}
         type="button"
+        aria-labelledby={labelId}
+        aria-haspopup="listbox"
+        aria-controls={listboxId}
         aria-expanded={isOpen}
         aria-invalid={Boolean(error)}
         disabled={disabled}
-        onClick={() => setIsOpen((open) => !open)}
-        className={`flex h-9 items-center justify-between rounded-card border bg-surface px-3.5 text-left text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${
+        onClick={() => (isOpen ? closeListbox() : openListbox())}
+        onKeyDown={handleTriggerKeyDown}
+        className={`flex h-11 md:h-9 items-center justify-between rounded-card border bg-surface px-3.5 text-left text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${
           error ? "border-danger" : isOpen ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
         }`}
       >
@@ -245,57 +335,36 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
           }`}
         />
       </button>
-      {inline ? (
-        isOpen && (
-          <div className="grid gap-1 rounded-card border border-border bg-surface-muted p-1">
-            {menuOptions.map((option) => {
-              const optionValue = getOptionValue(option);
-              const optionLabel = getOptionLabel(option);
-              return (
-              <button
-                key={optionValue}
-                type="button"
-                onClick={() => {
-                  if (onChange) onChange(optionValue);
-                  else setSelected(optionValue);
-                  setIsOpen(false);
-                }}
-                className={`flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard hover:bg-surface ${
-                  selectedValue === optionValue ? "bg-surface text-text shadow-low" : "text-text-muted"
-                }`}
-              >
-                {optionLabel}
-              </button>
-              );
-            })}
-          </div>
-        )
-      ) : (
+      {isOpen && (
         <div
-          className={`absolute left-0 right-0 top-[calc(100%+8px)] z-20 origin-top overflow-hidden rounded-card border border-border bg-surface p-1 shadow-panel transition-[opacity,transform] duration-base ease-standard motion-reduce:translate-y-0 motion-reduce:scale-100 motion-reduce:transition-opacity motion-reduce:duration-200 ${
-            isOpen
-              ? "translate-y-0 scale-100 opacity-100"
-              : "pointer-events-none -translate-y-1 scale-[0.98] opacity-0"
-          }`}
+          id={listboxId}
+          role="listbox"
+          aria-labelledby={labelId}
+          className={inline
+            ? "grid gap-1 rounded-card border border-border bg-surface-muted p-1"
+            : "absolute left-0 right-0 top-[calc(100%+8px)] z-20 origin-top overflow-hidden rounded-card border border-border bg-surface p-1 shadow-panel"}
         >
-          {menuOptions.map((option) => {
+          {menuOptions.map((option, index) => {
             const optionValue = getOptionValue(option);
             const optionLabel = getOptionLabel(option);
             return (
-            <button
-              key={optionValue}
-              type="button"
-              onClick={() => {
-                if (onChange) onChange(optionValue);
-                else setSelected(optionValue);
-                setIsOpen(false);
-              }}
-              className={`flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard hover:bg-surface-muted ${
-                selectedValue === optionValue ? "bg-surface-muted text-text" : "text-text-muted"
-              }`}
-            >
-              {optionLabel}
-            </button>
+              <button
+                ref={(node) => { optionRefs.current[index] = node; }}
+                key={optionValue}
+                type="button"
+                role="option"
+                aria-selected={selectedValue === optionValue}
+                onFocus={() => setActiveIndex(index)}
+                onKeyDown={(event) => handleOptionKeyDown(event, optionValue)}
+                onClick={() => selectOption(optionValue)}
+                className={`flex h-11 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard md:h-10 ${
+                  inline ? "hover:bg-surface" : "hover:bg-surface-muted"
+                } ${selectedValue === optionValue
+                  ? inline ? "bg-surface text-text shadow-low" : "bg-surface-muted text-text"
+                  : "text-text-muted"}`}
+              >
+                {optionLabel}
+              </button>
             );
           })}
         </div>
@@ -381,7 +450,7 @@ export function DataTable({
                     <button
                       type="button"
                       onClick={() => onSort?.(col.key)}
-                      className={`inline-flex h-8 w-full items-center gap-1.5 rounded-control px-1.5 font-semibold uppercase tracking-[0.08em] transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.98] ${
+                      className={`inline-flex h-8 w-full items-center gap-1.5 rounded-control font-semibold uppercase tracking-[0.08em] transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.98] ${
                         sortKey === col.key ? "text-text" : "text-text-subtle"
                       } ${col.align === "right" ? "justify-end" : "justify-start"}`}
                     >
@@ -399,7 +468,7 @@ export function DataTable({
                     </button>
                   ) : (
                     <span
-                      className={`inline-flex h-8 w-full items-center px-1.5 ${
+                      className={`inline-flex h-8 w-full items-center ${
                         col.align === "right" ? "justify-end" : "justify-start"
                       }`}
                     >

@@ -84,6 +84,7 @@ function ChartInner({
   height,
   data,
   xDataKey,
+  xLabelKey,
   margin,
   animationDuration,
   animationEasing,
@@ -120,6 +121,7 @@ function ChartInner({
       tweenYDomainOnXDomainChange={tweenYDomainOnXDomainChange}
       width={width}
       xDataKey={xDataKey}
+      xLabelKey={xLabelKey}
       xDomain={xDomain}
       xDomainSlotCount={xDomainSlotCount}
       yDomainTween={yDomainTween}
@@ -132,6 +134,7 @@ function ChartInner({
 export function LineChart({
   data,
   xDataKey = "date",
+  xLabelKey,
   margin: marginProp,
   animationDuration = 1100,
   animationEasing,
@@ -191,6 +194,7 @@ export function LineChart({
             tweenYDomainOnXDomainChange={tweenYDomainOnXDomainChange}
             width={width}
             xDataKey={xDataKey}
+            xLabelKey={xLabelKey}
             xDomain={xDomain}
             xDomainSlotCount={xDomainSlotCount}
             yDomainTween={yDomainTween}
