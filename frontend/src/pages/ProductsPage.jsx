@@ -10,9 +10,12 @@ import { parseNumberInput, retailCategories, validateProduct } from "../pos/doma
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
+import { ProductThumbnail } from "../components/product/ProductImage.jsx";
+import { ProductPhotoField } from "../components/product/ProductPhotoField.jsx";
+import { validateProductPhoto } from "../components/product/product-photo.js";
 
 function emptyProduct() {
-  return { id: "", name: "", barcode: "", category: "Sembako", price: "", stock: 0, unit: "pcs", active: true };
+  return { id: "", name: "", barcode: "", category: "Sembako", price: "", stock: 0, unit: "pcs", image: "", imageFile: null, removeImage: false, active: true };
 }
 
 function formatNumberInput(value) {
@@ -38,6 +41,7 @@ export default function ProductsPage() {
   const [scannerOpen, setScannerOpen] = React.useState(false);
   const [savingProduct, setSavingProduct] = React.useState(false);
   const [deactivatingProduct, setDeactivatingProduct] = React.useState(false);
+  const [photoPreviewURL, setPhotoPreviewURL] = React.useState("");
   const debouncedQuery = useDebouncedValue(query, 220);
   const productFilters = React.useMemo(() => ({
     q: debouncedQuery.trim(),
@@ -55,11 +59,41 @@ export default function ProductsPage() {
     initialSortDir: "desc",
   });
 
+  React.useEffect(() => () => {
+    if (photoPreviewURL) URL.revokeObjectURL(photoPreviewURL);
+  }, [photoPreviewURL]);
+
   if (table.isInitialLoading) {
     return <ProductsPageSkeleton />;
   }
 
   const isProductsMutating = savingProduct || deactivatingProduct;
+
+  const closeEditor = () => {
+    setPhotoPreviewURL("");
+    setEditing(null);
+    setProductErrors({});
+  };
+
+  const openEditor = (product) => {
+    setPhotoPreviewURL("");
+    setEditing({ ...product, imageFile: null, removeImage: false });
+    setProductErrors({});
+  };
+
+  const selectPhoto = (file) => {
+    const error = file ? validateProductPhoto(file) : "";
+    setProductErrors((current) => ({ ...current, image: error }));
+    if (error || !file) return;
+    setPhotoPreviewURL(URL.createObjectURL(file));
+    setEditing((current) => ({ ...current, imageFile: file, removeImage: false }));
+  };
+
+  const removePhoto = () => {
+    setPhotoPreviewURL("");
+    setEditing((current) => ({ ...current, imageFile: null, removeImage: true }));
+    setProductErrors((current) => ({ ...current, image: "" }));
+  };
 
   const save = async (event) => {
     event.preventDefault();
@@ -70,7 +104,7 @@ export default function ProductsPage() {
 
     setSavingProduct(true);
     try {
-      const saved = await store.saveProduct(editing);
+      const saved = await store.saveProduct(editing, { throwOnError: true });
       if (!saved) {
         toast.error("Failed to save product");
         return;
@@ -78,9 +112,19 @@ export default function ProductsPage() {
       toast.success(editing.id ? "Product updated" : "Product added", {
         description: saved.name,
       });
-      setEditing(null);
-      setProductErrors({});
+      closeEditor();
       await Promise.all([table.refresh(), loadProducts({ force: true })]);
+    } catch (error) {
+      const imageMessages = {
+        INVALID_IMAGE: "Gunakan file JPG, PNG, atau WebP yang valid.",
+        IMAGE_TOO_LARGE: "Ukuran foto maksimal 5 MB.",
+        IMAGE_STORAGE_UNAVAILABLE: "Penyimpanan foto sedang tidak tersedia. Coba lagi.",
+      };
+      if (imageMessages[error?.code]) {
+        setProductErrors((current) => ({ ...current, image: imageMessages[error.code] }));
+      } else {
+        toast.error(error?.message || "Failed to save product");
+      }
     } finally {
       setSavingProduct(false);
     }
@@ -117,7 +161,7 @@ export default function ProductsPage() {
   };
 
   const columns = [
-    { key: "name", label: "Product", sortable: true, render: (product) => <span className="font-semibold">{product.name}</span> },
+    { key: "name", label: "Product", sortable: true, render: (product) => <div className="flex min-w-[180px] items-center gap-3"><ProductThumbnail product={product} /><span className="font-semibold">{product.name}</span></div> },
     { key: "barcode", label: "Barcode", render: (product) => <span className="font-mono text-xs text-text-muted">{product.barcode}</span> },
     { key: "category", label: "Category", sortable: true },
     { key: "price", label: "Price", sortable: true, render: (product) => <span className="font-mono font-semibold tabular-nums">{formatPrice(product.price)}</span> },
@@ -139,7 +183,7 @@ export default function ProductsPage() {
       align: "right",
       render: (product) => (
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" size="sm" disabled={isProductsMutating} onClick={() => setEditing(product)}>
+          <Button variant="secondary" size="sm" disabled={isProductsMutating} onClick={() => openEditor(product)}>
             Edit
           </Button>
           <Button variant="danger" size="sm" disabled={isProductsMutating} onClick={() => setDeactivating(product)}>
@@ -190,7 +234,7 @@ export default function ProductsPage() {
             onChange={setStatus}
           />
         </div>
-        <Button variant="secondary" className="whitespace-nowrap" disabled={isProductsMutating} onClick={() => setEditing(emptyProduct())}>
+        <Button variant="secondary" className="whitespace-nowrap" disabled={isProductsMutating} onClick={() => openEditor(emptyProduct())}>
           <Icon name="plus" className="size-4" />
           Add product
         </Button>
@@ -253,14 +297,13 @@ export default function ProductsPage() {
         open={Boolean(editing)}
         onClose={() => {
           if (savingProduct) return;
-          setEditing(null);
-          setProductErrors({});
+          closeEditor();
         }}
         title={editing?.id ? "Edit product" : "Add product"}
         size="lg"
         footer={
           <>
-            <Button type="button" disabled={savingProduct} onClick={() => { setEditing(null); setProductErrors({}); }}>
+            <Button type="button" disabled={savingProduct} onClick={closeEditor}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" form="product-form" disabled={savingProduct}>
@@ -281,6 +324,16 @@ export default function ProductsPage() {
                 required: true,
                 disabled: savingProduct,
               }}
+            />
+
+            <ProductPhotoField
+              product={{ ...editing, image: editing.removeImage ? "" : editing.image }}
+              previewURL={photoPreviewURL}
+              filename={editing.imageFile?.name}
+              error={productErrors.image}
+              disabled={savingProduct}
+              onSelect={selectPhoto}
+              onRemove={removePhoto}
             />
 
             <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
