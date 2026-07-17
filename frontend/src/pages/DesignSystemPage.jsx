@@ -22,6 +22,7 @@ import PillShowcase from "../components/design/PillShowcase.jsx";
 import DashboardPatternsShowcase from "../components/design/DashboardPatternsShowcase.jsx";
 import ReportPatternsShowcase from "../components/design/ReportPatternsShowcase.jsx";
 import MarketingPatternsShowcase from "../components/design/MarketingPatternsShowcase.jsx";
+import ProductPhotoShowcase from "../components/design/ProductPhotoShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
@@ -100,6 +101,7 @@ export default function DesignSystemPage({ onNavigate }) {
         <SkeletonShowcase />
         <CartItemShowcase />
         <DialogShowcase />
+        <ProductPhotoShowcase />
         <ModalFormShowcase />
         <DataTableShowcase />
         <section className="rounded-panel border border-border bg-surface p-4 shadow-low">

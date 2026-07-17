@@ -4,6 +4,7 @@ import { TablePagination } from "../TablePagination.jsx";
 import { Badge, Button, DataTable, Input, SelectField } from "../primitives.jsx";
 import { transactionData, inventoryData } from "../../data.js";
 import { getNextSortState, sortRows } from "../../lib/sorting.js";
+import { ProductThumbnail } from "../product/ProductImage.jsx";
 
 const serverRows = Array.from({ length: 48 }, (_, index) => ({
   ...transactionData[index % transactionData.length],
@@ -75,7 +76,7 @@ export default function DataTableShowcase() {
   ];
   const inventoryCols = [
     { key: "sku", label: "SKU" },
-    { key: "name", label: "Item", sortable: true },
+    { key: "name", label: "Item", sortable: true, render: (row) => <div className="flex items-center gap-3"><ProductThumbnail product={row} /><span className="font-semibold">{row.name}</span></div> },
     { key: "category", label: "Category", sortable: true },
     {
       key: "stock",
