@@ -29,7 +29,7 @@ func TestResolveProductOrder(t *testing.T) {
 	}{
 		{sort: "createdAt", direction: "desc", column: "p.created_at", operator: "<"},
 		{sort: "name", direction: "asc", column: "p.name", operator: ">"},
-		{sort: "category", direction: "asc", column: "p.category", operator: ">"},
+		{sort: "category", direction: "asc", column: "lower(c.name)", operator: ">"},
 		{sort: "price", direction: "desc", column: "p.price", operator: "<"},
 		{sort: "stock", direction: "asc", column: "p.stock", operator: ">"},
 	}

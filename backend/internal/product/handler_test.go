@@ -65,7 +65,7 @@ func productMultipartRequest(t *testing.T, method, path string, image []byte, re
 	t.Helper()
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
-	fields := map[string]string{"name": "Tea", "barcode": "1", "category": "Drink", "price": "10", "stock": "1", "unit": "pcs", "active": "true"}
+	fields := map[string]string{"name": "Tea", "barcode": "1", "categoryId": "11111111-1111-1111-1111-111111111111", "price": "10", "stock": "1", "unitId": "22222222-2222-2222-2222-222222222222", "active": "true"}
 	if remove {
 		fields["remove_image"] = "true"
 	}

@@ -84,15 +84,17 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 	}
 	query := fmt.Sprintf(`
 		select sm.id, sm.product_id, coalesce(p.name, ''), coalesce(p.barcode, ''),
-			coalesce(p.category, ''), coalesce(p.unit, ''), sm.type, sm.quantity_delta,
+			coalesce(c.name, ''), coalesce(u.name, ''), sm.type, sm.quantity_delta,
 			sm.stock_before, sm.stock_after, sm.reason, sm.reference_type, sm.reference_id,
 			sm.created_by_user_id, sm.created_at
 		from stock_movements sm
 		join products p on p.org_id = sm.org_id and p.id = sm.product_id
+		join categories c on c.org_id = p.org_id and c.id = p.category_id
+		join units u on u.org_id = p.org_id and u.id = p.unit_id
 		where sm.org_id = $1
 			and ($2::uuid is null or sm.product_id = $2)
 			and ($3::text = '' or sm.type = $3)
-			and ($4::text = '' or p.name ilike '%%' || $4 || '%%' or p.barcode ilike '%%' || $4 || '%%' or p.category ilike '%%' || $4 || '%%')
+			and ($4::text = '' or p.name ilike '%%' || $4 || '%%' or p.barcode ilike '%%' || $4 || '%%' or c.name ilike '%%' || $4 || '%%')
 			and ($5::timestamptz is null or sm.created_at >= $5)
 			and ($6::timestamptz is null or sm.created_at <= $6)
 			and (not $7::boolean or (%s,sm.id) %s ($8,$9::uuid))
