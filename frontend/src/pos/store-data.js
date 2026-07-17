@@ -69,6 +69,16 @@ export function toProductPayload(product, includeStock) {
   };
 }
 
+export function toProductFormData(product, includeStock) {
+  const payload = toProductPayload(product, includeStock);
+  delete payload.image;
+  const form = new FormData();
+  Object.entries(payload).forEach(([key, value]) => form.set(key, String(value)));
+  if (product.imageFile) form.set("image_file", product.imageFile, product.imageFile.name);
+  if (product.removeImage) form.set("remove_image", "true");
+  return form;
+}
+
 function normalizeTransactions(items) {
   if (!Array.isArray(items)) return [];
   return items.map((transaction) => ({

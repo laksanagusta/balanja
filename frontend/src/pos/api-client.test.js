@@ -35,6 +35,22 @@ test("listProducts sends product search filters", async () => {
   assert.equal(requestURL, "/api/v1/products?q=tea&limit=6");
 });
 
+test("createProduct sends FormData without overriding its boundary", async () => {
+  let request;
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async (_url, options) => {
+      request = options;
+      return new Response(JSON.stringify({ data: { id: "p1" } }), { status: 201 });
+    },
+  });
+  const form = new FormData();
+  form.set("name", "Rice");
+  await api.createProduct(form);
+  assert.equal(request.body, form);
+  assert.equal(request.headers["Content-Type"], undefined);
+});
+
 test("listProducts preserves cursor metadata and serializes catalog filters", async () => {
   const requests = [];
   const api = createAPIClient({

@@ -1,7 +1,7 @@
 import React from "react";
 import { addProductToCart, addSavedProductToCart, validateProduct } from "./domain.js";
 import { loadCart, saveCart, clearCartStorage } from "./cart-storage.js";
-import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, searchProducts as fetchProductSearch, toProductPayload } from "./store-data.js";
+import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, searchProducts as fetchProductSearch, toProductFormData } from "./store-data.js";
 
 const POSStoreContext = React.createContext(null);
 const defaultSettings = { storeName: "Toko Balanja", storeAddress: "", taxEnabled: false, taxRate: 11, qrisLabel: "QRIS Toko Balanja" };
@@ -114,18 +114,23 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
 
   const clearCart = React.useCallback(() => { setCart([]); clearCartStorage(); setNotice(""); }, []);
 
-  const saveProduct = React.useCallback(async (product) => {
+  const saveProduct = React.useCallback(async (product, { throwOnError = false } = {}) => {
     const validation = validateProduct(product, products);
     if (!validation.ok) { setNotice(Object.values(validation.errors)[0]); return null; }
     try {
       const exists = Boolean(product.id);
+      const form = toProductFormData(product, !exists);
       const saved = exists
-        ? await api.updateProduct(product.id, toProductPayload(product, false))
-        : await api.createProduct(toProductPayload(product, true));
+        ? await api.updateProduct(product.id, form)
+        : await api.createProduct(form);
       setProducts((current) => exists ? current.map((item) => item.id === saved.id ? saved : item) : [...current, saved]);
       setNotice("");
       return saved;
-    } catch (error) { setNotice(error.message || "Failed to save product"); return null; }
+    } catch (error) {
+      setNotice(error.message || "Failed to save product");
+      if (throwOnError) throw error;
+      return null;
+    }
   }, [api, products]);
 
   const addScannedProductToCart = React.useCallback(async (product) => {
