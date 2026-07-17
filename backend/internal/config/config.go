@@ -21,6 +21,16 @@ type Config struct {
 	AllowedOrigins  []string
 	DBMaxConns      int32
 	ShutdownTimeout time.Duration
+	R2              R2Config
+}
+
+type R2Config struct {
+	Enabled         bool
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	Bucket          string
+	PublicBaseURL   string
 }
 
 func Load(getenv func(string) string) (Config, error) {
@@ -32,6 +42,13 @@ func Load(getenv func(string) string) (Config, error) {
 		AllowedOrigins:  splitCSV(getenv("ALLOWED_ORIGINS")),
 		DBMaxConns:      defaultDBMaxConns,
 		ShutdownTimeout: defaultShutdownTimeout,
+		R2: R2Config{
+			Endpoint:        strings.TrimSpace(getenv("R2_ENDPOINT")),
+			AccessKeyID:     strings.TrimSpace(getenv("R2_ACCESS_KEY_ID")),
+			SecretAccessKey: strings.TrimSpace(getenv("R2_SECRET_ACCESS_KEY")),
+			Bucket:          strings.TrimSpace(getenv("R2_BUCKET")),
+			PublicBaseURL:   strings.TrimRight(strings.TrimSpace(getenv("R2_PUBLIC_BASE_URL")), "/"),
+		},
 	}
 
 	for key, value := range map[string]string{
@@ -58,6 +75,31 @@ func Load(getenv func(string) string) (Config, error) {
 			return Config{}, fmt.Errorf("SHUTDOWN_TIMEOUT must be a positive duration")
 		}
 		config.ShutdownTimeout = parsed
+	}
+
+	if raw := strings.TrimSpace(getenv("R2_ENABLED")); raw != "" {
+		parsed, err := strconv.ParseBool(raw)
+		if err != nil {
+			return Config{}, fmt.Errorf("R2_ENABLED must be a boolean")
+		}
+		config.R2.Enabled = parsed
+	}
+	if config.R2.Enabled {
+		required := []struct {
+			key   string
+			value string
+		}{
+			{key: "R2_ENDPOINT", value: config.R2.Endpoint},
+			{key: "R2_ACCESS_KEY_ID", value: config.R2.AccessKeyID},
+			{key: "R2_SECRET_ACCESS_KEY", value: config.R2.SecretAccessKey},
+			{key: "R2_BUCKET", value: config.R2.Bucket},
+			{key: "R2_PUBLIC_BASE_URL", value: config.R2.PublicBaseURL},
+		}
+		for _, item := range required {
+			if item.value == "" {
+				return Config{}, fmt.Errorf("%s is required when R2_ENABLED is true", item.key)
+			}
+		}
 	}
 
 	return config, nil
