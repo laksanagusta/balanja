@@ -1,8 +1,9 @@
 import React from "react";
 import { toast } from "sonner";
-import { Badge, Button, Icon, Input, Panel } from "../components/primitives.jsx";
+import { Button, Icon, Input, Panel } from "../components/primitives.jsx";
 import { SettingsPageSkeleton } from "../components/page-loading.jsx";
 import MasterDataManager from "../components/settings/MasterDataManager.jsx";
+import SettingsNavigation from "../components/settings/SettingsNavigation.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 
 function normalizeTab(search) {
@@ -78,93 +79,82 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
         {(isUpdatingSettings || isUpdatingMasterData) && <UpdatingBadge />}
       </header>
 
-      <main className="grid min-h-0 flex-1 gap-4 overflow-auto p-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="grid gap-4">
-          <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1">
-            {settingsTabs.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onTabChange(item.id)}
-                data-href={item.href}
-                className={`rounded-control px-3 py-2 text-sm font-semibold transition ${tab === item.id ? "bg-surface text-text shadow-low" : "text-text-muted hover:bg-surface hover:text-text"}`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+      <main className="grid min-h-0 flex-1 content-start gap-4 overflow-auto p-4 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-6 lg:p-6">
+        <SettingsNavigation items={settingsTabs} activeId={tab} onChange={onTabChange} />
+
+        <div className="mx-auto grid w-full max-w-3xl gap-4">
           {tab === "profile" ? (
-        <Panel className="p-4">
-          <form onSubmit={save} className={`grid gap-4 ${isUpdatingSettings ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}>
-            <div className="border-b border-border pb-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-text">Profil toko</p>
-                  <p className="text-xs text-text-muted">Used on cashier screens and transaction context.</p>
+            <Panel className="p-4">
+              <form onSubmit={save} className={`grid gap-4 ${isUpdatingSettings ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}>
+                <div className="border-b border-border pb-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-text">Profil toko</p>
+                      <p className="text-xs text-text-muted">Used on cashier screens and transaction context.</p>
+                    </div>
+                    {isUpdatingSettings && <UpdatingBadge />}
+                  </div>
                 </div>
-                {isUpdatingSettings && <UpdatingBadge />}
-              </div>
-            </div>
 
-            <Input
-              label="Store name"
-              placeholder="Toko Balanja"
-              inputProps={{
-                value: draft.storeName,
-                onChange: (event) => setDraft({ ...draft, storeName: event.target.value }),
-                required: true,
-                disabled: isSaving,
-              }}
-            />
-            <Input
-              label="Store address"
-              placeholder="Jl. UMKM No. 1"
-              inputProps={{
-                value: draft.storeAddress,
-                onChange: (event) => setDraft({ ...draft, storeAddress: event.target.value }),
-                disabled: isSaving,
-              }}
-            />
-            <Input
-              label="QRIS label"
-              placeholder="QRIS Toko Balanja"
-              inputProps={{
-                value: draft.qrisLabel,
-                onChange: (event) => setDraft({ ...draft, qrisLabel: event.target.value }),
-                disabled: isSaving,
-              }}
-            />
-
-            <div className="grid gap-3 rounded-card border border-border bg-surface-muted p-4">
-              <label className="flex items-center justify-between gap-4 text-sm font-semibold text-text">
-                Enable tax
-                <input
-                  type="checkbox"
-                  checked={draft.taxEnabled}
-                  onChange={(event) => setDraft({ ...draft, taxEnabled: event.target.checked })}
-                  disabled={isSaving}
+                <Input
+                  label="Store name"
+                  placeholder="Toko Balanja"
+                  inputProps={{
+                    value: draft.storeName,
+                    onChange: (event) => setDraft({ ...draft, storeName: event.target.value }),
+                    required: true,
+                    disabled: isSaving,
+                  }}
                 />
-              </label>
-              <Input
-                label="Tax rate"
-                placeholder="11"
-                inputProps={{
-                  value: draft.taxRate,
-                  onChange: (event) => setDraft({ ...draft, taxRate: event.target.value }),
-                  inputMode: "numeric",
-                  disabled: isSaving,
-                }}
-              />
-            </div>
+                <Input
+                  label="Store address"
+                  placeholder="Jl. UMKM No. 1"
+                  inputProps={{
+                    value: draft.storeAddress,
+                    onChange: (event) => setDraft({ ...draft, storeAddress: event.target.value }),
+                    disabled: isSaving,
+                  }}
+                />
+                <Input
+                  label="QRIS label"
+                  placeholder="QRIS Toko Balanja"
+                  inputProps={{
+                    value: draft.qrisLabel,
+                    onChange: (event) => setDraft({ ...draft, qrisLabel: event.target.value }),
+                    disabled: isSaving,
+                  }}
+                />
 
-            <div className="flex justify-end">
-              <Button type="submit" variant="primary" disabled={isSaving}>
-                <Icon name="check" className="size-4" />
-                {isSaving ? "Saving..." : "Save settings"}
-              </Button>
-            </div>
-          </form>
-        </Panel>
+                <div className="grid gap-3 rounded-card border border-border bg-surface-muted p-4">
+                  <label className="flex items-center justify-between gap-4 text-sm font-semibold text-text">
+                    Enable tax
+                    <input
+                      type="checkbox"
+                      checked={draft.taxEnabled}
+                      onChange={(event) => setDraft({ ...draft, taxEnabled: event.target.checked })}
+                      disabled={isSaving}
+                    />
+                  </label>
+                  <Input
+                    label="Tax rate"
+                    placeholder="11"
+                    inputProps={{
+                      value: draft.taxRate,
+                      onChange: (event) => setDraft({ ...draft, taxRate: event.target.value }),
+                      inputMode: "numeric",
+                      disabled: isSaving,
+                    }}
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="submit" variant="primary" disabled={isSaving}>
+                    <Icon name="check" className="size-4" />
+                    {isSaving ? "Saving..." : "Save settings"}
+                  </Button>
+                </div>
+              </form>
+            </Panel>
           ) : null}
           {tab === "categories" ? (
             <MasterDataManager
@@ -191,32 +181,6 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
             />
           ) : null}
         </div>
-
-        <aside className="grid content-start gap-4">
-          <Panel className="grid gap-3 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-text">Current store</p>
-              <Badge tone="accent">Local MVP</Badge>
-            </div>
-            <div className="grid gap-2 text-sm">
-              <div>
-                <p className="text-text-muted">Name</p>
-                <p className="font-semibold text-text">{store.settings.storeName}</p>
-              </div>
-              <div>
-                <p className="text-text-muted">Address</p>
-                <p className="font-semibold text-text">{store.settings.storeAddress || "-"}</p>
-              </div>
-              <div>
-                <p className="text-text-muted">Tax</p>
-                <p className="font-semibold text-text">
-                  {store.settings.taxEnabled ? `${store.settings.taxRate}% enabled` : "Disabled"}
-                </p>
-              </div>
-            </div>
-          </Panel>
-
-        </aside>
       </main>
     </div>
   );

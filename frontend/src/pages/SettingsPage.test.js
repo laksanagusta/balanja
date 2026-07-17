@@ -9,4 +9,9 @@ test("settings tabs use query parameters with profile fallback", async () => {
   assert.match(source, /tab=units/);
   assert.match(source, /Profil toko/);
   assert.match(source, /MasterDataManager/);
+  assert.match(source, /SettingsNavigation/);
+  assert.match(source, /md:grid-cols-\[14rem_minmax\(0,1fr\)\]/);
+  assert.match(source, /max-w-3xl/);
+  assert.doesNotMatch(source, /Current store/);
+  assert.doesNotMatch(source, /Local MVP/);
 });
