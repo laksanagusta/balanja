@@ -14,9 +14,15 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
   assert.match(trend, /dataKey="previous"/);
   assert.match(trend, /xDataKey="date"/);
   assert.doesNotMatch(trend, /showMarkers/);
+  assert.match(trend, /dashFromIndex=\{0\}/);
+  assert.match(trend, /showDots=\{false\}/);
+  assert.match(trend, /TooltipContent/);
+  assert.match(trend, /formatPrice/);
+  assert.match(trend, /Periode ini/);
   assert.match(trend, /Periode sebelumnya/);
   assert.match(breakdowns, /Penjualan bersih/);
   assert.match(breakdowns, /Transaksi void/);
+  assert.doesNotMatch(breakdowns, /showVoids/);
   for (const label of ["Hari ini", "7 hari", "30 hari", "Bulan ini", "Rentang khusus"]) assert.match(toolbar, new RegExp(label));
   assert.match(toolbar, /aria-pressed/);
   assert.match(toolbar, /<form/);

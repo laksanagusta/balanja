@@ -30,10 +30,9 @@ export function VoidReportPanel({ voids = {}, formatMoney, formatCount }) {
   );
 }
 
-export default function ReportBreakdownPanels({ products = [], payments = [], cashiers = [], voids = {}, showVoids = true, formatMoney, formatCount }) {
+export default function ReportBreakdownPanels({ products = [], payments = [], cashiers = [], formatMoney, formatCount }) {
   return (
     <>
-      {showVoids && <VoidReportPanel voids={voids} formatMoney={formatMoney} formatCount={formatCount} />}
       <div className="grid gap-4 xl:grid-cols-2">
         <ReportTablePanel
           title="Produk teratas"

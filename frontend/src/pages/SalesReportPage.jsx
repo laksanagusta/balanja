@@ -141,8 +141,6 @@ export default function SalesReportPage({ onNavigate }) {
             products={report?.topProducts}
             payments={report?.paymentMethods}
             cashiers={report?.cashiers}
-            voids={report?.voids}
-            showVoids={false}
             formatMoney={formatPrice}
             formatCount={formatCount}
           />

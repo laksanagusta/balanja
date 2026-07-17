@@ -19,6 +19,8 @@ test("sales report page owns fetch, retained update, export, and handoff lifecyc
   assert.match(source, /refreshError/);
   assert.match(source, /hasUnappliedChanges/);
   assert.doesNotMatch(source, /opacity-60/);
+  assert.doesNotMatch(source, /showVoids/);
+  assert.doesNotMatch(source, /<ReportBreakdownPanels[\s\S]*?voids=/);
   assert.doesNotMatch(source, /components\/design/);
 	assert.match(source, /aria-busy=\{loading\}/);
 	assert.match(source, /Laporan gagal dimuat/);
