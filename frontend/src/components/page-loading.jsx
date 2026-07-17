@@ -399,58 +399,49 @@ export function StockPageSkeleton() {
 
 export function SettingsPageSkeleton() {
   return (
-    <div className="min-h-full overflow-auto bg-app-bg">
-      <header className="border-b border-border p-4">
-        <Skeleton className="h-8 w-28 bg-surface-muted/80" />
-        <Skeleton className="mt-2 h-4 w-72 bg-surface-muted/80" />
+    <div className="flex h-full min-h-0 flex-col bg-surface" aria-busy="true">
+      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto] lg:items-center">
+        <Skeleton className="h-5 w-24 bg-surface-muted/80" />
       </header>
 
-      <main className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Panel className="p-4">
-          <div className="grid gap-4">
+      <main className="grid min-h-0 flex-1 content-start gap-4 overflow-auto p-4 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-6 lg:p-6">
+        <div className="flex min-w-0 gap-1 overflow-x-auto pb-1 md:grid md:content-start md:overflow-visible md:pb-0">
+          {Array.from({ length: 3 }, (_, index) => (
+            <Skeleton
+              key={index}
+              className={`min-h-11 flex-none rounded-control bg-surface-muted/80 md:w-full ${index === 0 ? "w-28" : "w-24"}`}
+            />
+          ))}
+        </div>
+
+        <div className="mx-auto w-full max-w-3xl">
+          <Panel className="grid gap-4 p-4">
             <div className="border-b border-border pb-3">
               <Skeleton className="h-4 w-24 bg-surface-muted/80" />
-              <Skeleton className="mt-2 h-3.5 w-72 bg-surface-muted/80" />
+              <Skeleton className="mt-2 h-3.5 w-full max-w-80 bg-surface-muted/80" />
             </div>
 
-            {Array.from({ length: 3 }, (_, index) => (
-              <div key={index} className="grid gap-2">
-                <Skeleton className="h-3.5 w-20 bg-surface-muted/80" />
-                <Skeleton className="h-9 w-full rounded-card bg-surface-muted/80" />
+            <div className="grid gap-3 rounded-card border border-border bg-surface-muted/50 p-3 sm:grid-cols-[minmax(0,1fr)_7rem] sm:items-end">
+              <div className="grid gap-2">
+                <Skeleton className="h-3.5 w-24 bg-surface" />
+                <Skeleton className="h-11 w-full rounded-card bg-surface" />
               </div>
-            ))}
-
-            <div className="grid gap-3 rounded-card border border-border bg-surface-muted p-4">
-              <div className="flex items-center justify-between gap-4">
-                <Skeleton className="h-4 w-24 bg-surface" />
-                <Skeleton className="h-5 w-11 rounded-full bg-surface" />
-              </div>
-              <Skeleton className="h-3.5 w-20 bg-surface" />
-              <Skeleton className="h-9 w-full rounded-card bg-surface" />
+              <Skeleton className="h-11 w-full rounded-control bg-surface" />
             </div>
 
-            <div className="flex justify-end">
-              <Skeleton className="h-9 w-32 rounded-control bg-surface-muted/80" />
-            </div>
-          </div>
-        </Panel>
-
-        <aside className="grid content-start gap-4">
-          <Panel className="grid gap-3 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <Skeleton className="h-4 w-28 bg-surface-muted/80" />
-              <Skeleton className="h-5 w-20 rounded-full bg-surface-muted/80" />
-            </div>
             <div className="grid gap-3">
               {Array.from({ length: 3 }, (_, index) => (
-                <div key={index} className="grid gap-2">
-                  <Skeleton className="h-3.5 w-14 bg-surface-muted/80" />
-                  <Skeleton className="h-4 w-48 bg-surface-muted/80" />
+                <div key={index} className="flex min-h-14 items-center justify-between gap-3 rounded-card border border-border p-3">
+                  <div className="grid flex-1 gap-2">
+                    <Skeleton className={`h-4 bg-surface-muted/80 ${index === 1 ? "w-2/5" : "w-1/3"}`} />
+                    <Skeleton className="h-3 w-20 bg-surface-muted/80" />
+                  </div>
+                  <Skeleton className="h-8 w-20 rounded-control bg-surface-muted/80" />
                 </div>
               ))}
             </div>
           </Panel>
-        </aside>
+        </div>
       </main>
     </div>
   );
