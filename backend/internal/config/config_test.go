@@ -1,6 +1,9 @@
 package config
 
 import (
+	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -109,6 +112,18 @@ func TestLoadParsesEnabledR2Configuration(t *testing.T) {
 	}
 	if !got.R2.Enabled || got.R2.Endpoint != "https://account.r2.cloudflarestorage.com" || got.R2.PublicBaseURL != "https://images.example.com" {
 		t.Fatalf("R2 = %#v", got.R2)
+	}
+}
+
+func TestMainWiresR2IntoProducts(t *testing.T) {
+	t.Parallel()
+
+	source, err := os.ReadFile(filepath.Join("..", "..", "cmd", "api", "main.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(source, []byte("objectstore.NewR2")) || !bytes.Contains(source, []byte("product.WithImageStore")) {
+		t.Fatal("main does not wire R2 into product service")
 	}
 }
 

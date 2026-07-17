@@ -21,6 +21,14 @@ Semua value dibaca dari `backend/.env` atau environment shell yang sudah di-expo
 | `ALLOWED_ORIGINS` | no | CSV origin yang boleh melakukan CORS ke API |
 | `DB_MAX_CONNS` | no | Default `10` |
 | `SHUTDOWN_TIMEOUT` | no | Default `10s` |
+| `R2_ENABLED` | no | Default `false`; aktifkan upload foto produk setelah semua konfigurasi R2 tersedia |
+| `R2_ENDPOINT` | jika R2 aktif | Endpoint S3-compatible `https://<account-id>.r2.cloudflarestorage.com` |
+| `R2_ACCESS_KEY_ID` | jika R2 aktif | Access key backend untuk bucket foto produk |
+| `R2_SECRET_ACCESS_KEY` | jika R2 aktif | Secret key backend; jangan pernah diekspos ke frontend atau log |
+| `R2_BUCKET` | jika R2 aktif | Nama bucket foto produk |
+| `R2_PUBLIC_BASE_URL` | jika R2 aktif | Domain publik/custom domain tanpa path object |
+
+Credential R2 sebaiknya dibatasi ke operasi object put/delete pada bucket foto produk. Pembacaan gambar dilakukan melalui `R2_PUBLIC_BASE_URL`; credential tidak pernah dikirim ke browser.
 
 ## Routes
 
