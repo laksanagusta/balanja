@@ -2,7 +2,7 @@
 
 ### Product photos
 
-Product forms use one controlled photo field with a visible label, preview, JPG/PNG/WebP helper text, 5 MB limit, replace/remove actions, and inline error. Product tables place a 40px rounded thumbnail before the product name. Empty or broken URLs use the same category fallback as POS cards; images remain decorative when adjacent text already names the product.
+Product forms use one controlled photo field with a visible label, a slightly separated fieldset legend, preview, inline status text, JPG/PNG/WebP helper text, 5 MB limit, replace/remove actions, and inline error. Do not add a second filename caption below the field. Product tables place a 40px rounded thumbnail before the product name. Empty or broken URLs use the same category fallback as POS cards; images remain decorative when adjacent text already names the product.
 
 ## Product Surface
 
@@ -109,6 +109,8 @@ Retail product imagery inside public mockups should represent everyday UMKM shel
 Public navigation keeps the logo and authentication action visible on mobile; secondary anchor links may collapse or hide below the medium breakpoint. Marketing compositions stay open and flat—do not introduce nested cards or apply enlarged typography and spacing to POS, dashboard, catalog, stock, transactions, settings, or dialogs.
 
 Public buttons, links, and compact header actions use at least a 44px touch target and immediate press feedback on pointer-down. A compact header action may keep a 32px visual height only when a transparent hit area expands its clickable footprint to 44px. Navigation links must reuse the shared press transition without a competing transition utility. Programmatic anchor scrolling checks `prefers-reduced-motion` and becomes immediate when reduction is requested. Translucent public chrome becomes solid under `prefers-reduced-transparency`, while `prefers-contrast: more` uses an opaque surface and defined border. Decorative product mockups stay `aria-hidden` and use neutral containers rather than introducing nested page landmarks such as `main`.
+
+The login page lives as a centered sign-in surface without a top bar. It keeps the SignIn card and signed-in confirmation centered in the viewport, with no logo rail or back button in the page chrome.
 
 Public hero reveals use the shared strong ease over 420ms with short stagger delays no greater than 180ms, without retaining `will-change` after entry. FAQ answers remain mounted and expand with a brief opacity and grid-track transition while a single plus indicator morphs into a minus; reduced-motion contexts remove both transitions. Product mockups keep interface copy in Indonesian. Only the leading visible hero product image receives eager high-priority loading; remaining and compact mockup images use lazy loading with asynchronous decoding.
 

@@ -12,8 +12,13 @@ test("validates supported product photo type and size", () => {
 test("design system publishes product photo patterns", async () => {
   const design = await readFile(new URL("../../pages/DesignSystemPage.jsx", import.meta.url), "utf8");
   const table = await readFile(new URL("../design/DataTableShowcase.jsx", import.meta.url), "utf8");
+  const field = await readFile(new URL("./ProductPhotoField.jsx", import.meta.url), "utf8");
   assert.match(design, /ProductPhotoShowcase/);
   assert.match(table, /ProductThumbnail/);
+  assert.match(field, /inferFilename/);
+  assert.match(field, /capture="environment"/);
+  assert.doesNotMatch(field, /Nama file saat ini/);
+  assert.doesNotMatch(field, /Nama file/);
 });
 
 test("POS and cart share the product image fallback renderer", async () => {
