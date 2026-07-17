@@ -2,7 +2,7 @@ import React from "react";
 import { TableFilterPopover } from "../components/TableFilterPopover.jsx";
 import { TablePagination } from "../components/TablePagination.jsx";
 import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField } from "../components/primitives.jsx";
-import { EmptyState } from "../components/design/EmptyStateShowcase.jsx";
+import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import { TransactionsPageSkeleton } from "../components/page-loading.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
@@ -51,15 +51,15 @@ export default function TransactionsPage() {
   }
 
   const columns = [
-    { key: "number", label: "Transaction", sortable: true, render: (row) => <span className="font-semibold">{row.number}</span> },
-    { key: "createdAt", label: "Time", sortable: true, render: (row) => <span className="text-text-muted">{formatDate(row.createdAt)}</span> },
-    { key: "items", label: "Items", render: (row) => row.items.reduce((sum, item) => sum + item.qty, 0) },
-    { key: "paymentMethod", label: "Payment", sortable: true, render: (row) => row.paymentMethod.toUpperCase() },
+    { key: "number", label: "Transaksi", sortable: true, render: (row) => <span className="font-semibold">{row.number}</span> },
+    { key: "createdAt", label: "Waktu", sortable: true, render: (row) => <span className="text-text-muted">{formatDate(row.createdAt)}</span> },
+    { key: "items", label: "Item", render: (row) => row.items.reduce((sum, item) => sum + item.qty, 0) },
+    { key: "paymentMethod", label: "Pembayaran", sortable: true, render: (row) => row.paymentMethod === "cash" ? "Tunai" : row.paymentMethod.toUpperCase() },
     { key: "total", label: "Total", sortable: true, render: (row) => <span className="font-mono font-semibold tabular-nums">{formatPrice(row.total)}</span> },
-    { key: "status", label: "Status", render: (row) => <Badge tone="success">{row.status}</Badge> },
+    { key: "status", label: "Status", render: (row) => <Badge tone="success">{row.status === "completed" ? "Selesai" : row.status}</Badge> },
     {
       key: "actions",
-      label: "Actions",
+      label: "Aksi",
       align: "right",
       render: (row) => (
         <Button variant="secondary" size="sm" onClick={() => setSelected(row)}>
@@ -73,13 +73,13 @@ export default function TransactionsPage() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
       <header className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
-        <h1 className="text-base font-semibold text-text">Transactions</h1>
+        <h1 className="text-base font-semibold text-text">Transaksi</h1>
         <div className="flex min-w-[220px] flex-1 lg:ml-auto lg:max-w-[420px]">
           <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-              placeholder="Transaction, cashier, payment"
+              placeholder="Transaksi, kasir, pembayaran"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -91,18 +91,18 @@ export default function TransactionsPage() {
           activeCount={activeFilterCount}
         >
           <SelectField
-            label="Payment method"
+            label="Metode pembayaran"
             value={paymentMethod}
             options={[
-              { value: "", label: "All methods" },
-              { value: "cash", label: "Cash" },
+              { value: "", label: "Semua metode" },
+              { value: "cash", label: "Tunai" },
               { value: "qris", label: "QRIS" },
             ]}
             onChange={setPaymentMethod}
           />
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
-              label="Date from"
+              label="Tanggal dari"
               inputProps={{
                 type: "date",
                 value: dateFrom,
@@ -111,7 +111,7 @@ export default function TransactionsPage() {
               }}
             />
             <Input
-              label="Date to"
+              label="Tanggal sampai"
               inputProps={{
                 type: "date",
                 value: dateTo,
@@ -127,22 +127,14 @@ export default function TransactionsPage() {
             disabled={activeFilterCount === 0}
             onClick={() => { setPaymentMethod(""); setDateFrom(""); setDateTo(""); }}
           >
-            Clear filters
+            Reset filter
           </Button>
         </TableFilterPopover>
+        {table.isUpdating && <UpdatingBadge />}
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <div className="grid rounded-panel border border-border bg-surface p-0">
-          <div className="border-b border-border px-4 py-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-text">Transaction history</p>
-                <p className="text-xs text-text-muted">Sortable rows with payment method, cashier, and sale total.</p>
-              </div>
-              {table.isUpdating && <UpdatingBadge />}
-            </div>
-          </div>
           {table.rows.length ? (
             <DataTable
               columns={columns}
@@ -150,14 +142,14 @@ export default function TransactionsPage() {
               sortKey={table.sortKey}
               sortDir={table.sortDir}
               onSort={table.sortBy}
-              className={`px-2 ${table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}
+              className={table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}
             />
           ) : (
             <EmptyState
               icon={query || activeFilterCount ? "search" : "receipt"}
-              title={table.error ? "Transactions could not be loaded" : query || activeFilterCount ? "No transactions found" : "No transactions yet"}
-              description={table.error ? table.error.message : query || activeFilterCount ? "Try a different search or filter set." : "Completed sales will appear here."}
-              action={table.error ? <Button size="sm" variant="secondary" onClick={table.retry}>Retry</Button> : undefined}
+              title={table.error ? "Transaksi gagal dimuat" : query || activeFilterCount ? "Transaksi tidak ditemukan" : "Belum ada transaksi"}
+              description={table.error ? table.error.message : query || activeFilterCount ? "Coba kata kunci atau filter lain." : "Transaksi yang selesai akan muncul di sini."}
+              action={table.error ? <Button size="sm" variant="secondary" onClick={table.retry}>Coba lagi</Button> : undefined}
               className="m-4 min-h-[240px]"
             />
           )}
@@ -177,23 +169,23 @@ export default function TransactionsPage() {
       <Dialog
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        title={selected?.number || "Transaction detail"}
+        title={selected?.number || "Detail transaksi"}
         size="lg"
-        footer={<Button onClick={() => setSelected(null)}>Close</Button>}
+        footer={<Button onClick={() => setSelected(null)}>Tutup</Button>}
       >
         {selected && (
           <div className="mt-4 grid gap-4">
             <div className="grid gap-2 rounded-card border border-border bg-surface-muted p-4 text-sm">
               <div className="flex justify-between gap-4">
-                <span className="text-text-muted">Cashier</span>
-                <span className="font-semibold text-text">{selected.cashierName}</span>
+                <span className="text-text-muted">Kasir</span>
+                <span className="font-semibold text-text">{selected.cashierName || selected.cashierUserId || "-"}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-text-muted">Payment</span>
-                <span className="font-semibold text-text">{selected.paymentMethod.toUpperCase()}</span>
+                <span className="text-text-muted">Pembayaran</span>
+                <span className="font-semibold text-text">{selected.paymentMethod === "cash" ? "Tunai" : selected.paymentMethod.toUpperCase()}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-text-muted">Time</span>
+                <span className="text-text-muted">Waktu</span>
                 <span className="font-semibold text-text">{formatDate(selected.createdAt)}</span>
               </div>
             </div>
@@ -219,7 +211,7 @@ export default function TransactionsPage() {
                 <dd className="font-mono font-semibold">{formatPrice(selected.subtotal)}</dd>
               </div>
               <div className="flex justify-between text-text-muted">
-                <dt>Tax</dt>
+                <dt>Pajak</dt>
                 <dd className="font-mono font-semibold">{formatPrice(selected.tax)}</dd>
               </div>
               <div className="flex justify-between border-t border-dashed border-border pt-3 text-lg font-semibold text-text">
@@ -238,7 +230,7 @@ function UpdatingBadge() {
   return (
     <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
       <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-      Updating
+      Memperbarui
     </span>
   );
 }

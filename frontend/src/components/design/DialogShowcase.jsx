@@ -5,7 +5,6 @@ export default function DialogShowcase() {
   const [infoOpen, setInfoOpen] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [dangerOpen, setDangerOpen] = React.useState(false);
-  const [unknownBarcodeOpen, setUnknownBarcodeOpen] = React.useState(false);
 
   return (
     <div>
@@ -16,7 +15,6 @@ export default function DialogShowcase() {
           <Button onClick={() => setInfoOpen(true)}>Info dialog</Button>
           <Button variant="primary" onClick={() => setConfirmOpen(true)}>Confirm dialog</Button>
           <Button variant="danger" onClick={() => setDangerOpen(true)}>Danger dialog</Button>
-          <Button onClick={() => setUnknownBarcodeOpen(true)}>Unknown barcode</Button>
         </div>
 
         <Dialog
@@ -79,22 +77,6 @@ export default function DialogShowcase() {
           This action cannot be undone. All items will be removed from the cart.
         </Dialog>
 
-        <Dialog
-          open={unknownBarcodeOpen}
-          onClose={() => setUnknownBarcodeOpen(false)}
-          title="Barcode not found"
-          footer={
-            <>
-              <Button onClick={() => setUnknownBarcodeOpen(false)}>Cancel</Button>
-              <Button onClick={() => setUnknownBarcodeOpen(false)}>Scan again</Button>
-              <Button variant="primary" onClick={() => setUnknownBarcodeOpen(false)}>Add product</Button>
-            </>
-          }
-        >
-          <p className="mt-4">
-            Barcode <span className="font-mono font-semibold text-text">8997001230011</span> is not in the product catalog.
-          </p>
-        </Dialog>
       </div>
     </div>
   );

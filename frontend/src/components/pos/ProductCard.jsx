@@ -76,7 +76,7 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
               aria-live="polite"
               className="product-add-feedback absolute left-3 top-3 rounded-md bg-surface/95 px-2.5 py-1 text-xs font-semibold text-success shadow-low"
             >
-              Added
+              Ditambahkan
             </span>
           )}
           <div className="absolute right-3 top-3 flex items-center justify-end">
@@ -108,7 +108,7 @@ export function ProductCard({ product, onAdd, onDecrease }) {
   const alreadyInCart = qty > 0;
   const blocked = outOfStock || alreadyInCart;
   const { addFeedback, handleAdd } = useAddFeedback({ onAdd, disabled: blocked });
-  const buttonLabel = outOfStock ? "Out of stock" : alreadyInCart ? "Already in cart" : "Add to cart";
+  const buttonLabel = outOfStock ? "Stok habis" : alreadyInCart ? "Sudah di keranjang" : "Tambah ke keranjang";
 
   return (
     <ProductCardFrame product={product} outOfStock={outOfStock} addFeedback={addFeedback}>
@@ -116,7 +116,7 @@ export function ProductCard({ product, onAdd, onDecrease }) {
         <div className="grid h-10 min-w-0 grid-cols-3 items-center rounded-md border border-border bg-surface text-center text-base font-semibold text-text">
           <button
             type="button"
-            aria-label="Decrease quantity"
+            aria-label="Kurangi jumlah"
             className="grid h-full place-items-center text-text-muted transition hover:bg-surface-muted disabled:opacity-35"
             disabled={qty <= 0}
             onClick={onDecrease}
@@ -128,7 +128,7 @@ export function ProductCard({ product, onAdd, onDecrease }) {
           </span>
           <button
             type="button"
-            aria-label="Increase quantity"
+            aria-label="Tambah jumlah"
             className="grid h-full place-items-center text-text-muted transition hover:bg-surface-muted disabled:opacity-35"
             disabled={outOfStock}
             onClick={handleAdd}
@@ -144,19 +144,20 @@ export function ProductCard({ product, onAdd, onDecrease }) {
   );
 }
 
-export function PosProductCard({ product, onAdd, disabled = false, actionLabel = "Add to cart" }) {
-  const outOfStock = disabled || Number(product.stock) <= 0;
-  const { addFeedback, handleAdd } = useAddFeedback({ onAdd, disabled: outOfStock });
-  const buttonLabel = outOfStock ? "Out of stock" : actionLabel;
+export function PosProductCard({ product, onAdd, disabled = false, actionLabel = "Tambah ke keranjang" }) {
+  const outOfStock = Number(product.stock) <= 0;
+  const blocked = disabled || outOfStock;
+  const { addFeedback, handleAdd } = useAddFeedback({ onAdd, disabled: blocked });
+  const buttonLabel = outOfStock ? "Stok habis" : actionLabel;
 
   return (
     <ProductCardFrame
       product={product}
-      outOfStock={outOfStock}
+      outOfStock={blocked}
       addFeedback={addFeedback}
       className="pos-product-card"
     >
-      <Button className="product-add-button" disabled={outOfStock} onClick={handleAdd}>
+      <Button className="product-add-button" disabled={blocked} onClick={handleAdd}>
         <span key={buttonLabel} className="button-label-pop">{buttonLabel}</span>
       </Button>
     </ProductCardFrame>

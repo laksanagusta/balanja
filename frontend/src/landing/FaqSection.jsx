@@ -1,5 +1,4 @@
 import React from "react";
-import { Icon } from "../components/primitives.jsx";
 import { faqs } from "./content.js";
 
 export default function FaqSection() {
@@ -27,16 +26,22 @@ export default function FaqSection() {
                   aria-expanded={isOpen}
                   aria-controls={panelId}
                   onClick={() => setOpenIndex(isOpen ? -1 : index)}
-                  className="flex min-h-16 w-full items-center justify-between gap-6 py-5 text-left text-sm font-semibold text-text focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:text-base"
+                  className="press-feedback flex min-h-16 w-full items-center justify-between gap-6 py-5 text-left text-sm font-semibold text-text focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:text-base"
                 >
                   {faq.question}
-                  <Icon name={isOpen ? "minus" : "plus"} className="size-4 shrink-0 text-text-muted" />
+                  <span aria-hidden="true" className={`faq-toggle-icon shrink-0 text-text-muted ${isOpen ? "is-open" : ""}`} />
                 </button>
-                {isOpen && (
-                  <div id={panelId} role="region" aria-labelledby={buttonId} className="pb-5 pr-10 text-sm leading-7 text-text-muted sm:text-base">
-                    {faq.answer}
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={buttonId}
+                  aria-hidden={!isOpen}
+                  className={`faq-answer-grid ${isOpen ? "is-open" : ""}`}
+                >
+                  <div className="min-h-0 overflow-hidden">
+                    <p className="pb-5 pr-10 text-sm leading-7 text-text-muted sm:text-base">{faq.answer}</p>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}

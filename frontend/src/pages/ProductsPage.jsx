@@ -9,7 +9,7 @@ import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { parseNumberInput, retailCategories, validateProduct } from "../pos/domain.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
-import { EmptyState } from "../components/design/EmptyStateShowcase.jsx";
+import { EmptyState } from "../components/feedback/EmptyState.jsx";
 
 function emptyProduct() {
   return { id: "", name: "", barcode: "", category: "Sembako", price: "", stock: 0, unit: "pcs", active: true };
@@ -72,10 +72,10 @@ export default function ProductsPage() {
     try {
       const saved = await store.saveProduct(editing);
       if (!saved) {
-        toast.error("Failed to save product");
+        toast.error("Gagal menyimpan produk");
         return;
       }
-      toast.success(editing.id ? "Product updated" : "Product added", {
+      toast.success(editing.id ? "Produk diperbarui" : "Produk ditambahkan", {
         description: saved.name,
       });
       setEditing(null);
@@ -103,13 +103,13 @@ export default function ProductsPage() {
     try {
       const result = await store.deactivateProduct(deactivating.id);
       if (result.ok) {
-        toast.success("Product deactivated", {
+        toast.success("Produk dinonaktifkan", {
           description: deactivating.name,
         });
         setDeactivating(null);
         await Promise.all([table.refresh(), loadProducts({ force: true })]);
       } else {
-        toast.error(result.error || "Failed to deactivate product");
+        toast.error(result.error || "Gagal menonaktifkan produk");
       }
     } finally {
       setDeactivatingProduct(false);
@@ -117,13 +117,13 @@ export default function ProductsPage() {
   };
 
   const columns = [
-    { key: "name", label: "Product", sortable: true, render: (product) => <span className="font-semibold">{product.name}</span> },
+    { key: "name", label: "Produk", sortable: true, render: (product) => <span className="font-semibold">{product.name}</span> },
     { key: "barcode", label: "Barcode", render: (product) => <span className="font-mono text-xs text-text-muted">{product.barcode}</span> },
-    { key: "category", label: "Category", sortable: true },
-    { key: "price", label: "Price", sortable: true, render: (product) => <span className="font-mono font-semibold tabular-nums">{formatPrice(product.price)}</span> },
+    { key: "category", label: "Kategori", sortable: true },
+    { key: "price", label: "Harga", sortable: true, render: (product) => <span className="font-mono font-semibold tabular-nums">{formatPrice(product.price)}</span> },
     {
       key: "stock",
-      label: "Stock",
+      label: "Stok",
       sortable: true,
       render: (product) => (
         <span className={`font-mono tabular-nums ${product.stock <= 5 ? "font-semibold text-warning" : "text-text"}`}>
@@ -132,18 +132,18 @@ export default function ProductsPage() {
         </span>
       ),
     },
-    { key: "active", label: "Status", render: (product) => <Badge tone={product.active ? "success" : "danger"}>{product.active ? "Active" : "Inactive"}</Badge> },
+    { key: "active", label: "Status", render: (product) => <Badge tone={product.active ? "success" : "danger"}>{product.active ? "Aktif" : "Nonaktif"}</Badge> },
     {
       key: "actions",
-      label: "Actions",
+      label: "Aksi",
       align: "right",
       render: (product) => (
         <div className="flex justify-end gap-2">
           <Button variant="secondary" size="sm" disabled={isProductsMutating} onClick={() => setEditing(product)}>
-            Edit
+            Ubah
           </Button>
           <Button variant="danger" size="sm" disabled={isProductsMutating} onClick={() => setDeactivating(product)}>
-            Deactivate
+            Nonaktifkan
           </Button>
         </div>
       ),
@@ -153,13 +153,13 @@ export default function ProductsPage() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
       <header className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
-        <h1 className="text-base font-semibold text-text">Products</h1>
+        <h1 className="text-base font-semibold text-text">Produk</h1>
         <div className="flex min-w-[220px] flex-1 lg:ml-auto lg:max-w-[420px]">
           <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-              placeholder="Name, barcode, category"
+              placeholder="Nama, barcode, kategori"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -167,11 +167,11 @@ export default function ProductsPage() {
         </div>
         <div className="w-[160px]">
           <SelectField
-            label="Category"
+            label="Kategori"
             hideLabel
             value={category}
             options={[
-              { value: "", label: "All categories" },
+              { value: "", label: "Semua kategori" },
               ...retailCategories.filter((item) => item !== "Semua").map((item) => ({ value: item, label: item })),
             ]}
             onChange={setCategory}
@@ -183,30 +183,22 @@ export default function ProductsPage() {
             hideLabel
             value={status}
             options={[
-              { value: "", label: "All statuses" },
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
+              { value: "", label: "Semua status" },
+              { value: "active", label: "Aktif" },
+              { value: "inactive", label: "Nonaktif" },
             ]}
             onChange={setStatus}
           />
         </div>
         <Button variant="secondary" className="whitespace-nowrap" disabled={isProductsMutating} onClick={() => setEditing(emptyProduct())}>
           <Icon name="plus" className="size-4" />
-          Add product
+          Tambah produk
         </Button>
+        {table.isUpdating && <UpdatingBadge />}
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <div className="grid rounded-panel border border-border bg-surface p-0">
-          <div className="border-b border-border px-4 py-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-text">Product catalog</p>
-                <p className="text-xs text-text-muted">Sortable retail product rows with stock and barcode visibility.</p>
-              </div>
-              {table.isUpdating && <UpdatingBadge />}
-            </div>
-          </div>
           {table.rows.length ? (
             <DataTable
               columns={columns}
@@ -214,15 +206,15 @@ export default function ProductsPage() {
               sortKey={table.sortKey}
               sortDir={table.sortDir}
               onSort={table.sortBy}
-              className={`px-2 ${table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}
+              className={table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}
             />
           ) : (
             <EmptyState
               icon="search"
-              title={table.error ? "Products could not be loaded" : "No products found"}
-              description={table.error ? table.error.message : "Try a different name, barcode, category, or status."}
+              title={table.error ? "Produk gagal dimuat" : "Produk tidak ditemukan"}
+              description={table.error ? table.error.message : "Coba nama, barcode, kategori, atau status lain."}
               action={table.error ? (
-                <Button size="sm" variant="secondary" onClick={table.retry}>Retry</Button>
+                <Button size="sm" variant="secondary" onClick={table.retry}>Coba lagi</Button>
               ) : (
                 <Button
                   size="sm"
@@ -230,7 +222,7 @@ export default function ProductsPage() {
                   disabled={isProductsMutating}
                   onClick={() => { setQuery(""); setCategory(""); setStatus(""); }}
                 >
-                  Clear filters
+                  Atur ulang filter
                 </Button>
               )}
               className="m-4 min-h-[240px]"
@@ -256,15 +248,15 @@ export default function ProductsPage() {
           setEditing(null);
           setProductErrors({});
         }}
-        title={editing?.id ? "Edit product" : "Add product"}
+        title={editing?.id ? "Ubah produk" : "Tambah produk"}
         size="lg"
         footer={
           <>
             <Button type="button" disabled={savingProduct} onClick={() => { setEditing(null); setProductErrors({}); }}>
-              Cancel
+              Batal
             </Button>
             <Button type="submit" variant="primary" form="product-form" disabled={savingProduct}>
-              {savingProduct ? "Saving..." : "Save product"}
+              {savingProduct ? "Menyimpan..." : "Simpan produk"}
             </Button>
           </>
         }
@@ -272,7 +264,7 @@ export default function ProductsPage() {
         {editing && (
           <form id="product-form" noValidate onSubmit={save} className="mt-4 grid gap-4 text-text">
             <Input
-              label="Name"
+              label="Nama"
               placeholder="Beras Ramos 5kg"
               error={productErrors.name}
               inputProps={{
@@ -297,12 +289,12 @@ export default function ProductsPage() {
               />
               <Button type="button" variant="secondary" disabled={savingProduct} onClick={() => setScannerOpen(true)}>
                 <Icon name="barcode" className="size-4" />
-                Scan
+                Pindai
               </Button>
             </div>
 
             <SelectField
-              label="Category"
+              label="Kategori"
               value={editing.category}
               options={retailCategories.filter((item) => item !== "Semua")}
               onChange={(category) => updateEditing("category", category)}
@@ -312,7 +304,7 @@ export default function ProductsPage() {
 
             <div className="grid min-w-0 gap-3 sm:grid-cols-2">
               <Input
-                label="Price"
+                label="Harga"
                 placeholder="72000"
                 error={productErrors.price}
                 inputProps={{
@@ -324,8 +316,8 @@ export default function ProductsPage() {
                 }}
               />
               <Input
-                label="Stock"
-                placeholder={editing.id ? "Managed by sales and stock adjustments" : "18"}
+                label="Stok"
+                placeholder={editing.id ? "Dikelola oleh transaksi penjualan dan penyesuaian stok" : "18"}
                 error={productErrors.stock}
                 inputProps={{
                   value: formatNumberInput(editing.stock),
@@ -337,11 +329,11 @@ export default function ProductsPage() {
               />
               {editing.id && (
                 <p className="sm:col-span-2 -mt-1 rounded-control bg-surface-muted px-3 py-2 text-xs font-medium leading-5 text-text-muted">
-                  Stock is updated by checkout activity. Direct stock edits are intentionally disabled on existing products.
+                  Stok diperbarui oleh aktivitas transaksi. Pengubahan stok langsung memang dinonaktifkan pada produk yang sudah ada.
                 </p>
               )}
               <Input
-                label="Unit"
+                label="Satuan"
                 className="sm:col-span-2"
                 placeholder="pcs"
                 error={productErrors.unit}
@@ -360,7 +352,7 @@ export default function ProductsPage() {
               onClick={() => updateEditing("active", !editing.active)}
               className="flex h-10 items-center justify-between rounded-card border border-border bg-surface px-3.5 text-sm font-semibold text-text shadow-inner-soft transition hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
             >
-              <span>Active</span>
+              <span>Aktif</span>
               <Switch checked={editing.active} tone="success" />
             </button>
           </form>
@@ -372,26 +364,26 @@ export default function ProductsPage() {
         onClose={() => {
           if (!deactivatingProduct) setDeactivating(null);
         }}
-        title="Deactivate product?"
+        title="Nonaktifkan produk?"
         footer={
           <>
-            <Button type="button" disabled={deactivatingProduct} onClick={() => setDeactivating(null)}>Keep active</Button>
+            <Button type="button" disabled={deactivatingProduct} onClick={() => setDeactivating(null)}>Tetap aktif</Button>
             <Button type="button" variant="danger" disabled={deactivatingProduct} onClick={deactivate}>
-              {deactivatingProduct ? "Deactivating..." : "Deactivate"}
+              {deactivatingProduct ? "Menonaktifkan..." : "Nonaktifkan"}
             </Button>
           </>
         }
       >
-        <p className="mt-4">{deactivating?.name} will be removed from the active product catalog and current cart.</p>
+        <p className="mt-4">{deactivating?.name} akan dihapus dari katalog produk aktif dan keranjang saat ini.</p>
       </Dialog>
 
       <BarcodeScanner
         open={scannerOpen}
-        title="Scan product barcode"
+        title="Pindai barcode produk"
         onClose={() => setScannerOpen(false)}
         onDetected={(code) => {
           setEditing((current) => ({ ...current, barcode: code }));
-          toast.success("Barcode scanned", {
+          toast.success("Barcode berhasil dipindai", {
             description: code,
           });
           setScannerOpen(false);
@@ -405,7 +397,7 @@ function UpdatingBadge() {
   return (
     <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
       <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-      Updating
+      Memperbarui
     </span>
   );
 }

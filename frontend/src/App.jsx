@@ -59,16 +59,16 @@ export default function App() {
   const { isLoaded, isSignedIn } = useAuth();
   const [pathname, navigate] = usePathname(Boolean(isSignedIn), isLoaded);
 
+  if (!isLoaded) {
+    return <div className="min-h-screen bg-app-bg" aria-busy="true" />;
+  }
+
   if (pathname === routes.landing) {
     return <LandingPage isSignedIn={Boolean(isSignedIn)} onNavigate={navigate} />;
   }
 
   if (pathname === routes.login) {
     return <LoginPage isSignedIn={Boolean(isSignedIn)} onNavigate={navigate} />;
-  }
-
-  if (!isLoaded) {
-    return <div className="min-h-screen bg-app-bg" aria-busy="true" />;
   }
 
   return (

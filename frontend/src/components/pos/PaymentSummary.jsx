@@ -2,7 +2,7 @@ import React from "react";
 import { Icon, Pill } from "../primitives.jsx";
 
 const paymentMethods = [
-  { id: "cash", label: "Cash", icon: "cash" },
+  { id: "cash", label: "Tunai", icon: "cash" },
   { id: "qris", label: "QRIS", icon: "qr" },
 ];
 
@@ -18,12 +18,12 @@ export function PaymentSummary({
 }) {
   return (
     <div className="grid gap-4">
-      <h2 className="text-base font-semibold text-text">Total Payment</h2>
+      <h2 className="text-base font-semibold text-text">Ringkasan pembayaran</h2>
       <dl className="grid gap-3 text-sm">
         {[
           ["Subtotal", formatPrice(subtotal)],
-          ["Tax", formatPrice(tax)],
-          ...(discount > 0 ? [["Discount", `-${formatPrice(discount)}`]] : []),
+          ["Pajak", formatPrice(tax)],
+          ...(discount > 0 ? [["Diskon", `-${formatPrice(discount)}`]] : []),
         ].map(([label, value]) => (
           <div key={label} className="flex justify-between text-text-muted">
             <dt>{label}</dt>
@@ -32,12 +32,12 @@ export function PaymentSummary({
         ))}
         <div className="border-t border-dashed border-border pt-3">
           <div className="flex justify-between text-base font-semibold text-text">
-            <dt>Grand Total</dt>
+            <dt>Total akhir</dt>
             <dd className="font-mono tabular-nums">{formatPrice(grandTotal)}</dd>
           </div>
         </div>
       </dl>
-      <div className="flex flex-wrap gap-2" aria-label="Payment method">
+      <div className="flex flex-wrap gap-2" aria-label="Metode pembayaran">
         {paymentMethods.map((method) => (
           <Pill
             key={method.id}

@@ -18,12 +18,6 @@ export const features = [
     size: "standard",
   },
   {
-    title: "Stok tercatat",
-    description: "Pantau pergerakan stok dan lihat jumlah akhir tanpa pencatatan terpisah.",
-    visual: "stock",
-    size: "standard",
-  },
-  {
     title: "Riwayat transaksi",
     description: "Temukan kembali transaksi berdasarkan nomor, metode pembayaran, atau tanggal.",
     visual: "transactions",

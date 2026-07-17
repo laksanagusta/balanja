@@ -6,7 +6,7 @@ Remove the dedicated System section from the sidebar and place Settings inside t
 
 ## Approved Structure
 
-The desktop sidebar footer contains only the flat account control. Opening it reveals one source-anchored account popover with three layers:
+The desktop sidebar footer contains only the account control, without a separating top divider. The control owns its visual grouping through a soft border, standard surface, and subtle low shadow. Opening it reveals one source-anchored account popover with three layers:
 
 1. Identity header: avatar context is already visible in the source row, while the popover repeats name and email for confirmation.
 2. Neutral account action: `Pengaturan`, with the settings icon, navigates to `/settings` and closes the popover.

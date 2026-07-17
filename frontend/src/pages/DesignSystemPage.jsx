@@ -22,6 +22,7 @@ import PillShowcase from "../components/design/PillShowcase.jsx";
 import DashboardPatternsShowcase from "../components/design/DashboardPatternsShowcase.jsx";
 import ReportPatternsShowcase from "../components/design/ReportPatternsShowcase.jsx";
 import MarketingPatternsShowcase from "../components/design/MarketingPatternsShowcase.jsx";
+import NavigationPatternsShowcase from "../components/design/NavigationPatternsShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
@@ -90,6 +91,7 @@ export default function DesignSystemPage({ onNavigate }) {
         </div>
         <PillShowcase />
         <ComponentPrimitives />
+        <NavigationPatternsShowcase />
         <POSPatterns />
         <MenuCardShowcase />
         <OrderTypeShowcase />
@@ -106,12 +108,12 @@ export default function DesignSystemPage({ onNavigate }) {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-success">Operational pattern</p>
           <h3 className="mt-2 text-xl font-semibold text-text">Stock movement dialogs</h3>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
-            Stock changes use the shared compact header and table page pattern plus a required reason dialog. Search, movement type,
-            and New movement stay in the page header. Movement forms use a debounced searchable product picker backed by the products
-            API with six results, then preview current stock, signed delta, and stock-after below the fields. Operational tables use
-            server cursor pages with Previous and Next, page sizes 20, 50, and 100, and no unverified total. Refetches preserve the
-            existing rows with a compact updating indicator and softened opacity. Page-level search fields keep typing immediate and
-            debounce API work by roughly 220ms across POS, products, transactions, and stock.
+            Perubahan stok memakai pola header dan tabel operasional yang sama plus dialog alasan wajib isi. Pencarian, jenis pergerakan,
+            dan Pergerakan baru tetap berada di header halaman. Form pergerakan memakai picker produk searchable dengan debounce yang
+            terhubung ke API produk dengan enam hasil, lalu menampilkan stok saat ini, delta bertanda, dan stok setelah perubahan di bawah field.
+            Tabel operasional memakai cursor pagination server dengan Sebelumnya dan Berikutnya, ukuran halaman 20, 50, dan 100, tanpa total
+            yang tidak terverifikasi. Refetch mempertahankan baris yang ada dengan indikator memperbarui yang ringkas dan opacity yang dilembutkan.
+            Kolom audit stok menggunakan label Nama user dan hanya fallback ke id internal jika nama tampilan tidak tersedia.
           </p>
         </section>
         <EmptyStateShowcase />

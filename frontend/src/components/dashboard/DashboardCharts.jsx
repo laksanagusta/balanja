@@ -9,7 +9,7 @@ import { PieCenter } from "../charts/pie-center.jsx";
 import { BarChart } from "../charts/bar-chart.jsx";
 import { Bar } from "../charts/bar.jsx";
 import { BarXAxis } from "../charts/bar-x-axis.jsx";
-import { EmptyState } from "../design/EmptyStateShowcase.jsx";
+import { EmptyState } from "../feedback/EmptyState.jsx";
 import { Panel } from "../primitives.jsx";
 import { formatPrice } from "../../shared.jsx";
 import { localizedTrendTitle } from "../charts/trend-tooltip-title.js";
@@ -48,7 +48,7 @@ function RevenueTrendTooltip({ point }) {
 
 export function RevenueTrendPanel({ data, hasData, days }) {
   return (
-    <ChartPanel title="Revenue trend" description={`Daily completed-sales revenue over the last ${days} days.`} badge={`${days} days`}>
+    <ChartPanel title="Tren pendapatan" description={`Pendapatan transaksi selesai per hari dalam ${days} hari terakhir.`} badge={`${days} hari`}>
       {hasData ? (
         <LineChart data={data} xDataKey="date" xLabelKey="label" aspectRatio={null} className="mt-3 h-[250px] md:h-[280px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
           <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
@@ -57,7 +57,7 @@ export function RevenueTrendPanel({ data, hasData, days }) {
           <ChartTooltip showDatePill={false} content={({ point }) => <RevenueTrendTooltip point={point} />} />
         </LineChart>
       ) : (
-        <ChartEmpty title="No sales in this period" description="Completed transactions will build the revenue trend automatically." />
+        <ChartEmpty title="Belum ada penjualan di periode ini" description="Transaksi yang selesai akan mengisi tren pendapatan secara otomatis." />
       )}
     </ChartPanel>
   );
@@ -67,14 +67,14 @@ export function PaymentMixPanel({ data }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <ChartPanel title="Payment mix" description="Share of completed revenue by payment method.">
+    <ChartPanel title="Metode pembayaran" description="Distribusi pendapatan transaksi selesai berdasarkan metode pembayaran.">
       {data.length ? (
         <div className="mt-3 grid justify-items-center gap-3">
           <PieChart data={data} size={230} innerRadius={68} padAngle={0.035} cornerRadius={5} hoverOffset={5}>
             {data.map((item, index) => (
               <PieSlice key={item.label} index={index} color={item.color} showGlow={false} hoverEffect="grow" hoverOffset={4} />
             ))}
-            <PieCenter defaultLabel="Revenue" formatOptions={{ notation: "compact", maximumFractionDigits: 1 }} prefix="Rp" />
+            <PieCenter defaultLabel="Pendapatan" formatOptions={{ notation: "compact", maximumFractionDigits: 1 }} prefix="Rp" />
           </PieChart>
           <div className="grid w-full gap-2">
             {data.map((item) => (
@@ -89,10 +89,10 @@ export function PaymentMixPanel({ data }) {
               </div>
             ))}
           </div>
-          <p className="sr-only">Total payment revenue {formatPrice(total)}</p>
+          <p className="sr-only">Total pendapatan pembayaran {formatPrice(total)}</p>
         </div>
       ) : (
-        <ChartEmpty title="No payment data" description="Cash and QRIS shares appear after the first completed sale." />
+        <ChartEmpty title="Belum ada data pembayaran" description="Distribusi metode pembayaran akan muncul setelah transaksi selesai pertama." />
       )}
     </ChartPanel>
   );
@@ -106,7 +106,7 @@ export function TopProductsPanel({ data }) {
   const chartData = data.map((item) => ({ ...item, chartLabel: shortLabel(item.label) }));
 
   return (
-    <ChartPanel title="Top products" description="Five products with the highest units sold in this period.">
+    <ChartPanel title="Produk terlaris" description="Lima produk dengan jumlah unit terjual tertinggi pada periode ini.">
       {data.length ? (
         <BarChart data={chartData} xDataKey="chartLabel" aspectRatio="2.05 / 1" className="mt-3 min-h-[250px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }} barGap={0.38}>
           <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
@@ -115,7 +115,7 @@ export function TopProductsPanel({ data }) {
           <ChartTooltip />
         </BarChart>
       ) : (
-        <ChartEmpty title="No products sold yet" description="Product rankings appear as completed transactions accumulate." />
+        <ChartEmpty title="Belum ada produk terjual" description="Peringkat produk akan muncul seiring bertambahnya transaksi selesai." />
       )}
     </ChartPanel>
   );

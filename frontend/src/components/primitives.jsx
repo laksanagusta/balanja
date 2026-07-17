@@ -164,15 +164,15 @@ export function Icon({ name, className = "size-5" }) {
   return <svg {...common}>{paths[name]}</svg>;
 }
 
-export function Button({ children, variant = "secondary", size = "md", className = "", ...props }) {
+export function Button({ children, variant = "secondary", size = "md", compactVisual = false, className = "", ...props }) {
   const variants = {
     primary:
       "scan-3d bg-accent text-white hover:bg-accent-hover",
     secondary:
-      "border border-border bg-surface text-text shadow-low hover:bg-surface-muted",
-    ghost: "text-text-muted hover:bg-surface-muted hover:text-text",
+      "border border-border bg-surface text-text shadow-low hover:bg-surface-muted active:scale-[0.97] motion-reduce:active:scale-100",
+    ghost: "text-text-muted hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100",
     danger:
-      "bg-danger-soft text-danger hover:bg-danger-soft/80 border border-transparent",
+      "bg-danger-soft text-danger hover:bg-danger-soft/80 border border-transparent active:scale-[0.97] motion-reduce:active:scale-100",
   };
 
   const sizes = {
@@ -186,17 +186,30 @@ export function Button({ children, variant = "secondary", size = "md", className
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${compactVisual ? "h-11 rounded-control bg-transparent px-1.5 text-sm" : `${variants[variant]} ${sizes[size]}`} ${className}`}
       {...props}
     >
-      {children}
+      {compactVisual ? (
+        <span className={`header-compact-action-surface pointer-events-none inline-flex items-center justify-center ${variants[variant]} ${sizes[size]}`}>
+          {children}
+        </span>
+      ) : children}
     </button>
   );
 }
 
 export function Input({ label, placeholder, rightSlot, error, className = "", inputProps = {} }) {
+  const generatedId = React.useId();
+  const {
+    id = generatedId,
+    "aria-describedby": describedBy,
+    ...restInputProps
+  } = inputProps;
+  const errorId = `${id}-error`;
+  const descriptionIds = [describedBy, error ? errorId : ""].filter(Boolean).join(" ") || undefined;
+
   return (
-    <label className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
+    <label htmlFor={id} className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
       {label}
       <span
         className={`flex h-11 md:h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-2 focus-within:outline-focus/30 ${
@@ -204,14 +217,16 @@ export function Input({ label, placeholder, rightSlot, error, className = "", in
         }`}
       >
         <input
+          id={id}
           className="w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
-          {...inputProps}
+          aria-describedby={descriptionIds}
+          {...restInputProps}
         />
         {rightSlot}
       </span>
-      {error && <span className="text-xs font-medium text-danger">{error}</span>}
+      {error && <span id={errorId} aria-live="polite" className="text-xs font-medium text-danger">{error}</span>}
     </label>
   );
 }
@@ -435,7 +450,7 @@ export function DataTable({
                     <button
                       type="button"
                       onClick={() => onSort?.(col.key)}
-                      className={`inline-flex h-8 w-full items-center gap-1.5 rounded-control px-1.5 font-semibold uppercase tracking-[0.08em] transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.98] ${
+                      className={`inline-flex h-8 w-full items-center gap-1.5 rounded-control font-semibold uppercase tracking-[0.08em] transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.98] ${
                         sortKey === col.key ? "text-text" : "text-text-subtle"
                       } ${col.align === "right" ? "justify-end" : "justify-start"}`}
                     >
@@ -453,7 +468,7 @@ export function DataTable({
                     </button>
                   ) : (
                     <span
-                      className={`inline-flex h-8 w-full items-center px-1.5 ${
+                      className={`inline-flex h-8 w-full items-center ${
                         col.align === "right" ? "justify-end" : "justify-start"
                       }`}
                     >

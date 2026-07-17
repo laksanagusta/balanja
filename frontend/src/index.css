@@ -13,7 +13,7 @@
   --color-border-strong: #d9d9d9;
   --color-text: #242424;
   --color-text-muted: #6f6f6f;
-  --color-text-subtle: #a1a1a1;
+  --color-text-subtle: #6f6f6f;
   --color-accent: #1d1d1f;
   --color-accent-hover: #000000;
   --color-accent-soft: #f2f2f3;
@@ -72,6 +72,75 @@
     @apply flex h-11 items-center gap-4 rounded-control px-4 text-[15px] font-medium text-text-muted transition hover:bg-surface-muted hover:text-text;
   }
 
+  .press-feedback {
+    touch-action: manipulation;
+    transition:
+      transform var(--duration-fast) var(--ease-standard),
+      opacity var(--duration-fast) var(--ease-standard),
+      color var(--duration-base) var(--ease-standard);
+  }
+
+  .press-feedback:active {
+    transform: scale(0.97);
+    opacity: 0.78;
+  }
+
+  .header-compact-action {
+    touch-action: manipulation;
+  }
+
+  .header-compact-action-surface {
+    transition:
+      transform var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-base) var(--ease-standard);
+  }
+
+  .header-compact-action:active .header-compact-action-surface {
+    transform: translateY(1px) scale(0.97);
+  }
+
+  .faq-answer-grid {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows var(--duration-base) var(--ease-standard),
+      opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .faq-answer-grid.is-open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .faq-toggle-icon {
+    position: relative;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .faq-toggle-icon::before,
+  .faq-toggle-icon::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.75rem;
+    height: 1.5px;
+    border-radius: 999px;
+    background: currentColor;
+    transform: translate(-50%, -50%);
+  }
+
+  .faq-toggle-icon::after {
+    transform: translate(-50%, -50%) rotate(90deg) scaleX(1);
+    transition: transform var(--duration-base) var(--ease-standard);
+  }
+
+  .faq-toggle-icon.is-open::after {
+    transform: translate(-50%, -50%) rotate(90deg) scaleX(0);
+  }
+
   .category-tabs {
     grid-template-columns: repeat(var(--category-count), minmax(max-content, 1fr));
   }
@@ -105,6 +174,11 @@
     transition:
       transform var(--duration-fast) var(--ease-standard),
       background-color var(--duration-base) var(--ease-standard);
+  }
+
+  .pos-product-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 340px;
   }
 
   .product-add-button:active {
@@ -163,13 +237,12 @@
   }
 
   @media (hover: hover) and (pointer: fine) {
+    .header-compact-action:hover .header-compact-action-surface {
+      transform: translateY(-1px);
+    }
+
     .scan-3d:hover {
       transform: translateY(-1px);
-      box-shadow:
-        inset 0 1px 1px 0 rgb(255 255 255 / 0.16),
-        0 4px 8px -2px rgb(0 0 0 / 0.3),
-        0 16px 28px -12px rgb(0 0 0 / 0.56),
-        0 0 0 1px rgb(0 0 0 / 0.18);
     }
 
     .scan-3d:hover::before {
@@ -178,12 +251,7 @@
   }
 
   .scan-3d:active {
-    transform: translateY(1px);
-    box-shadow:
-      inset 0 1px 0.5px 0 rgb(255 255 255 / 0.14),
-      0 1px 1px -1px rgb(0 0 0 / 0.2),
-      0 2.5px 4px -2px rgb(0 0 0 / 0.24),
-      0 0 0 1px rgb(0 0 0 / 0.18);
+    transform: translateY(1px) scale(0.97);
   }
 
   .checkout-3d {
@@ -216,9 +284,8 @@
   }
 
   .marketing-reveal {
-    animation: marketing-reveal 560ms var(--ease-standard) both;
+    animation: marketing-reveal 420ms var(--ease-standard) both;
     animation-delay: var(--reveal-delay, 0ms);
-    will-change: transform, opacity;
   }
 }
 
@@ -357,7 +424,20 @@
     transition: none;
   }
 
+  .faq-answer-grid,
+  .faq-toggle-icon::after,
+  .header-compact-action-surface {
+    transition: none;
+  }
+
+  .header-compact-action:active .header-compact-action-surface,
+  .header-compact-action:hover .header-compact-action-surface {
+    transform: none;
+  }
+
   .checkout-3d,
+  .press-feedback,
+  .press-feedback:active,
   .product-add-button,
   .product-add-button:active,
   .scan-3d,
@@ -367,6 +447,23 @@
   .checkout-3d:active {
     transform: none;
     transition: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .public-header {
+    background: var(--color-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .public-header {
+    background: var(--color-surface);
+    border-color: var(--color-text);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 
