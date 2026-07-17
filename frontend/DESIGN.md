@@ -79,6 +79,8 @@ Public navigation keeps the logo and authentication action visible on mobile; se
 
 Sales reports use inclusive local calendar dates in WIB and compare every selected period with the immediately preceding period of equal length. Presets cover Hari ini, 7 hari, 30 hari, and Bulan ini; custom ranges allow at most 366 days and expose validation beside the date control.
 
+Sales-report trend charts use clean lines without persistent point markers. Hover highlights and tooltips remain available for inspecting individual values.
+
 The report workspace retains settled content during refetch, softens only the affected report panels, and announces `Memperbarui` through a polite status region. Initial loading mirrors the final layout with six metric blocks, a separate void block, a wide trend, and three breakdown panels. Mobile layouts stack controls, metrics, charts, and tables without hiding information.
 
 The six primary metrics are Penjualan bersih, Pajak, Total diterima, Transaksi selesai, Item terjual, and Rata-rata transaksi. Each includes an equal-period comparison; a zero prior value reads `Tidak ada data pembanding`. Voided transactions are always separate and never contribute to completed-sale metrics.
