@@ -38,8 +38,8 @@ export const ProductCatalog = React.memo(function ProductCatalog({
         <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4">
           <EmptyState
             icon={null}
-            title="No products found"
-            description="Clear the search or switch category to keep selling."
+            title="Produk tidak ditemukan"
+            description="Hapus pencarian atau ganti kategori untuk melanjutkan transaksi."
             className="min-h-[260px] p-7"
             borderClassName="border"
             titleClassName="text-sm"
@@ -47,24 +47,30 @@ export const ProductCatalog = React.memo(function ProductCatalog({
           />
           <div className="mt-3 flex justify-center">
             <Button variant="secondary" onClick={onClearFilters}>
-              Clear filters
+              Reset filter
             </Button>
           </div>
         </div>
       ) : (
-        products.map((product) => (
-          <PosProductCard
-            key={product.id}
-            product={{
-              ...product,
-              price: formatPrice(product.price),
-              qty: qtyByProduct.get(product.id) || 0,
-            }}
-            actionLabel={qtyByProduct.has(product.id) ? "Add one more" : "Add to cart"}
-            disabled={product.stock <= 0 || checkoutPending}
-            onAdd={() => onAdd(product.id)}
-          />
-        ))
+        products.map((product) => {
+          const qtyInCart = qtyByProduct.get(product.id) || 0;
+          const remainingStock = Math.max(Number(product.stock) - qtyInCart, 0);
+
+          return (
+            <PosProductCard
+              key={product.id}
+              product={{
+                ...product,
+                stock: remainingStock,
+                price: formatPrice(product.price),
+                qty: qtyInCart,
+              }}
+              actionLabel={qtyInCart > 0 ? "Tambah lagi" : "Tambah ke keranjang"}
+              disabled={remainingStock <= 0 || checkoutPending}
+              onAdd={() => onAdd(product.id)}
+            />
+          );
+        })
       )}
     </div>
   );

@@ -9,25 +9,25 @@ import { usePOSStore } from "../pos/store.jsx";
 import { loadStockMovementPage } from "../pos/store-data.js";
 import { calculateStockPreview, parseQuantityInput } from "../stock/movement-preview.js";
 
-const movementOptions = ["Restock", "Reduce", "Set exact stock"];
+const movementOptions = ["Tambah stok", "Kurangi stok", "Set stok pasti"];
 const movementValueByLabel = {
-  Restock: "restock",
-  Reduce: "reduce",
-  "Set exact stock": "set_exact",
+  "Tambah stok": "restock",
+  "Kurangi stok": "reduce",
+  "Set stok pasti": "set_exact",
 };
 const movementLabelByValue = {
-  sale: "Sale",
-  restock: "Restock",
-  reduce: "Reduce",
-  set_exact: "Set exact",
+  sale: "Penjualan",
+  restock: "Tambah stok",
+  reduce: "Kurangi stok",
+  set_exact: "Set pasti",
 };
-const movementFilterOptions = ["All movements", "Sale", "Restock", "Reduce", "Set exact"];
+const movementFilterOptions = ["Semua pergerakan", "Penjualan", "Tambah stok", "Kurangi stok", "Set pasti"];
 const movementFilterValue = {
-  "All movements": "",
-  Sale: "sale",
-  Restock: "restock",
-  Reduce: "reduce",
-  "Set exact": "set_exact",
+  "Semua pergerakan": "",
+  Penjualan: "sale",
+  "Tambah stok": "restock",
+  "Kurangi stok": "reduce",
+  "Set pasti": "set_exact",
 };
 const numberFormatter = new Intl.NumberFormat("id-ID");
 
@@ -46,7 +46,7 @@ export default function StockPage() {
   const store = usePOSStore();
   const { activeProducts, loading, loaded, loadProducts, searchProducts, createStockMovement } = store;
   const [query, setQuery] = React.useState("");
-  const [typeFilter, setTypeFilter] = React.useState("All movements");
+  const [typeFilter, setTypeFilter] = React.useState("Semua pergerakan");
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const debouncedQuery = useDebouncedValue(query, 220);
   const movementFilters = React.useMemo(() => ({
@@ -69,22 +69,22 @@ export default function StockPage() {
   }, [loadProducts]);
 
   const columns = React.useMemo(() => [
-    { key: "createdAt", label: "Date", sortable: true, render: (row) => formatDate(row.createdAt) },
+    { key: "createdAt", label: "Tanggal", sortable: true, render: (row) => formatDate(row.createdAt) },
     {
       key: "productName",
-      label: "Product",
+      label: "Produk",
       sortable: true,
       render: (row) => (
         <div className="min-w-[180px]">
           <p className="font-semibold text-text">{row.productName}</p>
-          <p className="text-xs text-text-muted">{row.productBarcode || row.productCategory || "No barcode"}</p>
+          <p className="text-xs text-text-muted">{row.productBarcode || row.productCategory || "Tanpa barcode"}</p>
         </div>
       ),
     },
-    { key: "type", label: "Type", sortable: true, render: (row) => <MovementBadge type={row.type} /> },
+    { key: "type", label: "Jenis", sortable: true, render: (row) => <MovementBadge type={row.type} /> },
     {
       key: "quantityDelta",
-      label: "Delta",
+      label: "Selisih",
       align: "right",
       sortable: true,
       render: (row) => (
@@ -95,7 +95,7 @@ export default function StockPage() {
     },
     {
       key: "stockAfter",
-      label: "Before - After",
+      label: "Sebelum - Sesudah",
       sortable: true,
       render: (row) => (
         <span className="font-mono text-sm tabular-nums text-text-muted">
@@ -103,22 +103,22 @@ export default function StockPage() {
         </span>
       ),
     },
-    { key: "reason", label: "Reason", render: (row) => <span className="line-clamp-2 max-w-[240px]">{row.reason}</span> },
-    { key: "createdByUserId", label: "User", render: (row) => <span className="text-xs text-text-muted">{row.createdByUserId}</span> },
-    { key: "referenceType", label: "Reference", render: (row) => row.referenceType || "Manual" },
+    { key: "reason", label: "Alasan", render: (row) => <span className="line-clamp-2 max-w-[240px]">{row.reason}</span> },
+    { key: "createdByUserName", label: "Nama user", render: (row) => <span className="text-xs text-text-muted">{row.createdByUserName || row.createdByUserId || "-"}</span> },
+    { key: "referenceType", label: "Referensi", render: (row) => row.referenceType || "Manual" },
   ], []);
   if ((loading.products && !loaded.products) || table.isInitialLoading) return <StockPageSkeleton />;
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
       <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto_auto] lg:items-center">
-        <h1 className="text-base font-semibold text-text">Stock</h1>
+        <h1 className="text-base font-semibold text-text">Stok</h1>
         <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
           <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-              placeholder="Product, barcode, category"
+              placeholder="Produk, barcode, kategori"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -126,7 +126,7 @@ export default function StockPage() {
         </div>
         <div className="w-full lg:w-[220px]">
           <SelectField
-            label="Type"
+            label="Jenis"
             hideLabel
             value={typeFilter}
             options={movementFilterOptions}
@@ -135,34 +135,26 @@ export default function StockPage() {
         </div>
         <Button variant="secondary" className="whitespace-nowrap lg:justify-self-end" onClick={() => setDialogOpen(true)}>
           <Icon name="plus" className="size-4" />
-          New movement
+          Pergerakan baru
         </Button>
+        {table.isUpdating && (
+          <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
+            <span className="size-1.5 animate-pulse rounded-full bg-accent" />
+            Memperbarui
+          </span>
+        )}
       </header>
 
       <main className="min-h-0 flex-1 overflow-auto p-4">
         <Panel className="overflow-hidden">
-          <div className="border-b border-border px-4 py-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-base font-semibold text-text">Movement history</h2>
-                <p className="text-sm text-text-muted">Semua perubahan stock tercatat append-only.</p>
-              </div>
-              {table.isUpdating && (
-                <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
-                  <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-                  Updating
-                </span>
-              )}
-            </div>
-          </div>
           {table.rows.length === 0 ? (
             <div className="grid place-items-center gap-2 px-4 py-12 text-center">
               <Icon name={table.error ? "help" : "package"} className="size-9 text-text-subtle" />
-              <p className="font-semibold text-text">{table.error ? "Stock movements could not be loaded" : "No stock movements yet"}</p>
+              <p className="font-semibold text-text">{table.error ? "Riwayat pergerakan stok gagal dimuat" : "Belum ada pergerakan stok"}</p>
               <p className="max-w-md text-sm text-text-muted">
-                {table.error ? table.error.message : "Buat manual movement atau complete sale untuk mengisi history."}
+                {table.error ? table.error.message : "Buat pergerakan manual atau selesaikan transaksi untuk mengisi riwayat."}
               </p>
-              {table.error && <Button size="sm" variant="secondary" onClick={table.retry}>Retry</Button>}
+              {table.error && <Button size="sm" variant="secondary" onClick={table.retry}>Coba lagi</Button>}
             </div>
           ) : (
             <DataTable
@@ -196,7 +188,7 @@ export default function StockPage() {
             const result = await createStockMovement(input);
             if (result) {
               await table.refresh();
-              toast.success("Stock movement saved");
+              toast.success("Pergerakan stok disimpan");
               setDialogOpen(false);
             }
           }}
@@ -213,7 +205,7 @@ function MovementBadge({ type }) {
 
 function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
   const [productId, setProductId] = React.useState(products[0]?.id || "");
-  const [typeLabel, setTypeLabel] = React.useState("Restock");
+  const [typeLabel, setTypeLabel] = React.useState("Tambah stok");
   const [quantityText, setQuantityText] = React.useState("");
   const [reason, setReason] = React.useState("");
   const [submitAttempted, setSubmitAttempted] = React.useState(false);
@@ -223,8 +215,8 @@ function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
   const quantity = parseQuantityInput(quantityText);
   const preview = calculateStockPreview({ type, currentStock: product?.stock || 0, quantity });
   const quantityError = getQuantityError({ type, quantityText, quantity, product, preview });
-  const reasonError = !reason.trim() ? "Reason is required for the audit trail." : "";
-  const productError = !product ? "Select an active product." : "";
+  const reasonError = !reason.trim() ? "Alasan wajib diisi untuk audit trail." : "";
+  const productError = !product ? "Pilih produk aktif." : "";
   const canSubmit = !productError && !quantityError && !reasonError && !isSaving;
   const showErrors = submitAttempted;
 
@@ -245,31 +237,31 @@ function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
       open
       onClose={isSaving ? undefined : onClose}
       size="lg"
-      title="New stock movement"
+      title="Pergerakan stok baru"
       footer={(
         <>
-          <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving}>Cancel</Button>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving}>Batal</Button>
           <Button type="submit" form="stock-movement-form" variant="primary" disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save movement"}
+            {isSaving ? "Menyimpan..." : "Simpan pergerakan"}
           </Button>
         </>
       )}
     >
       <form id="stock-movement-form" onSubmit={submit} className="grid gap-4 text-text">
-        <p className="text-sm text-text-muted">Reason wajib karena setiap movement menjadi audit trail.</p>
+        <p className="text-sm text-text-muted">Alasan wajib diisi karena setiap pergerakan menjadi audit trail.</p>
         <div className="grid gap-4">
           <ProductSearchPicker
-            label="Product"
+            label="Produk"
             products={products}
             searchProducts={searchProducts}
             value={productId}
             onChange={setProductId}
             error={showErrors ? productError : ""}
-            placeholder="Search product, barcode, category"
+            placeholder="Cari produk, barcode, kategori"
           />
-          <SelectField label="Movement type" value={typeLabel} options={movementOptions} onChange={setTypeLabel} />
+          <SelectField label="Jenis pergerakan" value={typeLabel} options={movementOptions} onChange={setTypeLabel} />
           <Input
-            label={type === "set_exact" ? "Target stock" : "Quantity"}
+            label={type === "set_exact" ? "Target stok" : "Jumlah"}
             placeholder="1.000"
             error={showErrors ? quantityError : ""}
             inputProps={{
@@ -279,16 +271,16 @@ function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
             }}
           />
           <Input
-            label="Reason"
-            placeholder="Barang masuk, rusak, koreksi stock opname"
+            label="Alasan"
+            placeholder="Barang masuk, rusak, koreksi stok opname"
             error={showErrors ? reasonError : ""}
             inputProps={{ value: reason, onChange: (event) => setReason(event.target.value) }}
           />
 
           <div className="grid grid-cols-3 gap-3 rounded-card border border-border bg-surface-muted p-3">
-            <PreviewMetric label="Current" value={numberFormatter.format(product?.stock || 0)} />
-            <PreviewMetric label="Delta" value={`${preview.delta > 0 ? "+" : ""}${numberFormatter.format(preview.delta)}`} tone={preview.delta >= 0 ? "success" : "danger"} />
-            <PreviewMetric label="After" value={numberFormatter.format(preview.stockAfter)} />
+            <PreviewMetric label="Saat ini" value={numberFormatter.format(product?.stock || 0)} />
+            <PreviewMetric label="Selisih" value={`${preview.delta > 0 ? "+" : ""}${numberFormatter.format(preview.delta)}`} tone={preview.delta >= 0 ? "success" : "danger"} />
+            <PreviewMetric label="Setelah" value={numberFormatter.format(preview.stockAfter)} />
           </div>
         </div>
       </form>
@@ -296,7 +288,7 @@ function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
   );
 }
 
-function ProductSearchPicker({ label, products, searchProducts, value, onChange, error = "", placeholder = "Search product" }) {
+function ProductSearchPicker({ label, products, searchProducts, value, onChange, error = "", placeholder = "Cari produk" }) {
   const [query, setQuery] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
   const [results, setResults] = React.useState(() => products.slice(0, 6));
@@ -352,9 +344,9 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
       {isOpen && (
         <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 grid max-h-72 gap-1 overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-panel">
           {isSearching ? (
-            <div className="px-3 py-4 text-sm font-medium text-text-muted">Searching...</div>
+            <div className="px-3 py-4 text-sm font-medium text-text-muted">Mencari...</div>
           ) : results.length === 0 ? (
-            <div className="px-3 py-4 text-sm font-medium text-text-muted">No matching products</div>
+            <div className="px-3 py-4 text-sm font-medium text-text-muted">Tidak ada produk yang cocok</div>
           ) : (
             results.map((product) => (
               <button
@@ -371,7 +363,7 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
               >
                 <span className="truncate text-sm font-semibold text-text">{product.name}</span>
                 <span className="truncate text-xs font-medium text-text-muted">
-                  {product.barcode || "No barcode"} · {product.category || "No category"} · {product.unit || "pcs"}
+                  {product.barcode || "Tanpa barcode"} · {product.category || "Tanpa kategori"} · {product.unit || "pcs"}
                 </span>
               </button>
             ))
@@ -388,12 +380,12 @@ function formatProductOption(product) {
 }
 
 function getQuantityError({ type, quantityText, quantity, product, preview }) {
-  if (!quantityText) return type === "set_exact" ? "Enter the target stock." : "Enter a quantity.";
-  if (type !== "set_exact" && quantity <= 0) return "Quantity must be greater than zero.";
-  if (type === "set_exact" && quantity < 0) return "Target stock cannot be negative.";
-  if (product && preview.stockAfter < 0) return "Quantity is higher than current stock.";
-  if (type === "set_exact" && product && quantity === product.stock) return "Target stock must change the current stock.";
-  if (!preview.isValid) return "Enter a valid stock quantity.";
+  if (!quantityText) return type === "set_exact" ? "Masukkan target stok." : "Masukkan jumlah.";
+  if (type !== "set_exact" && quantity <= 0) return "Jumlah harus lebih dari nol.";
+  if (type === "set_exact" && quantity < 0) return "Target stok tidak boleh negatif.";
+  if (product && preview.stockAfter < 0) return "Jumlah melebihi stok saat ini.";
+  if (type === "set_exact" && product && quantity === product.stock) return "Target stok harus mengubah stok saat ini.";
+  if (!preview.isValid) return "Masukkan jumlah stok yang valid.";
   return "";
 }
 

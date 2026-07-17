@@ -1,5 +1,5 @@
 "use client";;
-import { curveNatural } from "@visx/curve";
+import { curveMonotoneX } from "@visx/curve";
 import { LinePath } from "@visx/shape";
 
 import { useCallback, useId, useMemo, useRef, useState } from "react";
@@ -107,7 +107,7 @@ export function Line({
   yAxisId,
   stroke = chartCssVars.linePrimary,
   strokeWidth = 2.5,
-  curve = curveNatural,
+  curve = curveMonotoneX,
   animate = true,
   fadeEdges = true,
   showHighlight = true,

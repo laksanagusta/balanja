@@ -18,10 +18,13 @@ export function routeAccess(pathname) {
 }
 
 export function normalizePath(pathname, isSignedIn, isAuthLoaded = true) {
+  if (pathname === "/" && !isAuthLoaded) return pathname;
+  if (pathname === "/" && isSignedIn) return "/dashboard";
+
   const access = routeAccess(pathname);
 
   if (access === "public") return pathname;
   if (access === "private" && !isAuthLoaded) return pathname;
   if (access === "private") return isSignedIn ? pathname : "/login";
-  return isSignedIn ? "/pos" : "/";
+  return isSignedIn ? "/dashboard" : "/";
 }

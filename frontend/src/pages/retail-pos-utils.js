@@ -8,7 +8,11 @@ export function cashPaymentState(rawValue, total, cartItemCount) {
   return {
     amount,
     valid: hasCart && sufficient,
-    error: hasCart && !sufficient ? "Cash received must cover the grand total." : "",
+    error: hasCart && !finite
+      ? "Masukkan nominal tunai yang valid."
+      : hasCart && !sufficient
+        ? "Nominal tunai harus menutup total akhir."
+        : "",
     showChange: hasCart && sufficient,
     change: hasCart && sufficient ? amount - total : 0,
   };

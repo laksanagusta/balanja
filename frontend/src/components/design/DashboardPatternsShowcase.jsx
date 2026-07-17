@@ -9,9 +9,9 @@ const revenueTrend = [82, 104, 96000, 128, 118, 151, 173].map((value, index) => 
 }));
 
 const paymentMix = [
-  { label: "Cash", value: 456000, percentage: 58, color: "var(--color-chart-cash)" },
+  { label: "Tunai", value: 456000, percentage: 58, color: "var(--color-chart-cash)" },
   { label: "QRIS", value: 304000, percentage: 38.7, color: "var(--color-chart-qris)" },
-  { label: "Other", value: 26000, percentage: 3.3, color: "var(--color-chart-other)" },
+  { label: "Lainnya", value: 26000, percentage: 3.3, color: "var(--color-chart-other)" },
 ];
 
 const topProducts = [
@@ -25,17 +25,17 @@ const topProducts = [
 export default function DashboardPatternsShowcase() {
   return (
     <div>
-      <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Dashboard patterns</h3>
+      <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Pola dashboard</h3>
       <div className="grid gap-4 rounded-panel border border-border bg-app-bg p-4">
         <p className="text-sm leading-6 text-text-muted">
-          Production BKLIT charts use Balanja semantic tokens on calm white panels. Revenue uses violet, top products use green,
-          and payment methods use violet, mint, and amber. Legends, markers, labels and values keep every chart readable without color.
+          Chart BKLIT produksi memakai token semantik Balanja di panel putih yang tenang. Pendapatan memakai violet, produk terlaris memakai hijau,
+          dan metode pembayaran memakai violet, mint, dan amber. Legenda, marker, label, dan nilai menjaga setiap chart tetap terbaca tanpa bergantung pada warna.
         </p>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <DashboardKpiCard label="Revenue" value="Rp786.000" icon="cash" comparison={{ direction: "up", percent: 12.4 }} tone="success" />
-          <DashboardKpiCard label="Completed transactions" value="28" icon="receipt" comparison={{ direction: "up", percent: 7.7 }} />
-          <DashboardKpiCard label="Average transaction" value="Rp28.071" icon="ticket" comparison={{ direction: "down", percent: -2.3 }} />
-          <DashboardKpiCard label="Low-stock products" value="3" icon="package" tone="warning" supportingText="Needs restocking attention" />
+          <DashboardKpiCard label="Pendapatan" value="Rp786.000" icon="cash" comparison={{ direction: "up", percent: 12.4 }} tone="success" />
+          <DashboardKpiCard label="Transaksi selesai" value="28" icon="receipt" comparison={{ direction: "up", percent: 7.7 }} />
+          <DashboardKpiCard label="Rata-rata transaksi" value="Rp28.071" icon="ticket" comparison={{ direction: "down", percent: -2.3 }} />
+          <DashboardKpiCard label="Stok menipis" value="3" icon="package" tone="warning" supportingText="Perlu restok" />
         </div>
         <div className="grid gap-4 xl:grid-cols-12">
           <div className="min-w-0 xl:col-span-8"><RevenueTrendPanel data={revenueTrend} hasData days={7} /></div>

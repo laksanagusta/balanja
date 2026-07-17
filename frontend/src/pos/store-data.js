@@ -83,6 +83,8 @@ function normalizeTransactions(items) {
   if (!Array.isArray(items)) return [];
   return items.map((transaction) => ({
     ...transaction,
+    cashierName: transaction?.cashierName || transaction?.cashier_name || "",
+    cashierUserId: transaction?.cashierUserId || transaction?.cashier_user_id || "",
     items: normalizeTransactionItems(transaction?.items),
   }));
 }
@@ -103,6 +105,7 @@ function normalizeStockMovement(movement) {
     referenceType: movement.referenceType || "",
     referenceId: movement.referenceId || "",
     createdByUserId: movement.createdByUserId || "",
+    createdByUserName: movement.createdByUserName || movement.createdByUser?.name || movement.createdByName || "",
     createdAt: movement.createdAt,
   };
 }

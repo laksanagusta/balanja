@@ -4,7 +4,7 @@ import { PaymentMixPanel, RevenueTrendPanel, TopProductsPanel } from "../compone
 import LowStockPanel from "../components/dashboard/LowStockPanel.jsx";
 import { DashboardPageSkeleton } from "../components/page-loading.jsx";
 import { usePOSStore } from "../pos/store.jsx";
-import { formatPrice } from "../shared.jsx";
+import { formatPrice, routes } from "../shared.jsx";
 
 const periods = [7, 30];
 const emptyAnalytics = {
@@ -23,7 +23,7 @@ const emptyAnalytics = {
   lowStock: [],
 };
 
-export default function DashboardPage() {
+export default function DashboardPage({ onNavigate }) {
   const store = usePOSStore();
   const { settings, getDashboardSummary, setNotice } = store;
   const [days, setDays] = React.useState(7);
@@ -42,7 +42,7 @@ export default function DashboardPage() {
     getDashboardSummary({ days, signal: controller.signal })
       .then(setAnalytics)
       .catch((error) => {
-        if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load dashboard");
+        if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Gagal memuat dashboard");
         setAnalytics(emptyAnalytics);
       })
       .finally(() => {
@@ -64,11 +64,11 @@ export default function DashboardPage() {
       <header className="flex flex-col gap-3 border-b border-border bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-base font-semibold text-text">Dashboard</h1>
-          <p className="mt-0.5 truncate text-xs text-text-muted">Operational overview for {settings.storeName}</p>
+          <p className="mt-0.5 truncate text-xs text-text-muted">Ringkasan performa toko {settings.storeName}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isUpdatingSummary && <UpdatingBadge />}
-          <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1" aria-label="Dashboard period">
+          <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1" aria-label="Periode dashboard">
             {periods.map((period) => (
               <button
                 key={period}
@@ -79,7 +79,7 @@ export default function DashboardPage() {
                   days === period ? "bg-surface text-text shadow-low" : "text-text-muted hover:text-text"
                 }`}
               >
-                {period} days
+                {period} hari
               </button>
             ))}
           </div>
@@ -87,11 +87,11 @@ export default function DashboardPage() {
       </header>
 
       <main className={`grid gap-4 p-4 ${isUpdatingSummary ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}>
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key performance indicators">
-          <DashboardKpiCard label="Revenue" value={formatPrice(visibleAnalytics.revenue)} icon="cash" comparison={visibleAnalytics.comparisons.revenue} tone="success" />
-          <DashboardKpiCard label="Completed transactions" value={visibleAnalytics.transactionCount.toLocaleString("id-ID")} icon="receipt" comparison={visibleAnalytics.comparisons.transactions} />
-          <DashboardKpiCard label="Average transaction" value={formatPrice(visibleAnalytics.averageTransactionValue)} icon="ticket" comparison={visibleAnalytics.comparisons.average} />
-          <DashboardKpiCard label="Low-stock products" value={visibleAnalytics.lowStockCount.toLocaleString("id-ID")} icon="package" tone={visibleAnalytics.lowStockCount ? "warning" : "success"} supportingText={visibleAnalytics.lowStockCount ? "Needs restocking attention" : "Inventory levels look healthy"} />
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indikator kinerja utama">
+          <DashboardKpiCard label="Pendapatan" value={formatPrice(visibleAnalytics.revenue)} icon="cash" comparison={visibleAnalytics.comparisons.revenue} tone="success" />
+          <DashboardKpiCard label="Transaksi selesai" value={visibleAnalytics.transactionCount.toLocaleString("id-ID")} icon="receipt" comparison={visibleAnalytics.comparisons.transactions} />
+          <DashboardKpiCard label="Rata-rata transaksi" value={formatPrice(visibleAnalytics.averageTransactionValue)} icon="ticket" comparison={visibleAnalytics.comparisons.average} />
+          <DashboardKpiCard label="Stok menipis" value={visibleAnalytics.lowStockCount.toLocaleString("id-ID")} icon="package" tone={visibleAnalytics.lowStockCount ? "warning" : "success"} supportingText={visibleAnalytics.lowStockCount ? "Perlu restok" : "Level stok terlihat sehat"} />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-12">
@@ -108,7 +108,10 @@ export default function DashboardPage() {
             <TopProductsPanel data={visibleAnalytics.topProducts} />
           </div>
           <div className="min-w-0 xl:col-span-5 grid grid-rows-1">
-            <LowStockPanel products={visibleAnalytics.lowStock} />
+            <LowStockPanel
+              products={visibleAnalytics.lowStock}
+              onManageStock={() => onNavigate(routes.stock)}
+            />
           </div>
         </section>
       </main>
@@ -120,7 +123,7 @@ function UpdatingBadge() {
   return (
     <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
       <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-      Updating
+      Memperbarui
     </span>
   );
 }

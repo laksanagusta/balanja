@@ -9,9 +9,9 @@ const toneClasses = {
 };
 
 function comparisonLabel(comparison) {
-  if (!comparison || comparison.percent === null) return "No previous-period data";
+  if (!comparison || comparison.percent === null) return "Belum ada data periode sebelumnya";
   const arrow = comparison.direction === "up" ? "↑" : comparison.direction === "down" ? "↓" : "→";
-  return `${arrow} ${Math.abs(comparison.percent).toLocaleString("id-ID", { maximumFractionDigits: 1 })}% vs previous period`;
+  return `${arrow} ${Math.abs(comparison.percent).toLocaleString("id-ID", { maximumFractionDigits: 1 })}% vs periode sebelumnya`;
 }
 
 export default function DashboardKpiCard({ label, value, comparison, tone = "neutral", supportingText }) {
