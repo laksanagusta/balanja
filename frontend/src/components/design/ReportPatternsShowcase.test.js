@@ -17,4 +17,9 @@ test("design system documents production sales report patterns", async () => {
   assert.match(design, /neutral segmented selection/);
   assert.match(design, /harga snapshot × kuantitas/);
   assert.match(design, /pajak.*transaksi/i);
+  assert.match(design, /one-day sales-report trends use hourly WIB labels/i);
+  assert.match(design, /bounded chart height/i);
+  assert.match(design, /dashboard revenue.*localized.*Rupiah/i);
+  assert.match(showcase, /2026-07-17T\$\{String\(hour\)\.padStart/);
+  assert.match(showcase, /Tampilan per jam/);
 });

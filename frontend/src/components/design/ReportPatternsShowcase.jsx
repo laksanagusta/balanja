@@ -10,6 +10,16 @@ export default function ReportPatternsShowcase() {
   const comparison = { absolute: 120000, percent: 12.4, direction: "up" };
   const current = [1, 2, 3, 4, 5, 6, 7].map((day) => ({ bucket: `2026-07-0${day}`, label: `${day} Jul`, totalReceived: 80000 + day * 18000 }));
   const previous = [1, 2, 3, 4, 5, 6, 7].map((day) => ({ bucket: `2026-06-${23 + day}`, label: `${23 + day} Jun`, totalReceived: 70000 + day * 12000 }));
+  const hourlyCurrent = Array.from({ length: 24 }, (_, hour) => ({
+    bucket: `2026-07-17T${String(hour).padStart(2, "0")}:00:00+07:00`,
+    label: `${String(hour).padStart(2, "0")}.00`,
+    totalReceived: hour === 10 ? 180000 : hour === 15 ? 95000 : 0,
+  }));
+  const hourlyPrevious = Array.from({ length: 24 }, (_, hour) => ({
+    bucket: `2026-07-16T${String(hour).padStart(2, "0")}:00:00+07:00`,
+    label: `${String(hour).padStart(2, "0")}.00`,
+    totalReceived: hour === 11 ? 120000 : 0,
+  }));
   return (
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Pola laporan penjualan</h3>
@@ -20,6 +30,9 @@ export default function ReportPatternsShowcase() {
           <ReportMetricCard label="Pajak" value={money(119460)} comparison={{ absolute: 0, percent: null, direction: "neutral" }} formatAbsolute={money} />
           <ReportMetricCard label="Total diterima" value={money(1205460)} comparison={comparison} formatAbsolute={money} />
         </div>
+        <p className="text-xs font-semibold text-text-muted">Tampilan per jam</p>
+        <SalesTrendPanel current={hourlyCurrent} previous={hourlyPrevious} />
+        <p className="text-xs font-semibold text-text-muted">Tampilan per hari</p>
         <SalesTrendPanel current={current} previous={previous} />
         <VoidReportPanel voids={{ count: 1, originalValue: 18000 }} formatMoney={money} formatCount={count} />
         <ReportBreakdownPanels

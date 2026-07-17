@@ -81,6 +81,8 @@ Sales reports use inclusive local calendar dates in WIB and compare every select
 
 Sales-report trend charts use clean lines without persistent point markers. Hover highlights and tooltips remain available for inspecting individual values.
 
+One-day sales-report trends use hourly WIB labels while longer periods use localized daily labels; canonical timestamps control geometry and presentation labels never control scale. The selected period is solid, the previous equal-length period is fully dashed, and both remain dot-free. Report trends use bounded chart height. Dashboard revenue keeps visible markers for sparse daily observations, but uses localized axis labels, a localized Rupiah tooltip, and bounded chart height.
+
 The visible report and every export or transaction handoff share the same last-successful filter snapshot. Draft filters are announced and ambiguous actions remain unavailable until the report resolves successfully.
 
 Report presets use neutral segmented selection with 44px compact-screen targets. Background updates retain full data contrast. The previous-period trend is dashed consistently, and tooltips use Indonesian labels, dates, and Rupiah values.

@@ -45,7 +45,7 @@ Add these assertions to `ReportPatternsShowcase.test.js`:
 assert.match(design, /one-day sales-report trends use hourly WIB labels/i);
 assert.match(design, /bounded chart height/i);
 assert.match(design, /dashboard revenue.*localized.*Rupiah/i);
-assert.match(showcase, /2026-07-17T00:00:00\+07:00/);
+assert.match(showcase, /2026-07-17T\$\{String\(hour\)\.padStart/);
 assert.match(showcase, /Tampilan per jam/);
 ```
 
