@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved approach: extend the shared time-series chart with explicit display labels and full-series dash styling, then consume those capabilities from the sales report.
+Approved approach: extend the shared time-series chart with explicit display labels and full-series dash styling, then consume the relevant capabilities from the sales report and dashboard revenue trend.
 
 This specification supersedes the visualization details in `2026-07-17-sales-report-today-chart-fix-design.md`. The earlier fix correctly moved the scale to canonical timestamps, but it did not preserve hourly labels and used a projection-tail dash mechanism for a comparison series.
 
@@ -62,12 +62,21 @@ The chart plots daily ISO dates and uses the backend's localized day labels. The
 - Height: 260px on compact layouts and 320px from medium screens upward, independent of viewport width.
 - Empty state: unchanged when both aligned series contain no received value.
 
+## Dashboard revenue behavior
+
+The dashboard already produces canonical `Date` values and localized Indonesian labels for its rolling 7-day and 30-day revenue series. It will use `xLabelKey="label"` so the shared chart displays those labels instead of regenerating English dates.
+
+The dashboard tooltip will use a localized date title, the row label `Pendapatan`, and Rupiah formatting. Existing permanent markers remain because seven-point daily data is sparse and the dashboard design contract intentionally uses markers to make those discrete observations visible.
+
+The dashboard revenue chart will use a bounded height of 250px on compact layouts and 280px from medium screens upward. Its pie and top-products bar charts are not affected by this change.
+
 ## Component boundaries
 
 - `LineChart` forwards `xLabelKey` to the time-series shell.
 - The time-series shell resolves display labels without changing scale or interaction data.
 - `Line` owns full-series dash rendering.
 - `SalesTrendPanel` selects report-specific labels, tooltip copy, line styles, and responsive height.
+- `RevenueTrendPanel` selects dashboard-specific labels, tooltip copy, markers, and responsive height.
 - `alignTrend` continues to align current and previous values by relative index and preserves canonical buckets.
 
 ## Design-system synchronization
@@ -80,12 +89,15 @@ Before production component changes, `frontend/DESIGN.md` and the report Design 
 - no dots;
 - compact bounded chart height.
 
+The dashboard showcase will preserve revenue markers while demonstrating localized axis labels, a Rupiah tooltip, and bounded revenue-chart height.
+
 ## Testing
 
 - Unit-test label resolution with and without `xLabelKey`.
 - Assert the full-line renderer receives `strokeDasharray` in static and animated paths.
 - Assert `SalesTrendPanel` uses `xDataKey="date"`, `xLabelKey="label"`, full-series dash styling, no dot rendering, and bounded height.
 - Cover hourly tooltip-title formatting separately from daily formatting.
+- Assert `RevenueTrendPanel` uses `xLabelKey="label"`, retains markers, formats its tooltip as Rupiah, and uses bounded height.
 - Run focused chart/report tests, the full frontend suite, and the production build.
 
 ## Out of scope
@@ -93,5 +105,5 @@ Before production component changes, `frontend/DESIGN.md` and the report Design 
 - Changing backend aggregation or response fields.
 - Converting hourly totals into cumulative revenue.
 - Adding a y-axis component to the shared chart library.
-- Redesigning report filters, metric cards, or breakdown tables.
+- Redesigning report filters, metric cards, breakdown tables, dashboard KPI cards, pie charts, or bar charts.
 - Adding permanent markers, area fills, zooming, brushing, or gesture interactions.
