@@ -20,6 +20,7 @@ var (
 	ErrInvalidImage    = errors.New("invalid product image")
 	ErrImageTooLarge   = errors.New("product image too large")
 	ErrStorageDisabled = errors.New("product image storage disabled")
+	ErrImageStorage    = errors.New("product image storage unavailable")
 )
 
 type ImageUpload struct {

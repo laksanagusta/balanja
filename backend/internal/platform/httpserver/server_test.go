@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/http"
@@ -86,5 +87,22 @@ func TestReadiness(t *testing.T) {
 				t.Fatalf("status = %d, want %d", response.StatusCode, tt.status)
 			}
 		})
+	}
+}
+
+func TestServerAllowsFiveMiBUploadBody(t *testing.T) {
+	app := New(Dependencies{
+		Auth: func(c fiber.Ctx) error { return c.Next() },
+		Routes: func(router fiber.Router) {
+			router.Post("/upload-probe", func(c fiber.Ctx) error { return c.SendStatus(http.StatusNoContent) })
+		},
+	})
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/upload-probe", bytes.NewReader(make([]byte, 5<<20)))
+	response, err := app.Test(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != http.StatusNoContent {
+		t.Fatalf("status=%d", response.StatusCode)
 	}
 }

@@ -213,7 +213,7 @@ func (s *Service) Create(ctx context.Context, identity database.Identity, input 
 		}
 		stored, uploadErr := s.images.Put(ctx, objectstore.PutInput{Key: productImageKey(identity.OrgID, validated.Extension), ContentType: validated.ContentType, Body: validated.Data})
 		if uploadErr != nil {
-			return Product{}, fmt.Errorf("upload product image: %w", uploadErr)
+			return Product{}, fmt.Errorf("%w: %v", ErrImageStorage, uploadErr)
 		}
 		input.Image, input.ImageKey, newImageKey = stored.URL, stored.Key, stored.Key
 	}
@@ -259,7 +259,7 @@ func (s *Service) Update(ctx context.Context, identity database.Identity, id uui
 			Key: productImageKey(identity.OrgID, validated.Extension), ContentType: validated.ContentType, Body: validated.Data,
 		})
 		if uploadErr != nil {
-			return Product{}, fmt.Errorf("upload product image: %w", uploadErr)
+			return Product{}, fmt.Errorf("%w: %v", ErrImageStorage, uploadErr)
 		}
 		input.Image, input.ImageKey, newImageKey = stored.URL, stored.Key, stored.Key
 	default:
