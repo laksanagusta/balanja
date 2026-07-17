@@ -147,8 +147,8 @@ func (f *fakeRepository) Create(_ context.Context, _ database.Tx, _ string, inpu
 	f.create = input
 	return Product{ID: uuid.New(), Name: input.Name, Barcode: input.Barcode, Category: input.Category, Price: input.Price, Stock: input.Stock, Unit: input.Unit, Active: true}, nil
 }
-func (f *fakeRepository) Update(context.Context, database.Tx, string, uuid.UUID, UpdateInput) (Product, error) {
-	return Product{}, nil
+func (f *fakeRepository) Update(context.Context, database.Tx, string, uuid.UUID, UpdateInput) (UpdateResult, error) {
+	return UpdateResult{}, nil
 }
 func (f *fakeRepository) Deactivate(context.Context, database.Tx, string, uuid.UUID) (Product, error) {
 	return Product{}, nil

@@ -42,3 +42,16 @@ func TestInitialMigrationContainsTenantSafetyContract(t *testing.T) {
 		}
 	}
 }
+
+func TestProductImageKeyMigration(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join("..", "..", "migrations", "000009_product_image_key.up.sql")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile(%q) error = %v", path, err)
+	}
+	if !strings.Contains(strings.ToLower(string(content)), "add column image_key text not null default ''") {
+		t.Fatalf("migration does not add a non-null image_key with an empty default")
+	}
+}

@@ -35,7 +35,7 @@ type TenantRunner interface {
 type Repository interface {
 	List(context.Context, database.Tx, string, ListFilter) ([]Product, error)
 	Create(context.Context, database.Tx, string, CreateInput) (Product, error)
-	Update(context.Context, database.Tx, string, uuid.UUID, UpdateInput) (Product, error)
+	Update(context.Context, database.Tx, string, uuid.UUID, UpdateInput) (UpdateResult, error)
 	Deactivate(context.Context, database.Tx, string, uuid.UUID) (Product, error)
 }
 type Service struct {
@@ -194,7 +194,9 @@ func (s *Service) Update(ctx context.Context, identity database.Identity, id uui
 	}
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
 		var updateErr error
-		updated, updateErr = s.repository.Update(ctx, tx, identity.OrgID, id, input)
+		var result UpdateResult
+		result, updateErr = s.repository.Update(ctx, tx, identity.OrgID, id, input)
+		updated = result.Product
 		return updateErr
 	})
 	return

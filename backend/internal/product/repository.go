@@ -46,12 +46,19 @@ func resolveProductOrder(sort, direction string) (listOrder, error) {
 
 func scanProduct(row pgx.Row) (Product, error) {
 	var p Product
-	err := row.Scan(&p.ID, &p.Name, &p.Barcode, &p.Category, &p.Price, &p.Stock, &p.Unit, &p.Image, &p.Active, &p.CreatedAt, &p.UpdatedAt)
+	err := row.Scan(&p.ID, &p.Name, &p.Barcode, &p.Category, &p.Price, &p.Stock, &p.Unit, &p.Image, &p.ImageKey, &p.Active, &p.CreatedAt, &p.UpdatedAt)
 	return p, err
 }
 
-const productColumns = `id,name,barcode,category,price,stock,unit,image,active,created_at,updated_at`
-const productSelectColumns = `p.id,p.name,p.barcode,p.category,p.price,p.stock,p.unit,p.image,p.active,p.created_at,p.updated_at`
+func scanUpdateResult(row pgx.Row) (UpdateResult, error) {
+	var result UpdateResult
+	p := &result.Product
+	err := row.Scan(&p.ID, &p.Name, &p.Barcode, &p.Category, &p.Price, &p.Stock, &p.Unit, &p.Image, &p.ImageKey, &p.Active, &p.CreatedAt, &p.UpdatedAt, &result.PreviousImageKey)
+	return result, err
+}
+
+const productColumns = `id,name,barcode,category,price,stock,unit,image,image_key,active,created_at,updated_at`
+const productSelectColumns = `p.id,p.name,p.barcode,p.category,p.price,p.stock,p.unit,p.image,p.image_key,p.active,p.created_at,p.updated_at`
 
 func (PostgresRepository) List(ctx context.Context, tx database.Tx, orgID string, filter ListFilter) ([]Product, error) {
 	order, err := resolveProductOrder(filter.Sort, filter.Direction)
@@ -85,7 +92,7 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, orgID string
 	return products, nil
 }
 func (PostgresRepository) Create(ctx context.Context, tx database.Tx, orgID string, in CreateInput) (Product, error) {
-	p, err := scanProduct(tx.QueryRow(ctx, `insert into products (org_id,name,barcode,category,price,stock,unit,image) values ($1,$2,$3,$4,$5,$6,$7,$8) returning `+productColumns, orgID, in.Name, in.Barcode, in.Category, in.Price, in.Stock, in.Unit, in.Image))
+	p, err := scanProduct(tx.QueryRow(ctx, `insert into products (org_id,name,barcode,category,price,stock,unit,image,image_key) values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning `+productColumns, orgID, in.Name, in.Barcode, in.Category, in.Price, in.Stock, in.Unit, in.Image, in.ImageKey))
 	if err != nil {
 		var postgresError *pgconn.PgError
 		if errors.As(err, &postgresError) && postgresError.Code == "23505" {
@@ -95,15 +102,28 @@ func (PostgresRepository) Create(ctx context.Context, tx database.Tx, orgID stri
 	}
 	return p, nil
 }
-func (PostgresRepository) Update(ctx context.Context, tx database.Tx, orgID string, id uuid.UUID, in UpdateInput) (Product, error) {
-	p, err := scanProduct(tx.QueryRow(ctx, `update products set name=$3,barcode=$4,category=$5,price=$6,unit=$7,image=$8,active=$9 where org_id=$1 and id=$2 returning `+productColumns, orgID, id, in.Name, in.Barcode, in.Category, in.Price, in.Unit, in.Image, in.Active))
+func (PostgresRepository) Update(ctx context.Context, tx database.Tx, orgID string, id uuid.UUID, in UpdateInput) (UpdateResult, error) {
+	result, err := scanUpdateResult(tx.QueryRow(ctx, `
+		with previous as (
+			select image_key from products where org_id=$1 and id=$2 for update
+		), updated as (
+			update products p set
+				name=$3,barcode=$4,category=$5,price=$6,unit=$7,
+				image=case when $10 then p.image else $8 end,
+				image_key=case when $10 then p.image_key when p.image=$8 and $9='' then p.image_key else $9 end,
+				active=$11
+			from previous
+			where p.org_id=$1 and p.id=$2
+			returning p.id,p.name,p.barcode,p.category,p.price,p.stock,p.unit,p.image,p.image_key,p.active,p.created_at,p.updated_at
+		)
+		select updated.*,previous.image_key from updated cross join previous`, orgID, id, in.Name, in.Barcode, in.Category, in.Price, in.Unit, in.Image, in.ImageKey, in.PreserveImage, in.Active))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return Product{}, ErrNotFound
+			return UpdateResult{}, ErrNotFound
 		}
-		return Product{}, fmt.Errorf("update product: %w", err)
+		return UpdateResult{}, fmt.Errorf("update product: %w", err)
 	}
-	return p, nil
+	return result, nil
 }
 func (PostgresRepository) Deactivate(ctx context.Context, tx database.Tx, orgID string, id uuid.UUID) (Product, error) {
 	p, err := scanProduct(tx.QueryRow(ctx, `update products set active=false where org_id=$1 and id=$2 returning `+productColumns, orgID, id))
