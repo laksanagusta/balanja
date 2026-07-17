@@ -28,7 +28,7 @@
 - `frontend/src/components/reports/SalesTrendPanel.jsx`: consumes hourly labels, full dash styling, localized tooltip copy, and bounded height.
 - `frontend/src/components/reports/ReportComponents.test.js`: locks report chart wiring.
 - `frontend/src/components/dashboard/DashboardCharts.jsx`: consumes localized labels and tooltip copy while retaining markers.
-- `frontend/src/components/dashboard/DashboardCharts.test.js`: locks dashboard chart wiring.
+- `frontend/src/components/dashboard/dashboard-trend-visualization.test.js`: locks dashboard chart wiring without taking ownership of an unrelated untracked test.
 
 ### Task 1: Synchronize the Design System contract
 
@@ -305,7 +305,7 @@ git commit -m "feat: support full-series dashed lines"
 - Modify: `frontend/src/components/reports/SalesTrendPanel.jsx`
 - Modify: `frontend/src/components/reports/ReportComponents.test.js`
 - Modify: `frontend/src/components/dashboard/DashboardCharts.jsx`
-- Modify: `frontend/src/components/dashboard/DashboardCharts.test.js`
+- Create: `frontend/src/components/dashboard/dashboard-trend-visualization.test.js`
 
 - [ ] **Step 1: Write failing tooltip-title tests**
 
@@ -343,7 +343,7 @@ assert.match(trend, /aspectRatio=\{null\}/);
 assert.match(trend, /h-\[260px\] md:h-\[320px\]/);
 ```
 
-Extend `DashboardCharts.test.js` with:
+Create `dashboard-trend-visualization.test.js` with source assertions for:
 
 ```js
 assert.match(dashboard, /xLabelKey="label"/);
@@ -360,7 +360,7 @@ Run:
 
 ```bash
 cd frontend
-node --test src/components/charts/trend-tooltip-title.test.js src/components/reports/ReportComponents.test.js src/components/dashboard/DashboardCharts.test.js
+node --test src/components/charts/trend-tooltip-title.test.js src/components/reports/ReportComponents.test.js src/components/dashboard/dashboard-trend-visualization.test.js
 ```
 
 Expected: FAIL because the formatter module and new consumer wiring are absent.
@@ -462,7 +462,7 @@ Run:
 
 ```bash
 cd frontend
-node --test src/components/charts/trend-tooltip-title.test.js src/components/charts/time-series-labels.test.js src/components/charts/line-rendering.test.js src/components/reports/ReportComponents.test.js src/components/dashboard/DashboardCharts.test.js src/components/design/ReportPatternsShowcase.test.js
+node --test src/components/charts/trend-tooltip-title.test.js src/components/charts/time-series-labels.test.js src/components/charts/line-rendering.test.js src/components/reports/ReportComponents.test.js src/components/dashboard/dashboard-trend-visualization.test.js src/components/design/ReportPatternsShowcase.test.js
 ```
 
 Expected: all focused tests PASS.
@@ -470,7 +470,7 @@ Expected: all focused tests PASS.
 - [ ] **Step 7: Commit the consumer fixes**
 
 ```bash
-git add frontend/src/components/charts/trend-tooltip-title.js frontend/src/components/charts/trend-tooltip-title.test.js frontend/src/components/reports/SalesTrendPanel.jsx frontend/src/components/reports/ReportComponents.test.js frontend/src/components/dashboard/DashboardCharts.jsx frontend/src/components/dashboard/DashboardCharts.test.js
+git add frontend/src/components/charts/trend-tooltip-title.js frontend/src/components/charts/trend-tooltip-title.test.js frontend/src/components/reports/SalesTrendPanel.jsx frontend/src/components/reports/ReportComponents.test.js frontend/src/components/dashboard/DashboardCharts.jsx frontend/src/components/dashboard/dashboard-trend-visualization.test.js
 git commit -m "fix: render truthful report and dashboard trends"
 ```
 

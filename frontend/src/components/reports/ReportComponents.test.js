@@ -13,9 +13,13 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
   assert.match(trend, /dataKey="current"/);
   assert.match(trend, /dataKey="previous"/);
   assert.match(trend, /xDataKey="date"/);
+  assert.match(trend, /xLabelKey="label"/);
   assert.doesNotMatch(trend, /showMarkers/);
-  assert.match(trend, /dashFromIndex=\{0\}/);
+  assert.match(trend, /strokeDasharray="6 5"/);
+  assert.doesNotMatch(trend, /dashFromIndex/);
   assert.match(trend, /showDots=\{false\}/);
+  assert.match(trend, /aspectRatio=\{null\}/);
+  assert.match(trend, /h-\[260px\] md:h-\[320px\]/);
   assert.match(trend, /TooltipContent/);
   assert.match(trend, /formatPrice/);
   assert.match(trend, /Periode ini/);

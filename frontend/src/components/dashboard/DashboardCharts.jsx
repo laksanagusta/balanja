@@ -2,7 +2,7 @@ import React from "react";
 import { LineChart, Line } from "../charts/line-chart.jsx";
 import { Grid } from "../charts/grid.jsx";
 import { XAxis } from "../charts/x-axis.jsx";
-import { ChartTooltip } from "../charts/tooltip/index.js";
+import { ChartTooltip, TooltipContent } from "../charts/tooltip/index.js";
 import { PieChart } from "../charts/pie-chart.jsx";
 import PieSlice from "../charts/pie-slice.jsx";
 import { PieCenter } from "../charts/pie-center.jsx";
@@ -12,6 +12,7 @@ import { BarXAxis } from "../charts/bar-x-axis.jsx";
 import { EmptyState } from "../design/EmptyStateShowcase.jsx";
 import { Panel } from "../primitives.jsx";
 import { formatPrice } from "../../shared.jsx";
+import { localizedTrendTitle } from "../charts/trend-tooltip-title.js";
 
 function ChartPanel({ title, description, badge, children, className = "" }) {
   return (
@@ -32,15 +33,28 @@ function ChartEmpty({ title, description }) {
   return <EmptyState icon={null} title={title} description={description} className="mt-4 min-h-[230px]" />;
 }
 
+function RevenueTrendTooltip({ point }) {
+  return (
+    <TooltipContent
+      title={localizedTrendTitle(point)}
+      rows={[{
+        label: "Pendapatan",
+        value: formatPrice(point.revenue),
+        color: "var(--chart-line-primary)",
+      }]}
+    />
+  );
+}
+
 export function RevenueTrendPanel({ data, hasData, days }) {
   return (
     <ChartPanel title="Revenue trend" description={`Daily completed-sales revenue over the last ${days} days.`} badge={`${days} days`}>
       {hasData ? (
-        <LineChart data={data} xDataKey="date" aspectRatio="2.35 / 1" className="mt-3 min-h-[250px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
+        <LineChart data={data} xDataKey="date" xLabelKey="label" aspectRatio={null} className="mt-3 h-[250px] md:h-[280px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
           <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
-          <Line dataKey="revenue" stroke="var(--chart-line-primary)" strokeWidth={2.5} showPoints />
+          <Line dataKey="revenue" stroke="var(--chart-line-primary)" strokeWidth={2.5} showMarkers />
           <XAxis numTicks={days === 30 ? 6 : 7} />
-          <ChartTooltip />
+          <ChartTooltip showDatePill={false} content={({ point }) => <RevenueTrendTooltip point={point} />} />
         </LineChart>
       ) : (
         <ChartEmpty title="No sales in this period" description="Completed transactions will build the revenue trend automatically." />
