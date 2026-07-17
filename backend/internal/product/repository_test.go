@@ -1,6 +1,22 @@
 package product
 
-import "testing"
+import (
+	"encoding/json"
+	"strings"
+	"testing"
+)
+
+func TestProductImageKeyStaysPrivate(t *testing.T) {
+	t.Parallel()
+
+	encoded, err := json.Marshal(Product{Image: "https://img.example/p.jpg", ImageKey: "products/org/p.jpg"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(encoded), "products/org/p.jpg") {
+		t.Fatalf("private image key leaked: %s", encoded)
+	}
+}
 
 func TestResolveProductOrder(t *testing.T) {
 	t.Parallel()

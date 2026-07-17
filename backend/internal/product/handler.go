@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -41,6 +44,15 @@ func decode[T any](c fiber.Ctx) (T, error) {
 	return value, nil
 }
 func productError(c fiber.Ctx, err error) error {
+	if errors.Is(err, ErrImageTooLarge) {
+		return respond.Error(c, apperror.New(413, "IMAGE_TOO_LARGE", "product image must not exceed 5 MB"))
+	}
+	if errors.Is(err, ErrInvalidImage) {
+		return respond.Error(c, apperror.New(422, "INVALID_IMAGE", "product image must be a valid JPG, PNG, or WebP file"))
+	}
+	if errors.Is(err, ErrStorageDisabled) || errors.Is(err, ErrImageStorage) {
+		return respond.Error(c, apperror.New(503, "IMAGE_STORAGE_UNAVAILABLE", "product image storage is temporarily unavailable"))
+	}
 	if errors.Is(err, ErrInvalidCursor) {
 		return respond.Error(c, apperror.New(400, "INVALID_CURSOR", "product cursor is invalid"))
 	}
@@ -54,6 +66,46 @@ func productError(c fiber.Ctx, err error) error {
 		return respond.Error(c, apperror.New(404, "PRODUCT_NOT_FOUND", "product was not found"))
 	}
 	return respond.Error(c, err)
+}
+
+type multipartProduct struct {
+	Name        string                `form:"name"`
+	Barcode     string                `form:"barcode"`
+	Category    string                `form:"category"`
+	Price       int                   `form:"price"`
+	Stock       int                   `form:"stock"`
+	Unit        string                `form:"unit"`
+	Active      bool                  `form:"active"`
+	RemoveImage bool                  `form:"remove_image"`
+	ImageFile   *multipart.FileHeader `form:"image_file"`
+}
+
+func isMultipartRequest(c fiber.Ctx) bool {
+	mediaType, _, err := mime.ParseMediaType(c.Get(fiber.HeaderContentType))
+	return err == nil && mediaType == "multipart/form-data"
+}
+
+func decodeMultipartProduct(c fiber.Ctx) (multipartProduct, *ImageUpload, error) {
+	var form multipartProduct
+	if err := c.Bind().Form(&form); err != nil {
+		return form, nil, ErrInvalidProduct
+	}
+	if form.ImageFile == nil {
+		return form, nil, nil
+	}
+	file, err := form.ImageFile.Open()
+	if err != nil {
+		return form, nil, ErrInvalidImage
+	}
+	defer file.Close()
+	data, err := io.ReadAll(io.LimitReader(file, MaxProductImageBytes+1))
+	if err != nil {
+		return form, nil, ErrInvalidImage
+	}
+	if len(data) > MaxProductImageBytes {
+		return form, nil, ErrImageTooLarge
+	}
+	return form, &ImageUpload{Filename: form.ImageFile.Filename, Data: data}, nil
 }
 func (h *Handler) list(c fiber.Ctx) error {
 	id, err := identity(c)
@@ -93,11 +145,26 @@ func (h *Handler) create(c fiber.Ctx) error {
 	if err != nil {
 		return respond.Error(c, err)
 	}
-	input, err := decode[CreateInput](c)
-	if err != nil {
-		return respond.Error(c, err)
+	var input CreateInput
+	var upload *ImageUpload
+	if isMultipartRequest(c) {
+		form, image, decodeErr := decodeMultipartProduct(c)
+		if decodeErr != nil {
+			return productError(c, decodeErr)
+		}
+		if form.RemoveImage {
+			return productError(c, ErrInvalidImage)
+		}
+		input = CreateInput{Name: form.Name, Barcode: form.Barcode, Category: form.Category, Price: form.Price, Stock: form.Stock, Unit: form.Unit}
+		upload = image
+	} else {
+		var decodeErr error
+		input, decodeErr = decode[CreateInput](c)
+		if decodeErr != nil {
+			return respond.Error(c, decodeErr)
+		}
 	}
-	item, err := h.service.Create(c.Context(), id, input)
+	item, err := h.service.Create(c.Context(), id, input, upload)
 	if err != nil {
 		return productError(c, err)
 	}
@@ -112,11 +179,32 @@ func (h *Handler) update(c fiber.Ctx) error {
 	if err != nil {
 		return respond.Error(c, apperror.New(400, "INVALID_PRODUCT_ID", "product ID is invalid"))
 	}
-	input, err := decode[UpdateInput](c)
-	if err != nil {
-		return respond.Error(c, err)
+	var input UpdateInput
+	mutation := ImageMutation{Mode: ImageReference}
+	if isMultipartRequest(c) {
+		form, upload, decodeErr := decodeMultipartProduct(c)
+		if decodeErr != nil {
+			return productError(c, decodeErr)
+		}
+		if form.RemoveImage && upload != nil {
+			return productError(c, ErrInvalidImage)
+		}
+		input = UpdateInput{Name: form.Name, Barcode: form.Barcode, Category: form.Category, Price: form.Price, Unit: form.Unit, Active: form.Active}
+		mutation = ImageMutation{Mode: ImagePreserve}
+		if form.RemoveImage {
+			mutation = ImageMutation{Mode: ImageRemove}
+		}
+		if upload != nil {
+			mutation = ImageMutation{Mode: ImageReplace, Upload: upload}
+		}
+	} else {
+		var decodeErr error
+		input, decodeErr = decode[UpdateInput](c)
+		if decodeErr != nil {
+			return respond.Error(c, decodeErr)
+		}
 	}
-	item, err := h.service.Update(c.Context(), id, productID, input)
+	item, err := h.service.Update(c.Context(), id, productID, input, mutation)
 	if err != nil {
 		return productError(c, err)
 	}

@@ -1,6 +1,9 @@
 package config
 
 import (
+	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -70,6 +73,57 @@ func TestLoadParsesOverrides(t *testing.T) {
 	}
 	if len(got.AllowedOrigins) != 2 || got.AllowedOrigins[0] != "https://pos.example.com" {
 		t.Fatalf("AllowedOrigins = %#v", got.AllowedOrigins)
+	}
+}
+
+func TestLoadR2Configuration(t *testing.T) {
+	t.Parallel()
+
+	values := validEnvironment()
+	got, err := Load(mapGetter(values))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.R2.Enabled {
+		t.Fatalf("R2.Enabled = true, want false by default")
+	}
+
+	values["R2_ENABLED"] = "true"
+	_, err = Load(mapGetter(values))
+	if err == nil || !strings.Contains(err.Error(), "R2_ENDPOINT") {
+		t.Fatalf("Load() error = %v, want missing R2_ENDPOINT", err)
+	}
+}
+
+func TestLoadParsesEnabledR2Configuration(t *testing.T) {
+	t.Parallel()
+
+	values := validEnvironment()
+	values["R2_ENABLED"] = "true"
+	values["R2_ENDPOINT"] = " https://account.r2.cloudflarestorage.com "
+	values["R2_ACCESS_KEY_ID"] = "access"
+	values["R2_SECRET_ACCESS_KEY"] = "secret"
+	values["R2_BUCKET"] = "products"
+	values["R2_PUBLIC_BASE_URL"] = "https://images.example.com/"
+
+	got, err := Load(mapGetter(values))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.R2.Enabled || got.R2.Endpoint != "https://account.r2.cloudflarestorage.com" || got.R2.PublicBaseURL != "https://images.example.com" {
+		t.Fatalf("R2 = %#v", got.R2)
+	}
+}
+
+func TestMainWiresR2IntoProducts(t *testing.T) {
+	t.Parallel()
+
+	source, err := os.ReadFile(filepath.Join("..", "..", "cmd", "api", "main.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(source, []byte("objectstore.NewR2")) || !bytes.Contains(source, []byte("product.WithImageStore")) {
+		t.Fatal("main does not wire R2 into product service")
 	}
 }
 

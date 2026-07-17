@@ -19,7 +19,8 @@ type Dependencies struct {
 
 func New(dependencies Dependencies) *fiber.App {
 	app := fiber.New(fiber.Config{
-		AppName: "Balanja API",
+		AppName:   "Balanja API",
+		BodyLimit: 6 << 20,
 	})
 	app.Use(recover.New())
 	app.Use(requestid.New())

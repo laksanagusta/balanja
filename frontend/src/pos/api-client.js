@@ -37,6 +37,7 @@ export function createAPIClient({
 
     const timeout = AbortSignal.timeout(timeoutMs);
     const combinedSignal = signal && AbortSignal.any ? AbortSignal.any([signal, timeout]) : timeout;
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
     let response;
     try {
       response = await fetchImpl(`${baseURL}${path}`, {
@@ -44,10 +45,10 @@ export function createAPIClient({
         signal: combinedSignal,
         headers: {
           Authorization: `Bearer ${token}`,
-          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+          ...(body === undefined || isFormData ? {} : { "Content-Type": "application/json" }),
           ...headers,
         },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        ...(body === undefined ? {} : { body: isFormData ? body : JSON.stringify(body) }),
       });
     } catch (error) {
       if (error?.name === "AbortError" || error?.name === "TimeoutError") {

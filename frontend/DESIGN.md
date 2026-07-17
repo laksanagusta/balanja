@@ -1,5 +1,9 @@
 # Design System
 
+### Product photos
+
+Product forms use one controlled photo field with a visible label, preview, JPG/PNG/WebP helper text, 5 MB limit, replace/remove actions, and inline error. Product tables place a 40px rounded thumbnail before the product name. Empty or broken URLs use the same category fallback as POS cards; images remain decorative when adjacent text already names the product.
+
 ## Product Surface
 
 Balanja is a retail point-of-sale surface for Indonesian UMKM shops. The interface should stay simple, dense, quiet, and fast for repeated cashier work: white surfaces, soft borders, compact controls, product-image cards, clear stock signals, and near-black primary checkout actions.

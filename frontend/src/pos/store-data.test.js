@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { applyCheckoutResult, loadProducts, loadSettings, loadStockMovementPage, loadStockMovements, loadTransactionPage, loadTransactions, searchProducts, toProductPayload } from "./store-data.js";
+import { applyCheckoutResult, loadProducts, loadSettings, loadStockMovementPage, loadStockMovements, loadTransactionPage, loadTransactions, searchProducts, toProductFormData, toProductPayload } from "./store-data.js";
 
 test("catalog page loading does not replace the shared POS products", async () => {
   const source = await readFile(new URL("../pages/ProductsPage.jsx", import.meta.url), "utf8");
@@ -176,4 +176,27 @@ test("product payload converts thousand-separated inputs to numbers", () => {
   const payload = toProductPayload({ name: "Tea", barcode: "1", category: "Drink", price: "72.000", stock: "1.250", unit: "pcs", image: "" }, true);
   assert.equal(payload.price, 72000);
   assert.equal(payload.stock, 1250);
+});
+
+test("product form data carries one photo and create-only stock", () => {
+  const file = new File(["png"], "rice.png", { type: "image/png" });
+  const form = toProductFormData({ name: "Rice", barcode: "1", category: "Sembako", price: 10, stock: 2, unit: "pcs", imageFile: file }, true);
+  assert.equal(form.get("name"), "Rice");
+  assert.equal(form.get("stock"), "2");
+  assert.equal(form.get("image_file").name, "rice.png");
+  assert.equal(form.get("image_file").type, "image/png");
+  assert.equal(form.has("image"), false);
+});
+
+test("product form data sends removal intent without a file", () => {
+  const form = toProductFormData({ name: "Rice", barcode: "1", category: "Sembako", price: 10, unit: "pcs", active: true, removeImage: true }, false);
+  assert.equal(form.get("remove_image"), "true");
+  assert.equal(form.has("image_file"), false);
+  assert.equal(form.has("stock"), false);
+});
+
+test("product saves can rethrow API errors for field-level feedback", async () => {
+  const source = await readFile(new URL("./store.jsx", import.meta.url), "utf8");
+  assert.match(source, /throwOnError/);
+  assert.match(source, /if \(throwOnError\) throw error/);
 });

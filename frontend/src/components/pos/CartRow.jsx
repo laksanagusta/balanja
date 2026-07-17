@@ -1,39 +1,12 @@
 import React from "react";
 import { Icon } from "../primitives.jsx";
-
-const cartFallbackImages = {
-  Sembako: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80",
-  Minuman: "https://images.unsplash.com/photo-1616118132534-381148898bb4?auto=format&fit=crop&w=600&q=80",
-  Snack: "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=600&q=80",
-  Perawatan: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=600&q=80",
-  "Rumah Tangga": "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=600&q=80",
-};
+import { ProductImage } from "../product/ProductImage.jsx";
 
 function CartImage({ item }) {
-  const fallback = cartFallbackImages[item.category] || cartFallbackImages.Sembako;
-  const [src, setSrc] = React.useState(item.image || fallback);
-
-  React.useEffect(() => {
-    setSrc(item.image || fallback);
-  }, [item.image, fallback]);
-
-  if (!src) {
-    return (
-      <span className="mt-0.5 grid size-14 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-text-muted">
-        <Icon name="barcode" className="size-6" />
-      </span>
-    );
-  }
-
   return (
-    <img
-      src={src}
-      alt=""
-      className="mt-0.5 size-14 shrink-0 rounded-lg object-cover"
-      loading="lazy"
-      decoding="async"
-      onError={() => setSrc(src === fallback ? "" : fallback)}
-    />
+    <span className="mt-0.5 block size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted">
+      <ProductImage product={item} />
+    </span>
   );
 }
 

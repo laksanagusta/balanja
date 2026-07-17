@@ -15,6 +15,7 @@ type Product struct {
 	Stock     int       `json:"stock"`
 	Unit      string    `json:"unit"`
 	Image     string    `json:"image"`
+	ImageKey  string    `json:"-"`
 	Active    bool      `json:"active"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -46,13 +47,21 @@ type CreateInput struct {
 	Stock    int    `json:"stock"`
 	Unit     string `json:"unit"`
 	Image    string `json:"image"`
+	ImageKey string `json:"-"`
 }
 type UpdateInput struct {
-	Name     string `json:"name"`
-	Barcode  string `json:"barcode"`
-	Category string `json:"category"`
-	Price    int    `json:"price"`
-	Unit     string `json:"unit"`
-	Image    string `json:"image"`
-	Active   bool   `json:"active"`
+	Name          string `json:"name"`
+	Barcode       string `json:"barcode"`
+	Category      string `json:"category"`
+	Price         int    `json:"price"`
+	Unit          string `json:"unit"`
+	Image         string `json:"image"`
+	ImageKey      string `json:"-"`
+	PreserveImage bool   `json:"-"`
+	Active        bool   `json:"active"`
+}
+
+type UpdateResult struct {
+	Product          Product
+	PreviousImageKey string
 }
