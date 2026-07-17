@@ -81,6 +81,12 @@ Sales reports use inclusive local calendar dates in WIB and compare every select
 
 Sales-report trend charts use clean lines without persistent point markers. Hover highlights and tooltips remain available for inspecting individual values.
 
+The visible report and every export or transaction handoff share the same last-successful filter snapshot. Draft filters are announced and ambiguous actions remain unavailable until the report resolves successfully.
+
+Report presets use neutral segmented selection with 44px compact-screen targets. Background updates retain full data contrast. The previous-period trend is dashed consistently, and tooltips use Indonesian labels, dates, and Rupiah values.
+
+Void reporting is composed explicitly beside breakdown panels; report components do not use boolean display modes.
+
 The report workspace retains settled content during refetch, softens only the affected report panels, and announces `Memperbarui` through a polite status region. Initial loading mirrors the final layout with six metric blocks, a separate void block, a wide trend, and three breakdown panels. Mobile layouts stack controls, metrics, charts, and tables without hiding information.
 
 The six primary metrics are Penjualan bersih, Pajak, Total diterima, Transaksi selesai, Item terjual, and Rata-rata transaksi. Each includes an equal-period comparison; a zero prior value reads `Tidak ada data pembanding`. Voided transactions are always separate and never contribute to completed-sale metrics.

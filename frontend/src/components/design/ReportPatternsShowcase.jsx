@@ -1,7 +1,7 @@
 import React from "react";
 import ReportMetricCard from "../reports/ReportMetricCard.jsx";
 import SalesTrendPanel from "../reports/SalesTrendPanel.jsx";
-import ReportBreakdownPanels from "../reports/ReportBreakdownPanels.jsx";
+import ReportBreakdownPanels, { VoidReportPanel } from "../reports/ReportBreakdownPanels.jsx";
 
 const money = (value) => `Rp${new Intl.NumberFormat("id-ID").format(value)}`;
 const count = (value) => new Intl.NumberFormat("id-ID").format(value);
@@ -21,11 +21,11 @@ export default function ReportPatternsShowcase() {
           <ReportMetricCard label="Total diterima" value={money(1205460)} comparison={comparison} formatAbsolute={money} />
         </div>
         <SalesTrendPanel current={current} previous={previous} />
+        <VoidReportPanel voids={{ count: 1, originalValue: 18000 }} formatMoney={money} formatCount={count} />
         <ReportBreakdownPanels
           products={[{ productId: "p1", label: "Mie Instan", quantity: 42, netSales: 147000 }]}
           payments={[{ paymentMethod: "cash", transactionCount: 18, totalReceived: 786000 }, { paymentMethod: "qris", transactionCount: 9, totalReceived: 419460 }]}
           cashiers={[{ cashierUserId: "user-ayu", cashierName: "Ayu", completedTransactions: 16, itemsSold: 38, netSales: 640000, tax: 70400, totalReceived: 710400 }]}
-          voids={{ count: 1, originalValue: 18000 }}
           formatMoney={money}
           formatCount={count}
         />

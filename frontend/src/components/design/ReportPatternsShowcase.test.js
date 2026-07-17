@@ -10,7 +10,11 @@ test("design system documents production sales report patterns", async () => {
   ]);
   assert.match(page, /ReportPatternsShowcase/);
   assert.match(showcase, /ReportMetricCard/);
+  assert.match(showcase, /VoidReportPanel/);
+  assert.match(showcase, /<VoidReportPanel[\s\S]*<ReportBreakdownPanels/);
   assert.match(design, /Sales reports/);
+  assert.match(design, /last-successful filter snapshot/);
+  assert.match(design, /neutral segmented selection/);
   assert.match(design, /harga snapshot × kuantitas/);
   assert.match(design, /pajak.*transaksi/i);
 });
