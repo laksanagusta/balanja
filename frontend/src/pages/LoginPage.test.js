@@ -8,7 +8,8 @@ test("login page uses Clerk and links back to the public landing page", async ()
   assert.match(source, /<SignIn/);
   assert.match(source, /routing="hash"/);
   assert.match(source, /afterSignInUrl=\{routes\.dashboard\}/);
-  assert.match(source, /onNavigate\(routes\.landing\)/);
+  assert.doesNotMatch(source, /routes\.landing/);
+  assert.doesNotMatch(source, /<header/);
   assert.doesNotMatch(source, /Staff PIN/);
   assert.doesNotMatch(source, /BALANJA-01/);
 });
