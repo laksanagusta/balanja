@@ -1,48 +1,49 @@
-# Settings Tab Direction-Aware Transition Design
+# Settings Active-Pill Transition Design
 
 ## Goal
 
-Add a smooth, restrained directional transition when moving between the Settings tabs without delaying navigation, changing data behavior, or weakening accessibility.
+Add a smooth transition to the active selection pill in Settings navigation. The interaction must match the measured sliding category pill used on the Kasir page. Settings content itself must not slide or fade.
 
-## Motion Vocabulary
+## Reference Pattern
 
-The effect is a **direction-aware transition**: content slides one way going forward and the opposite way going back, so navigation has a sense of direction.
+Reuse the Kasir category-tab interaction model:
 
-The Settings order is `profile → categories → units`. Moving to a later tab enters from the inline-end side; moving to an earlier tab enters from the inline-start side.
+- Render one decorative indicator behind the tab labels.
+- Measure the active button's inline position and width.
+- Move and resize the indicator with CSS custom properties.
+- Keep every tab label stationary above the indicator.
+
+This naturally communicates direction because the pill travels from its previous position to the newly selected tab. No separate tab-order or content-direction state is needed.
 
 ## Interaction Contract
 
-- Animate only the active content surface, not the page header or Settings navigation.
-- The first settled render appears without a slide.
-- Each later tab change gives the entering content a small 20px horizontal offset based on direction and raises opacity from 0.7 to 1.
-- Use a critically damped Motion spring with no bounce and a perceptual response around 240–300ms.
-- Do not add an exit delay. The prior content leaves immediately so rapid tab changes remain responsive and never lock navigation.
-- A newly selected tab interrupts and replaces any in-progress entrance rather than waiting for it to finish.
-- Keep the content wrapper shrink-safe and clip only transient horizontal motion so the animation cannot create page-level overflow.
+- The active pill moves between `Profil toko`, `Kategori`, and `Satuan` with the shared design-system `duration-base` and `ease-standard` timing.
+- The pill adapts to both Settings layouts: horizontal overflow-safe tabs at compact widths and the 14rem vertical rail at 760px and above.
+- In the vertical rail, the same indicator also measures and animates the active button's block position and height.
+- The active button keeps `aria-current="page"`; the indicator is decorative and uses `aria-hidden="true"`.
+- Labels remain stationary, readable, and above the indicator throughout the transition.
+- Existing focus, hover, click, query-parameter, scroll-into-view, loading, and data behavior stays unchanged.
+- Remove the previously implemented Motion wrapper from Settings content. Content switches immediately without a slide or crossfade.
 
 ## Reduced Motion
 
-When `prefers-reduced-motion` is active, remove horizontal translation and use a short opacity crossfade. Navigation, focus order, and content rendering remain identical.
-
-## Loading and Data
-
-Do not change existing Settings loading, refetch, mutation, or query-parameter behavior. The transition applies whenever the active settled tab content is rendered. Existing full-page initial skeleton behavior remains unchanged.
+Under `prefers-reduced-motion: reduce`, disable the indicator transition. The pill updates to the selected tab immediately while preserving the same selected-state appearance and semantics.
 
 ## Implementation Shape
 
-- Derive tab direction from stable tab indices and the previously rendered tab.
-- Isolate direction calculation in a small exported helper so it can be tested without rendering React.
-- Wrap the active Settings content branches in one keyed Motion surface.
-- Read reduced-motion preference through Motion's React API.
-- Keep transform and opacity as the only animated properties.
+- Extend `SettingsNavigation` with measured indicator state and one decorative indicator element.
+- Reuse the existing navigation and item refs; measure the active item relative to the navigation container.
+- Recalculate on active-tab changes and container or active-item resize through `ResizeObserver`, with a safe fallback when the API is unavailable.
+- Expose inline and block offsets plus indicator width and height through Settings-specific CSS custom properties.
+- Keep the implementation local to Settings navigation; do not couple it to Settings content or duplicate the Kasir component.
 
 ## Design-System Synchronization
 
-Update the production-backed Settings showcase copy to name the direction-aware transition and its reduced-motion fallback. Add the same contract to `frontend/DESIGN.md`; do not duplicate the production animation implementation inside the showcase.
+Update the production-backed Settings showcase copy and `frontend/DESIGN.md` to describe the measured sliding active pill and its reduced-motion fallback. Remove all claims that Settings content uses a direction-aware slide transition.
 
 ## Verification
 
-- Unit-test forward, backward, and unchanged direction calculation.
-- Add a source contract for the keyed Motion surface, 20px directional offset, no-bounce spring, and reduced-motion crossfade.
-- Run focused Settings and design-system tests.
-- Run the complete frontend test suite and production build.
+- Add source contracts for the decorative indicator, active-item measurement, resize observation, and CSS transition.
+- Assert that Settings content no longer imports or renders Motion animation.
+- Verify the reduced-motion stylesheet disables the pill transition.
+- Run focused Settings and design-system tests, the complete frontend test suite, and the production build.
