@@ -25,7 +25,7 @@ release_env="$app_dir/.release.env"
 docker_bin="${DOCKER_BIN:-docker}"
 flock_bin="${FLOCK_BIN:-flock}"
 smoke_script="${SMOKE_SCRIPT:-$app_dir/smoke.sh}"
-public_url="${PUBLIC_URL:-https://pos.marvcore.com}"
+public_url="${PUBLIC_URL:-https://balanja.marvcore.com}"
 
 for required_file in "$compose_file" "$runtime_env" "$smoke_script"; do
   if [[ ! -r "$required_file" ]]; then
