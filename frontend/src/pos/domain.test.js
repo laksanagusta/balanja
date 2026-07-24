@@ -43,10 +43,10 @@ test("validateProduct blocks duplicate active barcodes", () => {
       id: "new-product",
       name: "Beras Baru",
       barcode: "8991001000011",
-      category: "Sembako",
+      categoryId: "cat-1",
       price: 70000,
       stock: 4,
-      unit: "pack",
+      unitId: "unit-1",
       active: true,
     },
     products,
@@ -62,10 +62,10 @@ test("validateProduct blocks a zero price", () => {
       id: "new-product",
       name: "Beras Baru",
       barcode: "8991001000999",
-      category: "Sembako",
+      categoryId: "cat-1",
       price: 0,
       stock: 4,
-      unit: "",
+      unitId: "",
       active: true,
     },
     products,
@@ -73,7 +73,7 @@ test("validateProduct blocks a zero price", () => {
 
   assert.equal(result.ok, false);
   assert.equal(result.errors.price, "Price must be at least 1");
-  assert.equal(result.errors.unit, "Unit is required");
+  assert.equal(result.errors.unitId, "Unit is required");
 });
 
 test("validateProduct accepts thousand-separated numeric fields", () => {
@@ -82,10 +82,10 @@ test("validateProduct accepts thousand-separated numeric fields", () => {
       id: "new-product",
       name: "Beras Baru",
       barcode: "8991001000999",
-      category: "Sembako",
+      categoryId: "cat-1",
       price: "72.000",
       stock: "1.250",
-      unit: "pack",
+      unitId: "unit-1",
       active: true,
     },
     products,
@@ -102,10 +102,10 @@ test("validateScannedProduct requires a sellable stock quantity and unit", () =>
       id: "",
       name: "Produk Baru",
       barcode: "8991001000999",
-      category: "Sembako",
+      categoryId: "cat-1",
       price: 0,
       stock: 0,
-      unit: "",
+      unitId: "",
       active: true,
     },
     products,
@@ -114,7 +114,7 @@ test("validateScannedProduct requires a sellable stock quantity and unit", () =>
   assert.equal(result.ok, false);
   assert.equal(result.errors.price, "Price must be at least 1");
   assert.equal(result.errors.stock, "Stock must be at least 1 to add this product to cart");
-  assert.equal(result.errors.unit, "Unit is required");
+  assert.equal(result.errors.unitId, "Unit is required");
 });
 
 test("addProductToCart adds by barcode and respects stock", () => {

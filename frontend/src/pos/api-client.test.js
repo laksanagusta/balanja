@@ -61,9 +61,9 @@ test("listProducts preserves cursor metadata and serializes catalog filters", as
     },
   });
 
-  const page = await api.listProducts({ q: "tea", category: "Drinks", active: true, limit: 20, sort: "name", dir: "asc", cursor: "current" });
+  const page = await api.listProducts({ q: "tea", categoryId: "cat-1", active: true, limit: 20, sort: "name", dir: "asc", cursor: "current" });
 
-  assert.equal(requests[0], "/api/v1/products?q=tea&category=Drinks&active=true&limit=20&sort=name&dir=asc&cursor=current");
+  assert.equal(requests[0], "/api/v1/products?q=tea&categoryId=cat-1&active=true&limit=20&sort=name&dir=asc&cursor=current");
   assert.deepEqual(page, { items: [{ id: "p1" }], nextCursor: "next", hasNextPage: true });
 });
 
@@ -110,6 +110,20 @@ test("throws a stable APIError from an error envelope", async () => {
     assert.equal(error.code, "INSUFFICIENT_STOCK");
     assert.equal(error.status, 409);
     assert.equal(error.requestId, "req-1");
+    return true;
+  });
+});
+
+test("master data API preserves archived conflict details", async () => {
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async () => new Response(JSON.stringify({
+      error: { code: "CATEGORY_ARCHIVED_NAME_CONFLICT", message: "Archived", details: { id: "cat-1" } },
+    }), { status: 409, headers: { "Content-Type": "application/json" } }),
+  });
+
+  await assert.rejects(() => api.createCategory({ name: "Minuman" }), (error) => {
+    assert.equal(error.details.id, "cat-1");
     return true;
   });
 });

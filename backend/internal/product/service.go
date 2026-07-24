@@ -17,10 +17,11 @@ import (
 )
 
 var (
-	ErrInvalidProduct  = errors.New("invalid product")
-	ErrInvalidCursor   = errors.New("invalid product cursor")
-	ErrBarcodeConflict = errors.New("barcode conflict")
-	ErrNotFound        = errors.New("product not found")
+	ErrInvalidProduct   = errors.New("invalid product")
+	ErrInvalidCursor    = errors.New("invalid product cursor")
+	ErrBarcodeConflict  = errors.New("barcode conflict")
+	ErrInvalidReference = errors.New("invalid product reference")
+	ErrNotFound         = errors.New("product not found")
 )
 
 var productSorts = map[string]struct{}{
@@ -37,6 +38,9 @@ type TenantRunner interface {
 type Repository interface {
 	List(context.Context, database.Tx, string, ListFilter) ([]Product, error)
 	Create(context.Context, database.Tx, string, CreateInput) (Product, error)
+	Get(context.Context, database.Tx, string, uuid.UUID) (Product, error)
+	CategoryIsActive(context.Context, database.Tx, string, uuid.UUID) (bool, error)
+	UnitIsActive(context.Context, database.Tx, string, uuid.UUID) (bool, error)
 	Update(context.Context, database.Tx, string, uuid.UUID, UpdateInput) (UpdateResult, error)
 	Deactivate(context.Context, database.Tx, string, uuid.UUID) (Product, error)
 }
@@ -71,7 +75,6 @@ func NewService(runner TenantRunner, repository Repository, options ...ServiceOp
 
 func normalizeListFilter(filter ListFilter) (ListFilter, error) {
 	filter.Query = strings.TrimSpace(filter.Query)
-	filter.Category = strings.TrimSpace(filter.Category)
 	if filter.Limit == 0 {
 		filter.Limit = 20
 	}
@@ -98,7 +101,7 @@ func productFingerprint(filter ListFilter) string {
 	return listcursor.Fingerprint(
 		"products",
 		"q="+filter.Query,
-		"category="+filter.Category,
+		"categoryId="+filter.CategoryID.String(),
 		"active="+active,
 		fmt.Sprintf("limit=%d", filter.Limit),
 		"sort="+filter.Sort,
@@ -198,8 +201,8 @@ func (s *Service) List(ctx context.Context, identity database.Identity, filter L
 	return page, err
 }
 func (s *Service) Create(ctx context.Context, identity database.Identity, input CreateInput, uploads ...*ImageUpload) (created Product, err error) {
-	input.Name, input.Barcode, input.Category, input.Unit, input.Image = strings.TrimSpace(input.Name), strings.TrimSpace(input.Barcode), strings.TrimSpace(input.Category), strings.TrimSpace(input.Unit), strings.TrimSpace(input.Image)
-	if input.Name == "" || input.Barcode == "" || input.Category == "" || input.Unit == "" || input.Price < 1 || input.Stock < 0 {
+	input.Name, input.Barcode, input.Image = strings.TrimSpace(input.Name), strings.TrimSpace(input.Barcode), strings.TrimSpace(input.Image)
+	if input.Name == "" || input.Barcode == "" || input.CategoryID == uuid.Nil || input.UnitID == uuid.Nil || input.Price < 1 || input.Stock < 0 {
 		return Product{}, ErrInvalidProduct
 	}
 	var newImageKey string
@@ -218,6 +221,17 @@ func (s *Service) Create(ctx context.Context, identity database.Identity, input 
 		input.Image, input.ImageKey, newImageKey = stored.URL, stored.Key, stored.Key
 	}
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
+		activeCategory, refErr := s.repository.CategoryIsActive(ctx, tx, identity.OrgID, input.CategoryID)
+		if refErr != nil {
+			return refErr
+		}
+		activeUnit, refErr := s.repository.UnitIsActive(ctx, tx, identity.OrgID, input.UnitID)
+		if refErr != nil {
+			return refErr
+		}
+		if !activeCategory || !activeUnit {
+			return ErrInvalidReference
+		}
 		var createErr error
 		created, createErr = s.repository.Create(ctx, tx, identity.OrgID, input)
 		return createErr
@@ -228,8 +242,8 @@ func (s *Service) Create(ctx context.Context, identity database.Identity, input 
 	return
 }
 func (s *Service) Update(ctx context.Context, identity database.Identity, id uuid.UUID, input UpdateInput, mutations ...ImageMutation) (updated Product, err error) {
-	input.Name, input.Barcode, input.Category, input.Unit, input.Image = strings.TrimSpace(input.Name), strings.TrimSpace(input.Barcode), strings.TrimSpace(input.Category), strings.TrimSpace(input.Unit), strings.TrimSpace(input.Image)
-	if input.Name == "" || input.Barcode == "" || input.Category == "" || input.Unit == "" || input.Price < 1 {
+	input.Name, input.Barcode, input.Image = strings.TrimSpace(input.Name), strings.TrimSpace(input.Barcode), strings.TrimSpace(input.Image)
+	if input.Name == "" || input.Barcode == "" || input.CategoryID == uuid.Nil || input.UnitID == uuid.Nil || input.Price < 1 {
 		return Product{}, ErrInvalidProduct
 	}
 	mutation := ImageMutation{Mode: ImageReference}
@@ -267,6 +281,24 @@ func (s *Service) Update(ctx context.Context, identity database.Identity, id uui
 	}
 	var result UpdateResult
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
+		current, getErr := s.repository.Get(ctx, tx, identity.OrgID, id)
+		if getErr != nil {
+			return getErr
+		}
+		activeCategory, refErr := s.repository.CategoryIsActive(ctx, tx, identity.OrgID, input.CategoryID)
+		if refErr != nil {
+			return refErr
+		}
+		if !activeCategory && input.CategoryID != current.CategoryID {
+			return ErrInvalidReference
+		}
+		activeUnit, refErr := s.repository.UnitIsActive(ctx, tx, identity.OrgID, input.UnitID)
+		if refErr != nil {
+			return refErr
+		}
+		if !activeUnit && input.UnitID != current.UnitID {
+			return ErrInvalidReference
+		}
 		var updateErr error
 		result, updateErr = s.repository.Update(ctx, tx, identity.OrgID, id, input)
 		updated = result.Product

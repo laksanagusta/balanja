@@ -6,6 +6,7 @@ type Error struct {
 	Code    string
 	Message string
 	Status  int
+	Details map[string]any
 	Cause   error
 }
 
@@ -20,4 +21,9 @@ func (e *Error) Unwrap() error { return e.Cause }
 
 func New(status int, code, message string) *Error {
 	return &Error{Status: status, Code: code, Message: message}
+}
+
+func WithDetails(err *Error, details map[string]any) *Error {
+	err.Details = details
+	return err
 }

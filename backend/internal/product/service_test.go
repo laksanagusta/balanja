@@ -23,12 +23,12 @@ func TestServiceListNormalizesProductQuery(t *testing.T) {
 	active := true
 	repository := &fakeRepository{}
 	page, err := NewService(fakeRunner{}, repository).List(context.Background(), database.Identity{OrgID: "org-1"}, ListFilter{
-		Query: " tea ", Category: " Drinks ", Active: &active, Limit: 20, Sort: "name", Direction: "asc",
+		Query: " tea ", Active: &active, Limit: 20, Sort: "name", Direction: "asc",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if repository.listFilter.Query != "tea" || repository.listFilter.Category != "Drinks" {
+	if repository.listFilter.Query != "tea" {
 		t.Fatalf("filter = %#v", repository.listFilter)
 	}
 	if page.Items == nil || page.HasNextPage {
@@ -84,7 +84,7 @@ func TestServiceCreateValidatesAndNormalizes(t *testing.T) {
 	repository := &fakeRepository{}
 	service := NewService(fakeRunner{}, repository)
 	created, err := service.Create(context.Background(), database.Identity{OrgID: "org_1", UserID: "user_1"}, CreateInput{
-		Name: " Teh Botol ", Barcode: " 8991 ", Category: " Minuman ", Price: 5000, Stock: 3, Unit: " botol ",
+		Name: " Teh Botol ", Barcode: " 8991 ", CategoryID: uuid.MustParse("11111111-1111-1111-1111-111111111111"), Price: 5000, Stock: 3, UnitID: uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 	})
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
@@ -101,9 +101,11 @@ func TestServiceCreateRejectsInvalidProduct(t *testing.T) {
 		name  string
 		input CreateInput
 	}{
-		{name: "empty name", input: CreateInput{Barcode: "1", Category: "x", Price: 1, Unit: "pcs"}},
-		{name: "zero price", input: CreateInput{Name: "x", Barcode: "1", Category: "x", Unit: "pcs"}},
-		{name: "negative stock", input: CreateInput{Name: "x", Barcode: "1", Category: "x", Price: 1, Stock: -1, Unit: "pcs"}},
+		{name: "empty name", input: CreateInput{Barcode: "1", CategoryID: uuid.New(), Price: 1, UnitID: uuid.New()}},
+		{name: "zero price", input: CreateInput{Name: "x", Barcode: "1", CategoryID: uuid.New(), UnitID: uuid.New()}},
+		{name: "negative stock", input: CreateInput{Name: "x", Barcode: "1", CategoryID: uuid.New(), Price: 1, Stock: -1, UnitID: uuid.New()}},
+		{name: "missing category", input: CreateInput{Name: "x", Barcode: "1", Price: 1, UnitID: uuid.New()}},
+		{name: "missing unit", input: CreateInput{Name: "x", Barcode: "1", CategoryID: uuid.New(), Price: 1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -120,9 +122,35 @@ func TestServiceCreatePreservesBarcodeConflict(t *testing.T) {
 	t.Parallel()
 
 	repository := &fakeRepository{err: ErrBarcodeConflict}
-	_, err := NewService(fakeRunner{}, repository).Create(context.Background(), database.Identity{OrgID: "org", UserID: "user"}, CreateInput{Name: "x", Barcode: "1", Category: "x", Price: 1, Unit: "pcs"})
+	_, err := NewService(fakeRunner{}, repository).Create(context.Background(), database.Identity{OrgID: "org", UserID: "user"}, CreateInput{Name: "x", Barcode: "1", CategoryID: uuid.New(), Price: 1, UnitID: uuid.New()})
 	if !errors.Is(err, ErrBarcodeConflict) {
 		t.Fatalf("Create() error = %v, want ErrBarcodeConflict", err)
+	}
+}
+
+func TestUpdateAllowsCurrentArchivedReferencesButRejectsNewOnes(t *testing.T) {
+	t.Parallel()
+
+	currentCategory := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	currentUnit := uuid.MustParse("22222222-2222-2222-2222-222222222222")
+	repository := &fakeRepository{
+		current:                  Product{CategoryID: currentCategory, UnitID: currentUnit},
+		activeCategory:           false,
+		activeUnit:               false,
+		categoryActiveConfigured: true,
+		unitActiveConfigured:     true,
+		updateResult: UpdateResult{
+			Product: Product{ID: uuid.New(), CategoryID: currentCategory, UnitID: currentUnit},
+		},
+	}
+	service := NewService(fakeRunner{}, repository)
+	input := UpdateInput{Name: "Tea", Barcode: "1", CategoryID: currentCategory, UnitID: currentUnit, Price: 100, Active: true}
+	if _, err := service.Update(context.Background(), database.Identity{OrgID: "org", UserID: "user"}, uuid.New(), input); err != nil {
+		t.Fatalf("preserving archived references: %v", err)
+	}
+	input.CategoryID = uuid.New()
+	if _, err := service.Update(context.Background(), database.Identity{OrgID: "org", UserID: "user"}, uuid.New(), input); !errors.Is(err, ErrInvalidReference) {
+		t.Fatalf("new archived reference error = %v", err)
 	}
 }
 
@@ -197,7 +225,7 @@ func TestServiceCreateImageCompensatesDatabaseFailure(t *testing.T) {
 
 	images := &fakeImageStore{put: objectstore.StoredObject{Key: "products/org/new.png", URL: "https://img.example/new.png"}}
 	service := NewService(fakeRunner{err: errors.New("database down")}, &fakeRepository{}, WithImageStore(images))
-	_, err := service.Create(context.Background(), database.Identity{OrgID: "org"}, CreateInput{Name: "Tea", Barcode: "1", Category: "Drink", Price: 10, Stock: 1, Unit: "pcs"}, &ImageUpload{Filename: "photo.png", Data: validPNG(t)})
+	_, err := service.Create(context.Background(), database.Identity{OrgID: "org", UserID: "user"}, CreateInput{Name: "Tea", Barcode: "1", CategoryID: uuid.New(), Price: 10, Stock: 1, UnitID: uuid.New()}, &ImageUpload{Filename: "photo.png", Data: validPNG(t)})
 	if err == nil || !slices.Equal(images.deleted, []string{"products/org/new.png"}) {
 		t.Fatalf("err=%v deleted=%v", err, images.deleted)
 	}
@@ -227,7 +255,7 @@ func validPNG(t *testing.T) []byte {
 }
 
 func validUpdateInput() UpdateInput {
-	return UpdateInput{Name: "Tea", Barcode: "1", Category: "Drink", Price: 10, Unit: "pcs", Active: true}
+	return UpdateInput{Name: "Tea", Barcode: "1", CategoryID: uuid.MustParse("11111111-1111-1111-1111-111111111111"), Price: 10, UnitID: uuid.MustParse("22222222-2222-2222-2222-222222222222"), Active: true}
 }
 
 type fakeRunner struct{ err error }
@@ -240,12 +268,17 @@ func (f fakeRunner) Run(_ context.Context, _ database.Identity, fn func(database
 }
 
 type fakeRepository struct {
-	create       CreateInput
-	err          error
-	listRows     []Product
-	listFilter   ListFilter
-	update       UpdateInput
-	updateResult UpdateResult
+	create                   CreateInput
+	err                      error
+	listRows                 []Product
+	listFilter               ListFilter
+	update                   UpdateInput
+	updateResult             UpdateResult
+	current                  Product
+	activeCategory           bool
+	activeUnit               bool
+	categoryActiveConfigured bool
+	unitActiveConfigured     bool
 }
 
 func (f *fakeRepository) List(_ context.Context, _ database.Tx, _ string, filter ListFilter) ([]Product, error) {
@@ -257,14 +290,32 @@ func (f *fakeRepository) Create(_ context.Context, _ database.Tx, _ string, inpu
 		return Product{}, f.err
 	}
 	f.create = input
-	return Product{ID: uuid.New(), Name: input.Name, Barcode: input.Barcode, Category: input.Category, Price: input.Price, Stock: input.Stock, Unit: input.Unit, Active: true}, nil
+	return Product{ID: uuid.New(), Name: input.Name, Barcode: input.Barcode, CategoryID: input.CategoryID, Category: "Minuman", Price: input.Price, Stock: input.Stock, UnitID: input.UnitID, Unit: "botol", Active: true}, nil
 }
 func (f *fakeRepository) Update(_ context.Context, _ database.Tx, _ string, _ uuid.UUID, input UpdateInput) (UpdateResult, error) {
 	f.update = input
 	if f.err != nil {
 		return UpdateResult{}, f.err
 	}
+	if f.updateResult.Product.ID == uuid.Nil {
+		f.updateResult.Product = Product{ID: uuid.New(), Name: input.Name, Barcode: input.Barcode, CategoryID: input.CategoryID, Category: "Minuman", Price: input.Price, UnitID: input.UnitID, Unit: "botol", Active: input.Active}
+	}
 	return f.updateResult, nil
+}
+func (f *fakeRepository) Get(_ context.Context, _ database.Tx, _ string, _ uuid.UUID) (Product, error) {
+	return f.current, nil
+}
+func (f *fakeRepository) CategoryIsActive(_ context.Context, _ database.Tx, _ string, _ uuid.UUID) (bool, error) {
+	if !f.categoryActiveConfigured {
+		return true, nil
+	}
+	return f.activeCategory, nil
+}
+func (f *fakeRepository) UnitIsActive(_ context.Context, _ database.Tx, _ string, _ uuid.UUID) (bool, error) {
+	if !f.unitActiveConfigured {
+		return true, nil
+	}
+	return f.activeUnit, nil
 }
 
 type fakeImageStore struct {

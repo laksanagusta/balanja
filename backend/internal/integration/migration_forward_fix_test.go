@@ -163,3 +163,35 @@ func TestForwardFixMigrationAddsStockMovements(t *testing.T) {
 		}
 	}
 }
+
+func TestForwardFixMigrationAddsCategoryUnitMasterData(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join("..", "..", "migrations", "000010_category_unit_master_data.up.sql")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile(%q) error = %v", path, err)
+	}
+	sql := strings.ToLower(string(content))
+
+	required := []string{
+		"create table categories",
+		"create table units",
+		"create unique index categories_org_name_ci_key",
+		"create unique index units_org_name_ci_key",
+		"alter table products add column category_id uuid",
+		"alter table products add column unit_id uuid",
+		"alter table products add constraint products_category_tenant_fk",
+		"alter table products add constraint products_unit_tenant_fk",
+		"alter table categories enable row level security",
+		"alter table units enable row level security",
+		"create policy categories_tenant on categories to balanja_api",
+		"create policy units_tenant on units to balanja_api",
+		"grant select, insert, update on categories, units to balanja_api",
+	}
+	for _, fragment := range required {
+		if !strings.Contains(sql, fragment) {
+			t.Errorf("forward fix migration missing %q", fragment)
+		}
+	}
+}

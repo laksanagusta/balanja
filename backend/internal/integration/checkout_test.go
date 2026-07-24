@@ -36,6 +36,9 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 		"000005_transactions_cashier_name_nullable.up.sql",
 		"000006_remove_obsolete_checkout_rpc.up.sql",
 		"000007_stock_movements.up.sql",
+		"000008_server_list_indexes.up.sql",
+		"000009_product_image_key.up.sql",
+		"000010_category_unit_master_data.up.sql",
 	} {
 		if _, err := admin.Exec(ctx, readMigration(t, migration)); err != nil {
 			t.Fatalf("apply migration %s: %v", migration, err)
@@ -43,10 +46,18 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 	}
 
 	productID := uuid.New()
+	categoryID := uuid.New()
+	unitID := uuid.New()
 	if _, err := admin.Exec(ctx, `insert into store_settings (org_id) values ('org_checkout')`); err != nil {
 		t.Fatalf("seed settings: %v", err)
 	}
-	if _, err := admin.Exec(ctx, `insert into products (id,org_id,name,barcode,category,price,stock,unit) values ($1,'org_checkout','Last item','last','test',100,1,'pcs')`, productID); err != nil {
+	if _, err := admin.Exec(ctx, `insert into categories (id,org_id,name) values ($1,'org_checkout','test')`, categoryID); err != nil {
+		t.Fatalf("seed category: %v", err)
+	}
+	if _, err := admin.Exec(ctx, `insert into units (id,org_id,name) values ($1,'org_checkout','pcs')`, unitID); err != nil {
+		t.Fatalf("seed unit: %v", err)
+	}
+	if _, err := admin.Exec(ctx, `insert into products (id,org_id,name,barcode,category_id,price,stock,unit_id) values ($1,'org_checkout','Last item','last',$2,100,1,$3)`, productID, categoryID, unitID); err != nil {
 		t.Fatalf("seed product: %v", err)
 	}
 

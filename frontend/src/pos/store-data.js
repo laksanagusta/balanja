@@ -1,4 +1,5 @@
 import { parseNumberInput } from "./domain.js";
+import { sortMasterData } from "./master-data.js";
 
 export async function loadProducts(api, options = {}) {
   const products = [];
@@ -26,6 +27,14 @@ export async function loadTransactionPage(api, options = {}) {
 
 export async function loadSettings(api, options = {}) {
   return api.getSettings(options);
+}
+
+export async function loadCategories(api, options = {}) {
+  return sortMasterData(await api.listCategories(options));
+}
+
+export async function loadUnits(api, options = {}) {
+  return sortMasterData(await api.listUnits(options));
 }
 
 export async function loadStockMovements(api, { signal, ...filters } = {}) {
@@ -60,10 +69,10 @@ export function toProductPayload(product, includeStock) {
   return {
     name: String(product.name || "").trim(),
     barcode: String(product.barcode || "").trim(),
-    category: String(product.category || "").trim(),
+    categoryId: String(product.categoryId || "").trim(),
     price: parseNumberInput(product.price),
     ...(includeStock ? { stock: parseNumberInput(product.stock) } : {}),
-    unit: String(product.unit || "").trim(),
+    unitId: String(product.unitId || "").trim(),
     image: product.image || "",
     ...(!includeStock ? { active: product.active !== false } : {}),
   };

@@ -1,5 +1,6 @@
 import React from "react";
 import { Panel, Skeleton } from "../primitives.jsx";
+import { SettingsPageSkeleton } from "../page-loading.jsx";
 
 export default function SkeletonShowcase() {
   return (
@@ -76,6 +77,12 @@ export default function SkeletonShowcase() {
               <Skeleton className="h-9 rounded-card" />
               <Skeleton className="h-9 rounded-card" />
             </Panel>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Settings skeleton</p>
+          <div className="h-[30rem] overflow-hidden rounded-card border border-border">
+            <SettingsPageSkeleton />
           </div>
         </div>
         <div className="mt-4 grid gap-3">

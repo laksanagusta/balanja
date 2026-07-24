@@ -15,3 +15,10 @@ test("product page maps storage failures to inline photo feedback", async () => 
   assert.match(source, /throwOnError: true/);
   assert.match(source, /productErrors.*image/s);
 });
+
+test("product editor uses category and unit IDs with inline creation", async () => {
+  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  assert.match(source, /categoryId/);
+  assert.match(source, /unitId/);
+  assert.match(source, /MasterDataSelectField/);
+});

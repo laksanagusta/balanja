@@ -59,6 +59,9 @@ func productError(c fiber.Ctx, err error) error {
 	if errors.Is(err, ErrInvalidProduct) {
 		return respond.Error(c, apperror.New(422, "INVALID_PRODUCT", "product is invalid"))
 	}
+	if errors.Is(err, ErrInvalidReference) {
+		return respond.Error(c, apperror.New(422, "INVALID_PRODUCT_REFERENCE", "product reference is invalid"))
+	}
 	if errors.Is(err, ErrBarcodeConflict) {
 		return respond.Error(c, apperror.New(409, "BARCODE_CONFLICT", "barcode already exists"))
 	}
@@ -71,10 +74,10 @@ func productError(c fiber.Ctx, err error) error {
 type multipartProduct struct {
 	Name        string                `form:"name"`
 	Barcode     string                `form:"barcode"`
-	Category    string                `form:"category"`
+	CategoryID  string                `form:"categoryId"`
 	Price       int                   `form:"price"`
 	Stock       int                   `form:"stock"`
-	Unit        string                `form:"unit"`
+	UnitID      string                `form:"unitId"`
 	Active      bool                  `form:"active"`
 	RemoveImage bool                  `form:"remove_image"`
 	ImageFile   *multipart.FileHeader `form:"image_file"`
@@ -86,9 +89,53 @@ func isMultipartRequest(c fiber.Ctx) bool {
 }
 
 func decodeMultipartProduct(c fiber.Ctx) (multipartProduct, *ImageUpload, error) {
-	var form multipartProduct
-	if err := c.Bind().Form(&form); err != nil {
-		return form, nil, ErrInvalidProduct
+	rawForm, err := c.MultipartForm()
+	if err != nil {
+		return multipartProduct{}, nil, ErrInvalidProduct
+	}
+	fieldValue := func(key string) string {
+		values := rawForm.Value[key]
+		if len(values) == 0 {
+			return ""
+		}
+		return values[0]
+	}
+	form := multipartProduct{
+		Name:       fieldValue("name"),
+		Barcode:    fieldValue("barcode"),
+		CategoryID: fieldValue("categoryId"),
+		UnitID:     fieldValue("unitId"),
+	}
+	if rawPrice := fieldValue("price"); rawPrice != "" {
+		price, err := strconv.Atoi(rawPrice)
+		if err != nil {
+			return form, nil, ErrInvalidProduct
+		}
+		form.Price = price
+	}
+	if rawStock := fieldValue("stock"); rawStock != "" {
+		stock, err := strconv.Atoi(rawStock)
+		if err != nil {
+			return form, nil, ErrInvalidProduct
+		}
+		form.Stock = stock
+	}
+	if rawActive := fieldValue("active"); rawActive != "" {
+		active, err := strconv.ParseBool(rawActive)
+		if err != nil {
+			return form, nil, ErrInvalidProduct
+		}
+		form.Active = active
+	}
+	if rawRemove := fieldValue("remove_image"); rawRemove != "" {
+		removeImage, err := strconv.ParseBool(rawRemove)
+		if err != nil {
+			return form, nil, ErrInvalidProduct
+		}
+		form.RemoveImage = removeImage
+	}
+	if files := rawForm.File["image_file"]; len(files) > 0 {
+		form.ImageFile = files[0]
 	}
 	if form.ImageFile == nil {
 		return form, nil, nil
@@ -107,6 +154,15 @@ func decodeMultipartProduct(c fiber.Ctx) (multipartProduct, *ImageUpload, error)
 	}
 	return form, &ImageUpload{Filename: form.ImageFile.Filename, Data: data}, nil
 }
+
+func parseMultipartUUID(value string) uuid.UUID {
+	parsed, err := uuid.Parse(value)
+	if err != nil {
+		return uuid.Nil
+	}
+	return parsed
+}
+
 func (h *Handler) list(c fiber.Ctx) error {
 	id, err := identity(c)
 	if err != nil {
@@ -128,8 +184,16 @@ func (h *Handler) list(c fiber.Ctx) error {
 		}
 		active = &parsed
 	}
+	categoryID := uuid.Nil
+	if rawCategoryID := c.Query("categoryId"); rawCategoryID != "" {
+		parsed, parseErr := uuid.Parse(rawCategoryID)
+		if parseErr != nil {
+			return respond.Error(c, apperror.New(422, "INVALID_PRODUCT", "product filter is invalid"))
+		}
+		categoryID = parsed
+	}
 	page, err := h.service.List(c.Context(), id, ListFilter{
-		Query: c.Query("q"), Category: c.Query("category"), Active: active, Limit: limit,
+		Query: c.Query("q"), CategoryID: categoryID, Active: active, Limit: limit,
 		Sort: c.Query("sort"), Direction: c.Query("dir"), Cursor: c.Query("cursor"),
 	})
 	if err != nil {
@@ -155,7 +219,14 @@ func (h *Handler) create(c fiber.Ctx) error {
 		if form.RemoveImage {
 			return productError(c, ErrInvalidImage)
 		}
-		input = CreateInput{Name: form.Name, Barcode: form.Barcode, Category: form.Category, Price: form.Price, Stock: form.Stock, Unit: form.Unit}
+		input = CreateInput{
+			Name:       form.Name,
+			Barcode:    form.Barcode,
+			CategoryID: parseMultipartUUID(form.CategoryID),
+			Price:      form.Price,
+			Stock:      form.Stock,
+			UnitID:     parseMultipartUUID(form.UnitID),
+		}
 		upload = image
 	} else {
 		var decodeErr error
@@ -189,7 +260,14 @@ func (h *Handler) update(c fiber.Ctx) error {
 		if form.RemoveImage && upload != nil {
 			return productError(c, ErrInvalidImage)
 		}
-		input = UpdateInput{Name: form.Name, Barcode: form.Barcode, Category: form.Category, Price: form.Price, Unit: form.Unit, Active: form.Active}
+		input = UpdateInput{
+			Name:       form.Name,
+			Barcode:    form.Barcode,
+			CategoryID: parseMultipartUUID(form.CategoryID),
+			Price:      form.Price,
+			UnitID:     parseMultipartUUID(form.UnitID),
+			Active:     form.Active,
+		}
 		mutation = ImageMutation{Mode: ImagePreserve}
 		if form.RemoveImage {
 			mutation = ImageMutation{Mode: ImageRemove}

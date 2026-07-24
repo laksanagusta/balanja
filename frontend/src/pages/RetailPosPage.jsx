@@ -7,7 +7,8 @@ import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { ProductCatalog } from "../components/pos/ProductCatalog.jsx";
 import { Badge, Button, Dialog, Icon, Input } from "../components/primitives.jsx";
 import { RetailPosSkeleton } from "../components/page-loading.jsx";
-import { calculateCartTotals, retailCategories } from "../pos/domain.js";
+import { calculateCartTotals } from "../pos/domain.js";
+import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
 import { cashPaymentState } from "./retail-pos-utils.js";
@@ -16,7 +17,7 @@ export default function RetailPosPage() {
   const store = usePOSStore();
   const searchInputRef = React.useRef(null);
   const [query, setQuery] = React.useState("");
-  const [category, setCategory] = React.useState("Semua");
+  const [category, setCategory] = React.useState("");
   const [paymentMethod, setPaymentMethod] = React.useState("cash");
   const [cashReceived, setCashReceived] = React.useState("");
   const [clearCartOpen, setClearCartOpen] = React.useState(false);
@@ -24,7 +25,11 @@ export default function RetailPosPage() {
   const [checkoutPending, setCheckoutPending] = React.useState(false);
   const [cashError, setCashError] = React.useState("");
   const [scannerOpen, setScannerOpen] = React.useState(false);
-  const activeCategoryIndex = Math.max(0, retailCategories.indexOf(category));
+  const categoryTabs = React.useMemo(
+    () => [{ value: "", label: "Semua" }, ...activeMasterOptions(store.categories)],
+    [store.categories],
+  );
+  const activeCategoryIndex = Math.max(0, categoryTabs.findIndex((item) => item.value === category));
 
   const totals = calculateCartTotals(store.cart, store.settings);
   const cartProducts = React.useMemo(
@@ -65,7 +70,7 @@ export default function RetailPosPage() {
 
   const clearFilters = React.useCallback(() => {
     setQuery("");
-    setCategory("Semua");
+    setCategory("");
     searchInputRef.current?.focus();
   }, []);
 
@@ -100,11 +105,13 @@ export default function RetailPosPage() {
     Promise.all([
       store.loadProducts({ force: true, signal: controller.signal }),
       store.loadSettings({ force: true, signal: controller.signal }),
+      store.loadCategories({ force: true, signal: controller.signal }),
+      store.loadUnits({ force: true, signal: controller.signal }),
     ]).finally(() => {
       if (!controller.signal.aborted) setIsPageLoading(false);
     });
     return () => controller.abort();
-  }, [store.loadProducts, store.loadSettings]);
+  }, [store.loadCategories, store.loadProducts, store.loadSettings, store.loadUnits]);
 
   React.useEffect(() => {
     if (!scannerOpen) return undefined;
@@ -156,14 +163,17 @@ export default function RetailPosPage() {
               className="category-tabs relative grid h-[38px] overflow-x-auto rounded-control bg-surface-muted p-[5px]"
               aria-label="Product category"
               style={{
-                "--category-count": retailCategories.length,
+                "--category-count": categoryTabs.length,
                 "--category-index": activeCategoryIndex,
               }}
             >
               <span className="category-tabs-indicator" aria-hidden="true" />
-              {retailCategories.map((item) => (
+              {categoryTabs.map((entry) => {
+                const item = entry.value;
+                const label = entry.label;
+                return (
                 <button
-                  key={item}
+                  key={item || "all"}
                   type="button"
                   aria-pressed={category === item}
                   onClick={() => setCategory(item)}
@@ -173,9 +183,10 @@ export default function RetailPosPage() {
                       : "text-text-muted hover:text-text"
                   }`}
                 >
-                  {item}
+                  {label}
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -222,11 +233,11 @@ export default function RetailPosPage() {
                       key={item.productId}
                       item={{
                         ...item,
-                        category: product?.category || item.barcode,
+                        category: resolveMasterName(store.categories, product?.categoryId, product?.category || item.barcode),
                         image: product?.image,
                       }}
                       subtotal={formatPrice(item.price * item.qty)}
-                      unitPrice={`${formatPrice(item.price)} / ${product?.unit || item.unit || "pcs"}`}
+                      unitPrice={`${formatPrice(item.price)} / ${resolveMasterName(store.units, product?.unitId, product?.unit || item.unit || "pcs")}`}
                       maxQty={product?.stock ?? item.stockAtAdd}
                       onUpdateQty={checkoutPending ? undefined : (qty) => store.updateCartQty(item.productId, qty)}
                       onRemove={checkoutPending ? undefined : () => store.updateCartQty(item.productId, 0)}

@@ -1,27 +1,34 @@
 import React from "react";
 import { addProductToCart, addSavedProductToCart, validateProduct } from "./domain.js";
 import { loadCart, saveCart, clearCartStorage } from "./cart-storage.js";
-import { applyCheckoutResult, applyProductStock, loadProducts as fetchProducts, loadSettings as fetchSettings, searchProducts as fetchProductSearch, toProductFormData } from "./store-data.js";
+import { sortMasterData } from "./master-data.js";
+import { applyCheckoutResult, applyProductStock, loadCategories as fetchCategories, loadProducts as fetchProducts, loadSettings as fetchSettings, loadUnits as fetchUnits, searchProducts as fetchProductSearch, toProductFormData } from "./store-data.js";
 
 const POSStoreContext = React.createContext(null);
 const defaultSettings = { storeName: "Toko Balanja", storeAddress: "", taxEnabled: false, taxRate: 11, qrisLabel: "QRIS Toko Balanja" };
 
 export function POSStoreProvider({ children, api, cashierName = "" }) {
   const [products, setProducts] = React.useState([]);
+  const [categories, setCategories] = React.useState([]);
   const [settings, setSettings] = React.useState(defaultSettings);
+  const [units, setUnits] = React.useState([]);
   const [cart, setCart] = React.useState(() => loadCart());
   const [notice, setNotice] = React.useState("");
-  const [loading, setLoading] = React.useState({ products: false, settings: false });
-  const [loaded, setLoaded] = React.useState({ products: false, settings: false });
-  const lastLoadedAt = React.useRef({ products: 0, settings: 0 });
+  const [loading, setLoading] = React.useState({ products: false, settings: false, categories: false, units: false });
+  const [loaded, setLoaded] = React.useState({ products: false, settings: false, categories: false, units: false });
+  const lastLoadedAt = React.useRef({ products: 0, settings: 0, categories: 0, units: 0 });
+  const categoriesRef = React.useRef(categories);
   const productsRef = React.useRef(products);
   const settingsRef = React.useRef(settings);
+  const unitsRef = React.useRef(units);
   const loadingRef = React.useRef(loading);
   const loadedRef = React.useRef(loaded);
 
   React.useEffect(() => { saveCart(cart); }, [cart]);
+  React.useEffect(() => { categoriesRef.current = categories; }, [categories]);
   React.useEffect(() => { productsRef.current = products; }, [products]);
   React.useEffect(() => { settingsRef.current = settings; }, [settings]);
+  React.useEffect(() => { unitsRef.current = units; }, [units]);
   React.useEffect(() => { loadingRef.current = loading; }, [loading]);
   React.useEffect(() => { loadedRef.current = loaded; }, [loaded]);
 
@@ -44,6 +51,28 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     } finally {
       loadingRef.current = { ...loadingRef.current, products: false };
       setLoading((current) => ({ ...current, products: false }));
+    }
+  }, [api]);
+
+  const loadCategories = React.useCallback(async ({ includeArchived = false, force = false, signal } = {}) => {
+    if (!force && !includeArchived && (loadedRef.current.categories || loadingRef.current.categories)) return categoriesRef.current;
+    loadingRef.current = { ...loadingRef.current, categories: true };
+    setLoading((current) => ({ ...current, categories: true }));
+    try {
+      const result = await fetchCategories(api, { includeArchived, signal });
+      categoriesRef.current = result;
+      loadedRef.current = { ...loadedRef.current, categories: true };
+      setCategories(result);
+      setLoaded((current) => ({ ...current, categories: true }));
+      lastLoadedAt.current.categories = Date.now();
+      setNotice("");
+      return result;
+    } catch (error) {
+      if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load categories");
+      return null;
+    } finally {
+      loadingRef.current = { ...loadingRef.current, categories: false };
+      setLoading((current) => ({ ...current, categories: false }));
     }
   }, [api]);
 
@@ -78,11 +107,101 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     }
   }, [api]);
 
+  const loadUnits = React.useCallback(async ({ includeArchived = false, force = false, signal } = {}) => {
+    if (!force && !includeArchived && (loadedRef.current.units || loadingRef.current.units)) return unitsRef.current;
+    loadingRef.current = { ...loadingRef.current, units: true };
+    setLoading((current) => ({ ...current, units: true }));
+    try {
+      const result = await fetchUnits(api, { includeArchived, signal });
+      unitsRef.current = result;
+      loadedRef.current = { ...loadedRef.current, units: true };
+      setUnits(result);
+      setLoaded((current) => ({ ...current, units: true }));
+      lastLoadedAt.current.units = Date.now();
+      setNotice("");
+      return result;
+    } catch (error) {
+      if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load units");
+      return null;
+    } finally {
+      loadingRef.current = { ...loadingRef.current, units: false };
+      setLoading((current) => ({ ...current, units: false }));
+    }
+  }, [api]);
+
+  const mergeMasterItem = React.useCallback((setter, ref, item) => {
+    setter((current) => {
+      const next = sortMasterData(current.some((entry) => entry.id === item.id)
+        ? current.map((entry) => entry.id === item.id ? item : entry)
+        : [...current, item]);
+      ref.current = next;
+      return next;
+    });
+  }, []);
+
+  const createCategory = React.useCallback(async (input) => {
+    const saved = await api.createCategory(input);
+    mergeMasterItem(setCategories, categoriesRef, saved);
+    setNotice("");
+    return saved;
+  }, [api, mergeMasterItem]);
+
+  const renameCategory = React.useCallback(async (id, input) => {
+    const saved = await api.renameCategory(id, input);
+    mergeMasterItem(setCategories, categoriesRef, saved);
+    setNotice("");
+    return saved;
+  }, [api, mergeMasterItem]);
+
+  const archiveCategory = React.useCallback(async (id) => {
+    const saved = await api.archiveCategory(id);
+    mergeMasterItem(setCategories, categoriesRef, saved);
+    setNotice("");
+    return saved;
+  }, [api, mergeMasterItem]);
+
+  const restoreCategory = React.useCallback(async (id) => {
+    const saved = await api.restoreCategory(id);
+    mergeMasterItem(setCategories, categoriesRef, saved);
+    setNotice("");
+    return saved;
+  }, [api, mergeMasterItem]);
+
+  const createUnit = React.useCallback(async (input) => {
+    const saved = await api.createUnit(input);
+    mergeMasterItem(setUnits, unitsRef, saved);
+    setNotice("");
+    return saved;
+  }, [api, mergeMasterItem]);
+
+  const renameUnit = React.useCallback(async (id, input) => {
+    const saved = await api.renameUnit(id, input);
+    mergeMasterItem(setUnits, unitsRef, saved);
+    setNotice("");
+    return saved;
+  }, [api, mergeMasterItem]);
+
+  const archiveUnit = React.useCallback(async (id) => {
+    const saved = await api.archiveUnit(id);
+    mergeMasterItem(setUnits, unitsRef, saved);
+    setNotice("");
+    return saved;
+  }, [api, mergeMasterItem]);
+
+  const restoreUnit = React.useCallback(async (id) => {
+    const saved = await api.restoreUnit(id);
+    mergeMasterItem(setUnits, unitsRef, saved);
+    setNotice("");
+    return saved;
+  }, [api, mergeMasterItem]);
+
   const refreshLoadedResources = React.useCallback(() => {
     const now = Date.now();
     if (loadedRef.current.products && now - lastLoadedAt.current.products >= 30_000) loadProducts({ force: true });
     if (loadedRef.current.settings && now - lastLoadedAt.current.settings >= 30_000) loadSettings({ force: true });
-  }, [loadProducts, loadSettings]);
+    if (loadedRef.current.categories && now - lastLoadedAt.current.categories >= 30_000) loadCategories({ force: true });
+    if (loadedRef.current.units && now - lastLoadedAt.current.units >= 30_000) loadUnits({ force: true });
+  }, [loadCategories, loadProducts, loadSettings, loadUnits]);
 
   React.useEffect(() => {
     const refetchStaleData = () => {
@@ -196,15 +315,17 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
   }, [api]);
 
   const activeProducts = React.useMemo(() => products.filter((item) => item.active), [products]);
-  const isLoading = loading.products || loading.settings;
+  const isLoading = loading.products || loading.settings || loading.categories || loading.units;
 
   const value = React.useMemo(() => ({
-    api, products, activeProducts, cart, settings, notice, isLoading, loading, loaded,
+    api, products, activeProducts, categories, units, cart, settings, notice, isLoading, loading, loaded,
     addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout,
     createStockMovement, updateSettings, getDashboardSummary: api.getDashboardSummary,
-    loadProducts, loadSettings, searchProducts,
+    loadProducts, loadSettings, loadCategories, loadUnits, searchProducts,
+    createCategory, renameCategory, archiveCategory, restoreCategory,
+    createUnit, renameUnit, archiveUnit, restoreUnit,
     setNotice, clearNotice: () => setNotice(""),
-  }), [products, activeProducts, cart, settings, notice, isLoading, loading, loaded, addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout, createStockMovement, updateSettings, api, loadProducts, loadSettings, searchProducts]);
+  }), [products, activeProducts, categories, units, cart, settings, notice, isLoading, loading, loaded, addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout, createStockMovement, updateSettings, api, loadProducts, loadSettings, loadCategories, loadUnits, searchProducts, createCategory, renameCategory, archiveCategory, restoreCategory, createUnit, renameUnit, archiveUnit, restoreUnit]);
 
   return <POSStoreContext.Provider value={value}>{children}</POSStoreContext.Provider>;
 }

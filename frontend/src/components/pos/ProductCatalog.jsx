@@ -22,7 +22,7 @@ export const ProductCatalog = React.memo(function ProductCatalog({
   const products = React.useMemo(() => {
     const normalizedQuery = deferredQuery.trim().toLowerCase();
     return activeProducts.filter((product) => {
-      const matchesCategory = category === "Semua" || product.category === category;
+      const matchesCategory = !category || product.categoryId === category;
       const searchableText = `${product.name} ${product.barcode}`.toLowerCase();
       return matchesCategory && searchableText.includes(normalizedQuery);
     });

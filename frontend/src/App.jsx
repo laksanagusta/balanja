@@ -16,13 +16,17 @@ import { routes } from "./shared.jsx";
 import { normalizePath } from "./routing.js";
 
 function usePathname(isSignedIn, isAuthLoaded) {
-  const [pathname, setPathname] = React.useState(() =>
-    normalizePath(window.location.pathname, isSignedIn, isAuthLoaded),
-  );
+  const [location, setLocation] = React.useState(() => ({
+    pathname: normalizePath(window.location.pathname, isSignedIn, isAuthLoaded),
+    search: window.location.search,
+  }));
 
   React.useEffect(() => {
     const handlePopState = () =>
-      setPathname(normalizePath(window.location.pathname, isSignedIn, isAuthLoaded));
+      setLocation({
+        pathname: normalizePath(window.location.pathname, isSignedIn, isAuthLoaded),
+        search: window.location.search,
+      });
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isAuthLoaded, isSignedIn]);
@@ -30,7 +34,7 @@ function usePathname(isSignedIn, isAuthLoaded) {
   React.useEffect(() => {
     const nextPath = normalizePath(window.location.pathname, isSignedIn, isAuthLoaded);
     if (nextPath !== window.location.pathname) window.history.replaceState({}, "", nextPath);
-    setPathname(nextPath);
+    setLocation({ pathname: nextPath, search: nextPath === window.location.pathname ? window.location.search : "" });
   }, [isAuthLoaded, isSignedIn]);
 
   const navigate = React.useCallback((path) => {
@@ -38,26 +42,27 @@ function usePathname(isSignedIn, isAuthLoaded) {
     const nextPath = normalizePath(target.pathname, isSignedIn, isAuthLoaded);
     const nextURL = nextPath === target.pathname ? `${nextPath}${target.search}` : nextPath;
     window.history.pushState({}, "", nextURL);
-    setPathname(nextPath);
+    setLocation({ pathname: nextPath, search: nextPath === target.pathname ? target.search : "" });
     window.scrollTo(0, 0);
   }, [isAuthLoaded, isSignedIn]);
 
-  return [pathname, navigate];
+  return [location, navigate];
 }
 
-function AppPage({ pathname, onNavigate }) {
+function AppPage({ pathname, search, onNavigate }) {
   if (pathname === routes.dashboard) return <DashboardPage onNavigate={onNavigate} />;
   if (pathname === routes.products) return <ProductsPage />;
   if (pathname === routes.stock) return <StockPage />;
   if (pathname === routes.transactions) return <TransactionsPage />;
   if (pathname === routes.reportsSales) return <SalesReportPage onNavigate={onNavigate} />;
-  if (pathname === routes.settings) return <SettingsPage />;
+  if (pathname === routes.settings) return <SettingsPage search={search} onTabChange={(tab) => onNavigate(`/settings?tab=${tab}`)} />;
   return <RetailPosPage />;
 }
 
 export default function App() {
   const { isLoaded, isSignedIn } = useAuth();
-  const [pathname, navigate] = usePathname(Boolean(isSignedIn), isLoaded);
+  const [location, navigate] = usePathname(Boolean(isSignedIn), isLoaded);
+  const pathname = location.pathname;
 
   if (!isLoaded) {
     return <div className="min-h-screen bg-app-bg" aria-busy="true" />;
@@ -86,7 +91,7 @@ export default function App() {
           <DesignSystemPage onNavigate={navigate} />
         ) : (
           <AppShell pathname={pathname} onNavigate={navigate}>
-            <AppPage pathname={pathname} onNavigate={navigate} />
+            <AppPage pathname={pathname} search={location.search} onNavigate={navigate} />
           </AppShell>
         )}
       </Show>

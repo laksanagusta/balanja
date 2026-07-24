@@ -7,23 +7,25 @@ import (
 )
 
 type Product struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Barcode   string    `json:"barcode"`
-	Category  string    `json:"category"`
-	Price     int       `json:"price"`
-	Stock     int       `json:"stock"`
-	Unit      string    `json:"unit"`
-	Image     string    `json:"image"`
-	ImageKey  string    `json:"-"`
-	Active    bool      `json:"active"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	Barcode    string    `json:"barcode"`
+	CategoryID uuid.UUID `json:"categoryId"`
+	Category   string    `json:"category"`
+	Price      int       `json:"price"`
+	Stock      int       `json:"stock"`
+	UnitID     uuid.UUID `json:"unitId"`
+	Unit       string    `json:"unit"`
+	Image      string    `json:"image"`
+	ImageKey   string    `json:"-"`
+	Active     bool      `json:"active"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 type ListFilter struct {
 	Query       string
-	Category    string
+	CategoryID  uuid.UUID
 	Active      *bool
 	Limit       int
 	Sort        string
@@ -40,25 +42,25 @@ type Page struct {
 }
 
 type CreateInput struct {
-	Name     string `json:"name"`
-	Barcode  string `json:"barcode"`
-	Category string `json:"category"`
-	Price    int    `json:"price"`
-	Stock    int    `json:"stock"`
-	Unit     string `json:"unit"`
-	Image    string `json:"image"`
-	ImageKey string `json:"-"`
+	Name       string    `json:"name"`
+	Barcode    string    `json:"barcode"`
+	CategoryID uuid.UUID `json:"categoryId"`
+	Price      int       `json:"price"`
+	Stock      int       `json:"stock"`
+	UnitID     uuid.UUID `json:"unitId"`
+	Image      string    `json:"image"`
+	ImageKey   string    `json:"-"`
 }
 type UpdateInput struct {
-	Name          string `json:"name"`
-	Barcode       string `json:"barcode"`
-	Category      string `json:"category"`
-	Price         int    `json:"price"`
-	Unit          string `json:"unit"`
-	Image         string `json:"image"`
-	ImageKey      string `json:"-"`
-	PreserveImage bool   `json:"-"`
-	Active        bool   `json:"active"`
+	Name          string    `json:"name"`
+	Barcode       string    `json:"barcode"`
+	CategoryID    uuid.UUID `json:"categoryId"`
+	Price         int       `json:"price"`
+	UnitID        uuid.UUID `json:"unitId"`
+	Image         string    `json:"image"`
+	ImageKey      string    `json:"-"`
+	PreserveImage bool      `json:"-"`
+	Active        bool      `json:"active"`
 }
 
 type UpdateResult struct {
