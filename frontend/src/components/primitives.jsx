@@ -1,7 +1,102 @@
 import React from "react";
+import {
+  ArchiveBoxIcon,
+  ArrowPathIcon,
+  BanknotesIcon,
+  Bars3Icon,
+  CheckIcon,
+  ChevronDownIcon,
+  ClockIcon,
+  Cog6ToothIcon,
+  DocumentTextIcon,
+  EyeIcon,
+  FunnelIcon,
+  HomeIcon,
+  ListBulletIcon,
+  MagnifyingGlassIcon,
+  MinusIcon,
+  MoonIcon,
+  PhotoIcon,
+  PlusIcon,
+  PrinterIcon,
+  QrCodeIcon,
+  QuestionMarkCircleIcon,
+  ReceiptPercentIcon,
+  ShoppingBagIcon,
+  ShoppingCartIcon,
+  Squares2X2Icon,
+  TableCellsIcon,
+  TagIcon,
+  TicketIcon,
+  TrashIcon,
+  UsersIcon,
+  ViewfinderCircleIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { nextSelectIndex } from "./select-field-navigation.js";
+import { ScrollEdge } from "./ScrollEdge.jsx";
+
+function PanelLeftIcon({ className }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      width="24"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="M9 3v18" />
+    </svg>
+  );
+}
+
+const heroIcons = {
+  grid: Squares2X2Icon,
+  sidebar: PanelLeftIcon,
+  home: HomeIcon,
+  receipt: ReceiptPercentIcon,
+  bag: ShoppingBagIcon,
+  cart: ShoppingCartIcon,
+  list: ListBulletIcon,
+  table: TableCellsIcon,
+  box: TagIcon,
+  package: ArchiveBoxIcon,
+  barcode: QrCodeIcon,
+  scan: ViewfinderCircleIcon,
+  menu: Bars3Icon,
+  users: UsersIcon,
+  search: MagnifyingGlassIcon,
+  filter: FunnelIcon,
+  eye: EyeIcon,
+  trash: TrashIcon,
+  settings: Cog6ToothIcon,
+  moon: MoonIcon,
+  help: QuestionMarkCircleIcon,
+  chevron: ChevronDownIcon,
+  plus: PlusIcon,
+  minus: MinusIcon,
+  file: DocumentTextIcon,
+  image: PhotoIcon,
+  cash: BanknotesIcon,
+  x: XMarkIcon,
+  check: CheckIcon,
+  clock: ClockIcon,
+  printer: PrinterIcon,
+  qr: QrCodeIcon,
+  ticket: TicketIcon,
+  loader: ArrowPathIcon,
+};
 
 export function Icon({ name, className = "size-5" }) {
+  const IconComponent = heroIcons[name] ?? QuestionMarkCircleIcon;
+  return <IconComponent className={name === "loader" ? [className, "animate-spin motion-reduce:animate-none"].join(" ") : className} aria-hidden="true" />;
+
   const common = {
     className,
     viewBox: "0 0 24 24",
@@ -44,6 +139,13 @@ export function Icon({ name, className = "size-5" }) {
       <>
         <path d="M6.5 8.5h11L16.5 21h-9z" />
         <path d="M9 8.5a3 3 0 0 1 6 0" />
+      </>
+    ),
+    cart: (
+      <>
+        <path d="M3.5 5h2l1.7 9.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.5L20 8H6.1" />
+        <circle cx="9.5" cy="19" r="1.25" />
+        <circle cx="17" cy="19" r="1.25" />
       </>
     ),
     list: (
@@ -137,6 +239,13 @@ export function Icon({ name, className = "size-5" }) {
       <>
         <path d="M7 3h7l4 4v14H7z" />
         <path d="M14 3v5h5M9.5 13h5M9.5 17h5" />
+      </>
+    ),
+    image: (
+      <>
+        <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+        <circle cx="9" cy="10" r="1.5" />
+        <path d="m5.5 17 4.2-4.2 2.8 2.8 2.2-2.2 3.8 3.6" />
       </>
     ),
     cash: (
@@ -433,16 +542,16 @@ export function DataTable({
   className = "",
 }) {
   return (
-    <div className={`w-full ${className}`}>
-      <div className="w-full overflow-auto">
-        <table className="w-full border-collapse text-sm">
+    <div className={`data-table-frame min-w-0 w-full ${className}`}>
+      <ScrollEdge>
+        <table className="min-w-max w-full border-separate border-spacing-0 text-sm">
           <thead>
-            <tr className="border-b border-border">
+            <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   aria-sort={col.sortable && sortKey === col.key ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
-                  className={`h-11 whitespace-nowrap px-3 text-xs font-semibold uppercase tracking-[0.08em] text-text-subtle ${
+                  className={`h-11 whitespace-nowrap border-b border-border px-3 text-xs font-semibold uppercase tracking-[0.08em] text-text-subtle ${
                     col.align === "right" ? "text-right" : "text-left"
                   }`}
                 >
@@ -483,14 +592,16 @@ export function DataTable({
             {data.map((row, i) => (
               <tr
                 key={row.id ?? i}
-                className={`border-b border-border transition last:border-b-0 hover:bg-surface-muted/60 ${
+                className={`transition hover:bg-surface-muted/60 ${
                   i % 2 === 1 ? "bg-surface-muted/30" : ""
                 }`}
               >
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`h-11 px-3 text-text ${col.align === "right" ? "text-right" : "text-left"}`}
+                    className={`h-11 px-3 text-text ${
+                      i === data.length - 1 ? "border-b-0" : "border-b border-border"
+                    } ${col.align === "right" ? "text-right" : "text-left"}`}
                   >
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
@@ -499,7 +610,7 @@ export function DataTable({
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollEdge>
     </div>
   );
 }

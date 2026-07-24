@@ -23,6 +23,8 @@ test("stock history uses server cursor sorting", async () => {
   assert.match(source, /useCursorTable/);
   assert.doesNotMatch(source, /sortRows/);
   assert.doesNotMatch(source, /loadStockMovements/);
+  assert.match(source, /createdByUserName \|\| "Tidak diketahui"/);
+  assert.doesNotMatch(source, /createdByUserName \|\| row\.createdByUserId/);
 });
 
 test("loads products without fetching unrelated POS resources", async () => {

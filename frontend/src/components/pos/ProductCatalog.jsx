@@ -10,7 +10,6 @@ export const ProductCatalog = React.memo(function ProductCatalog({
   query,
   category,
   checkoutPending,
-  isUpdating,
   onAdd,
   onClearFilters,
 }) {
@@ -29,13 +28,9 @@ export const ProductCatalog = React.memo(function ProductCatalog({
   }, [activeProducts, category, deferredQuery]);
 
   return (
-    <div
-      className={`menu-grid-transition grid flex-1 auto-rows-max gap-4 overflow-y-auto p-6 transition-opacity duration-base ease-standard sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 ${
-        isUpdating ? "opacity-60" : "opacity-100"
-      }`}
-    >
+    <div className="product-catalog-grid menu-grid-transition grid auto-rows-max gap-4 p-3 sm:p-6">
       {products.length === 0 ? (
-        <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4">
+        <div className="product-catalog-empty">
           <EmptyState
             icon={null}
             title="Produk tidak ditemukan"

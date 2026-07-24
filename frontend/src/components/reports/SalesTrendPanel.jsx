@@ -23,11 +23,12 @@ function ReportTrendTooltip({ point }) {
 
 export default function SalesTrendPanel({ current = [], previous = [] }) {
   const data = alignTrend(current, previous);
+  const titleId = React.useId();
   return (
     <Panel className="min-w-0 overflow-hidden p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-text">Tren total diterima</h2>
+          <h2 id={titleId} className="text-sm font-semibold text-text">Tren total diterima</h2>
           <p className="mt-1 text-xs text-text-muted">Periode terpilih dibanding periode sebelumnya yang sama panjang.</p>
         </div>
         <div className="flex flex-wrap gap-3 text-xs font-semibold text-text-muted" aria-label="Legenda tren">
@@ -36,13 +37,34 @@ export default function SalesTrendPanel({ current = [], previous = [] }) {
         </div>
       </div>
       {data.some((point) => point.current || point.previous) ? (
-        <LineChart data={data} xDataKey="date" xLabelKey="label" aspectRatio={null} className="mt-4 h-[260px] md:h-[320px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
-          <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
-          <Line dataKey="current" stroke="var(--chart-line-primary)" strokeWidth={2.5} />
-          <Line dataKey="previous" stroke="var(--color-text-muted)" strokeWidth={1.75} strokeDasharray="6 5" />
-          <XAxis numTicks={Math.min(data.length, 7)} />
-          <ChartTooltip showDots={false} showDatePill={false} content={({ point }) => <ReportTrendTooltip point={point} />} />
-        </LineChart>
+        <>
+          <LineChart data={data} xDataKey="date" xLabelKey="label" aspectRatio={null} className="mt-4 h-[260px] md:h-[320px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
+            <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
+            <Line dataKey="current" stroke="var(--chart-line-primary)" strokeWidth={2.5} />
+            <Line dataKey="previous" stroke="var(--color-text-muted)" strokeWidth={1.75} strokeDasharray="6 5" />
+            <XAxis numTicks={Math.min(data.length, 7)} />
+            <ChartTooltip showDots={false} showDatePill={false} content={({ point }) => <ReportTrendTooltip point={point} />} />
+          </LineChart>
+          <table className="sr-only">
+            <caption>Data tren total diterima</caption>
+            <thead>
+              <tr>
+                <th scope="col">Waktu</th>
+                <th scope="col">Periode ini</th>
+                <th scope="col">Periode sebelumnya</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((point, index) => (
+                <tr key={`${point.date?.toISOString?.() || point.date}-${index}`}>
+                  <th scope="row">{localizedTrendTitle(point)}</th>
+                  <td>{formatPrice(point.current)}</td>
+                  <td>{formatPrice(point.previous)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
       ) : (
         <EmptyState icon="cash" title="Belum ada penjualan" description="Tren akan muncul setelah ada transaksi selesai pada periode ini." className="mt-4 min-h-[240px]" />
       )}

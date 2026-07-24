@@ -6,10 +6,16 @@ test("settings skeleton mirrors the responsive navigation and centered content l
   const source = await readFile(new URL("./page-loading.jsx", import.meta.url), "utf8");
   const settingsSkeleton = source.slice(source.indexOf("export function SettingsPageSkeleton()"));
 
-  assert.match(settingsSkeleton, /md:grid-cols-\[14rem_minmax\(0,1fr\)\]/);
+  assert.match(settingsSkeleton, /settings-workspace/);
+  assert.match(settingsSkeleton, /settings-workspace-layout/);
+  assert.match(settingsSkeleton, /settings-navigation/);
+  assert.match(settingsSkeleton, /settings-navigation-item/);
+  assert.match(settingsSkeleton, /settings-content/);
+  assert.match(settingsSkeleton, /master-data-manager/);
+  assert.match(settingsSkeleton, /master-data-create/);
+  assert.match(settingsSkeleton, /master-data-item-row/);
+  assert.doesNotMatch(settingsSkeleton, /md:grid-cols-\[14rem_minmax\(0,1fr\)\]/);
   assert.match(settingsSkeleton, /max-w-3xl/);
-  assert.match(settingsSkeleton, /min-h-11/);
-  assert.match(settingsSkeleton, /overflow-x-auto/);
   assert.doesNotMatch(settingsSkeleton, /xl:grid-cols-\[minmax\(0,1fr\)_360px\]/);
   assert.doesNotMatch(settingsSkeleton, /<aside/);
 });

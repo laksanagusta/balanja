@@ -17,3 +17,16 @@ export function cashPaymentState(rawValue, total, cartItemCount) {
     change: hasCart && sufficient ? amount - total : 0,
   };
 }
+
+export function shouldDismissCartSwipe({ distance, velocity, width }) {
+  const distanceThreshold = Math.min(96, Math.max(Number(width) * 0.25, 64));
+  return Number(distance) >= distanceThreshold || Number(velocity) >= 0.35;
+}
+
+export function resistedCartSwipeDistance(distance, width) {
+  const numericDistance = Number(distance) || 0;
+  if (numericDistance >= 0) return numericDistance;
+  const dimension = Math.max(Number(width) || 1, 1);
+  const overshoot = Math.abs(numericDistance);
+  return -((overshoot * dimension * 0.22) / (dimension + overshoot * 0.22));
+}

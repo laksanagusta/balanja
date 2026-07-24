@@ -18,6 +18,7 @@ test("dashboard requests server-side analytics", async () => {
 
 test("dashboard low-stock insight provides a direct stock-management handoff", async () => {
   const dashboard = await readFile(new URL("./DashboardPage.jsx", import.meta.url), "utf8");
+  const charts = await readFile(new URL("../components/dashboard/DashboardCharts.jsx", import.meta.url), "utf8");
   const panel = await readFile(new URL("../components/dashboard/LowStockPanel.jsx", import.meta.url), "utf8");
 
   assert.match(dashboard, /function DashboardPage\(\{ onNavigate \}\)/);
@@ -26,4 +27,6 @@ test("dashboard low-stock insight provides a direct stock-management handoff", a
   assert.match(panel, /function LowStockPanel\(\{ products, onManageStock \}\)/);
   assert.match(panel, /Kelola stok/);
   assert.match(panel, /products\.length && onManageStock/);
+  assert.match(charts, /<Line dataKey="revenue"[^>]*showMarkers=\{false\}/);
+  assert.match(panel, /\{product\.category\} · \{product\.unit\}/);
 });

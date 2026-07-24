@@ -66,7 +66,7 @@ export default function MarketingPatternsShowcase() {
         </div>
 
         <p className="rounded-card border border-border bg-surface-muted p-4 text-sm leading-6 text-text-muted">
-          Public controls use a minimum 44px touch target, visible keyboard focus, and immediate press feedback. A compact 32px header action keeps a transparent 44px hit area. FAQ answers remain mounted and use the morphing indicator above. Smooth scrolling becomes immediate for reduced motion; translucent chrome becomes solid for reduced transparency or increased contrast.
+          Public controls use a minimum 44px touch target, visible keyboard focus, and immediate press feedback. Product items inside the POS mockup use neutral placeholders rather than stock photography. A compact 32px header action keeps a transparent 44px hit area. FAQ answers remain mounted and use the morphing indicator above. Smooth scrolling becomes immediate for reduced motion; translucent chrome becomes solid for reduced transparency or increased contrast.
         </p>
       </div>
     </section>

@@ -24,4 +24,8 @@ test("sales report page owns fetch, retained update, export, and handoff lifecyc
   assert.doesNotMatch(source, /components\/design/);
 	assert.match(source, /aria-busy=\{loading\}/);
 	assert.match(source, /Laporan gagal dimuat/);
+	const toolbar = await readFile(new URL("../components/reports/SalesReportToolbar.jsx", import.meta.url), "utf8");
+	assert.match(toolbar, /filterPanelId/);
+	assert.match(toolbar, /filtersExpanded/);
+	assert.match(toolbar, /Tampilkan filter|Sembunyikan filter/);
 });

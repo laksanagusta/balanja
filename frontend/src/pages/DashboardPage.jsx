@@ -2,6 +2,7 @@ import React from "react";
 import DashboardKpiCard from "../components/dashboard/DashboardKpiCard.jsx";
 import { PaymentMixPanel, RevenueTrendPanel, TopProductsPanel } from "../components/dashboard/DashboardCharts.jsx";
 import LowStockPanel from "../components/dashboard/LowStockPanel.jsx";
+import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { DashboardPageSkeleton } from "../components/page-loading.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice, routes } from "../shared.jsx";
@@ -67,7 +68,7 @@ export default function DashboardPage({ onNavigate }) {
           <p className="mt-0.5 truncate text-xs text-text-muted">Ringkasan performa toko {settings.storeName}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {isUpdatingSummary && <UpdatingBadge />}
+          <BackgroundUpdateStatus active={isUpdatingSummary} label="Memperbarui ringkasan dashboard" />
           <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1" aria-label="Periode dashboard">
             {periods.map((period) => (
               <button
@@ -86,7 +87,7 @@ export default function DashboardPage({ onNavigate }) {
         </div>
       </header>
 
-      <main className={`grid gap-4 p-4 ${isUpdatingSummary ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}`}>
+      <main className="grid gap-4 p-4">
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indikator kinerja utama">
           <DashboardKpiCard label="Pendapatan" value={formatPrice(visibleAnalytics.revenue)} icon="cash" comparison={visibleAnalytics.comparisons.revenue} tone="success" />
           <DashboardKpiCard label="Transaksi selesai" value={visibleAnalytics.transactionCount.toLocaleString("id-ID")} icon="receipt" comparison={visibleAnalytics.comparisons.transactions} />
@@ -116,14 +117,5 @@ export default function DashboardPage({ onNavigate }) {
         </section>
       </main>
     </div>
-  );
-}
-
-function UpdatingBadge() {
-  return (
-    <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
-      <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-      Memperbarui
-    </span>
   );
 }

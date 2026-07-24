@@ -45,11 +45,14 @@ test("hero uses the faithful POS mockup over the generated retail image", async 
   assert.match(mockup, /Selesaikan transaksi/);
 });
 
-test("POS mockup uses a fuller retail product set sourced from Unsplash", async () => {
+test("POS mockup uses neutral placeholders instead of product photos", async () => {
   const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
 
   assert.match(mockup, /Shampoo|Susu|Snack|Air Mineral/);
-  assert.ok((mockup.match(/https:\/\/images\.unsplash\.com\//g) ?? []).length >= 8);
+  assert.match(mockup, /function ProductImagePlaceholder/);
+  assert.match(mockup, /name="image"/);
+  assert.doesNotMatch(mockup, /https:\/\/images\.unsplash\.com\//);
+  assert.doesNotMatch(mockup, /<img\b/);
 });
 
 test("marketing motion has an explicit reduced-motion fallback", async () => {
@@ -130,14 +133,14 @@ test("primary button depth feedback changes transform without swapping box shado
   assert.doesNotMatch(scanActive, /box-shadow/);
 });
 
-test("POS mockup prioritizes only the leading hero imagery and lazily decodes the rest", async () => {
+test("landing keeps the retail backdrop while product items remain placeholders", async () => {
   const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
 
-  assert.match(page, /<PosProductMockup priority \/>/);
-  assert.match(mockup, /loading=/);
-  assert.match(mockup, /decoding="async"/);
-  assert.match(mockup, /fetchPriority=/);
+  assert.match(page, /hero-ascii-magic-5\.png/);
+  assert.match(page, /<PosProductMockup \/>/);
+  assert.doesNotMatch(mockup, /\bpriority\b/);
+  assert.doesNotMatch(mockup, /<img\b/);
 });
 
 test("subtle text token remains readable on white marketing surfaces", async () => {
@@ -164,7 +167,7 @@ test("design system documents the landing accessibility contract", async () => {
   assert.match(showcase, /press-feedback/);
   assert.match(design, /transparent hit area/);
   assert.match(design, /FAQ/);
-  assert.match(design, /lazy/);
+  assert.match(design, /neutral placeholder/i);
   assert.match(showcase, /header-compact-action/);
   assert.match(showcase, /faq-toggle-icon/);
 });

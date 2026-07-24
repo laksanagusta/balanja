@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { cashPaymentState } from "./retail-pos-utils.js";
+import * as retailPosUtils from "./retail-pos-utils.js";
 
 test("cash payment rejects empty and malformed amounts", () => {
   assert.equal(cashPaymentState("", 5000, 1).valid, false);
@@ -30,4 +31,20 @@ test("change is visible only for a non-empty cart with sufficient cash", () => {
     showChange: true,
     change: 2000,
   });
+});
+
+test("cart swipe dismissal uses distance or forward velocity", () => {
+  assert.equal(typeof retailPosUtils.shouldDismissCartSwipe, "function");
+  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 110, velocity: 0.1, width: 360 }), true);
+  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: 0.6, width: 360 }), true);
+  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: -0.6, width: 360 }), false);
+  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: 0.1, width: 360 }), false);
+});
+
+test("cart swipe resistance softens movement past the open boundary", () => {
+  assert.equal(typeof retailPosUtils.resistedCartSwipeDistance, "function");
+  assert.equal(retailPosUtils.resistedCartSwipeDistance(80, 360), 80);
+  const resisted = retailPosUtils.resistedCartSwipeDistance(-80, 360);
+  assert.ok(resisted < 0);
+  assert.ok(Math.abs(resisted) < 80);
 });

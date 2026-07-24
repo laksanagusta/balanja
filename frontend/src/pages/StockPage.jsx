@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { TablePagination } from "../components/TablePagination.jsx";
 import { Badge, Button, DataTable, Dialog, Icon, Input, Panel, SelectField } from "../components/primitives.jsx";
 import { StockPageSkeleton } from "../components/page-loading.jsx";
+import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { usePOSStore } from "../pos/store.jsx";
@@ -104,7 +105,7 @@ export default function StockPage() {
       ),
     },
     { key: "reason", label: "Alasan", render: (row) => <span className="line-clamp-2 max-w-[240px]">{row.reason}</span> },
-    { key: "createdByUserName", label: "Nama user", render: (row) => <span className="text-xs text-text-muted">{row.createdByUserName || row.createdByUserId || "-"}</span> },
+    { key: "createdByUserName", label: "Nama user", render: (row) => <span className="text-xs text-text-muted">{row.createdByUserName || "Tidak diketahui"}</span> },
     { key: "referenceType", label: "Referensi", render: (row) => row.referenceType || "Manual" },
   ], []);
   if ((loading.products && !loaded.products) || table.isInitialLoading) return <StockPageSkeleton />;
@@ -137,12 +138,7 @@ export default function StockPage() {
           <Icon name="plus" className="size-4" />
           Pergerakan baru
         </Button>
-        {table.isUpdating && (
-          <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
-            <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-            Memperbarui
-          </span>
-        )}
+        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui riwayat stok" />
       </header>
 
       <main className="min-h-0 flex-1 overflow-auto p-4">
@@ -163,7 +159,6 @@ export default function StockPage() {
               sortKey={table.sortKey}
               sortDir={table.sortDir}
               onSort={table.sortBy}
-              className={table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}
             />
           )}
           <TablePagination

@@ -3,6 +3,7 @@ import { TableFilterPopover } from "../components/TableFilterPopover.jsx";
 import { TablePagination } from "../components/TablePagination.jsx";
 import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField } from "../components/primitives.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
+import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { TransactionsPageSkeleton } from "../components/page-loading.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
@@ -130,7 +131,7 @@ export default function TransactionsPage() {
             Reset filter
           </Button>
         </TableFilterPopover>
-        {table.isUpdating && <UpdatingBadge />}
+        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui daftar transaksi" />
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
@@ -142,7 +143,6 @@ export default function TransactionsPage() {
               sortKey={table.sortKey}
               sortDir={table.sortDir}
               onSort={table.sortBy}
-              className={table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}
             />
           ) : (
             <EmptyState
@@ -223,14 +223,5 @@ export default function TransactionsPage() {
         )}
       </Dialog>
     </div>
-  );
-}
-
-function UpdatingBadge() {
-  return (
-    <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
-      <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-      Memperbarui
-    </span>
   );
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import BackgroundUpdateStatus from "../feedback/BackgroundUpdateStatus.jsx";
 import { TableFilterPopover } from "../TableFilterPopover.jsx";
 import { TablePagination } from "../TablePagination.jsx";
 import { Badge, Button, DataTable, Input, SelectField } from "../primitives.jsx";
@@ -106,11 +107,7 @@ export default function DataTableShowcase() {
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Data table</h3>
       <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
-        {updating && (
-          <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
-            <span className="size-1.5 animate-pulse rounded-full bg-accent" />Memperbarui
-          </span>
-        )}
+        <BackgroundUpdateStatus active={updating} label="Memperbarui contoh tabel" />
         <Button size="sm" variant="ghost" onClick={() => setUpdating((value) => !value)}>
           {updating ? "Selesai" : "Perbarui"}
         </Button>
@@ -137,7 +134,6 @@ export default function DataTableShowcase() {
           sortKey={sortKey}
           sortDir={sortDir}
           onSort={handleSort}
-          className={updating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}
         />
         <TablePagination
           start={rows.length ? startIndex + 1 : 0}
@@ -152,15 +148,20 @@ export default function DataTableShowcase() {
           loading={updating}
         />
       </div>
-      <div className="mt-4 grid rounded-panel border border-border bg-surface p-0">
-        <DataTable
-          columns={inventoryCols}
-          data={sortedInventory}
-          sortKey={inventorySortKey}
-          sortDir={inventorySortDir}
-          onSort={handleInventorySort}
-          className="pb-2"
-        />
+      <div className="mt-4 max-w-xl">
+        <p className="mb-2 text-xs leading-5 text-text-muted">
+          Geser horizontal untuk melihat kolom tersembunyi. Fade transparan memudar halus tanpa menyampling atau menutup border tabel.
+        </p>
+        <div className="grid rounded-panel border border-border bg-surface p-0">
+          <DataTable
+            columns={inventoryCols}
+            data={sortedInventory}
+            sortKey={inventorySortKey}
+            sortDir={inventorySortDir}
+            onSort={handleInventorySort}
+            className="pb-2"
+          />
+        </div>
       </div>
     </div>
   );

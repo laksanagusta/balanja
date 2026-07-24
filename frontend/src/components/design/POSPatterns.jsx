@@ -18,13 +18,41 @@ const sampleProduct = {
 
 export default function POSPatterns() {
   const [paymentMethod, setPaymentMethod] = React.useState("cash");
+  const [selectedCategory, setSelectedCategory] = React.useState("Sembako");
+  const categoryTabsRef = React.useRef(null);
+  const categoryTabRefs = React.useRef(new Map());
+  const [categoryIndicator, setCategoryIndicator] = React.useState({ left: 0, width: 0, ready: false });
+
+  React.useLayoutEffect(() => {
+    const tabs = categoryTabsRef.current;
+    const activeTab = categoryTabRefs.current.get(selectedCategory);
+    if (!tabs || !activeTab) return undefined;
+
+    const updateIndicator = () => {
+      setCategoryIndicator({ left: activeTab.offsetLeft, width: activeTab.offsetWidth, ready: true });
+    };
+    updateIndicator();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateIndicator);
+    observer?.observe(tabs);
+    observer?.observe(activeTab);
+    return () => observer?.disconnect();
+  }, [selectedCategory]);
 
   return (
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Pola komposit kasir</h3>
         <p className="mt-1 text-sm text-text-muted">
-          Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Panel app shell menjaga inset 8px yang konsisten dan memakai border tanpa bayangan wrapper di sela panel.
+          Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Saat barcode diproses, scanner menampilkan spinner cepat, mengunci pembacaan ganda, dan tetap menyediakan aksi tutup. Panel app shell menjaga inset 8px yang konsisten dan memakai border tanpa bayangan wrapper di sela panel.
+        </p>
+        <p className="mt-2 text-sm text-text-muted">
+          Satu vertical scroller dipakai pada layout ringkas. Katalog menampilkan 2 kartu per baris pada smartphone dan 4 pada tablet, sementara cart compact membuka sebagai drawer horizontal dari kanan. Workspace dan katalog beradaptasi melalui container query, dengan cart desktop selebar 360–420px. Density visual tetap ringkas untuk kerja kasir, sementara kontrol melebar menjadi minimal 44px pada perangkat sentuh.
+        </p>
+        <p className="mt-2 text-sm text-text-muted">
+          Trigger drawer memakai ikon cart dan jumlah item; aksi di dalam drawer memakai teks Tutup tanpa chevron ganda. Drawer menjaga fokus di dalam panel, membuat katalog inert, mengembalikan fokus setelah ditutup, dan mempertahankan scrim selama transisi keluar. Pada perangkat sentuh, header dapat digeser ke kanan untuk menutup dengan ambang jarak atau kecepatan dan tahanan rubber-band; reduced motion memakai cross-fade tanpa pergeseran.
+        </p>
+        <p className="mt-2 text-sm text-text-muted">
+          Pada setiap baris keranjang, subtotal tetap berada di kanan atas. Hapus berlabel dan kontrol jumlah yang dapat diketik ditempatkan tepat di bawah subtotal; minus pada jumlah satu menghapus item. Saat angka diketik, text morph singkat memberi umpan balik tanpa menggeser layout dan dinonaktifkan pada reduced motion. Kontrol tampil ringkas pada pointer presisi tetapi tetap melebar menjadi target sentuh aman pada perangkat sentuh.
         </p>
       </div>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -34,7 +62,7 @@ export default function POSPatterns() {
         </div>
         <div className="grid gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Kolom pencarian</p>
-          <div className="flex h-[42px] items-center gap-3 rounded-card border border-border bg-surface px-4 shadow-inner-soft">
+          <div className="pos-touch-target flex h-9 items-center gap-3 rounded-card border border-border bg-surface px-4 shadow-inner-soft">
             <Icon name="search" className="size-5 text-text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
@@ -51,16 +79,30 @@ export default function POSPatterns() {
         </div>
         <div className="grid gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Tab kategori</p>
-          <div className="flex gap-2 rounded-control bg-surface-muted p-1">
+          <div ref={categoryTabsRef} className="category-tabs relative flex w-full gap-1 overflow-x-auto rounded-control bg-surface-muted p-1">
+            <span
+              aria-hidden="true"
+              className="category-tabs-indicator"
+              style={{
+                "--category-indicator-x": `${categoryIndicator.left}px`,
+                "--category-indicator-width": `${categoryIndicator.width}px`,
+                opacity: categoryIndicator.ready ? 1 : 0,
+              }}
+            />
             {["Semua", "Sembako", "Minuman"].map((cat) => (
               <button
+                ref={(node) => {
+                  if (node) categoryTabRefs.current.set(cat, node);
+                  else categoryTabRefs.current.delete(cat);
+                }}
                 key={cat}
                 type="button"
-                aria-pressed={cat === "Sembako"}
-                className={`h-10 shrink-0 rounded-md px-5 text-sm font-medium transition ${
-                  cat === "Sembako"
-                    ? "bg-surface text-text shadow-low"
-                    : "text-text-muted hover:bg-surface/70 hover:text-text"
+                aria-pressed={cat === selectedCategory}
+                onClick={() => setSelectedCategory(cat)}
+                className={`pos-touch-target relative z-10 h-8 min-w-max flex-1 basis-0 rounded-md px-5 text-sm font-medium transition-colors duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                  cat === selectedCategory
+                    ? "text-text"
+                    : "text-text-muted hover:text-text"
                 }`}
               >
                 {cat}
@@ -78,7 +120,7 @@ export default function POSPatterns() {
                   type="button"
                   aria-pressed={paymentMethod === m.id}
                   onClick={() => setPaymentMethod(m.id)}
-                  className={`grid place-items-center gap-1 rounded-md border py-2.5 text-xs font-semibold transition ${
+                  className={`grid min-h-11 place-items-center gap-1 rounded-md border px-3 py-2.5 text-xs font-semibold transition ${
                     paymentMethod === m.id
                       ? "border-accent bg-accent-soft text-accent"
                       : "border-border text-text-muted hover:bg-surface-muted"

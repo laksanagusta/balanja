@@ -2,19 +2,64 @@ import React from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { Icon, useDialogPresence } from "./primitives.jsx";
 
+const MIN_PROCESSING_MS = 180;
+
 export default function BarcodeScanner({ open, title = "Pindai barcode", onDetected, onClose }) {
   const { isPresent, isVisible } = useDialogPresence(open);
   const videoRef = React.useRef(null);
   const controlsRef = React.useRef(null);
   const onDetectedRef = React.useRef(onDetected);
   const lastDetectionRef = React.useRef({ code: "", at: 0 });
+  const processingRef = React.useRef(false);
+  const processingRunRef = React.useRef(0);
+  const processingTimerRef = React.useRef(null);
   const [manualCode, setManualCode] = React.useState("");
   const [error, setError] = React.useState("");
   const [scanning, setScanning] = React.useState(false);
+  const [processing, setProcessing] = React.useState(false);
 
   React.useEffect(() => {
     onDetectedRef.current = onDetected;
   }, [onDetected]);
+
+  const processDetection = React.useCallback(async (code) => {
+    if (processingRef.current) return;
+
+    const runId = processingRunRef.current + 1;
+    processingRunRef.current = runId;
+    processingRef.current = true;
+    setProcessing(true);
+    setError("");
+    const startedAt = Date.now();
+
+    try {
+      await onDetectedRef.current?.(code);
+    } catch {
+      if (processingRunRef.current === runId) {
+        setError("Barcode gagal diproses. Coba pindai kembali.");
+      }
+    } finally {
+      if (processingRunRef.current !== runId) return;
+
+      const finish = () => {
+        if (processingRunRef.current !== runId) return;
+        processingRef.current = false;
+        processingTimerRef.current = null;
+        setProcessing(false);
+      };
+      const remaining = Math.max(0, MIN_PROCESSING_MS - (Date.now() - startedAt));
+      processingTimerRef.current = window.setTimeout(finish, remaining);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (open) return;
+    processingRunRef.current += 1;
+    processingRef.current = false;
+    window.clearTimeout(processingTimerRef.current);
+    processingTimerRef.current = null;
+    setProcessing(false);
+  }, [open]);
 
   React.useEffect(() => {
     if (!open) return undefined;
@@ -34,12 +79,13 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
       try {
         const controls = await reader.decodeFromVideoDevice(undefined, videoRef.current, (result, err) => {
           if (result) {
+            if (processingRef.current) return;
             const text = result.getText();
             const now = Date.now();
             const duplicate = lastDetectionRef.current.code === text;
             lastDetectionRef.current = { code: text, at: now };
             if (duplicate) return;
-            onDetectedRef.current(text);
+            void processDetection(text);
           } else if (err && Date.now() - lastDetectionRef.current.at >= 750) {
             lastDetectionRef.current = { code: "", at: 0 };
           }
@@ -70,16 +116,16 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
       controlsRef.current = null;
       setScanning(false);
     };
-  }, [open]);
+  }, [open, processDetection]);
 
   if (!isPresent) return null;
 
   const submitManual = (event) => {
     event.preventDefault();
     const code = manualCode.trim();
-    if (!code) return;
+    if (!code || processingRef.current) return;
     setManualCode("");
-    onDetectedRef.current(code);
+    void processDetection(code);
   };
 
   return (
@@ -91,6 +137,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     >
       <section
         className="relative h-full w-full overflow-hidden bg-black"
+        aria-busy={processing}
       >
         <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" muted playsInline autoPlay />
 
@@ -101,8 +148,13 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
         <header className="absolute inset-x-0 top-0 z-10 flex items-start justify-between bg-gradient-to-b from-black/60 via-black/25 to-transparent px-5 pb-6 pt-5">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>
-            <p className="text-sm text-white/70">
-              {scanning ? "Arahkan kamera ke barcode." : "Mode input manual siap digunakan."}
+            <p className="mt-0.5 min-h-5 text-sm text-white/70">
+              {processing ? (
+                <span role="status" aria-live="polite" className="inline-flex items-center gap-2 text-white">
+                  <Icon name="loader" className="size-4 [animation-duration:700ms]" />
+                  Memproses barcode…
+                </span>
+              ) : scanning ? "Arahkan kamera ke barcode." : "Mode input manual siap digunakan."}
             </p>
           </div>
           <button
@@ -124,15 +176,17 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
             <input
               value={manualCode}
               onChange={(event) => setManualCode(event.target.value)}
+              disabled={processing}
               inputMode="numeric"
               placeholder="Masukkan barcode manual"
-              className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/12 px-4 py-2.5 text-sm font-medium text-white placeholder:text-white/35 backdrop-blur-xl outline-none transition focus:border-white/30 focus:bg-white/20"
+              className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/12 px-4 py-2.5 text-sm font-medium text-white placeholder:text-white/35 backdrop-blur-xl outline-none transition-[opacity,background-color,border-color] duration-fast ease-standard focus:border-white/30 focus:bg-white/20 disabled:cursor-wait disabled:opacity-60"
             />
             <button
               type="submit"
-              className="shrink-0 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#1d1d1f] shadow-sm transition active:bg-white/80"
+              disabled={processing}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#1d1d1f] shadow-sm transition-[transform,opacity,background-color] duration-fast ease-standard active:scale-[0.97] active:bg-white/80 disabled:cursor-wait disabled:opacity-65 motion-reduce:active:scale-100"
             >
-              Gunakan kode
+              {processing ? "Memproses" : "Gunakan kode"}
             </button>
           </form>
         </div>

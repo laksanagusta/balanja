@@ -24,7 +24,7 @@ export function ProductPhotoField({ product, previewURL, filename, error, disabl
           error ? "border-danger" : "border-border"
         }`}
       >
-        <ProductThumbnail product={{ ...product, image: visible }} size="lg" />
+        <ProductThumbnail product={{ ...product, image: visible }} size="lg" fallback="placeholder" />
         <div className="min-w-[150px] flex-1">
           <p className="truncate text-sm font-medium text-text">
             {visibleFilename || "Belum ada foto"}

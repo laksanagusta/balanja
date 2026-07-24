@@ -11,6 +11,7 @@ import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
+import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { ProductThumbnail } from "../components/product/ProductImage.jsx";
 import MasterDataSelectField from "../components/product/MasterDataSelectField.jsx";
 import { ProductPhotoField } from "../components/product/ProductPhotoField.jsx";
@@ -267,7 +268,7 @@ export default function ProductsPage() {
           <Icon name="plus" className="size-4" />
           Tambah produk
         </Button>
-        {table.isUpdating && <UpdatingBadge />}
+        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui daftar produk" />
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
@@ -279,7 +280,6 @@ export default function ProductsPage() {
               sortKey={table.sortKey}
               sortDir={table.sortDir}
               onSort={table.sortBy}
-              className={table.isUpdating ? "opacity-60 transition-opacity duration-base ease-standard" : "transition-opacity duration-base ease-standard"}
             />
           ) : (
             <EmptyState
@@ -370,7 +370,7 @@ export default function ProductsPage() {
                 }}
               />
               <Button type="button" variant="secondary" disabled={savingProduct} onClick={() => setScannerOpen(true)}>
-                <Icon name="barcode" className="size-4" />
+                <Icon name="scan" className="size-4" />
                 Pindai
               </Button>
             </div>
@@ -474,14 +474,5 @@ export default function ProductsPage() {
         }}
       />
     </div>
-  );
-}
-
-function UpdatingBadge() {
-  return (
-    <span className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
-      <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-      Memperbarui
-    </span>
   );
 }
