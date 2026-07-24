@@ -50,4 +50,12 @@ go run ./cmd/api
 - Runtime API memakai role database khusus yang dipaksa lewat RLS, bukan owner credential.
 - Tenant source of truth adalah claim `org_id` dari Clerk JWT yang sudah diverifikasi di backend.
 
-Langkah provisioning dan deploy ada di [docs/deployment.md](/Users/dikalaksana/Engineering/balanja/docs/deployment.md).
+## Production
+
+Production berjalan di `https://pos.marvcore.com`. Push yang sudah terverifikasi
+ke branch `main` membangun image Docker Hub `balanja-api` dan `balanja-web`,
+kemudian menjalankan workflow `.github/workflows/ci-cd.yml` untuk deployment
+Tencent Cloud dengan health check dan rollback otomatis.
+
+Setup Docker Hub, server Ubuntu, GitHub secrets, first deploy, dan recovery
+didokumentasikan di [docs/deployment.md](docs/deployment.md).
