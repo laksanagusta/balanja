@@ -52,7 +52,7 @@ export function RevenueTrendPanel({ data, hasData, days }) {
       {hasData ? (
         <LineChart data={data} xDataKey="date" xLabelKey="label" aspectRatio={null} className="mt-3 h-[250px] md:h-[280px]" margin={{ top: 24, right: 18, bottom: 42, left: 18 }}>
           <Grid horizontal numTicksRows={4} fadeHorizontal={false} />
-          <Line dataKey="revenue" stroke="var(--chart-line-primary)" strokeWidth={2.5} showMarkers />
+          <Line dataKey="revenue" stroke="var(--chart-line-primary)" strokeWidth={2.5} showMarkers={false} />
           <XAxis numTicks={days === 30 ? 6 : 7} />
           <ChartTooltip showDatePill={false} content={({ point }) => <RevenueTrendTooltip point={point} />} />
         </LineChart>

@@ -25,15 +25,15 @@ export function PaymentSummary({
           ["Pajak", formatPrice(tax)],
           ...(discount > 0 ? [["Diskon", `-${formatPrice(discount)}`]] : []),
         ].map(([label, value]) => (
-          <div key={label} className="flex justify-between text-text-muted">
+          <div key={label} className="payment-summary-row text-text-muted">
             <dt>{label}</dt>
-            <dd className="font-mono font-semibold tabular-nums">{value}</dd>
+            <dd className="whitespace-nowrap font-mono font-semibold tabular-nums">{value}</dd>
           </div>
         ))}
         <div className="border-t border-dashed border-border pt-3">
-          <div className="flex justify-between text-base font-semibold text-text">
+          <div className="payment-summary-row text-base font-semibold text-text">
             <dt>Total akhir</dt>
-            <dd className="font-mono tabular-nums">{formatPrice(grandTotal)}</dd>
+            <dd className="whitespace-nowrap font-mono tabular-nums">{formatPrice(grandTotal)}</dd>
           </div>
         </div>
       </dl>
@@ -45,7 +45,7 @@ export function PaymentSummary({
             aria-pressed={paymentMethod === method.id}
             disabled={disabled}
             onClick={() => onPaymentMethodChange(method.id)}
-            className="gap-1.5"
+            className="pos-touch-target gap-1.5"
           >
             <Icon name={method.icon} className="size-4" />
             {method.label}

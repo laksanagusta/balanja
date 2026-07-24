@@ -126,7 +126,7 @@ export default function DesignSystemPage({ onNavigate }) {
             terhubung ke API produk dengan enam hasil, lalu menampilkan stok saat ini, delta bertanda, dan stok setelah perubahan di bawah field.
             Tabel operasional memakai cursor pagination server dengan Sebelumnya dan Berikutnya, ukuran halaman 20, 50, dan 100, tanpa total
             yang tidak terverifikasi. Refetch mempertahankan baris yang ada dengan indikator memperbarui yang ringkas dan opacity yang dilembutkan.
-            Kolom audit stok menggunakan label Nama user dan hanya fallback ke id internal jika nama tampilan tidak tersedia.
+            Kolom audit stok menggunakan label Nama user dari snapshot saat aktivitas dicatat; riwayat lama tanpa nama menampilkan Tidak diketahui, bukan id internal.
           </p>
         </section>
         <EmptyStateShowcase />

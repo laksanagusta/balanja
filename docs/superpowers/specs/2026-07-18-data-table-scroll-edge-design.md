@@ -39,10 +39,12 @@ The behavior is presentation-only. It must not change table focus order, keyboar
 
 ## Visual Treatment
 
-Each visible edge is a 28px-wide non-interactive overlay:
+Each visible edge is a 32px-wide non-interactive overlay aligned flush with the table frame:
 
 - Use a light, surface-colored transparent gradient that fades toward the table content.
-- Apply a restrained `backdrop-filter` blur of 6px.
+- Use a light directional surface fade without `backdrop-filter`; the reference table achieves the soft edge without sampling pixels behind the material.
+- Use `border-separate` with zero spacing and cell-owned dividers so the table structure and scroll fade remain independent.
+- Keep the directional tint flush inside the inherited panel radius; because the fade does not use backdrop sampling, it cannot blur or redraw the existing border.
 - Do not add a hard divider, dark shadow, or opaque block.
 - Keep the overlay `pointer-events: none` and hidden from assistive technology.
 - Transition only overlay opacity with the existing fast functional motion token.

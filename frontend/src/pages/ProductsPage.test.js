@@ -22,3 +22,9 @@ test("product editor uses category and unit IDs with inline creation", async () 
   assert.match(source, /unitId/);
   assert.match(source, /MasterDataSelectField/);
 });
+
+test("product barcode action uses the scan icon", async () => {
+  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  assert.match(source, /<Icon name="scan" className="size-4" \/>\s*Pindai/);
+  assert.doesNotMatch(source, /<Icon name="barcode" className="size-4" \/>\s*Pindai/);
+});

@@ -16,7 +16,20 @@ test("manual detection clears the submitted barcode for the next scan", async ()
   const submitManual = source.slice(source.indexOf("const submitManual"), source.indexOf("return (", source.indexOf("const submitManual")));
 
   assert.match(submitManual, /setManualCode\(""\)/);
-  assert.match(submitManual, /onDetectedRef\.current\(code\)/);
+  assert.match(submitManual, /processDetection\(code\)/);
+});
+
+test("scanner communicates processing and blocks overlapping detections", async () => {
+  const source = await readFile(new URL("./BarcodeScanner.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /const MIN_PROCESSING_MS = 180/);
+  assert.match(source, /if \(processingRef\.current\) return/);
+  assert.match(source, /await onDetectedRef\.current\?\.\(code\)/);
+  assert.match(source, /aria-busy=\{processing\}/);
+  assert.match(source, /role="status" aria-live="polite"/);
+  assert.match(source, /Memproses barcode…/);
+  assert.match(source, /disabled=\{processing\}/);
+  assert.match(source, /name="loader"/);
 });
 
 test("scanner uses a forced full-screen surface with Indonesian copy", async () => {

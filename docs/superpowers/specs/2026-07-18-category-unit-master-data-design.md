@@ -181,7 +181,7 @@ The layout uses existing tokens, controls, panel hierarchy, loading language, an
 
 Category and Unit both use the controlled `SelectField` pattern. Only active records appear as ordinary choices.
 
-Each selector includes an entity-specific inline create action. Activating it reveals a small input within the product-editing flow. A successful create updates the master collection and selects the new record without closing the product dialog or discarding other draft fields.
+Each selector includes an entity-specific inline create action at the bottom of its anchored searchable popover. Activating it replaces the option list with a compact input and quiet text actions. A successful create updates the master collection, selects the new record, and closes only the selector popover without closing the product dialog or discarding other draft fields. An exact archived-name match offers restore in the same inline flow.
 
 If create returns an archived-name conflict, the form offers to restore the identified record. Successful restoration selects it automatically.
 
@@ -206,7 +206,7 @@ Stock, Dashboard, Reports, and other product consumers display current category 
 - Archive and restore are idempotent.
 - Conflict-safe database constraints remain authoritative under concurrent requests.
 - Default seeding uses upsert semantics and is safe when multiple first-load requests run concurrently.
-- Settled lists remain visible during refetch or mutation and use the compact `Updating` language already defined by the design system.
+- Settled lists remain visible at full contrast during refetch or mutation; background activity is announced through the shared visually hidden polite status rather than a visible badge.
 - A failed inline mutation never closes its parent product dialog.
 
 ## Testing Strategy

@@ -25,28 +25,30 @@ var (
 )
 
 type Movement struct {
-	ID              uuid.UUID    `json:"id"`
-	ProductID       uuid.UUID    `json:"productId"`
-	ProductName     string       `json:"productName"`
-	ProductBarcode  string       `json:"productBarcode"`
-	ProductCategory string       `json:"productCategory"`
-	ProductUnit     string       `json:"productUnit"`
-	Type            MovementType `json:"type"`
-	QuantityDelta   int          `json:"quantityDelta"`
-	StockBefore     int          `json:"stockBefore"`
-	StockAfter      int          `json:"stockAfter"`
-	Reason          string       `json:"reason"`
-	ReferenceType   *string      `json:"referenceType,omitempty"`
-	ReferenceID     *uuid.UUID   `json:"referenceId,omitempty"`
-	CreatedByUserID string       `json:"createdByUserId"`
-	CreatedAt       time.Time    `json:"createdAt"`
+	ID                uuid.UUID    `json:"id"`
+	ProductID         uuid.UUID    `json:"productId"`
+	ProductName       string       `json:"productName"`
+	ProductBarcode    string       `json:"productBarcode"`
+	ProductCategory   string       `json:"productCategory"`
+	ProductUnit       string       `json:"productUnit"`
+	Type              MovementType `json:"type"`
+	QuantityDelta     int          `json:"quantityDelta"`
+	StockBefore       int          `json:"stockBefore"`
+	StockAfter        int          `json:"stockAfter"`
+	Reason            string       `json:"reason"`
+	ReferenceType     *string      `json:"referenceType,omitempty"`
+	ReferenceID       *uuid.UUID   `json:"referenceId,omitempty"`
+	CreatedByUserID   string       `json:"createdByUserId"`
+	CreatedByUserName string       `json:"createdByUserName,omitempty"`
+	CreatedAt         time.Time    `json:"createdAt"`
 }
 
 type CreateInput struct {
-	ProductID uuid.UUID    `json:"productId"`
-	Type      MovementType `json:"type"`
-	Quantity  int          `json:"quantity"`
-	Reason    string       `json:"reason"`
+	ProductID         uuid.UUID    `json:"productId"`
+	Type              MovementType `json:"type"`
+	Quantity          int          `json:"quantity"`
+	Reason            string       `json:"reason"`
+	CreatedByUserName string       `json:"createdByUserName,omitempty"`
 }
 
 type ProductStock struct {

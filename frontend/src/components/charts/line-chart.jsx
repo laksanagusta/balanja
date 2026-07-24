@@ -1,5 +1,6 @@
 "use client";;
 import { ParentSize } from "@visx/responsive";
+import { useReducedMotion } from "motion/react";
 import { Children, isValidElement, useCallback, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChartLoadingLabel } from "./chart-loading-label";
@@ -154,6 +155,9 @@ export function LineChart({
   children
 }) {
   const containerRef = useRef(null);
+  const reducedMotion = useReducedMotion();
+  const effectiveAnimationDuration = reducedMotion ? 0 : animationDuration;
+  const effectiveYDomainTweenDuration = reducedMotion ? 0 : yDomainTweenDuration;
   const margin = { ...DEFAULT_MARGIN, ...marginProp };
   const [chartPhase, setChartPhase] = useState(() =>
     resolveRestingChartPhase(status));
@@ -174,13 +178,13 @@ export function LineChart({
       ref={containerRef}
       style={{
         ...(aspectRatio ? { aspectRatio } : undefined),
-        touchAction: "none",
+        touchAction: "pan-y",
         ...style,
       }}>
       <ParentSize debounceTime={10}>
         {({ width, height }) => (
           <ChartInner
-            animationDuration={animationDuration}
+            animationDuration={effectiveAnimationDuration}
             animationEasing={animationEasing}
             chartStatus={status}
             containerRef={containerRef}
@@ -198,7 +202,7 @@ export function LineChart({
             xDomain={xDomain}
             xDomainSlotCount={xDomainSlotCount}
             yDomainTween={yDomainTween}
-            yDomainTweenDuration={yDomainTweenDuration}>
+            yDomainTweenDuration={effectiveYDomainTweenDuration}>
             {children}
           </ChartInner>
         )}

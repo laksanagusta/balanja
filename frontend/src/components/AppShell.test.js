@@ -9,6 +9,23 @@ test("app shell keeps a consistent inset on every outer edge", async () => {
   assert.doesNotMatch(source, /className="h-svh overflow-hidden bg-app-bg px-2 pt-2"/);
 });
 
+test("app shell locks document scrolling while pages own internal scroll", async () => {
+  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
+  const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(source, /const appShellScrollLockClass = "app-shell-scroll-lock";/);
+  assert.match(source, /document\.documentElement\.classList\.add\(appShellScrollLockClass\)/);
+  assert.match(source, /document\.body\.classList\.add\(appShellScrollLockClass\)/);
+  assert.match(source, /document\.documentElement\.classList\.remove\(appShellScrollLockClass\)/);
+  assert.match(source, /document\.body\.classList\.remove\(appShellScrollLockClass\)/);
+  assert.match(css, /html\.app-shell-scroll-lock,\s*body\.app-shell-scroll-lock\s*\{[\s\S]*overflow:\s*hidden/);
+  assert.match(showcase, /document scrolling is locked/i);
+  assert.match(designGuide, /document scrolling is locked/i);
+  assert.match(designGuide, /internal scroller/i);
+});
+
 test("app shell does not cast a shadow through the sidebar-content gap", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
 
@@ -66,4 +83,43 @@ test("mobile navigation is an accessible overlay with neutral selection", async 
   assert.match(source, /aria-label="Tutup menu navigasi"/);
   assert.match(source, /event\.key === "Escape"/);
   assert.doesNotMatch(source, /variant=\{pathname === path \? "primary"/);
+});
+
+test("desktop sidebar collapses to an accessible icon rail", async () => {
+  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /const \[sidebarCollapsed, setSidebarCollapsed\]/);
+  assert.match(source, /sidebarCollapsed \? "w-\[72px\]" : "w-\[236px\]"/);
+  assert.match(source, /aria-label=\{sidebarCollapsed \? "Perluas sidebar" : "Ciutkan sidebar"\}/);
+  assert.match(source, /aria-expanded=\{!sidebarCollapsed\}/);
+  assert.match(source, /aria-label=\{collapsed \? label : undefined\}/);
+  assert.match(source, /title=\{collapsed \? label : undefined\}/);
+});
+
+test("sidebar collapse uses the supplied panel-left icon", async () => {
+  const shell = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+  const icons = await readFile(new URL("./primitives.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
+  const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(icons, /function PanelLeftIcon\(\{ className \}\) \{[\s\S]*<rect width="18" height="18" x="3" y="3" rx="2"\s*\/>[\s\S]*<path d="M9 3v18"\s*\/>/);
+  assert.match(icons, /sidebar: PanelLeftIcon/);
+  assert.doesNotMatch(icons, /sidebar: RectangleStackIcon/);
+  assert.match(shell, /<Icon name="sidebar" className=\{`size-4 transition-transform/);
+  assert.match(showcase, /16px panel-left icon/i);
+  assert.match(designGuide, /16px panel-left icon/i);
+});
+
+test("shared Heroicons keep product and stock distinct in navigation", async () => {
+  const shell = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+  const icons = await readFile(new URL("./primitives.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
+  const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(icons, /from "@heroicons\/react\/24\/outline"/);
+  assert.match(icons, /box: TagIcon/);
+  assert.match(icons, /package: ArchiveBoxIcon/);
+  assert.doesNotMatch(shell, /function navIcon/);
+  assert.match(showcase, /Produk uses the tag icon while Stok uses the archive-box icon/);
+  assert.match(designGuide, /Produk route uses a tag icon while Stok uses an archive-box icon/);
 });

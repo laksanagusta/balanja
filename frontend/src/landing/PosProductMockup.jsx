@@ -2,14 +2,14 @@ import React from "react";
 import { Icon } from "../components/primitives.jsx";
 
 const products = [
-  { name: "Shampoo Botol 170ml", price: "Rp23.500", stock: "14 pcs", image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=600&q=80" },
-  { name: "Susu UHT 1L", price: "Rp19.500", stock: "11 karton", image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=600&q=80" },
-  { name: "Air Mineral 600ml", price: "Rp4.000", stock: "48 botol", image: "https://images.unsplash.com/photo-1616118132534-381148898bb4?auto=format&fit=crop&w=600&q=80" },
-  { name: "Snack Kentang", price: "Rp12.000", stock: "27 pcs", image: "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=600&q=80" },
-  { name: "Deterjen Bubuk 800g", price: "Rp18.000", stock: "20 pack", image: "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=600&q=80" },
-  { name: "Tisu Gulung 10pcs", price: "Rp24.000", stock: "16 pack", image: "https://images.unsplash.com/photo-1584556812952-905ffd0c611a?auto=format&fit=crop&w=600&q=80" },
-  { name: "Mie Instan Goreng", price: "Rp3.500", stock: "96 pcs", image: "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=600&q=80" },
-  { name: "Sabun Cuci Piring 750ml", price: "Rp13.500", stock: "22 botol", image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=600&q=80" },
+  { name: "Shampoo Botol 170ml", price: "Rp23.500", stock: "14 pcs" },
+  { name: "Susu UHT 1L", price: "Rp19.500", stock: "11 karton" },
+  { name: "Air Mineral 600ml", price: "Rp4.000", stock: "48 botol" },
+  { name: "Snack Kentang", price: "Rp12.000", stock: "27 pcs" },
+  { name: "Deterjen Bubuk 800g", price: "Rp18.000", stock: "20 pack" },
+  { name: "Tisu Gulung 10pcs", price: "Rp24.000", stock: "16 pack" },
+  { name: "Mie Instan Goreng", price: "Rp3.500", stock: "96 pcs" },
+  { name: "Sabun Cuci Piring 750ml", price: "Rp13.500", stock: "22 botol" },
 ];
 
 const sidebarGroups = [
@@ -18,7 +18,15 @@ const sidebarGroups = [
   { label: "Catatan", items: [["Transaksi", "file"]] },
 ];
 
-export default function PosProductMockup({ compact = false, priority = false }) {
+function ProductImagePlaceholder({ className = "" }) {
+  return (
+    <div className={`grid place-items-center bg-surface-muted text-text-subtle ${className}`}>
+      <Icon name="image" className="size-5" />
+    </div>
+  );
+}
+
+export default function PosProductMockup({ compact = false }) {
   return (
     <div
       aria-hidden="true"
@@ -82,17 +90,10 @@ export default function PosProductMockup({ compact = false, priority = false }) 
           </div>
 
           <div className={`mt-3 grid gap-2 ${compact ? "grid-cols-2" : "grid-cols-2 xl:grid-cols-4"}`}>
-            {products.map((product, index) => (
+            {products.map((product) => (
               <article key={product.name} className="overflow-hidden rounded-card border border-border bg-surface shadow-low">
                 <div className="relative h-16 overflow-hidden bg-surface-muted sm:h-24 lg:h-28">
-                  <img
-                    src={product.image}
-                    alt=""
-                    loading={priority && index < 4 ? "eager" : "lazy"}
-                    decoding="async"
-                    fetchPriority={priority && index === 0 ? "high" : "auto"}
-                    className="h-full w-full object-cover"
-                  />
+                  <ProductImagePlaceholder className="h-full w-full" />
                   <span className="absolute right-1.5 top-1.5 rounded-full bg-surface/90 px-1.5 py-0.5 text-[8px] font-semibold text-text">{product.stock}</span>
                 </div>
                 <div className="p-2">
@@ -116,7 +117,7 @@ export default function PosProductMockup({ compact = false, priority = false }) 
           <div className="mt-4 grid gap-3">
             {products.slice(1, 4).map((product, index) => (
               <div key={product.name} className="flex items-center gap-2 border-b border-border pb-3">
-                <img src={product.image} alt="" loading="lazy" decoding="async" className="size-9 rounded-control object-cover" />
+                <ProductImagePlaceholder className="size-9 shrink-0 rounded-control" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-text">{product.name}</p>
                   <p className="text-text-muted">{product.price}</p>

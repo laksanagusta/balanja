@@ -134,7 +134,11 @@ func stockCursorValue(movement Movement, sort string) any {
 
 func (s *Service) Create(ctx context.Context, identity database.Identity, input CreateInput) (created CreateResult, err error) {
 	input.Reason = strings.TrimSpace(input.Reason)
+	input.CreatedByUserName = strings.TrimSpace(input.CreatedByUserName)
 	if input.ProductID == [16]byte{} || input.Reason == "" {
+		return CreateResult{}, ErrInvalidStockMovement
+	}
+	if len(input.CreatedByUserName) > 120 {
 		return CreateResult{}, ErrInvalidStockMovement
 	}
 	if input.Type != MovementTypeRestock && input.Type != MovementTypeReduce && input.Type != MovementTypeSetExact {

@@ -28,8 +28,10 @@ export default function DashboardPatternsShowcase() {
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Pola dashboard</h3>
       <div className="grid gap-4 rounded-panel border border-border bg-app-bg p-4">
         <p className="text-sm leading-6 text-text-muted">
-          Chart BKLIT produksi memakai token semantik Balanja di panel putih yang tenang. Pendapatan memakai violet, produk terlaris memakai hijau,
-          dan metode pembayaran memakai violet, mint, dan amber. Legenda, marker, label, dan nilai menjaga setiap chart tetap terbaca tanpa bergantung pada warna.
+          Chart BKLIT produksi memakai token semantik Balanja di panel putih yang tenang. Pendapatan memakai violet tanpa titik permanen; tooltip hover
+          tetap membuat nilai harian dapat diperiksa. Pendapatan memakai violet, produk terlaris memakai hijau, dan metode pembayaran memakai violet, mint, dan amber.
+          Legenda, label, dan nilai tetap terbaca tanpa bergantung pada warna. Daftar stok menipis menempatkan kategori dan satuan sebagai subtitle
+          di bawah nama produk, sementara badge stok menjadi satu-satunya penanda kuantitas.
         </p>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardKpiCard label="Pendapatan" value="Rp786.000" icon="cash" comparison={{ direction: "up", percent: 12.4 }} tone="success" />

@@ -111,25 +111,26 @@ function ChartPanelSkeleton({ delay = 0, titleWidth = "w-28", bodyRows = 3, char
 
 export function RetailPosSkeleton() {
   return (
-    <div className="grid h-full min-h-0 overflow-y-auto bg-app-bg xl:grid-cols-[minmax(0,1fr)_360px] xl:overflow-hidden">
-      <main className="flex min-h-[640px] flex-col border-border bg-surface xl:min-h-0 xl:border-r">
+    <div className="retail-pos-query h-full min-h-0">
+      <div className="retail-pos-workspace grid h-full min-h-0 bg-app-bg">
+      <main className="retail-pos-catalog-pane flex min-w-0 flex-col border-border bg-surface">
         <div className="bg-surface">
-          <div className="flex flex-col gap-3 border-b border-border px-6 py-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 border-b border-border px-3 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative overflow-hidden rounded-md">
               <Skeleton className="h-5 w-28 bg-surface-muted/80" />
               <LoadingSheen delay={0} />
             </div>
-            <div className="relative overflow-hidden rounded-card w-full lg:max-w-md">
-              <Skeleton className="h-9 w-full bg-surface-muted/80" />
+            <div className="relative w-full overflow-hidden rounded-card lg:max-w-md">
+              <Skeleton className="h-11 w-full bg-surface-muted/80" />
               <LoadingSheen delay={80} />
             </div>
           </div>
 
-          <div className="px-6 py-3">
-            <div className="flex h-[38px] gap-2 overflow-hidden rounded-control bg-surface-muted p-[5px]">
+          <div className="px-3 py-3 sm:px-6">
+            <div className="flex gap-1 overflow-hidden rounded-control bg-surface-muted p-1">
               {Array.from({ length: 4 }, (_, index) => (
                 <div key={index} className="relative overflow-hidden rounded-md">
-                  <Skeleton className={`h-7 ${index === 0 ? "w-16" : index === 1 ? "w-20" : index === 2 ? "w-[4.5rem]" : "w-24"} bg-surface`} />
+                  <Skeleton className={`h-11 ${index === 0 ? "w-16" : index === 1 ? "w-20" : index === 2 ? "w-[4.5rem]" : "w-24"} bg-surface`} />
                   <LoadingSheen delay={120 + index * 60} />
                 </div>
               ))}
@@ -137,7 +138,7 @@ export function RetailPosSkeleton() {
           </div>
         </div>
 
-        <div className="menu-grid-transition grid flex-1 auto-rows-max gap-4 overflow-y-auto p-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <div className="product-catalog-grid menu-grid-transition grid auto-rows-max gap-4 p-3 sm:p-6">
           {Array.from({ length: 8 }, (_, index) => (
             <article
               key={index}
@@ -167,14 +168,14 @@ export function RetailPosSkeleton() {
                 </div>
               </div>
               <div className="mt-auto grid gap-2 border-t border-border p-2">
-                <Skeleton className="h-10 w-full bg-surface-muted/80" />
+                <Skeleton className="h-11 w-full bg-surface-muted/80" />
               </div>
             </article>
           ))}
         </div>
       </main>
 
-      <aside className="flex min-h-[560px] flex-col overflow-hidden border-t border-border bg-surface xl:min-h-0 xl:border-t-0">
+      <aside className="retail-pos-cart-pane flex min-w-0 flex-col border-border bg-surface">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="grid gap-2">
             <Skeleton className="h-5 w-20 bg-surface-muted/80" />
@@ -183,7 +184,7 @@ export function RetailPosSkeleton() {
           <Skeleton className="h-6 w-[4.5rem] bg-surface-muted/80" />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+        <div className="retail-pos-cart-list px-4 py-3">
           <div className="grid gap-3">
             {Array.from({ length: 3 }, (_, index) => (
               <div key={index} className="relative overflow-hidden rounded-card bg-surface-muted p-3">
@@ -201,7 +202,7 @@ export function RetailPosSkeleton() {
           </div>
         </div>
 
-        <div className="relative z-10 mt-auto grid gap-3 border-t border-border bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
+        <div className="retail-pos-cart-footer z-10 mt-auto grid gap-3 border-t border-border bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
           <div className="grid gap-3 rounded-card border border-border bg-surface-muted p-4">
             {[0, 1, 2].map((index) => (
               <div key={index} className="flex items-center justify-between gap-4">
@@ -211,9 +212,10 @@ export function RetailPosSkeleton() {
             ))}
           </div>
           <Skeleton className="h-11 w-full rounded-card bg-accent/20" />
-          <Skeleton className="h-9 w-full rounded-card bg-surface-muted/80" />
+          <Skeleton className="h-11 w-full rounded-card bg-surface-muted/80" />
         </div>
       </aside>
+      </div>
     </div>
   );
 }
@@ -404,43 +406,49 @@ export function SettingsPageSkeleton() {
         <Skeleton className="h-5 w-24 bg-surface-muted/80" />
       </header>
 
-      <main className="grid min-h-0 flex-1 content-start gap-4 overflow-auto p-4 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-6 lg:p-6">
-        <div className="flex min-w-0 gap-1 overflow-x-auto pb-1 md:grid md:content-start md:overflow-visible md:pb-0">
-          {Array.from({ length: 3 }, (_, index) => (
-            <Skeleton
-              key={index}
-              className={`min-h-11 flex-none rounded-control bg-surface-muted/80 md:w-full ${index === 0 ? "w-28" : "w-24"}`}
-            />
-          ))}
-        </div>
+      <main className="settings-workspace min-h-0 flex-1 overflow-auto">
+        <div className="settings-workspace-layout">
+          <div className="settings-navigation">
+            {Array.from({ length: 3 }, (_, index) => (
+              <Skeleton
+                key={index}
+                className={`settings-navigation-item rounded-control bg-surface-muted/80 ${index === 0 ? "w-28" : "w-24"}`}
+              />
+            ))}
+          </div>
 
-        <div className="mx-auto w-full max-w-3xl">
-          <Panel className="grid gap-4 p-4">
-            <div className="border-b border-border pb-3">
-              <Skeleton className="h-4 w-24 bg-surface-muted/80" />
-              <Skeleton className="mt-2 h-3.5 w-full max-w-80 bg-surface-muted/80" />
-            </div>
-
-            <div className="grid gap-3 rounded-card border border-border bg-surface-muted/50 p-3 sm:grid-cols-[minmax(0,1fr)_7rem] sm:items-end">
-              <div className="grid gap-2">
-                <Skeleton className="h-3.5 w-24 bg-surface" />
-                <Skeleton className="h-11 w-full rounded-card bg-surface" />
+          <div className="settings-content mx-auto w-full max-w-3xl">
+            <Panel className="master-data-manager grid gap-4 p-4">
+              <div className="border-b border-border pb-3">
+                <Skeleton className="h-4 w-24 bg-surface-muted/80" />
+                <Skeleton className="mt-2 h-3.5 w-full max-w-80 bg-surface-muted/80" />
               </div>
-              <Skeleton className="h-11 w-full rounded-control bg-surface" />
-            </div>
 
-            <div className="grid gap-3">
-              {Array.from({ length: 3 }, (_, index) => (
-                <div key={index} className="flex min-h-14 items-center justify-between gap-3 rounded-card border border-border p-3">
-                  <div className="grid flex-1 gap-2">
-                    <Skeleton className={`h-4 bg-surface-muted/80 ${index === 1 ? "w-2/5" : "w-1/3"}`} />
-                    <Skeleton className="h-3 w-20 bg-surface-muted/80" />
-                  </div>
-                  <Skeleton className="h-8 w-20 rounded-control bg-surface-muted/80" />
+              <div className="master-data-create rounded-card border border-border bg-surface-muted/50 p-3">
+                <div className="grid gap-2">
+                  <Skeleton className="h-3.5 w-24 bg-surface" />
+                  <Skeleton className="h-11 w-full rounded-card bg-surface" />
                 </div>
-              ))}
-            </div>
-          </Panel>
+                <div className="master-data-actions-single">
+                  <Skeleton className="settings-touch-target h-11 w-full min-w-24 rounded-control bg-surface" />
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <div key={index} className="master-data-item-row rounded-card border border-border p-3">
+                    <div className="grid min-w-0 gap-2">
+                      <Skeleton className={`h-4 bg-surface-muted/80 ${index === 1 ? "w-2/5" : "w-1/3"}`} />
+                      <Skeleton className="h-3 w-20 bg-surface-muted/80" />
+                    </div>
+                    <div className="master-data-actions-single">
+                      <Skeleton className="settings-touch-target h-8 w-full min-w-20 rounded-control bg-surface-muted/80" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </div>
         </div>
       </main>
     </div>

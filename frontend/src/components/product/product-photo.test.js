@@ -21,6 +21,14 @@ test("design system publishes product photo patterns", async () => {
   assert.doesNotMatch(field, /Nama file/);
 });
 
+test("empty product photo field uses a neutral photo placeholder", async () => {
+  const field = await readFile(new URL("./ProductPhotoField.jsx", import.meta.url), "utf8");
+  const image = await readFile(new URL("./ProductImage.jsx", import.meta.url), "utf8");
+  assert.match(field, /fallback="placeholder"/);
+  assert.match(image, /fallback === "placeholder"/);
+  assert.match(image, /name="image"/);
+});
+
 test("POS and cart share the product image fallback renderer", async () => {
   const product = await readFile(new URL("../pos/ProductCard.jsx", import.meta.url), "utf8");
   const cart = await readFile(new URL("../pos/CartRow.jsx", import.meta.url), "utf8");

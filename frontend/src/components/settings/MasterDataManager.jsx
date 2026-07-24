@@ -1,5 +1,6 @@
 import React from "react";
 import { Badge, Button, Icon, Input, Panel } from "../primitives.jsx";
+import BackgroundUpdateStatus from "../feedback/BackgroundUpdateStatus.jsx";
 
 export default function MasterDataManager({
   singularLabel,
@@ -34,16 +35,16 @@ export default function MasterDataManager({
   }
 
   return (
-    <Panel className="grid gap-4 p-4">
+    <Panel className="master-data-manager grid gap-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-text">{pluralLabel}</p>
           <p className="text-xs text-text-muted">Urutan alfabetis. Arsip bersifat reversible dan tidak menghapus data produk.</p>
         </div>
-        {loading ? <Badge tone="accent">Memperbarui</Badge> : null}
+        <BackgroundUpdateStatus active={loading} label={`Memperbarui ${pluralLabel.toLowerCase()}`} />
       </div>
 
-      <div className="grid gap-3 rounded-card border border-border bg-surface-muted/50 p-3">
+      <div className="master-data-create rounded-card border border-border bg-surface-muted/50 p-3">
         <Input
           label={`Tambah ${singularLabel.toLowerCase()}`}
           placeholder={`Nama ${singularLabel.toLowerCase()}`}
@@ -54,8 +55,9 @@ export default function MasterDataManager({
             disabled: pendingId === "__create__",
           }}
         />
-        <div className="flex justify-end">
+        <div className="master-data-actions-single">
           <Button
+            className="settings-touch-target w-full"
             type="button"
             variant="primary"
             disabled={!draft.trim() || pendingId === "__create__"}
@@ -73,16 +75,16 @@ export default function MasterDataManager({
       <div className={`grid gap-3 ${loading ? "opacity-70" : ""}`}>
         {activeItems.map((item) => (
           <div key={item.id} className="grid gap-3 rounded-card border border-border bg-surface p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-text">{item.name}</p>
+            <div className="master-data-item-row">
+              <div className="master-data-identity">
+                <p className="master-data-item-name text-sm font-semibold text-text">{item.name}</p>
                 <Badge tone="success">Aktif</Badge>
               </div>
-              <div className="flex gap-2">
-                <Button type="button" size="sm" onClick={() => { setRenamingId(item.id); setRenameValue(item.name); }}>
+              <div className="master-data-actions">
+                <Button className="settings-touch-target" type="button" size="sm" onClick={() => { setRenamingId(item.id); setRenameValue(item.name); }}>
                   Ubah nama
                 </Button>
-                <Button type="button" size="sm" variant="danger" onClick={() => setArchiveId(item.id)}>
+                <Button className="settings-touch-target" type="button" size="sm" variant="danger" onClick={() => setArchiveId(item.id)}>
                   Arsipkan
                 </Button>
               </div>
@@ -93,9 +95,10 @@ export default function MasterDataManager({
                   label={`Ubah nama ${singularLabel.toLowerCase()}`}
                   inputProps={{ value: renameValue, onChange: (event) => setRenameValue(event.target.value), disabled: pendingId === item.id }}
                 />
-                <div className="flex justify-end gap-2">
-                  <Button type="button" size="sm" onClick={() => setRenamingId("")}>Batal</Button>
+                <div className="master-data-actions">
+                  <Button className="settings-touch-target" type="button" size="sm" onClick={() => setRenamingId("")}>Batal</Button>
                   <Button
+                    className="settings-touch-target"
                     type="button"
                     size="sm"
                     variant="primary"
@@ -113,9 +116,10 @@ export default function MasterDataManager({
             {archiveId === item.id ? (
               <div className="grid gap-3 rounded-card border border-danger/20 bg-danger-soft/40 p-3">
                 <p className="text-sm text-text">Arsipkan {singularLabel.toLowerCase()} ini? Produk yang sudah terhubung tetap menyimpan referensinya.</p>
-                <div className="flex justify-end gap-2">
-                  <Button type="button" size="sm" onClick={() => setArchiveId("")}>Batal</Button>
+                <div className="master-data-actions">
+                  <Button className="settings-touch-target" type="button" size="sm" onClick={() => setArchiveId("")}>Batal</Button>
                   <Button
+                    className="settings-touch-target"
                     type="button"
                     size="sm"
                     variant="danger"
@@ -139,20 +143,23 @@ export default function MasterDataManager({
         <div className="mt-3 grid gap-3">
           {archivedItems.length === 0 ? <p className="text-sm text-text-muted">Belum ada item diarsipkan.</p> : null}
           {archivedItems.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-3 rounded-card border border-border bg-surface-muted/50 p-3">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-text">{item.name}</p>
+            <div key={item.id} className="master-data-archived-row rounded-card border border-border bg-surface-muted/50 p-3">
+              <div className="master-data-identity">
+                <p className="master-data-item-name text-sm font-semibold text-text">{item.name}</p>
                 <Badge>Diarsipkan</Badge>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="primary"
-                disabled={pendingId === item.id}
-                onClick={() => run(async () => onRestore?.(item.id), item.id)}
-              >
-                Pulihkan
-              </Button>
+              <div className="master-data-actions-single">
+                <Button
+                  className="settings-touch-target w-full"
+                  type="button"
+                  size="sm"
+                  variant="primary"
+                  disabled={pendingId === item.id}
+                  onClick={() => run(async () => onRestore?.(item.id), item.id)}
+                >
+                  Pulihkan
+                </Button>
+              </div>
             </div>
           ))}
         </div>

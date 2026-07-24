@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useScheduledTooltip } from "./use-scheduled-tooltip";
 import { normalizeYAxisId } from "./y-axis-scales";
 
+const TOUCH_INTENT_THRESHOLD = 10;
+
 export function useChartInteraction(
   {
     xScale,
@@ -29,6 +31,7 @@ export function useChartInteraction(
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const lastHoveredXRef = useRef(null);
+  const touchIntentRef = useRef(null);
 
   const resolveTooltipFromX = useCallback(pixelX => {
     const x0 = xScale.invert(pixelX);
@@ -164,7 +167,12 @@ export function useChartInteraction(
 
   const handleTouchStart = useCallback((event) => {
     if (event.touches.length === 1) {
-      event.preventDefault();
+      const touch = event.touches[0];
+      touchIntentRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        axis: null,
+      };
       const chartX = getChartX(event, 0);
       if (chartX === null) {
         return;
@@ -175,6 +183,7 @@ export function useChartInteraction(
         scheduleTooltip(tooltip);
       }
     } else if (event.touches.length === 2) {
+      touchIntentRef.current = null;
       event.preventDefault();
       resetTooltipDedupe();
       clearTooltip();
@@ -204,7 +213,19 @@ export function useChartInteraction(
 
   const handleTouchMove = useCallback((event) => {
     if (event.touches.length === 1) {
-      event.preventDefault();
+      const touch = event.touches[0];
+      const intent = touchIntentRef.current;
+      if (intent) {
+        const deltaX = Math.abs(touch.clientX - intent.startX);
+        const deltaY = Math.abs(touch.clientY - intent.startY);
+        if (!intent.axis && Math.max(deltaX, deltaY) < TOUCH_INTENT_THRESHOLD) return;
+        if (!intent.axis) intent.axis = deltaX > deltaY ? "horizontal" : "vertical";
+        if (intent.axis === "vertical") {
+          lastHoveredXRef.current = null;
+          clearTooltip();
+          return;
+        }
+      }
       const chartX = getChartX(event, 0);
       if (chartX === null) {
         return;
@@ -231,9 +252,10 @@ export function useChartInteraction(
         active: true,
       });
     }
-  }, [getChartX, resolveTooltipFromX, resolveIndexFromX, scheduleTooltip]);
+  }, [clearTooltip, getChartX, resolveTooltipFromX, resolveIndexFromX, scheduleTooltip]);
 
   const handleTouchEnd = useCallback(() => {
+    touchIntentRef.current = null;
     clearTooltip();
     setSelection(null);
   }, [clearTooltip]);
@@ -264,12 +286,13 @@ export function useChartInteraction(
         onTouchStart: handleTouchStart,
         onTouchMove: handleTouchMove,
         onTouchEnd: handleTouchEnd,
+        onTouchCancel: handleTouchEnd,
       }
     : {};
 
   const interactionStyle = {
     cursor: canInteract ? "crosshair" : "default",
-    touchAction: "none",
+    touchAction: "pan-y",
   };
 
   return {

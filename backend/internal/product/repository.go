@@ -58,6 +58,7 @@ func scanUpdateResult(row pgx.Row) (UpdateResult, error) {
 }
 
 const productColumns = `p.id,p.name,p.barcode,p.category_id,c.name,p.price,p.stock,p.unit_id,u.name,p.image,p.image_key,p.active,p.created_at,p.updated_at`
+const productInsertedColumns = `inserted.id,inserted.name,inserted.barcode,inserted.category_id,c.name,inserted.price,inserted.stock,inserted.unit_id,u.name,inserted.image,inserted.image_key,inserted.active,inserted.created_at,inserted.updated_at`
 const productUpdateColumns = `updated.id,updated.name,updated.barcode,updated.category_id,c.name,updated.price,updated.stock,updated.unit_id,u.name,updated.image,updated.image_key,updated.active,updated.created_at,updated.updated_at`
 
 func (PostgresRepository) List(ctx context.Context, tx database.Tx, orgID string, filter ListFilter) ([]Product, error) {
@@ -99,9 +100,15 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, orgID string
 }
 func (PostgresRepository) Create(ctx context.Context, tx database.Tx, orgID string, in CreateInput) (Product, error) {
 	p, err := scanProduct(tx.QueryRow(ctx, `
-		insert into products (org_id,name,barcode,category_id,price,stock,unit_id,image,image_key)
-		values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-		returning `+productColumns+`
+		with inserted as (
+			insert into products (org_id,name,barcode,category_id,price,stock,unit_id,image,image_key)
+			values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+			returning id,name,barcode,category_id,price,stock,unit_id,image,image_key,active,created_at,updated_at
+		)
+		select `+productInsertedColumns+`
+		from inserted
+		join categories c on c.org_id=$1 and c.id=inserted.category_id
+		join units u on u.org_id=$1 and u.id=inserted.unit_id
 	`, orgID, in.Name, in.Barcode, in.CategoryID, in.Price, in.Stock, in.UnitID, in.Image, in.ImageKey))
 	if err != nil {
 		var postgresError *pgconn.PgError

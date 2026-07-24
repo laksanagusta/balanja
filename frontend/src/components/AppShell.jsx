@@ -6,12 +6,9 @@ import { navGroups, routes } from "../shared.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { Icon } from "./primitives.jsx";
 
-function navIcon(icon) {
-  if (icon === "box") return "package";
-  return icon;
-}
+const appShellScrollLockClass = "app-shell-scroll-lock";
 
-function NavItem({ item, pathname, onNavigate }) {
+function NavItem({ item, pathname, onNavigate, collapsed = false }) {
   const [label, icon, path] = item;
   const active = pathname === path;
 
@@ -19,27 +16,31 @@ function NavItem({ item, pathname, onNavigate }) {
     <button
       type="button"
       aria-current={pathname === path ? "page" : undefined}
+      aria-label={collapsed ? label : undefined}
+      title={collapsed ? label : undefined}
       onClick={() => onNavigate(path)}
-      className={`flex h-9 w-full items-center gap-2.5 rounded-control px-3 text-left text-sm font-semibold transition-[background-color,color,transform] duration-fast ease-standard active:scale-[0.98] motion-reduce:active:scale-100 ${
+      className={`pos-touch-target flex h-9 w-full items-center rounded-control text-left text-sm font-semibold transition-[background-color,color,transform] duration-fast ease-standard active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:active:scale-100 ${collapsed ? "justify-center px-0" : "gap-2.5 px-3"} ${
         active
           ? "bg-surface-muted text-text"
           : "text-text-muted hover:bg-surface-muted hover:text-text"
       }`}
     >
-      <Icon name={navIcon(icon)} className="size-4" />
-      {label}
+      <Icon name={icon} className="size-4 shrink-0" />
+      {!collapsed && label}
     </button>
   );
 }
 
-function NavigationGroups({ pathname, onNavigate }) {
+function NavigationGroups({ pathname, onNavigate, collapsed = false }) {
   return navGroups.map((group) => (
-    <div key={group.label} className="grid gap-1">
-      <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-subtle">
-        {group.label}
-      </p>
+    <div key={group.label} role="group" aria-label={group.label} className="grid gap-1">
+      {!collapsed && (
+        <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-subtle">
+          {group.label}
+        </p>
+      )}
       {group.items.map((item) => (
-        <NavItem key={item[2]} item={item} pathname={pathname} onNavigate={onNavigate} />
+        <NavItem key={item[2]} item={item} pathname={pathname} onNavigate={onNavigate} collapsed={collapsed} />
       ))}
     </div>
   ));
@@ -84,7 +85,17 @@ export default function AppShell({ children, pathname, onNavigate }) {
   const { notice, clearNotice } = usePOSStore();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [accountOpen, setAccountOpen] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const avatarSeed = user?.primaryEmailAddress?.emailAddress || user?.fullName || user?.id || "cashier";
+
+  React.useEffect(() => {
+    document.documentElement.classList.add(appShellScrollLockClass);
+    document.body.classList.add(appShellScrollLockClass);
+    return () => {
+      document.documentElement.classList.remove(appShellScrollLockClass);
+      document.body.classList.remove(appShellScrollLockClass);
+    };
+  }, []);
 
   const go = React.useCallback((path) => {
     onNavigate(path);
@@ -116,15 +127,29 @@ export default function AppShell({ children, pathname, onNavigate }) {
   return (
     <div className="h-svh overflow-hidden bg-app-bg p-2">
       <div className="flex h-full gap-2 overflow-hidden">
-        <aside className="hidden h-full w-[236px] shrink-0 flex-col rounded-card border border-border bg-surface md:flex">
-          <div className="flex h-14 items-center px-4">
-            <button type="button" onClick={() => go(routes.dashboard)} className="text-left text-sm font-semibold lowercase text-text">
-              balanja
+        <aside className={`hidden h-full shrink-0 flex-col rounded-card border border-border bg-surface transition-[width] duration-base ease-standard motion-reduce:transition-none md:flex ${sidebarCollapsed ? "w-[72px]" : "w-[236px]"}`}>
+          <div className={`flex h-14 items-center ${sidebarCollapsed ? "justify-center px-2" : "justify-between gap-2 px-4"}`}>
+            {!sidebarCollapsed && (
+              <button type="button" onClick={() => go(routes.dashboard)} className="min-h-11 text-left text-sm font-semibold lowercase text-text">
+                balanja
+              </button>
+            )}
+            <button
+              type="button"
+              aria-label={sidebarCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+              aria-expanded={!sidebarCollapsed}
+              onClick={() => {
+                setSidebarCollapsed((collapsed) => !collapsed);
+                setAccountOpen(false);
+              }}
+              className="pos-icon-touch-target grid size-9 shrink-0 place-items-center rounded-control text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
+              <Icon name="sidebar" className={`size-4 transition-transform duration-base motion-reduce:transition-none ${sidebarCollapsed ? "rotate-180" : ""}`} />
             </button>
           </div>
 
           <nav aria-label="Navigasi utama" className="grid gap-4 px-2 py-3">
-            <NavigationGroups pathname={pathname} onNavigate={go} />
+            <NavigationGroups pathname={pathname} onNavigate={go} collapsed={sidebarCollapsed} />
           </nav>
 
           <div className="relative mt-auto p-3">
@@ -136,7 +161,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
                   go(routes.settings);
                 }}
                 onSignOut={() => signOut({ redirectUrl: "/" })}
-                className="absolute bottom-[64px] left-3 right-3 z-30"
+                className={`absolute bottom-[64px] left-3 z-30 ${sidebarCollapsed ? "w-[280px]" : "right-3"}`}
               />
             )}
             <button
@@ -144,18 +169,18 @@ export default function AppShell({ children, pathname, onNavigate }) {
               aria-label="Buka menu akun"
               aria-expanded={accountOpen}
               onClick={() => setAccountOpen((open) => !open)}
-              className={`flex w-full items-center gap-3 rounded-control border border-border bg-surface px-2 py-1.5 text-left shadow-low transition-[background-color,transform] duration-fast ease-standard active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${accountOpen ? "bg-surface-muted" : "hover:bg-surface-muted"}`}
+              className={`flex w-full items-center rounded-control border border-border bg-surface py-1.5 text-left shadow-low transition-[background-color,transform] duration-fast ease-standard active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${sidebarCollapsed ? "justify-center px-1" : "gap-3 px-2"} ${accountOpen ? "bg-surface-muted" : "hover:bg-surface-muted"}`}
             >
               <span className="size-9 shrink-0 overflow-hidden rounded-full bg-surface-muted">
                 <GradientAvatar seed={avatarSeed} size={36} />
               </span>
-              <span className="min-w-0 flex-1">
+              {!sidebarCollapsed && <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-text">{user?.fullName || "Kasir"}</span>
                 <span className="block truncate text-xs text-text-muted">
                   {user?.primaryEmailAddress?.emailAddress || "Sudah masuk"}
                 </span>
-              </span>
-              <Icon name="chevron" className={`size-4 text-text-muted transition ${accountOpen ? "" : "rotate-180"}`} />
+              </span>}
+              {!sidebarCollapsed && <Icon name="chevron" className={`size-4 text-text-muted transition ${accountOpen ? "" : "rotate-180"}`} />}
             </button>
           </div>
         </aside>

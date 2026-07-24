@@ -3,7 +3,7 @@ import { Icon, Panel } from "../primitives.jsx";
 
 const groups = [
   { label: "Ringkasan", items: [["Dashboard", "grid"]] },
-  { label: "Operasional", items: [["Kasir", "receipt"], ["Produk", "package"], ["Stok", "box"]] },
+  { label: "Operasional", items: [["Kasir", "receipt"], ["Produk", "box"], ["Stok", "package"]] },
   { label: "Catatan", items: [["Transaksi", "file"]] },
 ];
 
@@ -14,7 +14,7 @@ export default function NavigationPatternsShowcase() {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">Wayfinding pattern</p>
         <h3 className="mt-2 text-xl font-semibold text-text">Navigation and entry points</h3>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-text-muted">
-          Dashboard is home, Kasir is the explicit sales workspace, and each supporting destination is grouped by the work it contains.
+          Dashboard is home, Kasir is the explicit sales workspace, and each supporting destination is grouped by the work it contains. Produk uses the tag icon while Stok uses the archive-box icon, so the destinations remain distinguishable in the collapsed 72px icon rail.
         </p>
       </div>
 
@@ -51,7 +51,7 @@ export default function NavigationPatternsShowcase() {
         <div className="grid content-start gap-3 sm:grid-cols-2">
           <div className="rounded-card border border-border bg-surface-muted p-4">
             <p className="text-sm font-semibold text-text">Scanner follows the cart</p>
-            <p className="mt-1 text-sm leading-6 text-text-muted">Pindai barcode lives inside Kasir, where every detected product and cart change is immediately visible.</p>
+            <p className="mt-1 text-sm leading-6 text-text-muted">Pindai barcode lives inside Kasir, where every detected product and cart change is immediately visible. Saat barcode diproses, workspace menampilkan spinner cepat, mengunci pembacaan ganda, dan tetap menyediakan aksi tutup.</p>
           </div>
           <div className="rounded-card border border-border bg-surface-muted p-4">
             <p className="text-sm font-semibold text-text">Insights lead to action</p>
@@ -60,6 +60,14 @@ export default function NavigationPatternsShowcase() {
           <div className="rounded-card border border-border bg-surface-muted p-4 sm:col-span-2">
             <p className="text-sm font-semibold text-text">Mobile preserves context</p>
             <p className="mt-1 text-sm leading-6 text-text-muted">The same hierarchy appears in a dismissible overlay sheet with neutral selection, clear semantics, and reduced-motion support.</p>
+          </div>
+          <div className="rounded-card border border-border bg-surface-muted p-4 sm:col-span-2">
+            <p className="text-sm font-semibold text-text">Desktop rail stays available</p>
+            <p className="mt-1 text-sm leading-6 text-text-muted">A labeled sidebar control uses a compact 16px panel-left icon that rotates between the 236px navigation and a 72px icon rail without changing the active destination.</p>
+          </div>
+          <div className="rounded-card border border-border bg-surface-muted p-4 sm:col-span-2">
+            <p className="text-sm font-semibold text-text">The shell owns the viewport</p>
+            <p className="mt-1 text-sm leading-6 text-text-muted">While AppShell is mounted, document scrolling is locked and each workspace uses its bounded internal scroller so overlays cannot create blank page overflow.</p>
           </div>
         </div>
       </div>

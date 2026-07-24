@@ -2,6 +2,7 @@ import React from "react";
 import { toast } from "sonner";
 import BarcodeScanner from "../components/BarcodeScanner.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
+import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { CartRow } from "../components/pos/CartRow.jsx";
 import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { ProductCatalog } from "../components/pos/ProductCatalog.jsx";
@@ -11,11 +12,37 @@ import { calculateCartTotals } from "../pos/domain.js";
 import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice } from "../shared.jsx";
-import { cashPaymentState } from "./retail-pos-utils.js";
+import {
+  cashPaymentState,
+  resistedCartSwipeDistance,
+  shouldDismissCartSwipe,
+} from "./retail-pos-utils.js";
+
+const CART_EXIT_MS = 200;
+const FOCUSABLE_SELECTOR = [
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "[href]",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
+
+function focusableElements(container) {
+  return container ? Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)) : [];
+}
 
 export default function RetailPosPage() {
   const store = usePOSStore();
   const searchInputRef = React.useRef(null);
+  const categoryTabsRef = React.useRef(null);
+  const categoryTabRefs = React.useRef(new Map());
+  const cartTriggerRef = React.useRef(null);
+  const cartCloseRef = React.useRef(null);
+  const cartPaneRef = React.useRef(null);
+  const cartScrimRef = React.useRef(null);
+  const cartReturnFocusRef = React.useRef(null);
+  const cartCloseTimerRef = React.useRef(null);
+  const cartDragRef = React.useRef(null);
+  const [categoryIndicator, setCategoryIndicator] = React.useState({ left: 0, width: 0, ready: false });
   const [query, setQuery] = React.useState("");
   const [category, setCategory] = React.useState("");
   const [paymentMethod, setPaymentMethod] = React.useState("cash");
@@ -25,11 +52,12 @@ export default function RetailPosPage() {
   const [checkoutPending, setCheckoutPending] = React.useState(false);
   const [cashError, setCashError] = React.useState("");
   const [scannerOpen, setScannerOpen] = React.useState(false);
+  const [cartExpanded, setCartExpanded] = React.useState(false);
+  const [cartPresent, setCartPresent] = React.useState(false);
   const categoryTabs = React.useMemo(
     () => [{ value: "", label: "Semua" }, ...activeMasterOptions(store.categories)],
     [store.categories],
   );
-  const activeCategoryIndex = Math.max(0, categoryTabs.findIndex((item) => item.value === category));
 
   const totals = calculateCartTotals(store.cart, store.settings);
   const cartProducts = React.useMemo(
@@ -40,6 +68,7 @@ export default function RetailPosPage() {
   const isUpdatingPOS = (store.loading.products || store.loading.settings) && store.loaded.products && store.loaded.settings;
   const cashState = cashPaymentState(cashReceived, totals.total, store.cart.length);
   const checkoutDisabled = store.cart.length === 0 || checkoutPending;
+  const totalCartItems = store.cart.reduce((sum, item) => sum + item.qty, 0);
   const visibleCashError = paymentMethod === "cash"
     ? cashError || (cashReceived.trim() && !cashState.valid ? cashState.error : "")
     : "";
@@ -86,6 +115,114 @@ export default function RetailPosPage() {
     toast.success("Keranjang dikosongkan");
   };
 
+  const resetCartDragStyles = React.useCallback(() => {
+    cartPaneRef.current?.style.removeProperty("transition");
+    cartPaneRef.current?.style.removeProperty("transform");
+    cartScrimRef.current?.style.removeProperty("opacity");
+  }, []);
+
+  const finishCartClose = React.useCallback(() => {
+    window.clearTimeout(cartCloseTimerRef.current);
+    resetCartDragStyles();
+    setCartPresent(false);
+    cartReturnFocusRef.current?.focus?.({ preventScroll: true });
+    cartReturnFocusRef.current = null;
+  }, [resetCartDragStyles]);
+
+  const closeCart = React.useCallback(() => {
+    setCartExpanded(false);
+    window.clearTimeout(cartCloseTimerRef.current);
+    cartCloseTimerRef.current = window.setTimeout(finishCartClose, CART_EXIT_MS);
+  }, [finishCartClose]);
+
+  const openCart = React.useCallback(() => {
+    window.clearTimeout(cartCloseTimerRef.current);
+    resetCartDragStyles();
+    cartReturnFocusRef.current = document.activeElement;
+    setCartPresent(true);
+    setCartExpanded(true);
+    window.requestAnimationFrame(() => cartCloseRef.current?.focus({ preventScroll: true }));
+  }, [resetCartDragStyles]);
+
+  const handleCartPointerDown = React.useCallback((event) => {
+    const pane = cartPaneRef.current;
+    if (!cartExpanded || !pane || cartDragRef.current || event.target.closest("button")) return;
+    if (window.getComputedStyle(pane).position !== "absolute") return;
+    const bounds = pane.getBoundingClientRect();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    pane.style.transition = "none";
+    cartDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      lastX: event.clientX,
+      lastTime: event.timeStamp,
+      velocity: 0,
+      distance: 0,
+      width: bounds.width,
+    };
+  }, [cartExpanded]);
+
+  const handleCartPointerMove = React.useCallback((event) => {
+    const drag = cartDragRef.current;
+    const pane = cartPaneRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || !pane) return;
+    const elapsed = Math.max(event.timeStamp - drag.lastTime, 1);
+    drag.velocity = (event.clientX - drag.lastX) / elapsed;
+    drag.lastX = event.clientX;
+    drag.lastTime = event.timeStamp;
+    drag.distance = resistedCartSwipeDistance(event.clientX - drag.startX, drag.width);
+    pane.style.transform = `translate3d(${drag.distance}px, 0, 0)`;
+    if (cartScrimRef.current) {
+      cartScrimRef.current.style.opacity = String(Math.max(0, 1 - Math.max(drag.distance, 0) / drag.width));
+    }
+  }, []);
+
+  const releaseCartPointer = React.useCallback((event, cancelled = false) => {
+    const drag = cartDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    cartDragRef.current = null;
+    const dismiss = !cancelled && shouldDismissCartSwipe({
+      distance: drag.distance,
+      velocity: drag.velocity,
+      width: drag.width,
+    });
+    if (dismiss) closeCart();
+    window.requestAnimationFrame(resetCartDragStyles);
+  }, [closeCart, resetCartDragStyles]);
+
+  const updateCategoryIndicator = React.useCallback(() => {
+    const activeTab = categoryTabRefs.current.get(category);
+    if (!activeTab) return;
+    setCategoryIndicator((current) => {
+      const next = { left: activeTab.offsetLeft, width: activeTab.offsetWidth, ready: true };
+      return current.left === next.left && current.width === next.width && current.ready
+        ? current
+        : next;
+    });
+  }, [category]);
+
+  React.useLayoutEffect(() => {
+    const tabs = categoryTabsRef.current;
+    const activeTab = categoryTabRefs.current.get(category);
+    if (!tabs || !activeTab) return undefined;
+
+    activeTab.scrollIntoView({ block: "nearest", inline: "nearest" });
+    updateCategoryIndicator();
+
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateCategoryIndicator);
+    observer?.observe(tabs);
+    observer?.observe(activeTab);
+    window.addEventListener("resize", updateCategoryIndicator);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateCategoryIndicator);
+    };
+  }, [category, categoryTabs.length, updateCategoryIndicator]);
+
   React.useEffect(() => {
     const focusSearch = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -98,6 +235,33 @@ export default function RetailPosPage() {
     window.addEventListener("keydown", focusSearch);
     return () => window.removeEventListener("keydown", focusSearch);
   }, []);
+
+  React.useEffect(() => {
+    if (!cartExpanded) return undefined;
+    const handleCartKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeCart();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const elements = focusableElements(cartPaneRef.current);
+      if (elements.length === 0) return;
+      const first = elements[0];
+      const last = elements.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", handleCartKeyDown);
+    return () => window.removeEventListener("keydown", handleCartKeyDown);
+  }, [cartExpanded, closeCart]);
+
+  React.useEffect(() => () => window.clearTimeout(cartCloseTimerRef.current), []);
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -125,16 +289,29 @@ export default function RetailPosPage() {
   }
 
   return (
-    <div className="grid h-full min-h-0 overflow-y-auto bg-app-bg xl:grid-cols-[minmax(0,1fr)_360px] xl:overflow-hidden">
-      <main className="flex min-h-[640px] flex-col border-border bg-surface xl:min-h-0 xl:border-r">
+    <div className="retail-pos-query h-full min-h-0">
+      <div className="retail-pos-workspace grid h-full min-h-0 bg-app-bg">
+        <main inert={cartPresent ? true : undefined} className="retail-pos-catalog-pane flex min-w-0 flex-col border-border bg-surface">
         <div className="bg-surface">
-          <div className="flex flex-col gap-3 border-b border-border px-6 py-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 border-b border-border px-3 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center justify-between gap-3">
               <h1 className="text-base font-semibold text-text">Kasir</h1>
-              {isUpdatingPOS && <UpdatingBadge />}
+              <BackgroundUpdateStatus active={isUpdatingPOS} label="Memperbarui katalog kasir" />
+              <button
+                ref={cartTriggerRef}
+                type="button"
+                aria-label={`Buka keranjang, ${totalCartItems} item`}
+                aria-expanded={cartExpanded}
+                aria-controls="retail-pos-cart"
+                onClick={openCart}
+                className="retail-pos-cart-open pos-touch-target ml-auto flex min-w-11 items-center gap-2 rounded-control border border-border px-3 text-sm font-semibold text-text transition-colors duration-fast hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              >
+                <Icon name="cart" className="size-4" />
+                <span>{totalCartItems}</span>
+              </button>
             </div>
             <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row lg:max-w-[620px]">
-              <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-2 focus-within:outline-focus/30">
+              <div className="pos-touch-target flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-2 focus-within:outline-focus/30">
                 <Icon name="search" className="size-4 text-text-muted" />
                 <input
                   ref={searchInputRef}
@@ -151,33 +328,42 @@ export default function RetailPosPage() {
                   ⌘ K / Ctrl K
                 </kbd>
               </div>
-              <Button type="button" variant="secondary" className="shrink-0" onClick={() => setScannerOpen(true)}>
+              <Button type="button" variant="secondary" className="pos-touch-target shrink-0" onClick={() => setScannerOpen(true)}>
                 <Icon name="scan" className="size-4" />
                 Pindai barcode
               </Button>
             </div>
           </div>
 
-          <div className="px-6 py-3">
+          <div className="px-3 py-3 sm:px-6">
             <div
-              className="category-tabs relative grid h-[38px] overflow-x-auto rounded-control bg-surface-muted p-[5px]"
-              aria-label="Product category"
-              style={{
-                "--category-count": categoryTabs.length,
-                "--category-index": activeCategoryIndex,
-              }}
+              ref={categoryTabsRef}
+              className="category-tabs relative flex w-full min-w-0 gap-1 overflow-x-auto rounded-control bg-surface-muted p-1"
+              aria-label="Kategori produk"
             >
-              <span className="category-tabs-indicator" aria-hidden="true" />
+              <span
+                aria-hidden="true"
+                className="category-tabs-indicator"
+                style={{
+                  "--category-indicator-x": `${categoryIndicator.left}px`,
+                  "--category-indicator-width": `${categoryIndicator.width}px`,
+                  opacity: categoryIndicator.ready ? 1 : 0,
+                }}
+              />
               {categoryTabs.map((entry) => {
                 const item = entry.value;
                 const label = entry.label;
                 return (
                 <button
+                  ref={(node) => {
+                    if (node) categoryTabRefs.current.set(item, node);
+                    else categoryTabRefs.current.delete(item);
+                  }}
                   key={item || "all"}
                   type="button"
                   aria-pressed={category === item}
                   onClick={() => setCategory(item)}
-                  className={`relative z-10 h-7 shrink-0 rounded-md px-3 text-sm font-medium transition ${
+                  className={`pos-touch-target relative z-10 h-8 min-w-max flex-1 basis-0 rounded-md px-3 text-sm font-medium transition-colors duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                     category === item
                       ? "text-text"
                       : "text-text-muted hover:text-text"
@@ -197,23 +383,58 @@ export default function RetailPosPage() {
           query={query}
           category={category}
           checkoutPending={checkoutPending}
-          isUpdating={isUpdatingPOS}
           onAdd={store.addToCart}
           onClearFilters={clearFilters}
         />
-      </main>
+        </main>
 
-      <aside className="flex min-h-[560px] flex-col overflow-hidden border-t border-border bg-surface xl:min-h-0 xl:border-t-0">
+        <button
+          ref={cartScrimRef}
+          type="button"
+          tabIndex={-1}
+          aria-hidden="true"
+          className={`retail-pos-cart-scrim ${cartPresent ? "is-present" : ""} ${cartExpanded ? "is-open" : ""}`}
+          onClick={closeCart}
+        />
+
+        <aside
+          ref={cartPaneRef}
+          id="retail-pos-cart"
+          role={cartPresent ? "dialog" : undefined}
+          aria-modal={cartPresent ? "true" : undefined}
+          aria-label="Keranjang belanja"
+          className={`retail-pos-cart-pane flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
+          onTransitionEnd={(event) => {
+            if (!cartExpanded && event.target === event.currentTarget) finishCartClose();
+          }}
+        >
         <>
-          <div className="flex items-center justify-between px-4 py-3">
+          <div
+            className="retail-pos-cart-drag-handle flex items-center justify-between gap-3 px-4 py-3"
+            onPointerDown={handleCartPointerDown}
+            onPointerMove={handleCartPointerMove}
+            onPointerUp={(event) => releaseCartPointer(event)}
+            onPointerCancel={(event) => releaseCartPointer(event, true)}
+          >
             <div>
               <h2 className="text-base font-semibold text-text">Keranjang</h2>
               <p className="text-sm text-text-muted">{store.cart.length} jenis item</p>
             </div>
-            <Badge tone="accent">{store.cart.reduce((sum, item) => sum + item.qty, 0)} item</Badge>
+            <div className="flex items-center gap-2">
+              <Badge tone="accent">{totalCartItems} item</Badge>
+              <button
+                ref={cartCloseRef}
+                type="button"
+                onClick={closeCart}
+                className="retail-pos-cart-toggle pos-touch-target rounded-control px-3 text-sm font-semibold text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+          <div className="retail-pos-cart-content">
+          <div className="retail-pos-cart-list px-4 py-3">
             {store.cart.length === 0 ? (
               <EmptyState
                 icon={null}
@@ -248,7 +469,7 @@ export default function RetailPosPage() {
             )}
           </div>
 
-          <div className="relative z-10 mt-auto grid gap-3 border-t border-border bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
+          <div className="retail-pos-cart-footer z-10 mt-auto grid gap-3 border-t border-border bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
             <PaymentSummary
               subtotal={totals.subtotal}
               tax={totals.tax}
@@ -293,19 +514,22 @@ export default function RetailPosPage() {
               </div>
             )}
 
-            <Button variant="primary" onClick={checkout} disabled={checkoutDisabled}>
+            <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
               {checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
             </Button>
             <Button
               variant="secondary"
+              className="pos-touch-target"
               onClick={() => setClearCartOpen(true)}
               disabled={store.cart.length === 0 || checkoutPending}
             >
               Kosongkan keranjang
             </Button>
           </div>
+          </div>
         </>
-      </aside>
+        </aside>
+      </div>
       <Dialog
         open={clearCartOpen}
         onClose={() => {
@@ -314,8 +538,8 @@ export default function RetailPosPage() {
         title="Kosongkan keranjang?"
         footer={
           <div className="flex w-full justify-end gap-2">
-            <Button disabled={checkoutPending} onClick={() => setClearCartOpen(false)}>Tetap simpan</Button>
-            <Button variant="danger" disabled={checkoutPending} onClick={clearCart}>Kosongkan</Button>
+            <Button className="pos-touch-target" disabled={checkoutPending} onClick={() => setClearCartOpen(false)}>Tetap simpan</Button>
+            <Button variant="danger" className="pos-touch-target" disabled={checkoutPending} onClick={clearCart}>Kosongkan</Button>
           </div>
         }
       >
@@ -336,14 +560,5 @@ export default function RetailPosPage() {
         }}
       />
     </div>
-  );
-}
-
-function UpdatingBadge() {
-  return (
-    <span role="status" aria-live="polite" className="inline-flex h-7 items-center gap-2 rounded-control border border-border bg-surface-muted px-2.5 text-xs font-semibold text-text-muted">
-      <span className="size-1.5 animate-pulse rounded-full bg-accent motion-reduce:animate-none" />
-      Memperbarui
-    </span>
   );
 }

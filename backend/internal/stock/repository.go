@@ -62,14 +62,15 @@ func (PostgresRepository) Create(ctx context.Context, tx database.Tx, identity d
 		return CreateResult{}, err
 	}
 	movement, err := insertMovement(ctx, tx, insertMovementInput{
-		OrgID:           identity.OrgID,
-		ProductID:       input.ProductID,
-		Type:            input.Type,
-		QuantityDelta:   delta,
-		StockBefore:     product.Stock,
-		StockAfter:      after,
-		Reason:          input.Reason,
-		CreatedByUserID: identity.UserID,
+		OrgID:             identity.OrgID,
+		ProductID:         input.ProductID,
+		Type:              input.Type,
+		QuantityDelta:     delta,
+		StockBefore:       product.Stock,
+		StockAfter:        after,
+		Reason:            input.Reason,
+		CreatedByUserID:   identity.UserID,
+		CreatedByUserName: input.CreatedByUserName,
 	})
 	if err != nil {
 		return CreateResult{}, err
@@ -86,7 +87,7 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 		select sm.id, sm.product_id, coalesce(p.name, ''), coalesce(p.barcode, ''),
 			coalesce(c.name, ''), coalesce(u.name, ''), sm.type, sm.quantity_delta,
 			sm.stock_before, sm.stock_after, sm.reason, sm.reference_type, sm.reference_id,
-			sm.created_by_user_id, sm.created_at
+			sm.created_by_user_id, coalesce(sm.created_by_user_name, ''), sm.created_at
 		from stock_movements sm
 		join products p on p.org_id = sm.org_id and p.id = sm.product_id
 		join categories c on c.org_id = p.org_id and c.id = p.category_id
@@ -111,7 +112,7 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 	movements := make([]Movement, 0, filter.Limit)
 	for rows.Next() {
 		var movement Movement
-		if err := rows.Scan(&movement.ID, &movement.ProductID, &movement.ProductName, &movement.ProductBarcode, &movement.ProductCategory, &movement.ProductUnit, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedAt); err != nil {
+		if err := rows.Scan(&movement.ID, &movement.ProductID, &movement.ProductName, &movement.ProductBarcode, &movement.ProductCategory, &movement.ProductUnit, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan stock movement: %w", err)
 		}
 		movements = append(movements, movement)
@@ -144,25 +145,26 @@ func updateProductStock(ctx context.Context, tx database.Tx, orgID string, produ
 }
 
 type insertMovementInput struct {
-	OrgID           string
-	ProductID       uuid.UUID
-	Type            MovementType
-	QuantityDelta   int
-	StockBefore     int
-	StockAfter      int
-	Reason          string
-	ReferenceType   *string
-	ReferenceID     *uuid.UUID
-	CreatedByUserID string
+	OrgID             string
+	ProductID         uuid.UUID
+	Type              MovementType
+	QuantityDelta     int
+	StockBefore       int
+	StockAfter        int
+	Reason            string
+	ReferenceType     *string
+	ReferenceID       *uuid.UUID
+	CreatedByUserID   string
+	CreatedByUserName string
 }
 
 func insertMovement(ctx context.Context, tx database.Tx, input insertMovementInput) (Movement, error) {
 	var movement Movement
 	err := tx.QueryRow(ctx, `
-		insert into stock_movements (org_id,product_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id)
-		values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-		returning id,product_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,created_at
-	`, input.OrgID, input.ProductID, input.Type, input.QuantityDelta, input.StockBefore, input.StockAfter, input.Reason, input.ReferenceType, input.ReferenceID, input.CreatedByUserID).Scan(&movement.ID, &movement.ProductID, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedAt)
+		insert into stock_movements (org_id,product_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,created_by_user_name)
+		values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		returning id,product_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,coalesce(created_by_user_name, ''),created_at
+	`, input.OrgID, input.ProductID, input.Type, input.QuantityDelta, input.StockBefore, input.StockAfter, input.Reason, input.ReferenceType, input.ReferenceID, input.CreatedByUserID, input.CreatedByUserName).Scan(&movement.ID, &movement.ProductID, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt)
 	if err != nil {
 		return Movement{}, fmt.Errorf("insert stock movement: %w", err)
 	}

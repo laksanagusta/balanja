@@ -107,7 +107,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
             <div aria-hidden="true" className="absolute inset-0 bg-accent/20" />
             <div className="relative px-3 pt-3 sm:px-10 lg:px-20">
               <div className="rounded-t-panel bg-white/25 px-2 pt-2 shadow-[0_40px_100px_-40px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-                <PosProductMockup priority />
+                <PosProductMockup />
               </div>
             </div>
           </div>
