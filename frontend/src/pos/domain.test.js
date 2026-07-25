@@ -121,6 +121,8 @@ test("addProductToCart adds by barcode and respects stock", () => {
   const result = addProductToCart([], products, "8991001000011");
 
   assert.equal(result.ok, true);
+  assert.equal(result.product.name, "Beras Ramos 5kg");
+  assert.equal(result.quantity, 1);
   assert.deepEqual(result.cart, [
     {
       productId: "prod-rice-5kg",

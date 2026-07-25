@@ -16,6 +16,7 @@ import { ProductThumbnail } from "../components/product/ProductImage.jsx";
 import MasterDataSelectField from "../components/product/MasterDataSelectField.jsx";
 import { ProductPhotoField } from "../components/product/ProductPhotoField.jsx";
 import { validateProductPhoto } from "../components/product/product-photo.js";
+import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
 
 function emptyProduct(categoryId = "", unitId = "") {
   return { id: "", name: "", barcode: "", categoryId, unitId, price: "", stock: 0, image: "", imageFile: null, removeImage: false, active: true };
@@ -369,7 +370,15 @@ export default function ProductsPage() {
                   disabled: savingProduct,
                 }}
               />
-              <Button type="button" variant="secondary" disabled={savingProduct} onClick={() => setScannerOpen(true)}>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={savingProduct}
+                onClick={() => {
+                  void primeScanSuccessSound();
+                  setScannerOpen(true);
+                }}
+              >
                 <Icon name="scan" className="size-4" />
                 Pindai
               </Button>
@@ -467,10 +476,12 @@ export default function ProductsPage() {
         onClose={() => setScannerOpen(false)}
         onDetected={(code) => {
           setEditing((current) => ({ ...current, barcode: code }));
-          toast.success("Barcode berhasil dipindai", {
+          return {
+            ok: true,
+            message: "Barcode berhasil dipindai",
             description: code,
-          });
-          setScannerOpen(false);
+            close: true,
+          };
         }}
       />
     </div>

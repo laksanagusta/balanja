@@ -49,8 +49,10 @@ test("cart barcode scanning stays inside the visible cashier workspace", async (
   assert.match(source, /store\.loadProducts\(\{ signal: controller\.signal \}\)/);
   assert.match(source, /<BarcodeScanner/);
   assert.match(source, /store\.addToCart\(code\)/);
-  assert.match(source, /toast\.success\("Produk ditambahkan dari barcode"/);
-  assert.match(source, /toast\.error\(result\?\.error \|\| "Barcode gagal dipindai"/);
+  assert.match(source, /message:\s*"Produk ditambahkan dari barcode"/);
+  assert.match(source, /product:\s*\{[\s\S]*\.\.\.result\.product,[\s\S]*quantity:\s*result\.quantity/);
+  assert.match(source, /primeScanSuccessSound/);
+  assert.match(source, /error:\s*result\?\.error \|\| "Barcode gagal dipindai"/);
   const scanner = source.slice(source.indexOf("<BarcodeScanner"));
   assert.doesNotMatch(scanner.slice(scanner.indexOf("onDetected=")), /setScannerOpen\(false\)/);
 });
@@ -76,7 +78,10 @@ test("the design system documents and demonstrates the production POS contract",
   assert.match(showcase, /Satu vertical scroller/);
   assert.match(showcase, /ikon cart dan jumlah item/i);
   assert.match(showcase, /tahanan rubber-band/i);
-  assert.match(showcase, /spinner cepat/i);
+  assert.match(showcase, /tanpa kotak bidik permanen/i);
+  assert.match(showcase, /nama produk, harga, jumlah terbaru di keranjang, dan barcode/i);
+  assert.match(showcase, /cooldown pasti 1 detik/i);
+  assert.match(showcase, /bunyi halus/i);
   assert.match(showcase, /MobileCheckoutPanel/);
   assert.match(design, /639px or less/i);
   assert.match(design, /continuity transition/i);

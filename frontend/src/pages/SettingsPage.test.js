@@ -34,4 +34,7 @@ test("settings tabs use query parameters with profile fallback", async () => {
   assert.match(source, /duration: 0\.14, ease: "easeOut"/);
   assert.match(source, /initial=\{shouldAnimate/);
   assert.match(css, /\.settings-content\s*\{[\s\S]*overflow-x:\s*clip/);
+  assert.match(source, /useScanSoundPreference/);
+  assert.match(source, /role="switch"/);
+  assert.match(source, /Bunyi pemindaian/);
 });

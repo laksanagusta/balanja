@@ -13,6 +13,7 @@ import { RetailPosSkeleton } from "../components/page-loading.jsx";
 import { calculateCartTotals } from "../pos/domain.js";
 import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
+import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
 import { formatPrice } from "../shared.jsx";
 import {
   cashPaymentState,
@@ -350,7 +351,15 @@ export default function RetailPosPage() {
                   ⌘ K / Ctrl K
                 </kbd>
               </div>
-              <Button type="button" variant="primary" className="pos-touch-target shrink-0" onClick={() => setScannerOpen(true)}>
+              <Button
+                type="button"
+                variant="primary"
+                className="pos-touch-target shrink-0"
+                onClick={() => {
+                  void primeScanSuccessSound();
+                  setScannerOpen(true);
+                }}
+              >
                 <Icon name="scan" className="size-4" />
                 Pindai barcode
               </Button>
@@ -636,11 +645,22 @@ export default function RetailPosPage() {
         onDetected={(code) => {
           const result = store.addToCart(code);
           if (result?.ok) {
-            toast.success("Produk ditambahkan dari barcode", { description: code });
-            return;
+            return {
+              ok: true,
+              message: "Produk ditambahkan dari barcode",
+              description: code,
+              product: {
+                ...result.product,
+                quantity: result.quantity,
+              },
+            };
           }
           store.clearNotice();
-          toast.error(result?.error || "Barcode gagal dipindai", { description: code });
+          return {
+            ok: false,
+            error: result?.error || "Barcode gagal dipindai",
+            description: code,
+          };
         }}
       />
     </div>
