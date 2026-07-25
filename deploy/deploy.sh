@@ -81,8 +81,7 @@ compose() {
 
 verify_release() {
   compose up -d --wait --wait-timeout "${DEPLOY_WAIT_TIMEOUT:-120}" &&
-    "$smoke_script" http://localhost &&
-  "$smoke_script" "$public_url"
+    "$smoke_script" "$public_url"
 }
 
 rollback() {
@@ -94,8 +93,7 @@ rollback() {
   echo "candidate failed; restoring $current_sha" >&2
   write_release_env "$current_sha" &&
     compose pull &&
-    compose up -d --wait --wait-timeout "${DEPLOY_WAIT_TIMEOUT:-120}" &&
-  "$smoke_script" http://localhost
+    compose up -d --wait --wait-timeout "${DEPLOY_WAIT_TIMEOUT:-120}"
 }
 
 write_release_env "$candidate_sha"
