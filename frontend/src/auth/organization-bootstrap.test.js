@@ -13,7 +13,7 @@ const base = {
   membershipsLoading: false,
   memberships: [],
   emptyListVerified: false,
-  failed: false,
+  failure: null,
 };
 
 test("organization name uses the trimmed first name", () => {
@@ -98,7 +98,7 @@ test("bootstrap exposes an unrecovered failure", () => {
     organizationBootstrapDecision({
       ...base,
       emptyListVerified: true,
-      failed: true,
+      failure: "create",
     }),
     { type: "error" },
   );
@@ -108,9 +108,20 @@ test("bootstrap prefers a recovered membership over a prior failure", () => {
   assert.deepEqual(
     organizationBootstrapDecision({
       ...base,
-      failed: true,
+      failure: "create",
       memberships: [{ organization: { id: "org_recovered" } }],
     }),
     { type: "activate", organizationId: "org_recovered" },
+  );
+});
+
+test("bootstrap stops retrying after activation fails", () => {
+  assert.deepEqual(
+    organizationBootstrapDecision({
+      ...base,
+      failure: "activate",
+      memberships: [{ organization: { id: "org_unavailable" } }],
+    }),
+    { type: "error" },
   );
 });

@@ -59,10 +59,8 @@ export default function OrganizationOnboardingShowcase() {
           <BootstrapSurface
             actions={
               <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
-                <Button type="button" variant="primary">
-                  Coba lagi
-                </Button>
-                <Button type="button">Keluar</Button>
+                <Button type="button">Coba lagi</Button>
+                <Button type="button" variant="ghost">Keluar</Button>
               </div>
             }
             icon={<Icon name="bag" className="size-5" />}

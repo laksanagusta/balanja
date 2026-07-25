@@ -13,7 +13,7 @@ export function organizationBootstrapDecision({
   membershipsLoading,
   memberships,
   emptyListVerified,
-  failed,
+  failure,
 }) {
   if (!authLoaded) return { type: "loading" };
   if (!signedIn) return { type: "bypass" };
@@ -24,14 +24,14 @@ export function organizationBootstrapDecision({
   }
 
   const existingOrganizationId = memberships?.[0]?.organization?.id;
-  if (existingOrganizationId) {
+  if (existingOrganizationId && failure !== "activate") {
     return {
       type: "activate",
       organizationId: existingOrganizationId,
     };
   }
 
-  if (failed) return { type: "error" };
+  if (failure) return { type: "error" };
   if (!emptyListVerified) return { type: "revalidate" };
   return { type: "create" };
 }
