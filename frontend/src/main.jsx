@@ -6,6 +6,7 @@ import App from "./App.jsx";
 import "./index.css";
 import { POSStoreProvider } from "./pos/store.jsx";
 import { createAPIClient } from "./pos/api-client.js";
+import OrganizationBootstrap from "./auth/OrganizationBootstrap.jsx";
 
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -38,9 +39,11 @@ function Application() {
   );
 
   return isSignedIn ? (
-    <POSStoreProvider api={api} cashierName={user?.fullName || ""}>
-      <App />
-    </POSStoreProvider>
+    <OrganizationBootstrap>
+      <POSStoreProvider api={api} cashierName={user?.fullName || ""}>
+        <App />
+      </POSStoreProvider>
+    </OrganizationBootstrap>
   ) : (
     <App />
   );
