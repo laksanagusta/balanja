@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "../primitives.jsx";
 
-const PRIMARY_IMAGE_RETRY_MS = 1200;
+const PRIMARY_IMAGE_RETRY_DELAYS_MS = [500, 1500, 3000];
 
 const fallbackImages = {
   Sembako: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80",
@@ -69,9 +69,10 @@ export function ProductImage({ product, fallback = "category", className = "h-fu
     if (primarySource && showingPrimaryRef.current) {
       primaryFailedRef.current = true;
       showingPrimaryRef.current = false;
-      setSrc(fallbackSource);
-      if (retryCountRef.current === 0) {
-        retryTimerRef.current = window.setTimeout(retryPrimary, PRIMARY_IMAGE_RETRY_MS);
+      setSrc("");
+      const retryDelay = PRIMARY_IMAGE_RETRY_DELAYS_MS[retryCountRef.current];
+      if (retryDelay !== undefined) {
+        retryTimerRef.current = window.setTimeout(retryPrimary, retryDelay);
       }
       return;
     }

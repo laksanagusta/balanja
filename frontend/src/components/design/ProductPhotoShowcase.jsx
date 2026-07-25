@@ -22,7 +22,8 @@ export default function ProductPhotoShowcase() {
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Product photo</h3>
       <p className="mb-3 max-w-2xl text-sm leading-6 text-text-muted">
         Field ini menampilkan status foto langsung di baris utama, tanpa caption nama file terpisah, supaya form tetap
-        ringkas saat padat.
+        ringkas saat padat. Produk dengan URL foto tersimpan mempertahankan identitas gambarnya: kegagalan sementara
+        menampilkan placeholder netral selama retry Cloudflare bertahap, bukan menggantinya dengan foto kategori lain.
       </p>
       <div className="rounded-panel border border-border bg-surface p-4">
         <ProductPhotoField

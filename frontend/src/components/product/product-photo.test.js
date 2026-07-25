@@ -39,6 +39,10 @@ test("POS and cart share the product image fallback renderer", async () => {
 test("a transient product image failure retries the original URL after mobile browser resume", async () => {
   const image = await readFile(new URL("./ProductImage.jsx", import.meta.url), "utf8");
 
+  assert.match(image, /PRIMARY_IMAGE_RETRY_DELAYS_MS\s*=\s*\[[^\]]{1,80}\]/);
+  assert.match(image, /const retryDelay = PRIMARY_IMAGE_RETRY_DELAYS_MS\[retryCountRef\.current\]/);
+  assert.match(image, /primaryFailedRef\.current = true;[\s\S]{0,180}setSrc\(""\)/);
+  assert.doesNotMatch(image, /primaryFailedRef\.current = true;[\s\S]{0,180}setSrc\(fallbackSource\)/);
   assert.match(image, /window\.addEventListener\("online", retryPrimary\)/);
   assert.match(image, /window\.addEventListener\("pageshow", retryPrimary\)/);
   assert.match(image, /document\.visibilityState === "visible"/);
