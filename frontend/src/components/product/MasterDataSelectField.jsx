@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon } from "../primitives.jsx";
+import { FloatingPopover, Icon } from "../primitives.jsx";
 import { activeMasterOptions } from "../../pos/master-data.js";
 
 export default function MasterDataSelectField({
@@ -19,6 +19,7 @@ export default function MasterDataSelectField({
   const [pending, setPending] = React.useState(false);
   const generatedId = React.useId().replaceAll(":", "");
   const containerRef = React.useRef(null);
+  const popoverRef = React.useRef(null);
   const searchRef = React.useRef(null);
   const options = activeMasterOptions(items, value);
   const selected = options.find((option) => option.value === value);
@@ -33,7 +34,7 @@ export default function MasterDataSelectField({
   React.useEffect(() => {
     if (!open) return undefined;
     const closeOnOutsidePress = (event) => {
-      if (!containerRef.current?.contains(event.target)) closePopover();
+      if (!containerRef.current?.contains(event.target) && !popoverRef.current?.contains(event.target)) closePopover();
     };
     document.addEventListener("pointerdown", closeOnOutsidePress);
     return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
@@ -123,7 +124,12 @@ export default function MasterDataSelectField({
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-card border border-border bg-surface shadow-panel">
+        <FloatingPopover
+          ref={popoverRef}
+          anchorRef={containerRef}
+          open
+          className="overflow-hidden rounded-card border border-border bg-surface shadow-panel"
+        >
           <div className="border-b border-border p-2">
             <div className="flex h-9 items-center gap-2 rounded-control bg-surface-muted px-3">
               <Icon name={createMode ? "plus" : "search"} className="size-4 shrink-0 text-text-subtle" />
@@ -199,7 +205,7 @@ export default function MasterDataSelectField({
               </button>
             )}
           </div>
-        </div>
+        </FloatingPopover>
       ) : null}
 
       {error ? <span id={errorId} className="text-xs font-medium text-danger">{error}</span> : null}

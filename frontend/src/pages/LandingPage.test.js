@@ -30,6 +30,10 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.match(source, /id="fitur"/);
   assert.match(source, /id="cara-kerja"/);
   assert.match(source, /© balanja · v0\.1\.4/);
+  assert.match(source, /marketing-reveal w-full px-4 sm:px-6/);
+  assert.match(source, /relative mx-auto max-w-6xl overflow-hidden rounded-panel/);
+  assert.doesNotMatch(source, />Akses</);
+  assert.match(source, /border-t border-border pt-5 font-mono text-xs/);
   assert.match(faq, /id="faq"/);
 });
 
@@ -89,6 +93,8 @@ test("compact header action keeps a 44px transparent hit area without changing i
   assert.match(page, /size="sm"/);
   assert.match(primitives, /compactVisual[\s\S]*h-11/);
   assert.match(primitives, /header-compact-action-surface/);
+  assert.match(css, /header-compact-action:active \.header-compact-action-surface[\s\S]*scale\(0\.98\)/);
+  assert.match(css, /header-compact-action:hover \.header-compact-action-surface\.primary-button::before/);
   assert.doesNotMatch(css, /header-compact-action::after/);
 });
 
@@ -122,15 +128,18 @@ test("marketing reveal stays concise and does not retain a permanent compositor 
   assert.doesNotMatch(page, /"--reveal-delay": "260ms"/);
 });
 
-test("primary button depth feedback changes transform without swapping box shadows", async () => {
+test("primary button uses Clerk-style highlight and pressed depth without a gray border", async () => {
   const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
-  const scanHover = css.slice(css.indexOf(".scan-3d:hover {"), css.indexOf(".scan-3d:hover::before"));
-  const scanActive = css.slice(css.indexOf(".scan-3d:active {"), css.indexOf(".checkout-3d"));
+  const primaryStart = css.indexOf(".primary-button {");
+  const primaryBase = css.slice(primaryStart, css.indexOf(".primary-button::before", primaryStart));
+  const primaryInteractionStart = css.indexOf(".primary-button:hover::before", primaryStart);
+  const primaryInteraction = css.slice(primaryInteractionStart, css.indexOf(".checkout-3d", primaryInteractionStart));
 
-  assert.match(scanHover, /transform: translateY\(-1px\)/);
-  assert.doesNotMatch(scanHover, /box-shadow/);
-  assert.match(scanActive, /scale\(0\.97\)/);
-  assert.doesNotMatch(scanActive, /box-shadow/);
+  assert.match(primaryBase, /var\(--primary-button-ring\)/);
+  assert.doesNotMatch(primaryBase, /rgb\(0 0 0 \/ 0\.16\)/);
+  assert.match(primaryInteraction, /hover::before[\s\S]*opacity: 0/);
+  assert.match(primaryInteraction, /scale\(0\.98\)/);
+  assert.match(primaryInteraction, /active::after[\s\S]*opacity: 0/);
 });
 
 test("landing keeps the retail backdrop while product items remain placeholders", async () => {

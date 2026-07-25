@@ -11,6 +11,8 @@ test("cash payment rejects empty and malformed amounts", () => {
     error: "Masukkan nominal tunai yang valid.",
     showChange: false,
     change: 0,
+    showShortfall: false,
+    shortfall: 0,
   });
   assert.equal(cashPaymentState("Infinity", 5000, 1).valid, false);
 });
@@ -19,6 +21,8 @@ test("cash payment rejects insufficient cash", () => {
   const state = cashPaymentState("4000", 5000, 1);
   assert.equal(state.valid, false);
   assert.equal(state.error, "Nominal tunai harus menutup total akhir.");
+  assert.equal(state.showShortfall, true);
+  assert.equal(state.shortfall, 1000);
 });
 
 test("change is visible only for a non-empty cart with sufficient cash", () => {
@@ -30,6 +34,8 @@ test("change is visible only for a non-empty cart with sufficient cash", () => {
     error: "",
     showChange: true,
     change: 2000,
+    showShortfall: false,
+    shortfall: 0,
   });
 });
 

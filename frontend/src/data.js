@@ -198,7 +198,7 @@ export const tokenGroups = [
       ["Muted Text", "--color-text-muted", "#6f6f6f"],
       ["Subtle Text", "--color-text-subtle", "#a1a1a1"],
       ["Accent", "--color-accent", "#1d1d1f"],
-      ["Accent Hover", "--color-accent-hover", "#000000"],
+      ["Accent Hover", "--color-accent-hover", "#151517"],
       ["Accent Soft", "--color-accent-soft", "#f2f2f3"],
       ["Danger", "--color-danger", "#ef4444"],
       ["Danger Soft", "--color-danger-soft", "#fff1f1"],

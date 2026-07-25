@@ -28,12 +28,14 @@ export default function MarketingPatternsShowcase() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-panel pt-10 sm:pt-14">
-          <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-5.png')" }} />
-          <div aria-hidden="true" className="absolute inset-0 bg-accent/20" />
-          <div className="relative px-3 sm:px-10 lg:px-20">
-            <div className="rounded-t-panel bg-white/25 px-2 pt-2 backdrop-blur-xl">
-              <PosProductMockup compact />
+        <div className="w-full px-4 sm:px-6">
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-panel pt-10 sm:pt-14">
+            <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-5.png')" }} />
+            <div aria-hidden="true" className="absolute inset-0 bg-accent/20" />
+            <div className="relative px-3 sm:px-10 lg:px-20">
+              <div className="rounded-t-panel bg-white/25 px-2 pt-2 backdrop-blur-xl">
+                <PosProductMockup compact />
+              </div>
             </div>
           </div>
         </div>
@@ -66,7 +68,7 @@ export default function MarketingPatternsShowcase() {
         </div>
 
         <p className="rounded-card border border-border bg-surface-muted p-4 text-sm leading-6 text-text-muted">
-          Public controls use a minimum 44px touch target, visible keyboard focus, and immediate press feedback. Product items inside the POS mockup use neutral placeholders rather than stock photography. A compact 32px header action keeps a transparent 44px hit area. FAQ answers remain mounted and use the morphing indicator above. Smooth scrolling becomes immediate for reduced motion; translucent chrome becomes solid for reduced transparency or increased contrast.
+          Public controls use a minimum 44px touch target, visible keyboard focus, and immediate press feedback. The hero visual uses the same outer page gutter and inner 1152px container as the header, keeping its edges aligned with the logo and authentication action. Product items inside the POS mockup use neutral placeholders rather than stock photography. A compact 32px header action keeps a transparent 44px hit area. FAQ answers remain mounted and use the morphing indicator above. Smooth scrolling becomes immediate for reduced motion; translucent chrome becomes solid for reduced transparency or increased contrast.
         </p>
       </div>
     </section>

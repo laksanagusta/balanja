@@ -1,5 +1,7 @@
 import React from "react";
+import { CashPaymentFeedback } from "../pos/CashPaymentFeedback.jsx";
 import { PosProductCard } from "../pos/ProductCard.jsx";
+import { MobileCheckoutPanel } from "../pos/MobileCheckoutPanel.jsx";
 import { Button, Icon, Panel } from "../primitives.jsx";
 
 const methods = [
@@ -18,6 +20,8 @@ const sampleProduct = {
 
 export default function POSPatterns() {
   const [paymentMethod, setPaymentMethod] = React.useState("cash");
+  const [cashFeedbackPreview, setCashFeedbackPreview] = React.useState("shortfall");
+  const [mobileCheckoutExpanded, setMobileCheckoutExpanded] = React.useState(false);
   const [selectedCategory, setSelectedCategory] = React.useState("Sembako");
   const categoryTabsRef = React.useRef(null);
   const categoryTabRefs = React.useRef(new Map());
@@ -46,13 +50,19 @@ export default function POSPatterns() {
           Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Scanner memprioritaskan kamera belakang 720p, menjelaskan kegagalan izin atau perangkat secara spesifik, dan tetap menyediakan input manual. Saat barcode diproses, scanner menampilkan spinner cepat, mengunci pembacaan ganda, dan tetap menyediakan aksi tutup. Panel app shell menjaga inset 8px yang konsisten dan memakai border tanpa bayangan wrapper di sela panel.
         </p>
         <p className="mt-2 text-sm text-text-muted">
-          Satu vertical scroller dipakai pada layout ringkas. Katalog menampilkan 2 kartu per baris pada smartphone dan 4 pada tablet, sementara cart compact membuka sebagai drawer horizontal dari kanan. Workspace dan katalog beradaptasi melalui container query, dengan cart desktop selebar 360–420px. Density visual tetap ringkas untuk kerja kasir, sementara kontrol melebar menjadi minimal 44px pada perangkat sentuh.
+          Satu vertical scroller dipakai pada layout ringkas. Katalog menampilkan 2 kartu per baris pada smartphone dan 4 saat ruang katalog mencukupi. Hanya smartphone hingga 639px yang menampilkan trigger cart dan drawer penuh dari kanan; mulai 640px cart selalu terlihat sebagai kolom selebar 320–360px, lalu 360–420px pada workspace lebar. Workspace dan katalog beradaptasi melalui container query. Density visual tetap ringkas untuk kerja kasir, sementara kontrol melebar menjadi minimal 44px pada perangkat sentuh.
         </p>
         <p className="mt-2 text-sm text-text-muted">
           Trigger drawer memakai ikon cart dan jumlah item; aksi di dalam drawer memakai teks Tutup tanpa chevron ganda. Drawer menjaga fokus di dalam panel, membuat katalog inert, mengembalikan fokus setelah ditutup, dan mempertahankan scrim selama transisi keluar. Pada perangkat sentuh, header dapat digeser ke kanan untuk menutup dengan ambang jarak atau kecepatan dan tahanan rubber-band; reduced motion memakai cross-fade tanpa pergeseran.
         </p>
         <p className="mt-2 text-sm text-text-muted">
-          Pada setiap baris keranjang, subtotal tetap berada di kanan atas. Hapus berlabel dan kontrol jumlah yang dapat diketik ditempatkan tepat di bawah subtotal; minus pada jumlah satu menghapus item. Saat angka diketik, text morph singkat memberi umpan balik tanpa menggeser layout dan dinonaktifkan pada reduced motion. Kontrol tampil ringkas pada pointer presisi tetapi tetap melebar menjadi target sentuh aman pada perangkat sentuh.
+          Pada setiap baris keranjang, subtotal tetap berada di kanan atas. Hapus berlabel dan kontrol jumlah yang dapat diketik ditempatkan tepat di bawah subtotal; minus pada jumlah satu menghapus item. Saat angka diketik, text morph singkat memberi umpan balik. Saat stepper berubah, direction-aware transition menggeser nilai dari bawah ketika bertambah dan dari atas ketika berkurang. Gerak dinonaktifkan pada reduced motion dan tidak memperlambat input keyboard.
+        </p>
+        <p className="mt-2 text-sm text-text-muted">
+          Pada smartphone hingga 639px, cart memakai lebar penuh. Daftar item tetap menjadi satu-satunya area scroll, sedangkan surface grand total menempel di bawah. Bayar memperluas surface yang sama menjadi ringkasan pembayaran; Escape atau Kembali menciutkannya sebelum cart ditutup. Tablet dan desktop mempertahankan ringkasan pembayaran lama tanpa perubahan.
+        </p>
+        <p className="mt-2 text-sm text-text-muted">
+          Feedback tunai memakai satu live region yang melakukan blend hanya ketika status berpindah antara Uang kurang dan Kembalian. Nilai yang berubah di dalam status yang sama tetap instan agar pengetikan terasa cepat.
         </p>
       </div>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -62,7 +72,7 @@ export default function POSPatterns() {
         </div>
         <div className="grid gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Kolom pencarian</p>
-          <div className="pos-touch-target flex h-9 items-center gap-3 rounded-card border border-border bg-surface px-4 shadow-inner-soft">
+          <div className="pos-touch-target flex h-9 items-center gap-3 rounded-card border border-border bg-surface px-4 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
             <Icon name="search" className="size-5 text-text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
@@ -79,7 +89,7 @@ export default function POSPatterns() {
         </div>
         <div className="grid gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Tab kategori</p>
-          <div ref={categoryTabsRef} className="category-tabs relative flex w-full gap-1 overflow-x-auto rounded-control bg-surface-muted p-1">
+          <div ref={categoryTabsRef} className="category-tabs relative flex w-full gap-1 overflow-x-auto rounded-control border border-border bg-surface-muted p-1">
             <span
               aria-hidden="true"
               className="category-tabs-indicator"
@@ -149,10 +159,46 @@ export default function POSPatterns() {
                 </div>
               </div>
             </dl>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button type="button" size="sm" variant="secondary" onClick={() => setCashFeedbackPreview("shortfall")}>
+                Uang kurang
+              </Button>
+              <Button type="button" size="sm" variant="secondary" onClick={() => setCashFeedbackPreview("change")}>
+                Kembalian
+              </Button>
+            </div>
+            <div className="mt-3">
+              <CashPaymentFeedback
+                status={cashFeedbackPreview}
+                value={cashFeedbackPreview === "change" ? "Rp4.500" : "Rp5.500"}
+              />
+            </div>
             <Button variant="primary" className="checkout-3d mt-4 h-12 w-full text-base">
               Selesaikan transaksi
             </Button>
           </div>
+        </div>
+      </div>
+      <div className="grid gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Checkout cart smartphone</p>
+        <div className="mx-auto w-full max-w-sm overflow-hidden rounded-panel border border-border bg-surface">
+          <div className="grid min-h-48 content-start gap-3 p-4">
+            <div className="rounded-card border border-border bg-surface-muted p-3 text-sm text-text-muted">Daftar item tetap dapat di-scroll di atas surface pembayaran.</div>
+          </div>
+          <MobileCheckoutPanel
+            expanded={mobileCheckoutExpanded}
+            onExpand={() => setMobileCheckoutExpanded(true)}
+            onCollapse={() => setMobileCheckoutExpanded(false)}
+            grandTotal="Rp45.500"
+          >
+            <div className="grid gap-3">
+              <dl className="grid gap-2 text-sm">
+                <div className="flex justify-between text-text-muted"><dt>Subtotal</dt><dd className="font-mono font-semibold tabular-nums">Rp41.000</dd></div>
+                <div className="flex justify-between text-text-muted"><dt>Pajak</dt><dd className="font-mono font-semibold tabular-nums">Rp4.500</dd></div>
+              </dl>
+              <Button variant="primary" className="pos-touch-target w-full">Selesaikan transaksi</Button>
+            </div>
+          </MobileCheckoutPanel>
         </div>
       </div>
     </Panel>

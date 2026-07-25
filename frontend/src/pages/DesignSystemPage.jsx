@@ -41,7 +41,7 @@ export default function DesignSystemPage({ onNavigate }) {
             >
               Products
             </button>
-            <Button type="button" onClick={() => onNavigate(routes.pos)} className="h-[42px]">
+            <Button type="button" variant="primary" onClick={() => onNavigate(routes.pos)} className="h-[42px]">
               Open POS
             </Button>
           </div>

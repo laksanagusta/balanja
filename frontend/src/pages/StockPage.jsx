@@ -1,7 +1,7 @@
 import React from "react";
 import { toast } from "sonner";
 import { TablePagination } from "../components/TablePagination.jsx";
-import { Badge, Button, DataTable, Dialog, Icon, Input, Panel, SelectField } from "../components/primitives.jsx";
+import { Badge, Button, DataTable, Dialog, FloatingPopover, Icon, Input, Panel, SelectField } from "../components/primitives.jsx";
 import { StockPageSkeleton } from "../components/page-loading.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
@@ -115,7 +115,7 @@ export default function StockPage() {
       <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto_auto] lg:items-center">
         <h1 className="text-base font-semibold text-text">Stok</h1>
         <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
-          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft">
+          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
@@ -134,7 +134,7 @@ export default function StockPage() {
             onChange={setTypeFilter}
           />
         </div>
-        <Button variant="secondary" className="whitespace-nowrap lg:justify-self-end" onClick={() => setDialogOpen(true)}>
+        <Button variant="primary" className="whitespace-nowrap lg:justify-self-end" onClick={() => setDialogOpen(true)}>
           <Icon name="plus" className="size-4" />
           Pergerakan baru
         </Button>
@@ -288,6 +288,8 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
   const [isOpen, setIsOpen] = React.useState(false);
   const [results, setResults] = React.useState(() => products.slice(0, 6));
   const [isSearching, setIsSearching] = React.useState(false);
+  const containerRef = React.useRef(null);
+  const popoverRef = React.useRef(null);
   const debouncedQuery = useDebouncedValue(query, 220);
   const selectedProduct = React.useMemo(
     () => [...products, ...results].find((item) => item.id === value),
@@ -316,11 +318,20 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
     };
   }, [debouncedQuery, isOpen, searchProducts]);
 
+  React.useEffect(() => {
+    if (!isOpen) return undefined;
+    const closeOnOutsidePress = (event) => {
+      if (!containerRef.current?.contains(event.target) && !popoverRef.current?.contains(event.target)) setIsOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
+  }, [isOpen]);
+
   return (
-    <div className="relative grid gap-2 text-sm font-semibold text-text">
+    <div ref={containerRef} className="relative grid gap-2 text-sm font-semibold text-text">
       <span>{label}</span>
       <div
-        className={`flex h-10 items-center gap-3 rounded-card border bg-surface px-3.5 shadow-inner-soft focus-within:outline-2 focus-within:outline-focus/30 ${
+        className={`flex h-10 items-center gap-3 rounded-card border bg-surface px-3.5 shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
           error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
         }`}
       >
@@ -337,7 +348,12 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
         />
       </div>
       {isOpen && (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 grid max-h-72 gap-1 overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-panel">
+        <FloatingPopover
+          ref={popoverRef}
+          anchorRef={containerRef}
+          open
+          className="grid max-h-72 gap-1 overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-panel"
+        >
           {isSearching ? (
             <div className="px-3 py-4 text-sm font-medium text-text-muted">Mencari...</div>
           ) : results.length === 0 ? (
@@ -363,7 +379,7 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
               </button>
             ))
           )}
-        </div>
+        </FloatingPopover>
       )}
       {error && <span className="text-xs font-medium text-danger">{error}</span>}
     </div>

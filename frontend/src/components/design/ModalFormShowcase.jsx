@@ -10,7 +10,7 @@ export default function ModalFormShowcase() {
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Modal form</h3>
       <div className="rounded-panel border border-border bg-surface p-4">
-        <p className="mb-3 text-sm text-text-muted">Form dialogs for retail data entry — add product, customer info, discount.</p>
+        <p className="mb-3 text-sm text-text-muted">Form dialogs for retail data entry — popover fields portal above the dialog layer so their options stay visible and unclipped.</p>
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setProductOpen(true)}>Add product</Button>
           <Button onClick={() => setCustomerOpen(true)}>Customer info</Button>

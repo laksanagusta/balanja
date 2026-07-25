@@ -16,17 +16,21 @@ test("search and cash controls expose accessible form state", async () => {
 
   assert.match(source, /aria-label="Cari produk atau barcode"/);
   assert.match(source, /aria-keyshortcuts="Meta\+K Control\+K"/);
-  assert.match(source, /focus-within:outline-2/);
+  assert.match(source, /focus-within:outline-1/);
+  assert.doesNotMatch(source, /focus-within:outline-2/);
   assert.match(source, /error=\{visibleCashError\}/);
   assert.match(source, /name:\s*"cashReceived"/);
   assert.match(source, /aria-pressed=\{category === item\}/);
+  assert.match(source, /CashPaymentFeedback/);
+  assert.match(source, /cashState\.showShortfall/);
 });
 
 test("status copy and background refresh follow the interface contract", async () => {
   const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
+  const cashFeedback = await readFile(new URL("../components/pos/CashPaymentFeedback.jsx", import.meta.url), "utf8");
 
   assert.match(source, /Menyelesaikan…/);
-  assert.match(source, /role="status"/);
+  assert.match(cashFeedback, /role="status"/);
   assert.match(source, /BackgroundUpdateStatus/);
   assert.doesNotMatch(source, /UpdatingBadge|animate-pulse.*Memperbarui/s);
   assert.doesNotMatch(source, /Cari produk atau barcode\.\.\.|Menyelesaikan\.\.\./);
@@ -37,6 +41,10 @@ test("cart barcode scanning stays inside the visible cashier workspace", async (
 
   assert.match(source, /import BarcodeScanner/);
   assert.match(source, /Pindai barcode/);
+  const scanLabelAt = source.indexOf("Pindai barcode");
+  const scanButton = source.slice(source.lastIndexOf("<Button", scanLabelAt), scanLabelAt);
+  assert.match(scanButton, /variant="primary"/);
+  assert.match(scanButton, /<Icon name="scan"/);
   assert.match(source, /if \(!scannerOpen\) return/);
   assert.match(source, /store\.loadProducts\(\{ signal: controller\.signal \}\)/);
   assert.match(source, /<BarcodeScanner/);
@@ -62,13 +70,16 @@ test("the design system documents and demonstrates the production POS contract",
   assert.match(design, /44px touch target/i);
   assert.match(design, /trap focus while open/i);
   assert.match(design, /rubber-band resistance/i);
-  assert.match(design, /cross-fade the compact drawer/i);
+  assert.match(design, /cross-fade the smartphone drawer/i);
   assert.match(design, /mark the workspace busy/i);
   assert.match(showcase, /PosProductCard/);
   assert.match(showcase, /Satu vertical scroller/);
   assert.match(showcase, /ikon cart dan jumlah item/i);
   assert.match(showcase, /tahanan rubber-band/i);
   assert.match(showcase, /spinner cepat/i);
+  assert.match(showcase, /MobileCheckoutPanel/);
+  assert.match(design, /639px or less/i);
+  assert.match(design, /continuity transition/i);
 });
 
 test("compact POS uses one scroller and switches layout from its container width", async () => {
@@ -107,6 +118,7 @@ test("category tabs keep a measured sliding indicator while horizontally overflo
   assert.match(source, /offsetWidth/);
   assert.match(source, /ResizeObserver/);
   assert.match(source, /category-tabs-indicator/);
+  assert.match(source, /category-tabs[^"\n]*border border-border/);
   assert.match(css, /\.category-tabs-indicator[\s\S]*transition-property:\s*transform, width, opacity/);
   assert.match(css, /prefers-reduced-motion[\s\S]*\.category-tabs-indicator/);
 });
@@ -140,8 +152,36 @@ test("compact cart is an accessible horizontal drawer while desktop cart stays v
   assert.match(css, /\.retail-pos-cart-scrim\s*\{[\s\S]*opacity:\s*0[\s\S]*transition:[\s\S]*opacity/);
   assert.match(css, /\.retail-pos-cart-scrim\.is-present[\s\S]*pointer-events:\s*auto/);
   assert.match(css, /prefers-reduced-motion[\s\S]*\.retail-pos-cart-pane[\s\S]*transform:\s*none[\s\S]*opacity/);
-  assert.match(css, /prefers-reduced-motion[\s\S]*@container retail-pos \(min-width:\s*960px\)[\s\S]*\.retail-pos-cart-pane[\s\S]*opacity:\s*1/);
-  assert.match(css, /@container retail-pos \(min-width:\s*960px\)[\s\S]*\.retail-pos-cart-pane[\s\S]*position:\s*static[\s\S]*visibility:\s*visible/);
+  assert.match(css, /prefers-reduced-motion[\s\S]*@container retail-pos \(min-width:\s*640px\)[\s\S]*\.retail-pos-cart-pane[\s\S]*opacity:\s*1/);
+  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*display:\s*none/);
+  assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.retail-pos-cart-open[\s\S]*display:\s*flex/);
+  assert.match(css, /@container retail-pos \(min-width:\s*640px\)[\s\S]*\.retail-pos-cart-pane[\s\S]*position:\s*static[\s\S]*visibility:\s*visible/);
+});
+
+test("smartphone cart is full width and progressively discloses checkout without changing larger layouts", async () => {
+  const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
+  const component = await readFile(new URL("../components/pos/MobileCheckoutPanel.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+
+  assert.match(source, /const \[mobileCheckoutExpanded, setMobileCheckoutExpanded\]/);
+  assert.match(source, /retail-pos-standard-checkout/);
+  assert.match(source, /retail-pos-mobile-checkout/);
+  assert.match(source, /<MobileCheckoutPanel/);
+  assert.match(source, /if \(mobileCheckoutExpanded\)[\s\S]*setMobileCheckoutExpanded\(false\)[\s\S]*mobileCheckoutTriggerRef\.current\?\.focus/);
+  assert.match(source, /getClientRects\(\)\.length > 0/);
+  assert.match(component, /from "motion\/react"/);
+  assert.match(component, /AnimatePresence/);
+  assert.match(component, /layout=\{!shouldReduceMotion\}/);
+  assert.match(component, /duration: 0\.28/);
+  assert.match(component, /duration: 0\.14/);
+  assert.match(component, /aria-expanded=\{expanded\}/);
+  assert.match(component, /aria-controls=\{detailId\}/);
+  assert.match(component, /headingRef\.current\?\.focus/);
+  assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.retail-pos-cart-pane[\s\S]*width:\s*100%[\s\S]*border-left:\s*0/);
+  assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.retail-pos-standard-checkout[\s\S]*display:\s*none/);
+  assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.retail-pos-mobile-checkout[\s\S]*display:\s*block/);
+  assert.match(css, /\.retail-pos-standard-checkout\s*\{[\s\S]*display:\s*grid/);
+  assert.match(css, /@container retail-pos \(min-width:\s*640px\)[\s\S]*clamp\(320px,\s*38cqi,\s*360px\)/);
 });
 
 test("cashier controls keep compact visuals and expand only for coarse pointers", async () => {

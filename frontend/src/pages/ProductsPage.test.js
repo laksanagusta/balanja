@@ -28,3 +28,11 @@ test("product barcode action uses the scan icon", async () => {
   assert.match(source, /<Icon name="scan" className="size-4" \/>\s*Pindai/);
   assert.doesNotMatch(source, /<Icon name="barcode" className="size-4" \/>\s*Pindai/);
 });
+
+test("product creation is the toolbar primary action", async () => {
+  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const labelAt = source.indexOf("Tambah produk", source.indexOf("<header"));
+  const button = source.slice(source.lastIndexOf("<Button", labelAt), labelAt);
+  assert.match(button, /variant="primary"/);
+  assert.match(button, /<Icon name="plus"/);
+});

@@ -101,8 +101,8 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
           </div>
         </section>
 
-        <section className="marketing-reveal mx-auto w-full max-w-[1320px] overflow-hidden rounded-panel px-4 sm:px-6" style={{ "--reveal-delay": "180ms" }}>
-          <div className="relative overflow-hidden rounded-panel pt-12 sm:pt-16">
+        <section className="marketing-reveal w-full px-4 sm:px-6" style={{ "--reveal-delay": "180ms" }}>
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-panel pt-12 sm:pt-16">
             <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-5.png')" }} />
             <div aria-hidden="true" className="absolute inset-0 bg-accent/20" />
             <div className="relative px-3 pt-3 sm:px-10 lg:px-20">
@@ -183,12 +183,11 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
 
       <footer className="px-4 pb-8 sm:px-6">
         <div className="mx-auto max-w-6xl border-t border-border pt-12">
-          <div className="grid gap-10 sm:grid-cols-[1fr_auto_auto] sm:gap-16">
+          <div className="grid gap-10 sm:grid-cols-[1fr_auto] sm:gap-16">
             <div><Logo /><p className="mt-4 max-w-sm text-sm leading-6 text-text-muted">POS sederhana untuk membantu UMKM retail mengelola penjualan, produk, stok, dan transaksi.</p></div>
             <div><p className={eyebrowLabelClassName}>Produk</p><div className="mt-2 grid">{navItems.map((item) => <a key={item.href} href={item.href} className="press-feedback inline-flex min-h-11 items-center text-sm text-text-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{item.label}</a>)}</div></div>
-            <div><p className={eyebrowLabelClassName}>Akses</p><button type="button" onClick={openApp} className="press-feedback mt-2 inline-flex min-h-11 items-center text-sm text-text-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{isSignedIn ? "Dashboard" : "Masuk"}</button></div>
           </div>
-          <div className="mt-12 flex flex-col gap-2 border-t border-border pt-5 text-xs text-text-subtle sm:flex-row sm:items-center sm:justify-between"><span>© balanja · v0.1.4</span><span>Balanja POS</span></div>
+          <div className="mt-12 flex flex-col gap-2 border-t border-border pt-5 font-mono text-xs text-text-subtle sm:flex-row sm:items-center sm:justify-between"><span>© balanja · v0.1.4</span><span>Balanja POS</span></div>
         </div>
       </footer>
     </div>

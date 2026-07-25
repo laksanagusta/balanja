@@ -4,6 +4,7 @@ export function cashPaymentState(rawValue, total, cartItemCount) {
   const finite = Number.isFinite(amount) && amount >= 0;
   const hasCart = cartItemCount > 0;
   const sufficient = finite && amount >= total;
+  const insufficient = finite && amount < total;
 
   return {
     amount,
@@ -15,6 +16,8 @@ export function cashPaymentState(rawValue, total, cartItemCount) {
         : "",
     showChange: hasCart && sufficient,
     change: hasCart && sufficient ? amount - total : 0,
+    showShortfall: hasCart && insufficient,
+    shortfall: hasCart && insufficient ? total - amount : 0,
   };
 }
 
