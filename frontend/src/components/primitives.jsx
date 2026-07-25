@@ -851,7 +851,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
   );
 }
 
-export function Switch({ checked = false, tone = "accent" }) {
+export function Switch({ checked = false, tone = "accent", decorative = false }) {
   const activeTone = tone === "success" ? "bg-success" : "bg-accent";
 
   return (
@@ -859,8 +859,9 @@ export function Switch({ checked = false, tone = "accent" }) {
       className={`inline-flex h-5 w-9 items-center rounded-full border border-border p-0.5 transition ${
         checked ? activeTone : "bg-surface-muted"
       }`}
-      role="switch"
-      aria-checked={checked}
+      role={decorative ? undefined : "switch"}
+      aria-checked={decorative ? undefined : checked}
+      aria-hidden={decorative || undefined}
     >
       <span
         className={`size-4 rounded-full bg-white shadow-low transition ${

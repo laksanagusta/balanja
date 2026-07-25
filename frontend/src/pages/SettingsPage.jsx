@@ -1,13 +1,14 @@
 import React from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
-import { Button, Icon, Input, Panel } from "../components/primitives.jsx";
+import { Button, Icon, Input, Panel, Switch } from "../components/primitives.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { SettingsPageSkeleton } from "../components/page-loading.jsx";
 import MasterDataManager from "../components/settings/MasterDataManager.jsx";
 import SettingsNavigation from "../components/settings/SettingsNavigation.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { getSettingsTabDirection } from "./settings-motion.js";
+import { useScanSoundPreference } from "../hooks/useScanSoundPreference.js";
 
 function normalizeTab(search) {
   const tab = new URLSearchParams(search || "").get("tab");
@@ -33,6 +34,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
   const [draft, setDraft] = React.useState(store.settings);
   const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.settings);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [scanSoundEnabled, setScanSoundEnabled] = useScanSoundPreference();
   const isInitialLoad = tab === "profile" ? isPageLoading : !store.loaded[tab];
   const isUpdatingSettings = store.loading.settings && store.loaded.settings;
   const isUpdatingMasterData = tab !== "profile" && store.loading[tab];
@@ -172,6 +174,20 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                         }}
                       />
                     </div>
+
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={scanSoundEnabled}
+                      onClick={() => setScanSoundEnabled(!scanSoundEnabled)}
+                      className="flex min-h-11 w-full items-center justify-between gap-4 rounded-card border border-border bg-surface px-4 py-3 text-left transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                    >
+                      <span>
+                        <span className="block text-sm font-semibold text-text">Bunyi pemindaian</span>
+                        <span className="mt-0.5 block text-xs leading-5 text-text-muted">Putar bunyi halus setelah barcode berhasil diproses pada perangkat ini.</span>
+                      </span>
+                      <Switch checked={scanSoundEnabled} decorative />
+                    </button>
 
                     <div className="settings-form-actions">
                       <Button type="submit" variant="primary" disabled={isSaving}>

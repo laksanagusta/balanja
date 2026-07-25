@@ -2,6 +2,7 @@ import React from "react";
 import { CashPaymentFeedback } from "../pos/CashPaymentFeedback.jsx";
 import { PosProductCard } from "../pos/ProductCard.jsx";
 import { MobileCheckoutPanel } from "../pos/MobileCheckoutPanel.jsx";
+import { ScanResultConfirmation } from "../scan/ScanResultConfirmation.jsx";
 import { Button, Icon, Panel } from "../primitives.jsx";
 
 const methods = [
@@ -47,7 +48,7 @@ export default function POSPatterns() {
       <div>
         <h3 className="text-xl font-semibold text-text">Pola komposit kasir</h3>
         <p className="mt-1 text-sm text-text-muted">
-          Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Scanner memprioritaskan kamera belakang 720p, menjelaskan kegagalan izin atau perangkat secara spesifik, dan tetap menyediakan input manual. Saat barcode diproses, scanner menampilkan spinner cepat, mengunci pembacaan ganda, dan tetap menyediakan aksi tutup. Panel app shell menjaga inset 8px yang konsisten dan memakai border tanpa bayangan wrapper di sela panel.
+          Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Scanner memprioritaskan kamera belakang 720p, menjelaskan kegagalan izin atau perangkat secara spesifik, dan tetap menyediakan input manual. Kamera tampil bersih tanpa kotak bidik permanen; saat barcode diproses, scanner menampilkan status ringkas selama minimal 180ms. Barcode yang sama memakai cooldown pasti 1 detik sebelum dapat menambah kuantitas lagi. Hasil tampil di bawah sebagai material hitam blur tanpa toast global: indikator hijau muda untuk berhasil dan kuning untuk tidak ditemukan atau gagal. Keberhasilan scan kasir menyertakan nama produk, harga, jumlah terbaru di keranjang, dan barcode. Material masuk 180ms dan keluar 140ms; reduced motion mempertahankan cross-fade saja. Bunyi halus tetap menyertai keberhasilan saat preferensinya aktif.
         </p>
         <p className="mt-2 text-sm text-text-muted">
           Satu vertical scroller dipakai pada layout ringkas. Katalog menampilkan 2 kartu per baris pada smartphone dan 4 saat ruang katalog mencukupi. Hanya smartphone hingga 639px yang menampilkan trigger cart dan drawer penuh dari kanan; mulai 640px cart selalu terlihat sebagai kolom selebar 320–360px, lalu 360–420px pada workspace lebar. Workspace dan katalog beradaptasi melalui container query. Density visual tetap ringkas untuk kerja kasir, sementara kontrol melebar menjadi minimal 44px pada perangkat sentuh.
@@ -64,6 +65,28 @@ export default function POSPatterns() {
         <p className="mt-2 text-sm text-text-muted">
           Feedback tunai memakai satu live region yang melakukan blend hanya ketika status berpindah antara Uang kurang dan Kembalian. Nilai yang berubah di dalam status yang sama tetap instan agar pengetikan terasa cepat.
         </p>
+      </div>
+      <div className="grid gap-3 rounded-panel bg-black/90 p-4 sm:grid-cols-2">
+        <ScanResultConfirmation
+          visible
+          announce={false}
+          feedback={{
+            tone: "success",
+            message: "Produk ditambahkan",
+            description: "8997001230011",
+            product: {
+              name: "Beras Premium 5 kg",
+              price: 72000,
+              quantity: 2,
+              barcode: "8997001230011",
+            },
+          }}
+        />
+        <ScanResultConfirmation
+          visible
+          announce={false}
+          feedback={{ tone: "error", message: "Produk tidak ditemukan", description: "8997001230999" }}
+        />
       </div>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <div className="grid gap-4">

@@ -2,6 +2,7 @@ import React from "react";
 import MasterDataManager from "../settings/MasterDataManager.jsx";
 import MasterDataSelectField from "../product/MasterDataSelectField.jsx";
 import SettingsNavigation from "../settings/SettingsNavigation.jsx";
+import { Switch } from "../primitives.jsx";
 
 const sampleItems = [
   { id: "cat-1", name: "Minuman", active: true },
@@ -56,6 +57,15 @@ export default function MasterDataPatternsShowcase() {
           onCreate={async (input) => ({ id: "cat-new", name: input.name.trim(), active: true })}
           onRestore={async (id) => ({ id, name: "Lama", active: true })}
         />
+      </div>
+      <div className="max-w-3xl rounded-card border border-border bg-surface p-4">
+        <div className="flex min-h-11 items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-text">Bunyi pemindaian</p>
+            <p className="mt-0.5 text-xs leading-5 text-text-muted">Konfirmasi halus setelah barcode berhasil diproses. Preferensi ini tersimpan lokal pada perangkat kasir.</p>
+          </div>
+          <Switch checked decorative />
+        </div>
       </div>
     </section>
   );

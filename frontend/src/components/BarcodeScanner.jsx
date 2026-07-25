@@ -1,8 +1,14 @@
 import React from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { Icon, useDialogPresence } from "./primitives.jsx";
+import { playScanSuccessSound, primeScanSuccessSound } from "../preferences/scan-feedback.js";
+import { ScanResultConfirmation } from "./scan/ScanResultConfirmation.jsx";
 
 const MIN_PROCESSING_MS = 180;
+const SAME_CODE_COOLDOWN_MS = 1000;
+const RESULT_HOLD_MS = 900;
+const RESULT_EXIT_MS = 140;
+const CLOSE_AFTER_SUCCESS_MS = 650;
 const SCANNER_CAMERA_CONSTRAINTS = {
   audio: false,
   video: {
@@ -38,18 +44,28 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
   const videoRef = React.useRef(null);
   const controlsRef = React.useRef(null);
   const onDetectedRef = React.useRef(onDetected);
-  const lastDetectionRef = React.useRef({ code: "", at: 0 });
+  const onCloseRef = React.useRef(onClose);
+  const lastDetectionRef = React.useRef({ code: "", acceptedAt: 0 });
   const processingRef = React.useRef(false);
   const processingRunRef = React.useRef(0);
   const processingTimerRef = React.useRef(null);
+  const feedbackHideTimerRef = React.useRef(null);
+  const feedbackRemoveTimerRef = React.useRef(null);
+  const closeTimerRef = React.useRef(null);
   const [manualCode, setManualCode] = React.useState("");
   const [error, setError] = React.useState("");
   const [scanning, setScanning] = React.useState(false);
   const [processing, setProcessing] = React.useState(false);
+  const [feedback, setFeedback] = React.useState(null);
+  const [feedbackVisible, setFeedbackVisible] = React.useState(false);
 
   React.useEffect(() => {
     onDetectedRef.current = onDetected;
   }, [onDetected]);
+
+  React.useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   const processDetection = React.useCallback(async (code) => {
     if (processingRef.current) return;
@@ -58,15 +74,43 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     processingRunRef.current = runId;
     processingRef.current = true;
     setProcessing(true);
+    setFeedbackVisible(false);
+    window.clearTimeout(feedbackHideTimerRef.current);
+    window.clearTimeout(feedbackRemoveTimerRef.current);
+    window.clearTimeout(closeTimerRef.current);
     setError("");
     const startedAt = Date.now();
+    let outcome = {
+      ok: true,
+      message: "Barcode berhasil dipindai",
+      description: code,
+      close: false,
+    };
 
     try {
-      await onDetectedRef.current?.(code);
-    } catch {
-      if (processingRunRef.current === runId) {
-        setError("Barcode gagal diproses. Coba pindai kembali.");
+      const result = await onDetectedRef.current?.(code);
+      if (result?.ok === false) {
+        outcome = {
+          ok: false,
+          message: result.error || result.message || "Barcode gagal diproses",
+          description: result.description || code,
+          close: false,
+        };
+      } else if (result) {
+        outcome = {
+          ...outcome,
+          ...result,
+          ok: true,
+          description: result.description || code,
+        };
       }
+    } catch {
+      outcome = {
+        ok: false,
+        message: "Barcode gagal diproses. Coba pindai kembali.",
+        description: code,
+        close: false,
+      };
     } finally {
       if (processingRunRef.current !== runId) return;
 
@@ -75,6 +119,19 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
         processingRef.current = false;
         processingTimerRef.current = null;
         setProcessing(false);
+        setFeedback({ ...outcome, tone: outcome.ok ? "success" : "error" });
+        setFeedbackVisible(true);
+        feedbackHideTimerRef.current = window.setTimeout(() => {
+          setFeedbackVisible(false);
+          feedbackRemoveTimerRef.current = window.setTimeout(() => setFeedback(null), RESULT_EXIT_MS);
+        }, RESULT_HOLD_MS);
+
+        if (outcome.ok) {
+          void playScanSuccessSound();
+          if (outcome.close) {
+            closeTimerRef.current = window.setTimeout(() => onCloseRef.current?.(), CLOSE_AFTER_SUCCESS_MS);
+          }
+        }
       };
       const remaining = Math.max(0, MIN_PROCESSING_MS - (Date.now() - startedAt));
       processingTimerRef.current = window.setTimeout(finish, remaining);
@@ -87,7 +144,16 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     processingRef.current = false;
     window.clearTimeout(processingTimerRef.current);
     processingTimerRef.current = null;
+    window.clearTimeout(feedbackHideTimerRef.current);
+    window.clearTimeout(feedbackRemoveTimerRef.current);
+    window.clearTimeout(closeTimerRef.current);
+    feedbackHideTimerRef.current = null;
+    feedbackRemoveTimerRef.current = null;
+    closeTimerRef.current = null;
+    lastDetectionRef.current = { code: "", acceptedAt: 0 };
     setProcessing(false);
+    setFeedbackVisible(false);
+    setFeedback(null);
   }, [open]);
 
   React.useEffect(() => {
@@ -110,12 +176,11 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
             if (processingRef.current) return;
             const text = result.getText();
             const now = Date.now();
-            const duplicate = lastDetectionRef.current.code === text;
-            lastDetectionRef.current = { code: text, at: now };
-            if (duplicate) return;
+            const repeatedTooSoon = lastDetectionRef.current.code === text
+              && now - lastDetectionRef.current.acceptedAt < SAME_CODE_COOLDOWN_MS;
+            if (repeatedTooSoon) return;
+            lastDetectionRef.current = { code: text, acceptedAt: now };
             void processDetection(text);
-          } else if (err && Date.now() - lastDetectionRef.current.at >= 750) {
-            lastDetectionRef.current = { code: "", at: 0 };
           }
         });
 
@@ -153,6 +218,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     event.preventDefault();
     const code = manualCode.trim();
     if (!code || processingRef.current) return;
+    void primeScanSuccessSound();
     setManualCode("");
     void processDetection(code);
   };
@@ -170,24 +236,35 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
       >
         <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" muted playsInline autoPlay />
 
-        <div className="absolute inset-0 z-[1] grid place-items-center pointer-events-none">
-          <div className="h-[min(48vw,21rem)] w-[min(74vw,28rem)] rounded-[28px] border border-white/20 sm:h-[min(42vw,24rem)] sm:w-[min(62vw,32rem)]" />
+        <div
+          className="pointer-events-none absolute inset-0 z-[2] grid place-items-center px-6"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          aria-hidden={!processing}
+        >
+          <div
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold shadow-panel backdrop-blur-xl transition-[opacity,transform] duration-fast ease-standard motion-reduce:transform-none ${
+              processing
+                ? "translate-y-0 opacity-100"
+                : "translate-y-1 opacity-0"
+            } bg-black/65 text-white`}
+          >
+            {processing ? <Icon name="loader" className="size-4 [animation-duration:700ms]" /> : null}
+            <span>{processing ? "Memproses barcode…" : ""}</span>
+          </div>
         </div>
 
         <header className="absolute inset-x-0 top-0 z-10 flex items-start justify-between bg-gradient-to-b from-black/60 via-black/25 to-transparent px-5 pb-6 pt-5">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>
             <p className="mt-0.5 min-h-5 text-sm text-white/70">
-              {processing ? (
-                <span role="status" aria-live="polite" className="inline-flex items-center gap-2 text-white">
-                  <Icon name="loader" className="size-4 [animation-duration:700ms]" />
-                  Memproses barcode…
-                </span>
-              ) : scanning ? "Arahkan kamera ke barcode." : "Mode input manual siap digunakan."}
+              {processing ? "Barcode terdeteksi." : scanning ? "Arahkan kamera ke barcode." : "Mode input manual siap digunakan."}
             </p>
           </div>
           <button
             type="button"
+            aria-label="Tutup pemindai"
             onClick={onClose}
             className="grid size-7 shrink-0 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xl transition hover:bg-white/35 active:bg-white/45"
           >
@@ -196,6 +273,9 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
         </header>
 
         <div className="absolute inset-x-0 bottom-0 z-10 space-y-3 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-5 pb-5 pt-10">
+          <div className="flex min-h-[52px] justify-center">
+            <ScanResultConfirmation feedback={feedback} visible={feedbackVisible} />
+          </div>
           {error && (
             <p className="rounded-xl bg-warning-soft/95 px-3.5 py-2.5 text-sm font-medium text-warning text-center">
               {error}

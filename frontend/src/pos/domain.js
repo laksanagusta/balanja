@@ -184,7 +184,12 @@ export function addProductToCart(cart, products, barcodeOrProductId) {
         },
       ];
 
-  return { ok: true, cart: nextCart };
+  return {
+    ok: true,
+    cart: nextCart,
+    product,
+    quantity: nextQty,
+  };
 }
 
 export function addSavedProductToCart(cart, products, product) {
