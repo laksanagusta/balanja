@@ -50,4 +50,7 @@ test("POS showcase documents the compact responsive contract", async () => {
   assert.match(showcase, /360–420px/);
   assert.match(showcase, /category-tabs-indicator/);
   assert.match(showcase, /pos-touch-target/);
+  assert.match(showcase, /Aksi teks Selesai/);
+  assert.match(showcase, /spring tanpa bounce/);
+  assert.match(showcase, /position-only layout/);
 });

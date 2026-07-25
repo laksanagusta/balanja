@@ -258,19 +258,19 @@
   }
 
   .master-data-create,
-  .master-data-item-row,
-  .master-data-archived-row {
+  .master-data-rename {
     display: grid;
     min-inline-size: 0;
     gap: 0.75rem;
   }
 
-  .master-data-identity {
-    display: flex;
+  .master-data-item-row,
+  .master-data-archived-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     min-inline-size: 0;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 
   .master-data-item-name {
@@ -290,6 +290,10 @@
 
   .settings-touch-target {
     min-block-size: 2.75rem;
+  }
+
+  .master-data-field-action {
+    align-items: flex-end !important;
   }
 
   @container settings-workspace (min-width: 480px) {
@@ -327,10 +331,8 @@
       align-items: end;
     }
 
-    .master-data-item-row,
-    .master-data-archived-row {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
+    .master-data-create-error {
+      grid-column: 1 / -1;
     }
 
     .master-data-actions {
@@ -339,10 +341,6 @@
 
     .master-data-actions-single {
       justify-items: end;
-    }
-
-    .settings-touch-target {
-      min-block-size: 2rem;
     }
   }
 
@@ -448,6 +446,25 @@
 
   .pos-touch-target {
     min-block-size: 2.25rem;
+  }
+
+  .pos-toolbar-control-surface,
+  .pos-toolbar-scan .header-compact-action-surface {
+    block-size: 2.25rem;
+  }
+
+  .pos-toolbar-scan .header-compact-action-surface {
+    inline-size: 100%;
+  }
+
+  .pos-toolbar-scan .header-compact-action-surface.primary-button {
+    box-shadow:
+      var(--primary-button-inner-shadow),
+      0 0 0 1px var(--primary-button-ring);
+  }
+
+  .pos-toolbar-scan .header-compact-action-surface.primary-button::after {
+    display: none;
   }
 
   .pos-icon-touch-target {
@@ -1121,4 +1138,12 @@
   --color-chart-scale-04: var(--chart-scale-04);
   --color-chart-scale-05: var(--chart-scale-05);
   --color-chart-scale-pattern-color: var(--chart-scale-pattern-color);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }

@@ -1,6 +1,83 @@
 import React from "react";
-import { Badge, Button, Icon, Input, Panel } from "../primitives.jsx";
+import { toast } from "sonner";
+import { Button, Icon, Input, Panel } from "../primitives.jsx";
 import BackgroundUpdateStatus from "../feedback/BackgroundUpdateStatus.jsx";
+
+function ItemActionsMenu({ itemName, disabled, onRename, onArchive }) {
+  const [open, setOpen] = React.useState(false);
+  const containerRef = React.useRef(null);
+  const triggerRef = React.useRef(null);
+  const firstItemRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return undefined;
+
+    firstItemRef.current?.focus();
+    const closeOnOutsidePress = (event) => {
+      if (!containerRef.current?.contains(event.target)) setOpen(false);
+    };
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePress);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  function choose(action) {
+    setOpen(false);
+    action();
+  }
+
+  return (
+    <div ref={containerRef} className="relative shrink-0">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={`Tindakan untuk ${itemName}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() => setOpen((current) => !current)}
+        className="settings-touch-target inline-flex size-11 items-center justify-center rounded-control text-text-muted transition-colors duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+      >
+        <Icon name="more" className="size-5" />
+      </button>
+
+      {open ? (
+        <div
+          role="menu"
+          aria-label={`Tindakan untuk ${itemName}`}
+          className="absolute right-0 top-full z-20 mt-1 min-w-40 rounded-card border border-border bg-surface p-1 shadow-panel"
+        >
+          <button
+            ref={firstItemRef}
+            type="button"
+            role="menuitem"
+            onClick={() => choose(onRename)}
+            className="flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium text-text transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
+          >
+            Ubah nama
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => choose(onArchive)}
+            className="flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium text-danger transition-colors duration-fast ease-standard hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
+          >
+            Arsipkan
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function MasterDataManager({
   singularLabel,
@@ -15,7 +92,6 @@ export default function MasterDataManager({
   const [draft, setDraft] = React.useState("");
   const [renamingId, setRenamingId] = React.useState("");
   const [renameValue, setRenameValue] = React.useState("");
-  const [archiveId, setArchiveId] = React.useState("");
   const [error, setError] = React.useState("");
   const [pendingId, setPendingId] = React.useState("");
 
@@ -27,143 +103,158 @@ export default function MasterDataManager({
     setError("");
     try {
       await action();
+      return true;
     } catch (actionError) {
       setError(actionError?.message || `Gagal menyimpan ${singularLabel.toLowerCase()}`);
+      return false;
     } finally {
       setPendingId("");
     }
   }
 
+  async function archiveItem(item) {
+    const archived = await run(() => onArchive?.(item.id), item.id);
+    if (!archived) return;
+
+    toast.success(`${singularLabel} diarsipkan`, {
+      description: item.name,
+      action: {
+        label: "Urungkan",
+        onClick: () => run(() => onRestore?.(item.id), item.id),
+      },
+    });
+  }
+
   return (
-    <Panel className="master-data-manager grid gap-4 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Panel className="master-data-manager">
+      <div className="flex flex-wrap items-start justify-between gap-3 p-4">
         <div>
           <p className="text-sm font-semibold text-text">{pluralLabel}</p>
-          <p className="text-xs text-text-muted">Urutan alfabetis. Arsip bersifat reversible dan tidak menghapus data produk.</p>
+          <p className="mt-0.5 text-xs leading-5 text-text-muted">Kelola pilihan yang digunakan pada data produk.</p>
         </div>
         <BackgroundUpdateStatus active={loading} label={`Memperbarui ${pluralLabel.toLowerCase()}`} />
       </div>
 
-      <div className="master-data-create rounded-card border border-border bg-surface-muted/50 p-3">
+      <div className="master-data-create border-t border-border p-4">
         <Input
           label={`Tambah ${singularLabel.toLowerCase()}`}
           placeholder={`Nama ${singularLabel.toLowerCase()}`}
-          error={error}
+          density="compact"
           inputProps={{
             value: draft,
-            onChange: (event) => setDraft(event.target.value),
+            onChange: (event) => {
+              setDraft(event.target.value);
+              setError("");
+            },
             disabled: pendingId === "__create__",
           }}
         />
         <div className="master-data-actions-single">
           <Button
-            className="settings-touch-target w-full"
+            className="header-compact-action master-data-field-action settings-touch-target"
             type="button"
             variant="primary"
+            size="base"
+            compactVisual
             disabled={!draft.trim() || pendingId === "__create__"}
-            onClick={() => run(async () => {
-              await onCreate?.({ name: draft });
-              setDraft("");
-            })}
+            onClick={async () => {
+              const created = await run(() => onCreate?.({ name: draft }), "");
+              if (created) setDraft("");
+            }}
           >
             <Icon name="plus" className="size-4" />
             Tambah
           </Button>
         </div>
+        {error ? <p aria-live="polite" className="master-data-create-error text-xs font-medium text-danger">{error}</p> : null}
       </div>
 
-      <div className={`grid gap-3 ${loading ? "opacity-70" : ""}`}>
-        {activeItems.map((item) => (
-          <div key={item.id} className="grid gap-3 rounded-card border border-border bg-surface p-3">
-            <div className="master-data-item-row">
-              <div className="master-data-identity">
-                <p className="master-data-item-name text-sm font-semibold text-text">{item.name}</p>
-                <Badge tone="success">Aktif</Badge>
-              </div>
-              <div className="master-data-actions">
-                <Button className="settings-touch-target" type="button" size="sm" onClick={() => { setRenamingId(item.id); setRenameValue(item.name); }}>
-                  Ubah nama
-                </Button>
-                <Button className="settings-touch-target" type="button" size="sm" variant="danger" onClick={() => setArchiveId(item.id)}>
-                  Arsipkan
-                </Button>
-              </div>
-            </div>
+      <div className={`master-data-list divide-y divide-border border-t border-border ${loading ? "opacity-70" : ""}`}>
+        {activeItems.length === 0 ? (
+          <p className="px-4 py-5 text-sm text-text-muted">Belum ada {pluralLabel.toLowerCase()}.</p>
+        ) : activeItems.map((item) => (
+          <div key={item.id} className="master-data-list-item">
             {renamingId === item.id ? (
-              <div className="grid gap-3 rounded-card border border-border bg-surface-muted/50 p-3">
+              <div className="master-data-rename bg-surface-muted/50 p-4">
                 <Input
                   label={`Ubah nama ${singularLabel.toLowerCase()}`}
-                  inputProps={{ value: renameValue, onChange: (event) => setRenameValue(event.target.value), disabled: pendingId === item.id }}
+                  density="compact"
+                  inputProps={{
+                    autoFocus: true,
+                    value: renameValue,
+                    onChange: (event) => setRenameValue(event.target.value),
+                    disabled: pendingId === item.id,
+                    onKeyDown: (event) => {
+                      if (event.key === "Escape") setRenamingId("");
+                    },
+                  }}
                 />
                 <div className="master-data-actions">
-                  <Button className="settings-touch-target" type="button" size="sm" onClick={() => setRenamingId("")}>Batal</Button>
+                  <Button className="header-compact-action settings-touch-target" type="button" size="base" variant="ghost" compactVisual onClick={() => setRenamingId("")}>
+                    Batal
+                  </Button>
                   <Button
-                    className="settings-touch-target"
+                    className="header-compact-action settings-touch-target"
                     type="button"
-                    size="sm"
+                    size="base"
                     variant="primary"
+                    compactVisual
                     disabled={!renameValue.trim() || pendingId === item.id}
-                    onClick={() => run(async () => {
-                      await onRename?.(item.id, { name: renameValue });
-                      setRenamingId("");
-                    }, item.id)}
+                    onClick={async () => {
+                      const renamed = await run(() => onRename?.(item.id, { name: renameValue }), item.id);
+                      if (renamed) setRenamingId("");
+                    }}
                   >
                     Simpan
                   </Button>
                 </div>
               </div>
-            ) : null}
-            {archiveId === item.id ? (
-              <div className="grid gap-3 rounded-card border border-danger/20 bg-danger-soft/40 p-3">
-                <p className="text-sm text-text">Arsipkan {singularLabel.toLowerCase()} ini? Produk yang sudah terhubung tetap menyimpan referensinya.</p>
-                <div className="master-data-actions">
-                  <Button className="settings-touch-target" type="button" size="sm" onClick={() => setArchiveId("")}>Batal</Button>
-                  <Button
-                    className="settings-touch-target"
-                    type="button"
-                    size="sm"
-                    variant="danger"
-                    disabled={pendingId === item.id}
-                    onClick={() => run(async () => {
-                      await onArchive?.(item.id);
-                      setArchiveId("");
-                    }, item.id)}
-                  >
-                    Arsipkan
-                  </Button>
-                </div>
+            ) : (
+              <div className="master-data-item-row min-h-13 items-center px-4 py-1">
+                <p className="master-data-item-name text-sm font-medium text-text">{item.name}</p>
+                <ItemActionsMenu
+                  itemName={item.name}
+                  disabled={pendingId === item.id}
+                  onRename={() => {
+                    setRenamingId(item.id);
+                    setRenameValue(item.name);
+                    setError("");
+                  }}
+                  onArchive={() => archiveItem(item)}
+                />
               </div>
-            ) : null}
+            )}
           </div>
         ))}
       </div>
 
-      <details className="rounded-card border border-border bg-surface p-3">
-        <summary className="cursor-pointer text-sm font-semibold text-text">Diarsipkan ({archivedItems.length})</summary>
-        <div className="mt-3 grid gap-3">
-          {archivedItems.length === 0 ? <p className="text-sm text-text-muted">Belum ada item diarsipkan.</p> : null}
-          {archivedItems.map((item) => (
-            <div key={item.id} className="master-data-archived-row rounded-card border border-border bg-surface-muted/50 p-3">
-              <div className="master-data-identity">
-                <p className="master-data-item-name text-sm font-semibold text-text">{item.name}</p>
-                <Badge>Diarsipkan</Badge>
+      {archivedItems.length > 0 ? (
+        <details className="group border-t border-border">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-2 text-sm font-medium text-text-muted transition-colors duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
+            <span>Diarsipkan · {archivedItems.length}</span>
+            <Icon name="chevron" className="size-4 transition-transform duration-base ease-standard group-open:rotate-180 motion-reduce:transition-none" />
+          </summary>
+          <div className="divide-y divide-border border-t border-border">
+            {archivedItems.map((item) => (
+              <div key={item.id} className="master-data-archived-row min-h-13 items-center px-4 py-1">
+                <p className="master-data-item-name text-sm font-medium text-text-muted">{item.name}</p>
+                <div className="master-data-actions-single">
+                  <Button
+                    className="settings-touch-target w-full"
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    disabled={pendingId === item.id}
+                    onClick={() => run(() => onRestore?.(item.id), item.id)}
+                  >
+                    Pulihkan
+                  </Button>
+                </div>
               </div>
-              <div className="master-data-actions-single">
-                <Button
-                  className="settings-touch-target w-full"
-                  type="button"
-                  size="sm"
-                  variant="primary"
-                  disabled={pendingId === item.id}
-                  onClick={() => run(async () => onRestore?.(item.id), item.id)}
-                >
-                  Pulihkan
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </details>
+            ))}
+          </div>
+        </details>
+      ) : null}
     </Panel>
   );
 }

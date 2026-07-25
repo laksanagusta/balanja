@@ -48,7 +48,7 @@ export default function POSPatterns() {
       <div>
         <h3 className="text-xl font-semibold text-text">Pola komposit kasir</h3>
         <p className="mt-1 text-sm text-text-muted">
-          Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Scanner memprioritaskan kamera belakang 720p, menjelaskan kegagalan izin atau perangkat secara spesifik, dan tetap menyediakan input manual. Kamera tampil bersih tanpa kotak bidik permanen; saat barcode diproses, scanner menampilkan status ringkas selama minimal 180ms. Barcode yang sama memakai cooldown pasti 1 detik sebelum dapat menambah kuantitas lagi. Hasil tampil di bawah sebagai material hitam blur tanpa toast global: indikator hijau muda untuk berhasil dan kuning untuk tidak ditemukan atau gagal. Keberhasilan scan kasir menyertakan nama produk, harga, jumlah terbaru di keranjang, dan barcode. Material masuk 180ms dan keluar 140ms; reduced motion mempertahankan cross-fade saja. Bunyi halus tetap menyertai keberhasilan saat preferensinya aktif.
+          Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Scanner memprioritaskan kamera belakang 720p, menjelaskan kegagalan izin atau perangkat secara spesifik, dan tetap menyediakan input manual. Aksi teks Selesai di header menyediakan jalan keluar eksplisit dengan target sentuh 44px. Kamera tampil bersih tanpa kotak bidik permanen; saat barcode diproses, scanner menampilkan status ringkas selama minimal 180ms. Barcode yang sama memakai cooldown pasti 1 detik sebelum dapat menambah kuantitas lagi. Hasil tampil di bawah sebagai material hitam blur tanpa toast global: indikator hijau muda untuk berhasil dan kuning untuk tidak ditemukan atau gagal. Keberhasilan scan kasir menyertakan nama produk, harga, jumlah terbaru di keranjang, dan barcode. Material masuk 180ms dan keluar 140ms; reduced motion mempertahankan cross-fade saja. Bunyi halus tetap menyertai keberhasilan saat preferensinya aktif.
         </p>
         <p className="mt-2 text-sm text-text-muted">
           Satu vertical scroller dipakai pada layout ringkas. Katalog menampilkan 2 kartu per baris pada smartphone dan 4 saat ruang katalog mencukupi. Hanya smartphone hingga 639px yang menampilkan trigger cart dan drawer penuh dari kanan; mulai 640px cart selalu terlihat sebagai kolom selebar 320–360px, lalu 360–420px pada workspace lebar. Workspace dan katalog beradaptasi melalui container query. Density visual tetap ringkas untuk kerja kasir, sementara kontrol melebar menjadi minimal 44px pada perangkat sentuh.
@@ -60,7 +60,7 @@ export default function POSPatterns() {
           Pada setiap baris keranjang, subtotal tetap berada di kanan atas. Hapus berlabel dan kontrol jumlah yang dapat diketik ditempatkan tepat di bawah subtotal; minus pada jumlah satu menghapus item. Saat angka diketik, text morph singkat memberi umpan balik. Saat stepper berubah, direction-aware transition menggeser nilai dari bawah ketika bertambah dan dari atas ketika berkurang. Gerak dinonaktifkan pada reduced motion dan tidak memperlambat input keyboard.
         </p>
         <p className="mt-2 text-sm text-text-muted">
-          Pada smartphone hingga 639px, cart memakai lebar penuh. Daftar item tetap menjadi satu-satunya area scroll, sedangkan surface grand total menempel di bawah. Bayar memperluas surface yang sama menjadi ringkasan pembayaran; Escape atau Kembali menciutkannya sebelum cart ditutup. Tablet dan desktop mempertahankan ringkasan pembayaran lama tanpa perubahan.
+          Pada smartphone hingga 639px, cart memakai lebar penuh. Daftar item tetap menjadi satu-satunya area scroll, sedangkan surface grand total menempel di bawah. Bayar memperluas surface yang sama menjadi ringkasan pembayaran; Escape atau Kembali menciutkannya sebelum cart ditutup. Perubahan ukuran memakai spring tanpa bounce, sementara isi, heading, dan grand total berpindah dengan position-only layout serta cross-fade singkat agar penutupan tidak menyquash teks. Tablet dan desktop mempertahankan ringkasan pembayaran lama tanpa perubahan.
         </p>
         <p className="mt-2 text-sm text-text-muted">
           Feedback tunai memakai satu live region yang melakukan blend hanya ketika status berpindah antara Uang kurang dan Kembalian. Nilai yang berubah di dalam status yang sama tetap instan agar pengetikan terasa cepat.
@@ -94,20 +94,25 @@ export default function POSPatterns() {
           <PosProductCard product={sampleProduct} onAdd={() => ({ ok: true })} />
         </div>
         <div className="grid gap-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Kolom pencarian</p>
-          <div className="pos-touch-target flex h-9 items-center gap-3 rounded-card border border-border bg-surface px-4 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
-            <Icon name="search" className="size-5 text-text-muted" />
-            <input
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-              name="designProductSearch"
-              autoComplete="off"
-              aria-label="Cari produk atau barcode"
-              aria-keyshortcuts="Meta+K Control+K"
-              placeholder="Cari produk atau barcode…"
-            />
-            <kbd className="rounded-md border border-border bg-surface-muted px-2 py-1 text-xs font-semibold text-text-subtle">
-              ⌘ K / Ctrl K
-            </kbd>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Pencarian dan pindai</p>
+          <div className="flex min-w-0 flex-col gap-2">
+            <label className="pos-touch-target flex min-w-0 items-center">
+              <span className="pos-toolbar-control-surface flex h-9 w-full min-w-0 items-center gap-3 rounded-card border border-border bg-surface px-4 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+                <Icon name="search" className="size-5 text-text-muted" />
+                <input
+                  className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
+                  name="designProductSearch"
+                  autoComplete="off"
+                  aria-label="Cari produk atau barcode"
+                  aria-keyshortcuts="Meta+K Control+K"
+                  placeholder="Cari produk atau barcode…"
+                />
+              </span>
+            </label>
+            <Button variant="primary" size="base" compactVisual className="header-compact-action pos-toolbar-scan pos-touch-target">
+              <Icon name="scan" className="size-4" />
+              Pindai barcode
+            </Button>
           </div>
         </div>
         <div className="grid gap-4">

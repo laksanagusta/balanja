@@ -120,9 +120,13 @@ export function RetailPosSkeleton() {
               <Skeleton className="h-5 w-28 bg-surface-muted/80" />
               <LoadingSheen delay={0} />
             </div>
-            <div className="relative w-full overflow-hidden rounded-card lg:max-w-md">
-              <Skeleton className="h-11 w-full bg-surface-muted/80" />
-              <LoadingSheen delay={80} />
+            <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row lg:max-w-[620px]">
+              <div className="pos-touch-target flex min-w-0 flex-1 items-center">
+                <Skeleton className="h-9 w-full rounded-card bg-surface-muted/80" />
+              </div>
+              <div className="pos-touch-target flex shrink-0 items-center">
+                <Skeleton className="h-9 w-36 rounded-control bg-surface-muted/80" />
+              </div>
             </div>
           </div>
 
@@ -418,32 +422,29 @@ export function SettingsPageSkeleton() {
           </div>
 
           <div className="settings-content mx-auto w-full max-w-3xl">
-            <Panel className="master-data-manager grid gap-4 p-4">
-              <div className="border-b border-border pb-3">
+            <Panel className="master-data-manager">
+              <div className="p-4">
                 <Skeleton className="h-4 w-24 bg-surface-muted/80" />
                 <Skeleton className="mt-2 h-3.5 w-full max-w-80 bg-surface-muted/80" />
               </div>
 
-              <div className="master-data-create rounded-card border border-border bg-surface-muted/50 p-3">
+              <div className="master-data-create border-t border-border p-4">
                 <div className="grid gap-2">
-                  <Skeleton className="h-3.5 w-24 bg-surface" />
-                  <Skeleton className="h-11 w-full rounded-card bg-surface" />
+                  <Skeleton className="h-3.5 w-24 bg-surface-muted/80" />
+                  <Skeleton className="h-9 w-full rounded-card bg-surface-muted/80" />
                 </div>
                 <div className="master-data-actions-single">
-                  <Skeleton className="settings-touch-target h-11 w-full min-w-24 rounded-control bg-surface" />
+                  <div className="settings-touch-target flex items-center justify-center">
+                    <Skeleton className="h-9 w-20 rounded-control bg-surface-muted/80" />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid gap-3">
+              <div className="divide-y divide-border border-t border-border">
                 {Array.from({ length: 3 }, (_, index) => (
-                  <div key={index} className="master-data-item-row rounded-card border border-border p-3">
-                    <div className="grid min-w-0 gap-2">
-                      <Skeleton className={`h-4 bg-surface-muted/80 ${index === 1 ? "w-2/5" : "w-1/3"}`} />
-                      <Skeleton className="h-3 w-20 bg-surface-muted/80" />
-                    </div>
-                    <div className="master-data-actions-single">
-                      <Skeleton className="settings-touch-target h-8 w-full min-w-20 rounded-control bg-surface-muted/80" />
-                    </div>
+                  <div key={index} className="master-data-item-row min-h-13 px-4 py-1">
+                    <Skeleton className={`h-4 bg-surface-muted/80 ${index === 1 ? "w-2/5" : "w-1/3"}`} />
+                    <Skeleton className="settings-touch-target size-11 rounded-control bg-surface-muted/80" />
                   </div>
                 ))}
               </div>

@@ -16,7 +16,7 @@ export default function FormShowcase() {
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Form fields</h3>
-        <p className="mt-1 text-sm text-text-muted">Input, select, and toggle components.</p>
+        <p className="mt-1 text-sm text-text-muted">Input and select surfaces keep the same compact visual height at every breakpoint while their mobile touch area remains 44px. Editable text stays at least 16px on touch devices so focusing a field never triggers browser auto-zoom.</p>
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="grid max-w-md gap-4">

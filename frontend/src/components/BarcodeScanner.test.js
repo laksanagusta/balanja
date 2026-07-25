@@ -52,6 +52,10 @@ test("scanner uses a forced full-screen surface with Indonesian copy", async () 
   assert.doesNotMatch(source, /h-\[min\(48vw,21rem\)\]/);
   assert.match(source, /Arahkan kamera ke barcode\./);
   assert.match(source, /Masukkan barcode manual/);
+  assert.match(source, /aria-label="Selesai memindai"/);
+  assert.match(source, />\s*Selesai\s*</);
+  assert.match(source, /min-h-11/);
+  assert.doesNotMatch(source, /aria-label="Tutup pemindai"/);
 });
 
 test("scanner requests a useful rear-camera stream instead of browser defaults", async () => {

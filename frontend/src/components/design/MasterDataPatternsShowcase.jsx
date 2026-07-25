@@ -25,7 +25,8 @@ export default function MasterDataPatternsShowcase() {
         <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
           Settings memakai container query agar rail 14rem hanya muncul saat workspace benar-benar cukup lebar. Tab content memakai
           direction-aware transition yang mengikuti urutan navigasi, sementara reduced motion menggantinya dengan crossfade singkat.
-          Pada ruang ringkas, nama panjang membungkus aman dan action mempertahankan target sentuh minimum 44px.
+          Daftar master data memakai flat rows, divider tipis, dan satu overflow menu untuk aksi sekunder. Input dan permukaan tombol
+          form sejajar pada tinggi visual 36px, sementara tombol mempertahankan target sentuh 44px.
         </p>
       </div>
       <div className="settings-workspace overflow-hidden rounded-card border border-border bg-app-bg">

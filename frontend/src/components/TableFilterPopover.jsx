@@ -3,7 +3,14 @@ import { Icon } from "./primitives.jsx";
 
 const focusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function TableFilterPopover({ open, onOpenChange, activeCount = 0, children }) {
+export function TableFilterPopover({
+  open,
+  onOpenChange,
+  activeCount = 0,
+  className = "",
+  triggerClassName = "",
+  children,
+}) {
   const contentId = React.useId();
   const contentRef = React.useRef(null);
   const triggerRef = React.useRef(null);
@@ -43,14 +50,14 @@ export function TableFilterPopover({ open, onOpenChange, activeCount = 0, childr
   }, [onOpenChange, open]);
 
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       <button
         ref={triggerRef}
         type="button"
         aria-expanded={open}
         aria-controls={contentId}
         onClick={() => onOpenChange(!open)}
-        className="relative z-40 inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-text-muted shadow-low transition-[background-color,border-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        className={`relative z-40 inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-text-muted shadow-low transition-[background-color,border-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${triggerClassName}`}
       >
         <Icon name="filter" className="size-4" />
         Filters
