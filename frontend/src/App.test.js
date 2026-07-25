@@ -11,3 +11,20 @@ test("app waits for Clerk before deciding whether to render the landing page", a
   assert.ok(landingGuard >= 0);
   assert.ok(loadingGuard < landingGuard);
 });
+
+test("development annotation tooling is excluded from production rendering", async () => {
+  const source = await readFile(new URL("./main.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /import\.meta\.env\.DEV\s*&&\s*<Agentation/);
+  assert.doesNotMatch(source, /^\s*<Agentation endpoint=/m);
+});
+
+test("signed-in POS mounting is gated by organization bootstrap", async () => {
+  const source = await readFile(new URL("./main.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /import OrganizationBootstrap from "\.\/auth\/OrganizationBootstrap\.jsx"/);
+  assert.match(
+    source,
+    /<OrganizationBootstrap>\s*<POSStoreProvider[\s\S]*?<\/POSStoreProvider>\s*<\/OrganizationBootstrap>/,
+  );
+});

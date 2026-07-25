@@ -3,11 +3,12 @@ import { Button, Icon, Panel } from "../primitives.jsx";
 
 const tokens = [
   ["Accent", "--color-accent", "#1d1d1f"],
-  ["Accent Hover", "--color-accent-hover", "#000000"],
+  ["Accent Hover", "--color-accent-hover", "#151517"],
   ["Danger", "--color-danger", "#ef4444"],
   ["Danger Soft", "--color-danger-soft", "#fff1f1"],
-  ["Radius", "--radius-control", "10px"],
-  ["Shadow Accent", "--shadow-accent", "0 12px 22px rgb(29 29 31 / 0.18)"],
+  ["Radius", "--radius-control", "8px"],
+  ["Primary ring", "--primary-button-ring", "#1d1d1f"],
+  ["Primary depth", "--primary-button-far-shadow", "layered neutral shadow"],
 ];
 
 export default function ButtonShowcase() {
@@ -15,11 +16,14 @@ export default function ButtonShowcase() {
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Button</h3>
-        <p className="mt-1 text-sm text-text-muted">Primary, secondary, danger, ghost, and disabled states.</p>
+        <p className="mt-1 text-sm text-text-muted">Primary uses a Clerk-inspired layered surface without a visible gray border. Use it once per action cluster for the forward action—such as Pindai barcode, Tambah produk, or checkout—while filters, cancel, row actions, and destructive actions keep their quieter hierarchy.</p>
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="flex flex-wrap items-start gap-3">
-          <Button variant="primary" onClick={() => alert("Primary action")}>Primary action</Button>
+          <Button variant="primary" onClick={() => alert("Tambah produk")}>
+            <Icon name="plus" className="size-4" />
+            Tambah produk
+          </Button>
           <Button onClick={() => alert("Secondary action")}>Secondary action</Button>
           <Button variant="ghost" onClick={() => alert("Ghost action")}>Ghost</Button>
           <Button variant="danger" onClick={() => alert("Destructive")}>

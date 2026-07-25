@@ -4,6 +4,8 @@ import BarcodeScanner from "../components/BarcodeScanner.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { CartRow } from "../components/pos/CartRow.jsx";
+import { CashPaymentFeedback } from "../components/pos/CashPaymentFeedback.jsx";
+import { MobileCheckoutPanel } from "../components/pos/MobileCheckoutPanel.jsx";
 import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { ProductCatalog } from "../components/pos/ProductCatalog.jsx";
 import { Badge, Button, Dialog, Icon, Input } from "../components/primitives.jsx";
@@ -27,7 +29,9 @@ const FOCUSABLE_SELECTOR = [
 ].join(",");
 
 function focusableElements(container) {
-  return container ? Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)) : [];
+  return container
+    ? Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter((element) => element.getClientRects().length > 0)
+    : [];
 }
 
 export default function RetailPosPage() {
@@ -42,6 +46,7 @@ export default function RetailPosPage() {
   const cartReturnFocusRef = React.useRef(null);
   const cartCloseTimerRef = React.useRef(null);
   const cartDragRef = React.useRef(null);
+  const mobileCheckoutTriggerRef = React.useRef(null);
   const [categoryIndicator, setCategoryIndicator] = React.useState({ left: 0, width: 0, ready: false });
   const [query, setQuery] = React.useState("");
   const [category, setCategory] = React.useState("");
@@ -54,6 +59,7 @@ export default function RetailPosPage() {
   const [scannerOpen, setScannerOpen] = React.useState(false);
   const [cartExpanded, setCartExpanded] = React.useState(false);
   const [cartPresent, setCartPresent] = React.useState(false);
+  const [mobileCheckoutExpanded, setMobileCheckoutExpanded] = React.useState(false);
   const categoryTabs = React.useMemo(
     () => [{ value: "", label: "Semua" }, ...activeMasterOptions(store.categories)],
     [store.categories],
@@ -69,8 +75,15 @@ export default function RetailPosPage() {
   const cashState = cashPaymentState(cashReceived, totals.total, store.cart.length);
   const checkoutDisabled = store.cart.length === 0 || checkoutPending;
   const totalCartItems = store.cart.reduce((sum, item) => sum + item.qty, 0);
+  const cashFeedback = cashState.showChange
+    ? { status: "change", value: formatPrice(cashState.change) }
+    : cashState.showShortfall
+      ? { status: "shortfall", value: formatPrice(cashState.shortfall) }
+      : null;
   const visibleCashError = paymentMethod === "cash"
-    ? cashError || (cashReceived.trim() && !cashState.valid ? cashState.error : "")
+    ? cashState.showShortfall
+      ? ""
+      : cashError || (cashReceived.trim() && !cashState.valid ? cashState.error : "")
     : "";
 
   const checkout = async () => {
@@ -88,6 +101,7 @@ export default function RetailPosPage() {
       });
       if (result.ok) {
         setCashReceived("");
+        setMobileCheckoutExpanded(false);
         toast.success("Transaksi selesai", { description: result.transaction?.number });
       } else {
         toast.error(result.error || "Checkout gagal");
@@ -111,6 +125,7 @@ export default function RetailPosPage() {
   const clearCart = () => {
     if (store.cart.length === 0) return;
     store.clearCart();
+    setMobileCheckoutExpanded(false);
     setClearCartOpen(false);
     toast.success("Keranjang dikosongkan");
   };
@@ -130,6 +145,7 @@ export default function RetailPosPage() {
   }, [resetCartDragStyles]);
 
   const closeCart = React.useCallback(() => {
+    setMobileCheckoutExpanded(false);
     setCartExpanded(false);
     window.clearTimeout(cartCloseTimerRef.current);
     cartCloseTimerRef.current = window.setTimeout(finishCartClose, CART_EXIT_MS);
@@ -138,6 +154,7 @@ export default function RetailPosPage() {
   const openCart = React.useCallback(() => {
     window.clearTimeout(cartCloseTimerRef.current);
     resetCartDragStyles();
+    setMobileCheckoutExpanded(false);
     cartReturnFocusRef.current = document.activeElement;
     setCartPresent(true);
     setCartExpanded(true);
@@ -241,6 +258,11 @@ export default function RetailPosPage() {
     const handleCartKeyDown = (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
+        if (mobileCheckoutExpanded) {
+          setMobileCheckoutExpanded(false);
+          window.requestAnimationFrame(() => mobileCheckoutTriggerRef.current?.focus({ preventScroll: true }));
+          return;
+        }
         closeCart();
         return;
       }
@@ -259,7 +281,7 @@ export default function RetailPosPage() {
     };
     window.addEventListener("keydown", handleCartKeyDown);
     return () => window.removeEventListener("keydown", handleCartKeyDown);
-  }, [cartExpanded, closeCart]);
+  }, [cartExpanded, closeCart, mobileCheckoutExpanded]);
 
   React.useEffect(() => () => window.clearTimeout(cartCloseTimerRef.current), []);
 
@@ -304,14 +326,14 @@ export default function RetailPosPage() {
                 aria-expanded={cartExpanded}
                 aria-controls="retail-pos-cart"
                 onClick={openCart}
-                className="retail-pos-cart-open pos-touch-target ml-auto flex min-w-11 items-center gap-2 rounded-control border border-border px-3 text-sm font-semibold text-text transition-colors duration-fast hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                className="retail-pos-cart-open pos-touch-target ml-auto min-w-11 items-center gap-2 rounded-control border border-border px-3 text-sm font-semibold text-text transition-colors duration-fast hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
                 <Icon name="cart" className="size-4" />
                 <span>{totalCartItems}</span>
               </button>
             </div>
             <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row lg:max-w-[620px]">
-              <div className="pos-touch-target flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-2 focus-within:outline-focus/30">
+              <div className="pos-touch-target flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
                 <Icon name="search" className="size-4 text-text-muted" />
                 <input
                   ref={searchInputRef}
@@ -328,7 +350,7 @@ export default function RetailPosPage() {
                   ⌘ K / Ctrl K
                 </kbd>
               </div>
-              <Button type="button" variant="secondary" className="pos-touch-target shrink-0" onClick={() => setScannerOpen(true)}>
+              <Button type="button" variant="primary" className="pos-touch-target shrink-0" onClick={() => setScannerOpen(true)}>
                 <Icon name="scan" className="size-4" />
                 Pindai barcode
               </Button>
@@ -338,7 +360,7 @@ export default function RetailPosPage() {
           <div className="px-3 py-3 sm:px-6">
             <div
               ref={categoryTabsRef}
-              className="category-tabs relative flex w-full min-w-0 gap-1 overflow-x-auto rounded-control bg-surface-muted p-1"
+              className="category-tabs relative flex w-full min-w-0 gap-1 overflow-x-auto rounded-control border border-border bg-surface-muted p-1"
               aria-label="Kategori produk"
             >
               <span
@@ -469,7 +491,7 @@ export default function RetailPosPage() {
             )}
           </div>
 
-          <div className="retail-pos-cart-footer z-10 mt-auto grid gap-3 border-t border-border bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
+          <div className="retail-pos-cart-footer retail-pos-standard-checkout z-10 mt-auto gap-3 border-t border-border bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
             <PaymentSummary
               subtotal={totals.subtotal}
               tax={totals.tax}
@@ -499,11 +521,7 @@ export default function RetailPosPage() {
                 }}
               />
             )}
-            {paymentMethod === "cash" && cashState.showChange && (
-              <p role="status" aria-live="polite" className="rounded-control bg-success-soft px-3 py-2 text-sm font-semibold text-success">
-                Kembalian: {formatPrice(cashState.change)}
-              </p>
-            )}
+            <CashPaymentFeedback status={paymentMethod === "cash" ? cashFeedback?.status : null} value={cashFeedback?.value} />
             {paymentMethod === "qris" && (
               <div className="grid content-start gap-3 rounded-card border border-border bg-surface-muted p-4">
                 <div className="flex justify-between text-sm">
@@ -525,6 +543,72 @@ export default function RetailPosPage() {
             >
               Kosongkan keranjang
             </Button>
+          </div>
+
+          <div className="retail-pos-mobile-checkout">
+            <MobileCheckoutPanel
+              expanded={mobileCheckoutExpanded}
+              onExpand={() => setMobileCheckoutExpanded(true)}
+              onCollapse={() => setMobileCheckoutExpanded(false)}
+              grandTotal={formatPrice(totals.total)}
+              disabled={checkoutDisabled}
+              triggerRef={mobileCheckoutTriggerRef}
+            >
+              <div className="grid gap-3">
+                <PaymentSummary
+                  subtotal={totals.subtotal}
+                  tax={totals.tax}
+                  discount={0}
+                  grandTotal={totals.total}
+                  paymentMethod={paymentMethod}
+                  onPaymentMethodChange={changePaymentMethod}
+                  formatPrice={formatPrice}
+                  disabled={checkoutPending}
+                  showTitle={false}
+                />
+
+                {paymentMethod === "cash" && (
+                  <Input
+                    label="Nominal tunai"
+                    placeholder="Contoh: 150000…"
+                    error={visibleCashError}
+                    inputProps={{
+                      name: "mobileCashReceived",
+                      autoComplete: "off",
+                      value: cashReceived,
+                      onChange: (event) => {
+                        setCashReceived(event.target.value);
+                        setCashError("");
+                      },
+                      inputMode: "numeric",
+                      disabled: checkoutPending,
+                    }}
+                  />
+                )}
+                <CashPaymentFeedback status={paymentMethod === "cash" ? cashFeedback?.status : null} value={cashFeedback?.value} />
+                {paymentMethod === "qris" && (
+                  <div className="grid content-start gap-3 rounded-card border border-border bg-surface-muted p-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-muted">QRIS manual</span>
+                      <span className="font-semibold text-text">{store.settings.qrisLabel}</span>
+                    </div>
+                    <p className="text-xs leading-5 text-text-muted">Konfirmasi pembayaran di aplikasi QRIS merchant sebelum menyelesaikan transaksi.</p>
+                  </div>
+                )}
+
+                <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
+                  {checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="pos-touch-target"
+                  onClick={() => setClearCartOpen(true)}
+                  disabled={store.cart.length === 0 || checkoutPending}
+                >
+                  Kosongkan keranjang
+                </Button>
+              </div>
+            </MobileCheckoutPanel>
           </div>
           </div>
         </>

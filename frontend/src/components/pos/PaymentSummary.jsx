@@ -15,10 +15,11 @@ export function PaymentSummary({
   onPaymentMethodChange,
   formatPrice,
   disabled = false,
+  showTitle = true,
 }) {
   return (
     <div className="grid gap-4">
-      <h2 className="text-base font-semibold text-text">Ringkasan pembayaran</h2>
+      {showTitle ? <h2 className="text-base font-semibold text-text">Ringkasan pembayaran</h2> : null}
       <dl className="grid gap-3 text-sm">
         {[
           ["Subtotal", formatPrice(subtotal)],

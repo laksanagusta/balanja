@@ -25,6 +25,7 @@ import MarketingPatternsShowcase from "../components/design/MarketingPatternsSho
 import ProductPhotoShowcase from "../components/design/ProductPhotoShowcase.jsx";
 import NavigationPatternsShowcase from "../components/design/NavigationPatternsShowcase.jsx";
 import MasterDataPatternsShowcase from "../components/design/MasterDataPatternsShowcase.jsx";
+import OrganizationOnboardingShowcase from "../components/design/OrganizationOnboardingShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
@@ -40,7 +41,7 @@ export default function DesignSystemPage({ onNavigate }) {
             >
               Products
             </button>
-            <Button type="button" onClick={() => onNavigate(routes.pos)} className="h-[42px]">
+            <Button type="button" variant="primary" onClick={() => onNavigate(routes.pos)} className="h-[42px]">
               Open POS
             </Button>
           </div>
@@ -59,6 +60,7 @@ export default function DesignSystemPage({ onNavigate }) {
         <TokenGrid />
         <TypographyPanel />
         <MarketingPatternsShowcase />
+        <OrganizationOnboardingShowcase />
         <section className="rounded-panel border border-border bg-surface p-4 shadow-low">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-success">Login page pattern</p>
           <h3 className="mt-2 text-xl font-semibold text-text">Centered sign-in surface without top bar</h3>

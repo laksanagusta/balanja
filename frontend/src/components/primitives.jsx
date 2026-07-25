@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import {
   ArchiveBoxIcon,
   ArrowPathIcon,
@@ -35,6 +36,70 @@ import {
 } from "@heroicons/react/24/outline";
 import { nextSelectIndex } from "./select-field-navigation.js";
 import { ScrollEdge } from "./ScrollEdge.jsx";
+
+export const FloatingPopover = React.forwardRef(function FloatingPopover(
+  { anchorRef, open, className = "", gap = 8, children },
+  forwardedRef,
+) {
+  const localRef = React.useRef(null);
+  const [position, setPosition] = React.useState(null);
+
+  React.useImperativeHandle(forwardedRef, () => localRef.current);
+
+  React.useLayoutEffect(() => {
+    if (!open) {
+      setPosition(null);
+      return undefined;
+    }
+
+    const updatePosition = () => {
+      const anchor = anchorRef.current;
+      const popover = localRef.current;
+      if (!anchor || !popover) return;
+
+      const anchorRect = anchor.getBoundingClientRect();
+      const popoverHeight = popover.offsetHeight;
+      const roomBelow = window.innerHeight - anchorRect.bottom - gap;
+      const shouldOpenAbove = roomBelow < popoverHeight && anchorRect.top > roomBelow;
+      const top = shouldOpenAbove
+        ? Math.max(gap, anchorRect.top - popoverHeight - gap)
+        : Math.min(anchorRect.bottom + gap, window.innerHeight - popoverHeight - gap);
+
+      setPosition({
+        left: Math.max(gap, Math.min(anchorRect.left, window.innerWidth - anchorRect.width - gap)),
+        top,
+        width: anchorRect.width,
+      });
+    };
+
+    const frame = requestAnimationFrame(updatePosition);
+    const resizeObserver = new ResizeObserver(updatePosition);
+    if (anchorRef.current) resizeObserver.observe(anchorRef.current);
+    if (localRef.current) resizeObserver.observe(localRef.current);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [anchorRef, gap, open]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      ref={localRef}
+      className={`fixed z-[60] ${position ? "" : "invisible"} ${className}`}
+      style={position || undefined}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+});
 
 function PanelLeftIcon({ className }) {
   return (
@@ -276,7 +341,7 @@ export function Icon({ name, className = "size-5" }) {
 export function Button({ children, variant = "secondary", size = "md", compactVisual = false, className = "", ...props }) {
   const variants = {
     primary:
-      "scan-3d bg-accent text-white hover:bg-accent-hover",
+      "primary-button bg-accent text-white hover:bg-accent-hover",
     secondary:
       "border border-border bg-surface text-text shadow-low hover:bg-surface-muted active:scale-[0.97] motion-reduce:active:scale-100",
     ghost: "text-text-muted hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100",
@@ -321,7 +386,7 @@ export function Input({ label, placeholder, rightSlot, error, className = "", in
     <label htmlFor={id} className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
       {label}
       <span
-        className={`flex h-11 md:h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-2 focus-within:outline-focus/30 ${
+        className={`flex h-11 md:h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
           error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
         }`}
       >
@@ -346,6 +411,7 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
   const [activeIndex, setActiveIndex] = React.useState(-1);
   const generatedId = React.useId().replaceAll(":", "");
   const containerRef = React.useRef(null);
+  const popoverRef = React.useRef(null);
   const triggerRef = React.useRef(null);
   const optionRefs = React.useRef([]);
   const labelId = `${generatedId}-label`;
@@ -383,7 +449,7 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
     if (!isOpen) return undefined;
 
     const handlePointerDown = (event) => {
-      if (!containerRef.current?.contains(event.target)) closeListbox();
+      if (!containerRef.current?.contains(event.target) && !popoverRef.current?.contains(event.target)) closeListbox();
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
@@ -444,14 +510,12 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
           }`}
         />
       </button>
-      {isOpen && (
+      {isOpen && (inline ? (
         <div
           id={listboxId}
           role="listbox"
           aria-labelledby={labelId}
-          className={inline
-            ? "grid gap-1 rounded-card border border-border bg-surface-muted p-1"
-            : "absolute left-0 right-0 top-[calc(100%+8px)] z-20 origin-top overflow-hidden rounded-card border border-border bg-surface p-1 shadow-panel"}
+          className="grid gap-1 rounded-card border border-border bg-surface-muted p-1"
         >
           {menuOptions.map((option, index) => {
             const optionValue = getOptionValue(option);
@@ -477,7 +541,38 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
             );
           })}
         </div>
-      )}
+      ) : (
+        <FloatingPopover
+          ref={popoverRef}
+          anchorRef={containerRef}
+          open
+          className="origin-top overflow-hidden rounded-card border border-border bg-surface p-1 shadow-panel"
+        >
+          <div id={listboxId} role="listbox" aria-labelledby={labelId}>
+            {menuOptions.map((option, index) => {
+              const optionValue = getOptionValue(option);
+              const optionLabel = getOptionLabel(option);
+              return (
+                <button
+                  ref={(node) => { optionRefs.current[index] = node; }}
+                  key={optionValue}
+                  type="button"
+                  role="option"
+                  aria-selected={selectedValue === optionValue}
+                  onFocus={() => setActiveIndex(index)}
+                  onKeyDown={(event) => handleOptionKeyDown(event, optionValue)}
+                  onClick={() => selectOption(optionValue)}
+                  className={`flex h-11 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard md:h-10 ${
+                    selectedValue === optionValue ? "bg-surface-muted text-text" : "text-text-muted hover:bg-surface-muted"
+                  }`}
+                >
+                  {optionLabel}
+                </button>
+              );
+            })}
+          </div>
+        </FloatingPopover>
+      ))}
       {error && <span className="text-xs font-medium text-danger">{error}</span>}
     </div>
   );

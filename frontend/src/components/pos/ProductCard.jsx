@@ -49,7 +49,7 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
           </div>
         </div>
       </div>
-      <div className="grid gap-2 px-4 py-3">
+      <div className="grid gap-2 px-2 py-3">
         <Badge>{product.category}</Badge>
         <div className="grid content-start gap-1.5">
           <h3 className="line-clamp-1 text-sm font-semibold leading-tight text-text">{product.name}</h3>
@@ -97,7 +97,7 @@ export function ProductCard({ product, onAdd, onDecrease }) {
             <Icon name="plus" className="size-4" />
           </button>
         </div>
-        <Button className="product-add-button pos-touch-target" disabled={blocked} onClick={handleAdd}>
+        <Button variant="primary" className="product-add-button pos-touch-target" disabled={blocked} onClick={handleAdd}>
           <span key={buttonLabel} className="button-label-pop">{buttonLabel}</span>
         </Button>
       </div>
@@ -118,7 +118,7 @@ export function PosProductCard({ product, onAdd, disabled = false, actionLabel =
       addFeedback={addFeedback}
       className="pos-product-card"
     >
-      <Button className="product-add-button pos-touch-target" disabled={blocked} onClick={handleAdd}>
+      <Button variant="primary" className="product-add-button pos-touch-target" disabled={blocked} onClick={handleAdd}>
         <span key={buttonLabel} className="button-label-pop">{buttonLabel}</span>
       </Button>
     </ProductCardFrame>

@@ -76,7 +76,7 @@ export default function TransactionsPage() {
       <header className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
         <h1 className="text-base font-semibold text-text">Transaksi</h1>
         <div className="flex min-w-[220px] flex-1 lg:ml-auto lg:max-w-[420px]">
-          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft">
+          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"

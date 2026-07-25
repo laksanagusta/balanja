@@ -14,12 +14,45 @@ export function CartRow({ item, subtotal, unitPrice, maxQty, onUpdateQty, onRemo
   const stockLimit = Number(maxQty);
   const hasStockLimit = Number.isFinite(stockLimit);
   const plusDisabled = hasStockLimit && item.qty >= stockLimit;
+  const qtyInputRef = React.useRef(null);
+  const previousQtyRef = React.useRef(item.qty);
+  const qtySlideAnimationRef = React.useRef(null);
   const [draftQty, setDraftQty] = React.useState(String(item.qty));
   const [qtyInputMotion, setQtyInputMotion] = React.useState(null);
 
   React.useEffect(() => {
+    const previousQty = previousQtyRef.current;
+    previousQtyRef.current = item.qty;
     setDraftQty(String(item.qty));
+
+    if (previousQty === item.qty || typeof window === "undefined") return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const input = qtyInputRef.current;
+      if (
+        !input
+        || document.activeElement === input
+        || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        || typeof input.animate !== "function"
+      ) return;
+
+      qtySlideAnimationRef.current?.cancel();
+      const startY = item.qty > previousQty ? "55%" : "-55%";
+      qtySlideAnimationRef.current = input.animate(
+        [
+          { color: "var(--color-accent)", opacity: 0.35, transform: `translateY(${startY})` },
+          { color: "inherit", opacity: 1, transform: "translateY(0)" },
+        ],
+        {
+          duration: 160,
+          easing: "cubic-bezier(0.23, 1, 0.32, 1)",
+        },
+      );
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [item.qty]);
+
+  React.useEffect(() => () => qtySlideAnimationRef.current?.cancel(), []);
 
   const commitQuantity = () => {
     const parsedQty = Number.parseInt(draftQty, 10);
@@ -71,6 +104,7 @@ export function CartRow({ item, subtotal, unitPrice, maxQty, onUpdateQty, onRemo
                       <Icon name="minus" className="size-3.5" />
                     </button>
                     <input
+                      ref={qtyInputRef}
                       aria-label="Kuantitas"
                       inputMode="numeric"
                       pattern="[0-9]*"
