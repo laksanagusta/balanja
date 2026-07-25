@@ -52,7 +52,7 @@ go run ./cmd/api
 
 ## Production
 
-Production berjalan di `https://pos.marvcore.com`. Push yang sudah terverifikasi
+Production berjalan di `https://balanja.marvcore.com`. Push yang sudah terverifikasi
 ke branch `main` membangun image Docker Hub `balanja-api` dan `balanja-web`,
 kemudian menjalankan workflow `.github/workflows/ci-cd.yml` untuk deployment
 Tencent Cloud dengan health check dan rollback otomatis.
