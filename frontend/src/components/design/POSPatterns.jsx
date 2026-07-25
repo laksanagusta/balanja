@@ -51,7 +51,7 @@ export default function POSPatterns() {
           Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Scanner memprioritaskan kamera belakang 720p, menjelaskan kegagalan izin atau perangkat secara spesifik, dan tetap menyediakan input manual. Aksi teks Selesai di header menyediakan jalan keluar eksplisit dengan target sentuh 44px. Kamera tampil bersih tanpa kotak bidik permanen; saat barcode diproses, scanner menampilkan status ringkas selama minimal 180ms. Barcode yang sama memakai cooldown pasti 1 detik sebelum dapat menambah kuantitas lagi. Hasil tampil di bawah sebagai material hitam blur tanpa toast global: indikator hijau muda untuk berhasil dan kuning untuk tidak ditemukan atau gagal. Keberhasilan scan kasir menyertakan nama produk, harga, jumlah terbaru di keranjang, dan barcode. Material masuk 180ms dan keluar 140ms; reduced motion mempertahankan cross-fade saja. Bunyi halus tetap menyertai keberhasilan saat preferensinya aktif.
         </p>
         <p className="mt-2 text-sm text-text-muted">
-          Satu vertical scroller dipakai pada layout ringkas. Katalog menampilkan 2 kartu per baris pada smartphone dan 4 saat ruang katalog mencukupi. Hanya smartphone hingga 639px yang menampilkan trigger cart dan drawer penuh dari kanan; mulai 640px cart selalu terlihat sebagai kolom selebar 320–360px, lalu 360–420px pada workspace lebar. Workspace dan katalog beradaptasi melalui container query. Density visual tetap ringkas untuk kerja kasir, sementara kontrol melebar menjadi minimal 44px pada perangkat sentuh.
+          Satu vertical scroller dipakai pada layout ringkas. Density visual tetap ringkas: katalog menampilkan 2 kartu per baris pada smartphone dengan gap 8px, media persegi yang lebih dominan, dan tombol visual 36px di dalam target sentuh 44px. Footer mengikuti konten tanpa ruang kosong buatan. Saat ruang katalog mencukupi, grid kembali menjadi 4 kolom dan density kartu normal. Hanya smartphone hingga 639px yang menampilkan trigger cart dan drawer penuh dari kanan; mulai 640px cart selalu terlihat sebagai kolom selebar 320–360px, lalu 360–420px pada workspace lebar. Workspace dan katalog beradaptasi melalui container query.
         </p>
         <p className="mt-2 text-sm text-text-muted">
           Trigger drawer memakai ikon cart dan jumlah item; aksi di dalam drawer memakai teks Tutup tanpa chevron ganda. Drawer menjaga fokus di dalam panel, membuat katalog inert, mengembalikan fokus setelah ditutup, dan mempertahankan scrim selama transisi keluar. Pada perangkat sentuh, header dapat digeser ke kanan untuk menutup dengan ambang jarak atau kecepatan dan tahanan rubber-band; reduced motion memakai cross-fade tanpa pergeseran.
@@ -60,7 +60,7 @@ export default function POSPatterns() {
           Pada setiap baris keranjang, subtotal tetap berada di kanan atas. Hapus berlabel dan kontrol jumlah yang dapat diketik ditempatkan tepat di bawah subtotal; minus pada jumlah satu menghapus item. Saat angka diketik, text morph singkat memberi umpan balik. Saat stepper berubah, direction-aware transition menggeser nilai dari bawah ketika bertambah dan dari atas ketika berkurang. Gerak dinonaktifkan pada reduced motion dan tidak memperlambat input keyboard.
         </p>
         <p className="mt-2 text-sm text-text-muted">
-          Pada smartphone hingga 639px, cart memakai lebar penuh. Daftar item tetap menjadi satu-satunya area scroll, sedangkan surface grand total menempel di bawah. Bayar memperluas surface yang sama menjadi ringkasan pembayaran; Escape atau Kembali menciutkannya sebelum cart ditutup. Perubahan ukuran memakai spring tanpa bounce, sementara isi, heading, dan grand total berpindah dengan position-only layout serta cross-fade singkat agar penutupan tidak menyquash teks. Tablet dan desktop mempertahankan ringkasan pembayaran lama tanpa perubahan.
+          Pada smartphone hingga 639px, cart memakai lebar penuh. Daftar item tetap menjadi satu-satunya area scroll, sedangkan surface grand total menempel di bawah. Bayar memperluas surface yang sama menjadi ringkasan pembayaran; Escape atau Kembali menciutkannya sebelum cart ditutup. Tinggi disclosure bergerak dari 0 ke auto memakai physical spring tanpa bounce, sementara isi tetap mounted tetapi inert saat tertutup. Heading dan grand total melakukan cross-fade pada slot yang sama, dan tombol mempertahankan ukuran tetap. Tablet dan desktop mempertahankan ringkasan pembayaran lama tanpa perubahan.
         </p>
         <p className="mt-2 text-sm text-text-muted">
           Feedback tunai memakai satu live region yang melakukan blend hanya ketika status berpindah antara Uang kurang dan Kembalian. Nilai yang berubah di dalam status yang sama tetap instan agar pengetikan terasa cepat.
@@ -89,7 +89,7 @@ export default function POSPatterns() {
         />
       </div>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <div className="grid gap-4">
+        <div className="pos-smartphone-card-preview grid gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Kartu produk</p>
           <PosProductCard product={sampleProduct} onAdd={() => ({ ok: true })} />
         </div>
@@ -209,6 +209,7 @@ export default function POSPatterns() {
       </div>
       <div className="grid gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Checkout cart smartphone</p>
+        <p className="text-sm leading-6 text-text-muted">Ringkasan memakai continuity transition: tinggi disclosure bergerak antara 0 dan auto, header crossfade pada slot yang sama, dan tombol mempertahankan ukuran tetap agar buka-tutup terasa menyatu.</p>
         <div className="mx-auto w-full max-w-sm overflow-hidden rounded-panel border border-border bg-surface">
           <div className="grid min-h-48 content-start gap-3 p-4">
             <div className="rounded-card border border-border bg-surface-muted p-3 text-sm text-text-muted">Daftar item tetap dapat di-scroll di atas surface pembayaran.</div>
