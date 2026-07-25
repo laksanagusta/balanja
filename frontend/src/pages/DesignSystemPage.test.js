@@ -28,6 +28,13 @@ test("design system reuses the production Settings skeleton", async () => {
   assert.match(showcase, /SettingsPageSkeleton/);
 });
 
+test("design system documents organization onboarding states", async () => {
+  const source = await readFile(new URL("./DesignSystemPage.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /OrganizationOnboardingShowcase/);
+  assert.match(source, /<OrganizationOnboardingShowcase \/>/);
+});
+
 test("POS showcase documents the compact responsive contract", async () => {
   const showcase = await readFile(
     new URL("../components/design/POSPatterns.jsx", import.meta.url),
