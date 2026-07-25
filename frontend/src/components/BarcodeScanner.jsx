@@ -264,11 +264,11 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
           </div>
           <button
             type="button"
-            aria-label="Tutup pemindai"
+            aria-label="Selesai memindai"
             onClick={onClose}
-            className="grid size-7 shrink-0 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xl transition hover:bg-white/35 active:bg-white/45"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-white/20 px-4 text-sm font-semibold text-white backdrop-blur-xl transition-[transform,background-color] duration-fast ease-standard active:scale-[0.97] active:bg-white/45 motion-reduce:active:scale-100"
           >
-            <Icon name="x" className="size-[15px]" />
+            Selesai
           </button>
         </header>
 

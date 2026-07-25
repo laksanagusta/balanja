@@ -35,3 +35,14 @@ test("POS and cart share the product image fallback renderer", async () => {
   assert.match(product, /import \{ ProductImage \}/);
   assert.match(cart, /import \{ ProductImage \}/);
 });
+
+test("a transient product image failure retries the original URL after mobile browser resume", async () => {
+  const image = await readFile(new URL("./ProductImage.jsx", import.meta.url), "utf8");
+
+  assert.match(image, /window\.addEventListener\("online", retryPrimary\)/);
+  assert.match(image, /window\.addEventListener\("pageshow", retryPrimary\)/);
+  assert.match(image, /document\.visibilityState === "visible"/);
+  assert.match(image, /balanja_image_retry/);
+  assert.match(image, /window\.removeEventListener\("online", retryPrimary\)/);
+  assert.match(image, /window\.removeEventListener\("pageshow", retryPrimary\)/);
+});

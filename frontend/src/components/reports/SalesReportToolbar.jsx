@@ -20,7 +20,8 @@ export default function SalesReportToolbar({ filters, cashierOptions = [], error
         <Button
           type="button"
           size="sm"
-          className="h-11 md:hidden"
+          compactVisual
+          className="md:hidden"
           variant="secondary"
           aria-expanded={filtersExpanded}
           aria-controls={filterPanelId}
@@ -38,7 +39,7 @@ export default function SalesReportToolbar({ filters, cashierOptions = [], error
       >
         <div className="flex flex-wrap items-center gap-2">
           {presets.map(([value, label]) => (
-            <Button key={value} type="button" size="sm" className="h-11 md:h-8" variant={filters.preset === value ? "secondary" : "ghost"} aria-pressed={filters.preset === value} onClick={() => onPreset(value)}>{label}</Button>
+            <Button key={value} type="button" size="sm" compactVisual variant={filters.preset === value ? "secondary" : "ghost"} aria-pressed={filters.preset === value} onClick={() => onPreset(value)}>{label}</Button>
           ))}
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto] xl:items-end">
@@ -47,14 +48,14 @@ export default function SalesReportToolbar({ filters, cashierOptions = [], error
           <SelectField label="Metode pembayaran" value={filters.paymentMethod} onChange={(paymentMethod) => onChange({ paymentMethod })} options={[{ value: "", label: "Semua metode" }, { value: "cash", label: "Tunai" }, { value: "qris", label: "QRIS" }]} />
           <SelectField label="Kasir" value={filters.cashierUserId} onChange={(cashierUserId) => onChange({ cashierUserId })} options={[{ value: "", label: "Semua kasir" }, ...cashierOptions.map((option) => ({ value: option.cashierUserId, label: option.label }))]} />
           <div className="flex flex-wrap gap-2 xl:justify-end">
-            <Button type="submit" size="sm" className="h-11 md:h-8" variant="primary" disabled={!hasUnappliedChanges || isUpdating}>Terapkan</Button>
-            <Button type="button" size="sm" className="h-11 md:h-8" variant="ghost" onClick={onReset}>Reset</Button>
+            <Button type="submit" size="sm" compactVisual variant="primary" disabled={!hasUnappliedChanges || isUpdating}>Terapkan</Button>
+            <Button type="button" size="sm" compactVisual variant="ghost" onClick={onReset}>Reset</Button>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" size="sm" className="h-11 md:h-8" variant="secondary" aria-label="Ekspor ringkasan harian CSV" disabled={actionsDisabled || Boolean(exporting)} onClick={() => onExport("daily")}>{exporting === "daily" ? "Membuat CSV…" : "CSV harian"}</Button>
-          <Button type="button" size="sm" className="h-11 md:h-8" variant="secondary" aria-label="Ekspor detail transaksi CSV" disabled={actionsDisabled || Boolean(exporting)} onClick={() => onExport("transactions")}>{exporting === "transactions" ? "Membuat CSV…" : "CSV transaksi"}</Button>
-          <Button type="button" size="sm" className="h-11 md:h-8" variant="ghost" disabled={actionsDisabled} onClick={onHandoff}>Lihat transaksi</Button>
+          <Button type="button" size="sm" compactVisual variant="secondary" aria-label="Ekspor ringkasan harian CSV" disabled={actionsDisabled || Boolean(exporting)} onClick={() => onExport("daily")}>{exporting === "daily" ? "Membuat CSV…" : "CSV harian"}</Button>
+          <Button type="button" size="sm" compactVisual variant="secondary" aria-label="Ekspor detail transaksi CSV" disabled={actionsDisabled || Boolean(exporting)} onClick={() => onExport("transactions")}>{exporting === "transactions" ? "Membuat CSV…" : "CSV transaksi"}</Button>
+          <Button type="button" size="sm" compactVisual variant="ghost" disabled={actionsDisabled} onClick={onHandoff}>Lihat transaksi</Button>
         </div>
       </div>
       {refreshError && <p role="alert" className="rounded-card border border-warning/20 bg-warning-soft px-3 py-2 text-xs font-medium text-warning">{refreshError}</p>}

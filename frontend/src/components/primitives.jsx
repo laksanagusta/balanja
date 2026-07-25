@@ -10,6 +10,7 @@ import {
   ClockIcon,
   Cog6ToothIcon,
   DocumentTextIcon,
+  EllipsisHorizontalIcon,
   EyeIcon,
   FunnelIcon,
   HomeIcon,
@@ -156,6 +157,7 @@ const heroIcons = {
   qr: QrCodeIcon,
   ticket: TicketIcon,
   loader: ArrowPathIcon,
+  more: EllipsisHorizontalIcon,
 };
 
 export function Icon({ name, className = "size-5" }) {
@@ -372,7 +374,7 @@ export function Button({ children, variant = "secondary", size = "md", compactVi
   );
 }
 
-export function Input({ label, placeholder, rightSlot, error, className = "", inputProps = {} }) {
+export function Input({ label, placeholder, rightSlot, error, density = "default", className = "", inputProps = {} }) {
   const generatedId = React.useId();
   const {
     id = generatedId,
@@ -385,20 +387,22 @@ export function Input({ label, placeholder, rightSlot, error, className = "", in
   return (
     <label htmlFor={id} className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
       {label}
-      <span
-        className={`flex h-11 md:h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
-          error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
-        }`}
-      >
-        <input
-          id={id}
-          className="w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
-          placeholder={placeholder}
-          aria-invalid={Boolean(error)}
-          aria-describedby={descriptionIds}
-          {...restInputProps}
-        />
-        {rightSlot}
+      <span className={`flex ${density === "compact" ? "h-9" : "h-11 md:h-9"} w-full min-w-0 items-center`}>
+        <span
+          className={`flex h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
+            error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
+          }`}
+        >
+          <input
+            id={id}
+            className="w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
+            placeholder={placeholder}
+            aria-invalid={Boolean(error)}
+            aria-describedby={descriptionIds}
+            {...restInputProps}
+          />
+          {rightSlot}
+        </span>
       </span>
       {error && <span id={errorId} aria-live="polite" className="text-xs font-medium text-danger">{error}</span>}
     </label>
@@ -498,17 +502,21 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
         disabled={disabled}
         onClick={() => (isOpen ? closeListbox() : openListbox())}
         onKeyDown={handleTriggerKeyDown}
-        className={`flex h-11 md:h-9 items-center justify-between rounded-card border bg-surface px-3.5 text-left text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${
-          error ? "border-danger" : isOpen ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
-        }`}
+        className="flex h-11 w-full items-center bg-transparent p-0 text-left md:h-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
       >
-        {selectedLabel}
-        <Icon
-          name="chevron"
-          className={`size-4 transition duration-base ease-standard motion-reduce:transition-none ${
-            isOpen ? "rotate-180" : "rotate-0"
+        <span
+          className={`flex h-9 w-full items-center justify-between rounded-card border bg-surface px-3.5 text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard ${
+            error ? "border-danger" : isOpen ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
           }`}
-        />
+        >
+          {selectedLabel}
+          <Icon
+            name="chevron"
+            className={`size-4 transition duration-base ease-standard motion-reduce:transition-none ${
+              isOpen ? "rotate-180" : "rotate-0"
+            }`}
+          />
+        </span>
       </button>
       {isOpen && (inline ? (
         <div
@@ -530,13 +538,17 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
                 onFocus={() => setActiveIndex(index)}
                 onKeyDown={(event) => handleOptionKeyDown(event, optionValue)}
                 onClick={() => selectOption(optionValue)}
-                className={`flex h-11 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard md:h-10 ${
-                  inline ? "hover:bg-surface" : "hover:bg-surface-muted"
-                } ${selectedValue === optionValue
-                  ? inline ? "bg-surface text-text shadow-low" : "bg-surface-muted text-text"
-                  : "text-text-muted"}`}
+                className="group flex h-11 w-full items-center bg-transparent p-0 text-left"
               >
-                {optionLabel}
+                <span
+                  className={`flex h-10 w-full items-center rounded-control px-3 text-sm font-medium transition duration-fast ease-standard ${
+                    inline ? "group-hover:bg-surface" : "group-hover:bg-surface-muted"
+                  } ${selectedValue === optionValue
+                    ? inline ? "bg-surface text-text shadow-low" : "bg-surface-muted text-text"
+                    : "text-text-muted"}`}
+                >
+                  {optionLabel}
+                </span>
               </button>
             );
           })}
@@ -562,11 +574,15 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
                   onFocus={() => setActiveIndex(index)}
                   onKeyDown={(event) => handleOptionKeyDown(event, optionValue)}
                   onClick={() => selectOption(optionValue)}
-                  className={`flex h-11 w-full items-center rounded-control px-3 text-left text-sm font-medium transition duration-fast ease-standard md:h-10 ${
-                    selectedValue === optionValue ? "bg-surface-muted text-text" : "text-text-muted hover:bg-surface-muted"
-                  }`}
+                  className="group flex h-11 w-full items-center bg-transparent p-0 text-left"
                 >
-                  {optionLabel}
+                  <span
+                    className={`flex h-10 w-full items-center rounded-control px-3 text-sm font-medium transition duration-fast ease-standard ${
+                      selectedValue === optionValue ? "bg-surface-muted text-text" : "text-text-muted group-hover:bg-surface-muted"
+                    }`}
+                  >
+                    {optionLabel}
+                  </span>
                 </button>
               );
             })}

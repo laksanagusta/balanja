@@ -2,7 +2,7 @@ import React from "react";
 import BackgroundUpdateStatus from "../feedback/BackgroundUpdateStatus.jsx";
 import { TableFilterPopover } from "../TableFilterPopover.jsx";
 import { TablePagination } from "../TablePagination.jsx";
-import { Badge, Button, DataTable, Input, SelectField } from "../primitives.jsx";
+import { Badge, Button, DataTable, Icon, Input, SelectField } from "../primitives.jsx";
 import { transactionData, inventoryData } from "../../data.js";
 import { getNextSortState, sortRows } from "../../lib/sorting.js";
 import { ProductThumbnail } from "../product/ProductImage.jsx";
@@ -30,6 +30,8 @@ export default function DataTableShowcase() {
   const [payment, setPayment] = React.useState("");
   const [dateFrom, setDateFrom] = React.useState("");
   const [dateTo, setDateTo] = React.useState("");
+  const [productCategory, setProductCategory] = React.useState("Semua kategori");
+  const [productStatus, setProductStatus] = React.useState("Semua status");
   const [inventorySortKey, setInventorySortKey] = React.useState("stock");
   const [inventorySortDir, setInventorySortDir] = React.useState("asc");
 
@@ -106,12 +108,29 @@ export default function DataTableShowcase() {
   return (
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Data table</h3>
-      <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
+      <div className="mb-2 grid gap-3 lg:grid-cols-[auto_1fr_auto_auto] lg:items-center">
+        <p className="text-base font-semibold text-text">Transaksi</p>
+        <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
+          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+            <Icon name="search" className="size-4 text-text-muted" />
+            <input
+              aria-label="Cari transaksi contoh"
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
+              placeholder="Transaksi, kasir, pembayaran"
+            />
+          </div>
+        </div>
         <BackgroundUpdateStatus active={updating} label="Memperbarui contoh tabel" />
         <Button size="sm" variant="ghost" onClick={() => setUpdating((value) => !value)}>
           {updating ? "Selesai" : "Perbarui"}
         </Button>
-        <TableFilterPopover open={filtersOpen} onOpenChange={setFiltersOpen} activeCount={activeFilterCount}>
+        <TableFilterPopover
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          activeCount={activeFilterCount}
+          className="w-full lg:w-auto"
+          triggerClassName="w-full justify-center lg:w-auto"
+        >
           <SelectField
             label="Metode pembayaran"
             value={payment}
@@ -148,20 +167,55 @@ export default function DataTableShowcase() {
           loading={updating}
         />
       </div>
-      <div className="mt-4 max-w-xl">
+      <div className="mt-4 grid gap-3 lg:grid-cols-[auto_1fr_auto_auto_auto] lg:items-center">
+        <p className="text-base font-semibold text-text">Produk</p>
+        <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
+          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+            <Icon name="search" className="size-4 text-text-muted" />
+            <input
+              aria-label="Cari produk contoh"
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
+              placeholder="Nama, barcode, kategori"
+            />
+          </div>
+        </div>
+        <div className="w-full lg:w-[160px]">
+          <SelectField
+            label="Kategori"
+            hideLabel
+            value={productCategory}
+            options={["Semua kategori", "Makanan", "Minuman"]}
+            onChange={setProductCategory}
+          />
+        </div>
+        <div className="w-full lg:w-[130px]">
+          <SelectField
+            label="Status"
+            hideLabel
+            value={productStatus}
+            options={["Semua status", "Aktif", "Nonaktif"]}
+            onChange={setProductStatus}
+          />
+        </div>
+        <Button variant="primary" className="w-full whitespace-nowrap lg:w-auto lg:justify-self-end">
+          <Icon name="plus" className="size-4" />
+          Tambah produk
+        </Button>
+      </div>
+      <div className="mt-2 max-w-xl">
         <p className="mb-2 text-xs leading-5 text-text-muted">
           Geser horizontal untuk melihat kolom tersembunyi. Fade transparan memudar halus tanpa menyampling atau menutup border tabel.
         </p>
-        <div className="grid rounded-panel border border-border bg-surface p-0">
-          <DataTable
-            columns={inventoryCols}
-            data={sortedInventory}
-            sortKey={inventorySortKey}
-            sortDir={inventorySortDir}
-            onSort={handleInventorySort}
-            className="pb-2"
-          />
-        </div>
+      </div>
+      <div className="grid rounded-panel border border-border bg-surface p-0">
+        <DataTable
+          columns={inventoryCols}
+          data={sortedInventory}
+          sortKey={inventorySortKey}
+          sortDir={inventorySortDir}
+          onSort={handleInventorySort}
+          className="pb-2"
+        />
       </div>
     </div>
   );

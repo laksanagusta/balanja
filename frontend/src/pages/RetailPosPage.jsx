@@ -223,6 +223,7 @@ export default function RetailPosPage() {
   }, [category]);
 
   React.useLayoutEffect(() => {
+    if (isInitialLoad) return undefined;
     const tabs = categoryTabsRef.current;
     const activeTab = categoryTabRefs.current.get(category);
     if (!tabs || !activeTab) return undefined;
@@ -239,7 +240,7 @@ export default function RetailPosPage() {
       observer?.disconnect();
       window.removeEventListener("resize", updateCategoryIndicator);
     };
-  }, [category, categoryTabs.length, updateCategoryIndicator]);
+  }, [category, categoryTabs.length, isInitialLoad, updateCategoryIndicator]);
 
   React.useEffect(() => {
     const focusSearch = (event) => {
@@ -334,27 +335,31 @@ export default function RetailPosPage() {
               </button>
             </div>
             <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row lg:max-w-[620px]">
-              <div className="pos-touch-target flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
-                <Icon name="search" className="size-4 text-text-muted" />
-                <input
-                  ref={searchInputRef}
-                  className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-                  name="productSearch"
-                  autoComplete="off"
-                  aria-label="Cari produk atau barcode"
-                  aria-keyshortcuts="Meta+K Control+K"
-                  placeholder="Cari produk atau barcode…"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-                <kbd className="hidden rounded-md border border-border bg-surface-muted px-2 py-1 text-xs font-semibold text-text-subtle sm:block">
-                  ⌘ K / Ctrl K
-                </kbd>
-              </div>
+              <label className="pos-touch-target flex min-w-0 flex-1 items-center">
+                <span className="pos-toolbar-control-surface flex h-9 w-full min-w-0 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+                  <Icon name="search" className="size-4 text-text-muted" />
+                  <input
+                    ref={searchInputRef}
+                    className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
+                    name="productSearch"
+                    autoComplete="off"
+                    aria-label="Cari produk atau barcode"
+                    aria-keyshortcuts="Meta+K Control+K"
+                    placeholder="Cari produk atau barcode…"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                  <kbd className="hidden rounded-md border border-border bg-surface-muted px-2 py-1 text-xs font-semibold text-text-subtle sm:block">
+                    ⌘ K / Ctrl K
+                  </kbd>
+                </span>
+              </label>
               <Button
                 type="button"
                 variant="primary"
-                className="pos-touch-target shrink-0"
+                size="base"
+                compactVisual
+                className="header-compact-action pos-toolbar-scan pos-touch-target shrink-0"
                 onClick={() => {
                   void primeScanSuccessSound();
                   setScannerOpen(true);
@@ -396,7 +401,9 @@ export default function RetailPosPage() {
                   onClick={() => setCategory(item)}
                   className={`pos-touch-target relative z-10 h-8 min-w-max flex-1 basis-0 rounded-md px-3 text-sm font-medium transition-colors duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                     category === item
-                      ? "text-text"
+                      ? categoryIndicator.ready
+                        ? "text-text"
+                        : "bg-surface text-text shadow-low"
                       : "text-text-muted hover:text-text"
                   }`}
                 >

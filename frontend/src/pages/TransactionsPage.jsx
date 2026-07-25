@@ -73,9 +73,9 @@ export default function TransactionsPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
-      <header className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
+      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto] lg:items-center">
         <h1 className="text-base font-semibold text-text">Transaksi</h1>
-        <div className="flex min-w-[220px] flex-1 lg:ml-auto lg:max-w-[420px]">
+        <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
           <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
@@ -90,6 +90,8 @@ export default function TransactionsPage() {
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
           activeCount={activeFilterCount}
+          className="w-full lg:w-auto"
+          triggerClassName="w-full justify-center lg:w-auto"
         >
           <SelectField
             label="Metode pembayaran"
