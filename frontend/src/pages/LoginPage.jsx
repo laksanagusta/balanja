@@ -24,7 +24,11 @@ export default function LoginPage({ isSignedIn, onNavigate }) {
           </div>
         ) : (
           <div className="rounded-panel border border-border bg-surface p-4 shadow-panel">
-            <SignIn routing="hash" afterSignInUrl={routes.dashboard} />
+            <SignIn
+              routing="hash"
+              fallbackRedirectUrl={routes.dashboard}
+              signUpFallbackRedirectUrl={routes.dashboard}
+            />
           </div>
         )}
       </section>
