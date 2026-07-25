@@ -43,7 +43,7 @@ export default function POSPatterns() {
       <div>
         <h3 className="text-xl font-semibold text-text">Pola komposit kasir</h3>
         <p className="mt-1 text-sm text-text-muted">
-          Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Saat barcode diproses, scanner menampilkan spinner cepat, mengunci pembacaan ganda, dan tetap menyediakan aksi tutup. Panel app shell menjaga inset 8px yang konsisten dan memakai border tanpa bayangan wrapper di sela panel.
+          Kartu produk, pencarian barcode, tab kategori, dan ringkasan pembayaran dibangun dari primitive di atas. Scanner memprioritaskan kamera belakang 720p, menjelaskan kegagalan izin atau perangkat secara spesifik, dan tetap menyediakan input manual. Saat barcode diproses, scanner menampilkan spinner cepat, mengunci pembacaan ganda, dan tetap menyediakan aksi tutup. Panel app shell menjaga inset 8px yang konsisten dan memakai border tanpa bayangan wrapper di sela panel.
         </p>
         <p className="mt-2 text-sm text-text-muted">
           Satu vertical scroller dipakai pada layout ringkas. Katalog menampilkan 2 kartu per baris pada smartphone dan 4 pada tablet, sementara cart compact membuka sebagai drawer horizontal dari kanan. Workspace dan katalog beradaptasi melalui container query, dengan cart desktop selebar 360–420px. Density visual tetap ringkas untuk kerja kasir, sementara kontrol melebar menjadi minimal 44px pada perangkat sentuh.

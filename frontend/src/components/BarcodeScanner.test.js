@@ -43,3 +43,24 @@ test("scanner uses a forced full-screen surface with Indonesian copy", async () 
   assert.match(source, /Arahkan kamera ke barcode\./);
   assert.match(source, /Masukkan barcode manual/);
 });
+
+test("scanner requests a useful rear-camera stream instead of browser defaults", async () => {
+  const source = await readFile(new URL("./BarcodeScanner.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /decodeFromConstraints\(SCANNER_CAMERA_CONSTRAINTS/);
+  assert.doesNotMatch(source, /decodeFromVideoDevice\(undefined/);
+  assert.match(source, /facingMode:\s*\{\s*ideal:\s*"environment"\s*\}/);
+  assert.match(source, /width:\s*\{\s*ideal:\s*1280\s*\}/);
+  assert.match(source, /height:\s*\{\s*ideal:\s*720\s*\}/);
+  assert.match(source, /advanced:\s*\[\{\s*focusMode:\s*"continuous"\s*\}\]/);
+});
+
+test("scanner exposes actionable camera startup errors", async () => {
+  const source = await readFile(new URL("./BarcodeScanner.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /cameraErrorMessage/);
+  assert.match(source, /NotAllowedError/);
+  assert.match(source, /NotFoundError/);
+  assert.match(source, /NotReadableError/);
+  assert.match(source, /window\.isSecureContext/);
+});

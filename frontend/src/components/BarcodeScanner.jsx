@@ -3,6 +3,35 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { Icon, useDialogPresence } from "./primitives.jsx";
 
 const MIN_PROCESSING_MS = 180;
+const SCANNER_CAMERA_CONSTRAINTS = {
+  audio: false,
+  video: {
+    facingMode: { ideal: "environment" },
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+    advanced: [{ focusMode: "continuous" }],
+  },
+};
+
+function cameraErrorMessage(error) {
+  if (!window.isSecureContext) {
+    return "Kamera hanya dapat digunakan melalui koneksi HTTPS. Masukkan barcode secara manual.";
+  }
+
+  switch (error?.name) {
+    case "NotAllowedError":
+    case "PermissionDeniedError":
+      return "Izin kamera ditolak. Izinkan akses kamera di pengaturan browser, lalu buka scanner kembali.";
+    case "NotFoundError":
+    case "DevicesNotFoundError":
+      return "Kamera tidak ditemukan di perangkat ini. Masukkan barcode secara manual.";
+    case "NotReadableError":
+    case "TrackStartError":
+      return "Kamera sedang digunakan aplikasi lain. Tutup aplikasi tersebut, lalu buka scanner kembali.";
+    default:
+      return "Kamera tidak dapat dimulai. Masukkan barcode secara manual.";
+  }
+}
 
 export default function BarcodeScanner({ open, title = "Pindai barcode", onDetected, onClose }) {
   const { isPresent, isVisible } = useDialogPresence(open);
@@ -74,10 +103,9 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
       }
 
       setError("");
-      setScanning(true);
 
       try {
-        const controls = await reader.decodeFromVideoDevice(undefined, videoRef.current, (result, err) => {
+        const controls = await reader.decodeFromConstraints(SCANNER_CAMERA_CONSTRAINTS, videoRef.current, (result, err) => {
           if (result) {
             if (processingRef.current) return;
             const text = result.getText();
@@ -97,9 +125,10 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
         }
 
         controlsRef.current = controls;
-      } catch {
+        setScanning(true);
+      } catch (cameraError) {
         if (!cancelled) {
-          setError("Kamera tidak tersedia. Masukkan barcode secara manual.");
+          setError(cameraErrorMessage(cameraError));
           setScanning(false);
         }
       }
