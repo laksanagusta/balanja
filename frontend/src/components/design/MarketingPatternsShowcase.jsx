@@ -16,7 +16,7 @@ export default function MarketingPatternsShowcase() {
       <div className="grid gap-6 p-4 sm:p-6">
         <div className="grid gap-6 rounded-panel bg-app-bg p-5 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Kasir, stok, dan transaksi dalam satu alur</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Fitur baru: Scan barcode langsung dari kasir</p>
             <p className="mt-4 max-w-4xl text-[42px] font-semibold leading-[0.98] tracking-[-0.055em] text-text sm:text-[56px] lg:text-[72px]">
               Jualan rapi. Stok terkendali. <span className="text-text-subtle">Toko lebih tenang.</span>
             </p>

@@ -22,7 +22,7 @@ test("landing page keeps the approved hero and public calls to action", async ()
   const source = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const faq = await readFile(new URL("../landing/FaqSection.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /Kasir, stok, dan transaksi dalam satu alur/);
+  assert.match(source, /Fitur baru: Scan barcode langsung dari kasir/);
   assert.match(source, /Jualan rapi/);
   assert.match(source, /Stok terkendali/);
   assert.match(source, /Toko lebih tenang/);

@@ -87,7 +87,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
       <main>
         <section className="px-4 pb-12 pt-16 text-center sm:px-6 sm:pb-16 sm:pt-24 lg:pt-28">
           <div className="mx-auto max-w-5xl">
-            <p className="marketing-reveal mx-auto inline-flex rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-text-muted">Kasir, stok, dan transaksi dalam satu alur</p>
+            <p className="marketing-reveal mx-auto inline-flex rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-text-muted">Fitur baru: Scan barcode langsung dari kasir</p>
             <h1 className="marketing-reveal mx-auto mt-6 max-w-4xl text-[42px] font-semibold leading-[0.98] tracking-[-0.055em] text-text sm:text-[58px] lg:text-[72px]" style={{ "--reveal-delay": "60ms" }}>
               Jualan rapi. Stok terkendali. <span className="text-text-subtle">Toko lebih tenang.</span>
             </h1>
