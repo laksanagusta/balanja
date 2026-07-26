@@ -5,6 +5,7 @@ import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { CartRow } from "../components/pos/CartRow.jsx";
 import { CashPaymentFeedback } from "../components/pos/CashPaymentFeedback.jsx";
+import QuotaStatus from "../components/entitlements/QuotaStatus.jsx";
 import { MobileCheckoutPanel } from "../components/pos/MobileCheckoutPanel.jsx";
 import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { ProductCatalog } from "../components/pos/ProductCatalog.jsx";
@@ -15,16 +16,17 @@ import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
 import { formatPrice } from "../shared.jsx";
-
-const formatThousands = (value) => {
-  if (!value) return value;
-  return new Intl.NumberFormat("id-ID").format(Number(value));
-};
+import { upgradeContacts } from "../entitlements/contact-links.js";
 import {
   cashPaymentState,
   resistedCartSwipeDistance,
   shouldDismissCartSwipe,
 } from "./retail-pos-utils.js";
+
+const formatThousands = (value) => {
+  if (!value) return value;
+  return new Intl.NumberFormat("id-ID").format(Number(value));
+};
 
 const CART_EXIT_MS = 200;
 const FOCUSABLE_SELECTOR = [
@@ -79,7 +81,15 @@ export default function RetailPosPage() {
   const isInitialLoad = isPageLoading;
   const isUpdatingPOS = (store.loading.products || store.loading.settings) && store.loaded.products && store.loaded.settings;
   const cashState = cashPaymentState(cashReceived, totals.total, store.cart.length);
-  const checkoutDisabled = store.cart.length === 0 || checkoutPending;
+  const planBlocksCheckout = store.entitlement?.canCheckout === false;
+  const mobilePanelDisabled = store.cart.length === 0 || checkoutPending;
+  const checkoutDisabled = mobilePanelDisabled || planBlocksCheckout;
+  const upgradeContactLinks = React.useMemo(() => upgradeContacts({
+    whatsapp: import.meta.env.VITE_UPGRADE_WHATSAPP_NUMBER,
+    email: import.meta.env.VITE_UPGRADE_EMAIL,
+    storeName: store.settings.storeName,
+    supportReference: store.entitlement?.supportReference,
+  }), [store.entitlement?.supportReference, store.settings.storeName]);
   const totalCartItems = store.cart.reduce((sum, item) => sum + item.qty, 0);
   const cashFeedback = cashState.showChange
     ? { status: "change", value: formatPrice(cashState.change) }
@@ -116,6 +126,10 @@ export default function RetailPosPage() {
       setCheckoutPending(false);
     }
   };
+
+  const recordEntitlementContact = React.useCallback((event) => {
+    store.api.recordEntitlementEvent(event).catch(() => {});
+  }, [store.api]);
 
   const clearFilters = React.useCallback(() => {
     setQuery("");
@@ -554,8 +568,19 @@ export default function RetailPosPage() {
               </div>
             )}
 
+            <QuotaStatus
+              entitlement={store.entitlement}
+              error={store.entitlementError}
+              loading={
+                store.loading.entitlement ||
+                (!store.loaded.entitlement && !store.entitlementError)
+              }
+              contacts={upgradeContactLinks}
+              onRefresh={() => store.loadEntitlement({ force: true })}
+              onContact={recordEntitlementContact}
+            />
             <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
-              {checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
+              {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
             </Button>
             <Button
               variant="secondary"
@@ -573,7 +598,7 @@ export default function RetailPosPage() {
               onExpand={() => setMobileCheckoutExpanded(true)}
               onCollapse={() => setMobileCheckoutExpanded(false)}
               grandTotal={formatPrice(totals.total)}
-              disabled={checkoutDisabled}
+              disabled={mobilePanelDisabled}
               triggerRef={mobileCheckoutTriggerRef}
             >
               <div className="grid gap-3">
@@ -619,8 +644,19 @@ export default function RetailPosPage() {
                   </div>
                 )}
 
+                <QuotaStatus
+                  entitlement={store.entitlement}
+                  error={store.entitlementError}
+                  loading={
+                    store.loading.entitlement ||
+                    (!store.loaded.entitlement && !store.entitlementError)
+                  }
+                  contacts={upgradeContactLinks}
+                  onRefresh={() => store.loadEntitlement({ force: true })}
+                  onContact={recordEntitlementContact}
+                />
                 <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
-                  {checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
+                  {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
                 </Button>
                 <Button
                   variant="secondary"

@@ -118,6 +118,27 @@ Dashboard charts must use the installed BKLIT registry components (`@bklit/line-
 Time-series line charts should use a monotone X curve and visible point markers on compact views so sparse daily data stays truthful and readable instead of turning into a decorative spline.
 Bar-chart axis labels must fit within the nearest bar-center spacing. Cap label width and use an ellipsis on compact charts so adjacent product names never overlap; keep the full label in the DOM and chart tooltip so truncation is visual only.
 
+## Transaction entitlement states
+
+Transaction quota feedback stays inside the compact operational hierarchy. Usage
+below 40 is neutral metadata. Usage 40–44 uses a low-emphasis warning, usage
+45–49 uses a persistent warning with an explicit upgrade action, and exhausted
+trial state uses a danger-toned surface beside payment controls. Do not create a
+new billing palette; reuse the existing neutral, warning, danger, border,
+surface, focus, and button tokens.
+
+An exhausted plan blocks only final checkout. Product browsing, cart editing,
+stock, transaction history, dashboard, reports, and settings stay usable. The
+cart must never be cleared or hidden by a quota response. Desktop and mobile
+render the same status and contact hierarchy, with descriptive labels, visible
+focus, and at least 44px compact-screen targets.
+
+WhatsApp is the primary upgrade action only when configured; email is secondary.
+If one channel is absent, remove it instead of rendering a disabled or broken
+link. A status-read failure is not presented as exhausted quota: show
+`Status paket belum dapat diperiksa` with `Coba lagi` and preserve all pending
+cashier input.
+
 ## Adding New UI
 
 Use semantic tokens and existing primitives before adding raw Tailwind values. Keep retail operations screens compact and avoid hero-style layouts, decorative gradients, nested cards, and one-off shadows.

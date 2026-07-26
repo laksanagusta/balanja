@@ -200,6 +200,10 @@ Credential disimpan di home user deployment, bukan di repository.
 Tambahkan repository variable:
 
 - `DOCKERHUB_USERNAME`: namespace Docker Hub tanpa `docker.io/`.
+- `UPGRADE_WHATSAPP_NUMBER`: nomor WhatsApp tujuan upgrade dalam format
+  internasional, hanya digit, misalnya `6281234567890`.
+- `UPGRADE_EMAIL`: alamat email tujuan upgrade. Minimal salah satu channel
+  upgrade harus terisi.
 
 Tambahkan repository secrets:
 
@@ -330,6 +334,19 @@ Minimum policy:
 3. Jangan simpan owner database URL pada server aplikasi.
 4. Gunakan forward-fix migration untuk production; jangan mengandalkan full down
    migration setelah data live.
+
+Untuk rollout entitlement transaction:
+
+1. Jalankan `backend/migrations/000012_organization_entitlements.up.sql`
+   menggunakan owner database.
+2. Verifikasi seluruh organisasi lama berstatus `paid_active`. Backfill ini
+   disengaja agar toko yang sudah berjalan tidak mendadak terkunci.
+3. Pastikan `UPGRADE_WHATSAPP_NUMBER` dan/atau `UPGRADE_EMAIL` sudah diatur,
+   kemudian build dan deploy image web baru.
+4. Deploy API baru dan lakukan smoke test dari
+   [runbook entitlement](operations/entitlements.md).
+5. Ubah tenant lama menjadi `paid_suspended` hanya setelah review operator;
+   jangan mengembalikan tenant ke trial atau mengubah counter secara manual.
 
 ## 12. Credential Rotation
 

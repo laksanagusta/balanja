@@ -39,6 +39,8 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 		"000008_server_list_indexes.up.sql",
 		"000009_product_image_key.up.sql",
 		"000010_category_unit_master_data.up.sql",
+		"000011_stock_movement_user_name.up.sql",
+		"000012_organization_entitlements.up.sql",
 	} {
 		if _, err := admin.Exec(ctx, readMigration(t, migration)); err != nil {
 			t.Fatalf("apply migration %s: %v", migration, err)
@@ -105,5 +107,53 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 	}
 	if cashierUserID != "user" || cashierName == nil || *cashierName != "Ayu" {
 		t.Fatalf("cashier user=%q name=%v", cashierUserID, cashierName)
+	}
+
+	quotaProductID := uuid.New()
+	if _, err := admin.Exec(ctx, `insert into products (id,org_id,name,barcode,category_id,price,stock,unit_id) values ($1,'org_checkout','Quota item','quota',$2,100,2,$3)`, quotaProductID, categoryID, unitID); err != nil {
+		t.Fatalf("seed quota product: %v", err)
+	}
+	if _, err := admin.Exec(ctx, `update organization_entitlements set transactions_used=49 where org_id='org_checkout'`); err != nil {
+		t.Fatalf("seed quota usage: %v", err)
+	}
+
+	quotaInput := checkout.Input{Items: []checkout.ItemInput{{ProductID: quotaProductID, Quantity: 1}}, Payment: checkout.PaymentInput{Method: "qris"}, CashierName: "Ayu"}
+	quotaErrors := make([]error, 2)
+	quotaResults := make([]checkout.Result, 2)
+	quotaKeys := []string{"quota-checkout-a", "quota-checkout-b"}
+	for index := range quotaErrors {
+		wait.Add(1)
+		go func() {
+			defer wait.Done()
+			quotaResults[index], quotaErrors[index] = service.Checkout(ctx, database.Identity{OrgID: "org_checkout", UserID: "user"}, quotaKeys[index], quotaInput)
+		}()
+	}
+	wait.Wait()
+	successIndex := -1
+	limited := 0
+	for index, checkoutErr := range quotaErrors {
+		if checkoutErr == nil {
+			successIndex = index
+		}
+		if errors.Is(checkoutErr, checkout.ErrTransactionLimitReached) {
+			limited++
+		}
+	}
+	if successIndex < 0 || limited != 1 {
+		t.Fatalf("quota successIndex=%d limited=%d errors=%v", successIndex, limited, quotaErrors)
+	}
+	replay, err := service.Checkout(ctx, database.Identity{OrgID: "org_checkout", UserID: "user"}, quotaKeys[successIndex], quotaInput)
+	if err != nil || !replay.Replay {
+		t.Fatalf("replay=%#v err=%v", replay, err)
+	}
+	var usage, quotaTransactions int
+	if err := admin.QueryRow(ctx, `select transactions_used from organization_entitlements where org_id='org_checkout'`).Scan(&usage); err != nil {
+		t.Fatalf("load quota usage: %v", err)
+	}
+	if err := admin.QueryRow(ctx, `select count(*) from transactions where org_id='org_checkout' and id=$1`, quotaResults[successIndex].Transaction.ID).Scan(&quotaTransactions); err != nil {
+		t.Fatalf("count quota transactions: %v", err)
+	}
+	if usage != 50 || quotaTransactions != 1 {
+		t.Fatalf("usage=%d quotaTransactions=%d", usage, quotaTransactions)
 	}
 }

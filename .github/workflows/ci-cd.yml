@@ -111,6 +111,8 @@ jobs:
           build-args: |
             VITE_CLERK_PUBLISHABLE_KEY=${{ github.event_name == 'push' && secrets.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder' }}
             VITE_API_BASE_URL=
+            VITE_UPGRADE_WHATSAPP_NUMBER=${{ vars.UPGRADE_WHATSAPP_NUMBER }}
+            VITE_UPGRADE_EMAIL=${{ vars.UPGRADE_EMAIL }}
           cache-from: type=gha,scope=${{ matrix.component }}
           cache-to: type=gha,mode=max,scope=${{ matrix.component }}
           provenance: true
