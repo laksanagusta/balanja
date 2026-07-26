@@ -24,10 +24,22 @@ test("mobile checkout can remain inspectable when final submission is plan-block
 
 test("POS product card is an explicit variant", async () => {
   const source = await readFile(new URL("./ProductCard.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../../index.css", import.meta.url), "utf8");
 
   assert.match(source, /export function PosProductCard/);
   assert.match(source, /const blocked = disabled \|\| outOfStock/);
   assert.match(source, /const buttonLabel = outOfStock \? "Stok habis" : actionLabel/);
+  assert.match(source, /product-card-media-shell/);
+  assert.match(source, /product-card-media/);
+  assert.match(source, /product-card-content/);
+  assert.match(source, /product-card-actions/);
+  assert.match(source, /variant="primary"\s+className="product-add-button pos-touch-target"/);
+  assert.doesNotMatch(source, /PosProductCard[\s\S]*compactVisual/);
+  assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.product-catalog-grid\s*\{[\s\S]*gap:\s*0\.5rem;[\s\S]*padding:\s*0\.5rem;/);
+  assert.match(css, /\.pos-product-card \.product-card-media\s*\{[\s\S]*aspect-ratio:\s*1;/);
+  assert.match(css, /\.pos-product-card \.product-card-actions\s*\{[\s\S]*margin-block-start:\s*0;/);
+  assert.match(css, /\.pos-product-card \.product-add-button\s*\{[\s\S]*min-block-size:\s*2\.75rem;[\s\S]*background:\s*transparent !important;/);
+  assert.match(css, /\.pos-product-card \.product-add-button \.button-label-pop\s*\{[\s\S]*block-size:\s*2\.25rem;/);
   assert.doesNotMatch(source, /showStepper|allowRepeatAdd/);
 });
 

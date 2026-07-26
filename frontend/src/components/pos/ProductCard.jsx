@@ -28,8 +28,8 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
     <article
       className={`product-card-frame menu-card-enter flex min-h-[304px] flex-col overflow-hidden rounded-card border border-border bg-surface shadow-low transition-transform duration-base ease-standard motion-reduce:transition-none ${outOfStock ? "is-out-of-stock opacity-55" : ""} ${className}`}
     >
-      <div className="p-2 pb-0">
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border border-border bg-surface-muted">
+      <div className="product-card-media-shell p-2 pb-0">
+        <div className="product-card-media relative aspect-[4/3] w-full overflow-hidden rounded-md border border-border bg-surface-muted">
           <ProductImage product={product} />
           <span className="product-add-ring" data-visible={addFeedback} aria-hidden="true" />
           <span
@@ -57,7 +57,7 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
           </p>
         </div>
       </div>
-      <div className="mt-auto grid gap-2 border-t border-border p-2">{children}</div>
+      <div className="product-card-actions mt-auto grid gap-2 border-t border-border p-2">{children}</div>
     </article>
   );
 }
@@ -117,7 +117,12 @@ export function PosProductCard({ product, onAdd, disabled = false, actionLabel =
       addFeedback={addFeedback}
       className="pos-product-card"
     >
-      <Button variant="primary" className="product-add-button pos-touch-target" disabled={blocked} onClick={handleAdd}>
+      <Button
+        variant="primary"
+        className="product-add-button pos-touch-target"
+        disabled={blocked}
+        onClick={handleAdd}
+      >
         <span key={buttonLabel} className="button-label-pop">{buttonLabel}</span>
       </Button>
     </ProductCardFrame>

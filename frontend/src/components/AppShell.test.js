@@ -71,6 +71,19 @@ test("desktop account control owns its separation without a footer divider", asy
   assert.match(source, /rounded-control border border-border bg-surface[^"`]*shadow-low/);
 });
 
+test("account avatars share the approved four-color glow", async () => {
+  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
+  const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.equal(source.match(/className="account-avatar/g)?.length, 2);
+  assert.match(showcase, /className="account-avatar size-9/);
+  assert.match(css, /--shadow-avatar:\s*0px 23px 60px -15px #7359f299,\s*14px 30px 65px -15px #fa59807d,\s*0px 38px 70px -15px #ffeb4062,\s*-13px 30px 74px -15px #33d9f246;/);
+  assert.match(css, /\.account-avatar\s*\{\s*box-shadow:\s*var\(--shadow-avatar\)/);
+  assert.match(designGuide, /--shadow-avatar/);
+});
+
 test("app shell leaves cart scanning to the cashier workspace", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
 

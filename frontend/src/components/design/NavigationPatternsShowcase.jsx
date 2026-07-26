@@ -48,7 +48,7 @@ export default function NavigationPatternsShowcase() {
             </div>
           </div>
           <div className="mt-auto pt-3">
-            <div className="flex items-center gap-3 rounded-control border border-border bg-surface px-2 py-1.5 shadow-low"><span className="size-9 rounded-full bg-[conic-gradient(#f59e0b,#8b5cf6,#06b6d4,#f59e0b)]" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-text">Dika Laksana</span><span className="block truncate text-xs text-text-muted">dika@example.com</span></span><Icon name="chevron" className="size-4 text-text-muted" /></div>
+            <div className="flex items-center gap-3 rounded-control border border-border bg-surface px-2 py-1.5 shadow-low"><span className="account-avatar size-9 rounded-full bg-[conic-gradient(#f59e0b,#8b5cf6,#06b6d4,#f59e0b)]" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-text">Dika Laksana</span><span className="block truncate text-xs text-text-muted">dika@example.com</span></span><Icon name="chevron" className="size-4 text-text-muted" /></div>
           </div>
         </aside>
 
