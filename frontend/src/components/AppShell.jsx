@@ -2,7 +2,7 @@ import React from "react";
 import { useClerk, useUser } from "@clerk/react";
 import { GradientAvatar } from "@outpacelabs/avatars";
 import { toast } from "sonner";
-import { navGroups, routes } from "../shared.jsx";
+import { Logo, navGroups, routes } from "../shared.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { Icon } from "./primitives.jsx";
 
@@ -130,8 +130,8 @@ export default function AppShell({ children, pathname, onNavigate }) {
         <aside className={`hidden h-full shrink-0 flex-col rounded-card border border-border bg-surface transition-[width] duration-base ease-standard motion-reduce:transition-none md:flex ${sidebarCollapsed ? "w-[72px]" : "w-[236px]"}`}>
           <div className={`flex h-14 items-center ${sidebarCollapsed ? "justify-center px-2" : "justify-between gap-2 px-4"}`}>
             {!sidebarCollapsed && (
-              <button type="button" onClick={() => go(routes.dashboard)} className="min-h-11 text-left text-sm font-semibold lowercase text-text">
-                balanja
+              <button type="button" onClick={() => go(routes.dashboard)} className="min-h-11 text-left">
+                <Logo />
               </button>
             )}
             <button
@@ -197,8 +197,8 @@ export default function AppShell({ children, pathname, onNavigate }) {
             >
               <Icon name="menu" className="size-5" />
             </button>
-            <button type="button" onClick={() => go(routes.dashboard)} className="min-h-11 px-2 text-base font-bold">
-              Balanja
+            <button type="button" onClick={() => go(routes.dashboard)} className="min-h-11 px-2">
+              <Logo />
             </button>
             <button
               type="button"
@@ -241,8 +241,8 @@ export default function AppShell({ children, pathname, onNavigate }) {
                 className="absolute bottom-2 left-2 top-2 grid w-[min(320px,calc(100vw-32px))] grid-rows-[auto_1fr] overflow-hidden rounded-card border border-border bg-surface shadow-panel transition-[transform,opacity] duration-base ease-standard motion-reduce:transform-none"
               >
                 <div className="flex h-14 items-center justify-between border-b border-border px-4">
-                  <button type="button" onClick={() => go(routes.dashboard)} className="min-h-11 text-sm font-semibold lowercase text-text">
-                    balanja
+                  <button type="button" onClick={() => go(routes.dashboard)} className="min-h-11 text-left">
+                    <Logo />
                   </button>
                   <button
                     type="button"

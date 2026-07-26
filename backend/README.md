@@ -144,3 +144,25 @@ Contoh:
 cd /Users/dikalaksana/Engineering/balanja/backend
 TEST_DATABASE_URL="$TEST_DATABASE_URL" TEST_RUNTIME_DATABASE_URL="$TEST_RUNTIME_DATABASE_URL" go test ./internal/integration -tags=integration -race -count=1 -v
 ```
+
+## Manual entitlement activation
+
+Paid activation and suspension use the private entitlement command with a
+privileged database URL. Never use the runtime `balanja_api` connection and
+never pass the database URL as a command-line flag.
+
+```bash
+read -rsp 'Admin database URL: ' ADMIN_DATABASE_URL
+echo
+export ADMIN_DATABASE_URL
+go run ./cmd/entitlement \
+  --org-id org_123 \
+  --status paid_active \
+  --actor operator@example.com \
+  --note "invoice INV-12 paid"
+unset ADMIN_DATABASE_URL
+```
+
+Use `--status paid_suspended` to stop new checkout without deleting tenant data.
+The command is idempotent when the requested status is already active and writes
+an audit row only when the status changes.

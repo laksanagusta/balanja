@@ -82,6 +82,12 @@ Cash feedback uses one compact live region beneath the cash input. A sufficient 
 
 Dashboard is the stable authenticated home: signed-in `/`, unknown authenticated paths, and the Balanja brand all resolve to `/dashboard`. The cashier workspace remains at `/pos` and uses the direct Indonesian label `Kasir` rather than the technical abbreviation `POS`.
 
+Every header surface—public navigation, expanded desktop sidebar, compact
+mobile header, and mobile navigation overlay—must render the shared `Logo`
+component. This preserves the same Manrope face, 800 weight, `Balanja`
+capitalization, 18px size, and normal tracking everywhere. Do not recreate the
+wordmark with local text styles.
+
 Operational navigation uses visible groups and consistent Indonesian labels: `Ringkasan` contains Dashboard; `Operasional` contains Kasir, Produk, and Stok; and `Catatan` contains Transaksi. On desktop, a labeled 16px panel-left icon control collapses the 236px sidebar into a 72px icon rail and rotates between its expanded and collapsed states; every icon retains its accessible name and tooltip, the active destination remains visible, and the account trigger remains available. Pengaturan lives inside the account popover rather than competing with daily destinations in the sidebar. Navigation selection uses a quiet neutral surface, never the primary action treatment reserved for the single forward or commit action in its local region.
 
 The desktop sidebar footer contains only the account control with 12px outer padding and no separating top divider. The source row uses the standard surface, a soft `border-border` outline, and `shadow-low` for subtle separation; hover, keyboard focus, and open states may add a neutral muted surface without animating the shadow. Account avatars use the shared four-color violet, pink, yellow, and cyan `--shadow-avatar` glow on both desktop and mobile; do not substitute a generic neutral shadow. The account popover repeats identity, exposes Pengaturan as a neutral action, then separates Keluar below it with danger styling. Pengaturan navigates through the shared app router and closes the popover. Desktop anchors the menu above its footer source; mobile anchors the same menu below the account trigger. Do not keep a second Settings entry in desktop or mobile navigation.
@@ -112,6 +118,27 @@ Dashboard charts must use the installed BKLIT registry components (`@bklit/line-
 Time-series line charts should use a monotone X curve and visible point markers on compact views so sparse daily data stays truthful and readable instead of turning into a decorative spline.
 Bar-chart axis labels must fit within the nearest bar-center spacing. Cap label width and use an ellipsis on compact charts so adjacent product names never overlap; keep the full label in the DOM and chart tooltip so truncation is visual only.
 
+## Transaction entitlement states
+
+Transaction quota feedback stays inside the compact operational hierarchy. Usage
+below 40 is neutral metadata. Usage 40–44 uses a low-emphasis warning, usage
+45–49 uses a persistent warning with an explicit upgrade action, and exhausted
+trial state uses a danger-toned surface beside payment controls. Do not create a
+new billing palette; reuse the existing neutral, warning, danger, border,
+surface, focus, and button tokens.
+
+An exhausted plan blocks only final checkout. Product browsing, cart editing,
+stock, transaction history, dashboard, reports, and settings stay usable. The
+cart must never be cleared or hidden by a quota response. Desktop and mobile
+render the same status and contact hierarchy, with descriptive labels, visible
+focus, and at least 44px compact-screen targets.
+
+WhatsApp is the primary upgrade action only when configured; email is secondary.
+If one channel is absent, remove it instead of rendering a disabled or broken
+link. A status-read failure is not presented as exhausted quota: show
+`Status paket belum dapat diperiksa` with `Coba lagi` and preserve all pending
+cashier input.
+
 ## Adding New UI
 
 Use semantic tokens and existing primitives before adding raw Tailwind values. Keep retail operations screens compact and avoid hero-style layouts, decorative gradients, nested cards, and one-off shadows.
@@ -124,6 +151,19 @@ The signed-out landing page lives at `/`; Clerk sign-in lives at `/login`. An au
 
 Marketing display headings use 40px to 48px on mobile and 64px to 72px on wide screens, with a tight 0.98 to 1.04 line height. Keep hero headlines to two or three lines. Major section spacing scales from 80px on mobile to 112px on tablet and 144px on wide screens.
 
+Landing copy follows StoryBrand. The merchant is the protagonist, scattered
+operational records are the problem, and Balanja is the practical guide that
+provides one clear workflow. Lead with concrete outcomes—faster service,
+controlled stock, searchable transactions, and clearer daily decisions—before
+describing features. CTAs name the next useful outcome, such as
+`Mulai kelola toko`; avoid generic actions. Never invent testimonials,
+customer counts, performance numbers, pricing, free access, guarantees,
+scarcity, or urgency that the product cannot substantiate.
+
+The compact badge above the landing hero headline is a product news flash, not
+the general value proposition. Use it to announce one concrete, available
+feature; the current message is `Fitur baru: Scan barcode langsung dari kasir`.
+
 Use the existing semantic palette, 8px/12px/16px radius hierarchy, soft borders, near-black primary CTA, and bordered secondary CTA. Product visuals may use real current Balanja screenshots or faithful UI mockups built from the same tokens and information architecture. Hero mockups use a stable landscape frame, may sit over a restrained retail photograph, and share the header's outer page gutter plus inner 1152px container so their visible edges align exactly with the logo and authentication action. They must preserve readable product hierarchy without inventing capabilities. When a manual screenshot replaces a mockup, include intrinsic dimensions, descriptive alt text, and a muted failure fallback.
 
 Product items inside public POS mockups use a neutral placeholder instead of stock photography. Keep the everyday UMKM shelf-goods names—such as shampoo, snack, susu, air minum, tissue, and detergent—so the interface still reads as Indonesian retail. This rule applies to both catalog cards and cart-row thumbnails; the larger retail backdrop may remain photographic.
@@ -134,7 +174,14 @@ The public footer contains brand context and product navigation only; do not dup
 
 Public buttons, links, and compact header actions use at least a 44px touch target and immediate press feedback on pointer-down. A compact header action may keep a 32px visual height only when a transparent hit area expands its clickable footprint to 44px. Navigation links must reuse the shared press transition without a competing transition utility. Programmatic anchor scrolling checks `prefers-reduced-motion` and becomes immediate when reduction is requested. Translucent public chrome becomes solid under `prefers-reduced-transparency`, while `prefers-contrast: more` uses an opaque surface and defined border. Decorative product mockups stay `aria-hidden` and use neutral containers rather than introducing nested page landmarks such as `main`.
 
-The login page lives as a centered sign-in surface without a top bar. It keeps the SignIn card and signed-in confirmation centered in the viewport, with no logo rail or back button in the page chrome.
+The login page lives as a centered sign-in surface without a top bar. It uses
+dynamic viewport height instead of `100vh`, 12px mobile page insets, and a
+full-width container capped at 400px. Clerk `rootBox`, `cardBox`, and `card`
+must resolve to the available inline size so the page has no horizontal
+overflow from 320px upward. Keep a single Clerk card as the only bordered and
+elevated surface—never wrap it in a second decorative card. The signed-in
+confirmation follows the same compact mobile-first geometry, with no logo rail
+or back button in the page chrome.
 
 Public hero reveals use the shared strong ease over 420ms with short stagger delays no greater than 180ms, without retaining `will-change` after entry. FAQ answers remain mounted and expand with a brief opacity and grid-track transition while a single plus indicator morphs into a minus; reduced-motion contexts remove both transitions. Product mockups keep interface copy in Indonesian and render item imagery as token-based neutral placeholders.
 

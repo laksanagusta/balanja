@@ -38,7 +38,7 @@ export function PaymentSummary({
           </div>
         </div>
       </dl>
-      <div className="flex flex-wrap gap-2" aria-label="Metode pembayaran">
+      <div className="grid gap-2" aria-label="Metode pembayaran">
         {paymentMethods.map((method) => (
           <Pill
             key={method.id}
@@ -46,7 +46,7 @@ export function PaymentSummary({
             aria-pressed={paymentMethod === method.id}
             disabled={disabled}
             onClick={() => onPaymentMethodChange(method.id)}
-            className="pos-touch-target gap-1.5"
+            className="pos-touch-target w-full justify-center gap-1.5"
           >
             <Icon name={method.icon} className="size-4" />
             {method.label}

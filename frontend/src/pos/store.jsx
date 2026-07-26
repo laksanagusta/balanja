@@ -14,10 +14,13 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
   const [units, setUnits] = React.useState([]);
   const [cart, setCart] = React.useState(() => loadCart());
   const [notice, setNotice] = React.useState("");
-  const [loading, setLoading] = React.useState({ products: false, settings: false, categories: false, units: false });
-  const [loaded, setLoaded] = React.useState({ products: false, settings: false, categories: false, units: false });
-  const lastLoadedAt = React.useRef({ products: 0, settings: 0, categories: 0, units: 0 });
+  const [entitlement, setEntitlement] = React.useState(null);
+  const [entitlementError, setEntitlementError] = React.useState("");
+  const [loading, setLoading] = React.useState({ products: false, settings: false, categories: false, units: false, entitlement: false });
+  const [loaded, setLoaded] = React.useState({ products: false, settings: false, categories: false, units: false, entitlement: false });
+  const lastLoadedAt = React.useRef({ products: 0, settings: 0, categories: 0, units: 0, entitlement: 0 });
   const categoriesRef = React.useRef(categories);
+  const entitlementRef = React.useRef(entitlement);
   const productsRef = React.useRef(products);
   const settingsRef = React.useRef(settings);
   const unitsRef = React.useRef(units);
@@ -26,6 +29,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
 
   React.useEffect(() => { saveCart(cart); }, [cart]);
   React.useEffect(() => { categoriesRef.current = categories; }, [categories]);
+  React.useEffect(() => { entitlementRef.current = entitlement; }, [entitlement]);
   React.useEffect(() => { productsRef.current = products; }, [products]);
   React.useEffect(() => { settingsRef.current = settings; }, [settings]);
   React.useEffect(() => { unitsRef.current = units; }, [units]);
@@ -129,6 +133,32 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     }
   }, [api]);
 
+  const loadEntitlement = React.useCallback(async ({ force = false, signal } = {}) => {
+    if (!force && (loadedRef.current.entitlement || loadingRef.current.entitlement)) return entitlementRef.current;
+    loadingRef.current = { ...loadingRef.current, entitlement: true };
+    setLoading((current) => ({ ...current, entitlement: true }));
+    try {
+      const result = await api.getEntitlement({ signal });
+      loadedRef.current = { ...loadedRef.current, entitlement: true };
+      entitlementRef.current = result;
+      setEntitlement(result);
+      setEntitlementError("");
+      setLoaded((current) => ({ ...current, entitlement: true }));
+      lastLoadedAt.current.entitlement = Date.now();
+      return result;
+    } catch (error) {
+      setEntitlementError(error.message || "Status paket belum dapat diperiksa");
+      return null;
+    } finally {
+      loadingRef.current = { ...loadingRef.current, entitlement: false };
+      setLoading((current) => ({ ...current, entitlement: false }));
+    }
+  }, [api]);
+
+  React.useEffect(() => {
+    loadEntitlement();
+  }, [loadEntitlement]);
+
   const mergeMasterItem = React.useCallback((setter, ref, item) => {
     setter((current) => {
       const next = sortMasterData(current.some((entry) => entry.id === item.id)
@@ -201,7 +231,8 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     if (loadedRef.current.settings && now - lastLoadedAt.current.settings >= 30_000) loadSettings({ force: true });
     if (loadedRef.current.categories && now - lastLoadedAt.current.categories >= 30_000) loadCategories({ force: true });
     if (loadedRef.current.units && now - lastLoadedAt.current.units >= 30_000) loadUnits({ force: true });
-  }, [loadCategories, loadProducts, loadSettings, loadUnits]);
+    if (loadedRef.current.entitlement && now - lastLoadedAt.current.entitlement >= 30_000) loadEntitlement({ force: true });
+  }, [loadCategories, loadEntitlement, loadProducts, loadSettings, loadUnits]);
 
   React.useEffect(() => {
     const refetchStaleData = () => {
@@ -281,12 +312,22 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     try {
       const result = await api.checkout({ cart, payment, cashierName });
       setProducts((current) => applyCheckoutResult(current, result));
+      entitlementRef.current = result.entitlement;
+      setEntitlement(result.entitlement);
+      setEntitlementError("");
       setCart([]);
       clearCartStorage();
       setNotice("Transaction completed");
-      return { ok: true, transaction: result.transaction };
-    } catch (error) { setNotice(error.message || "Checkout failed"); return { ok: false, error: error.message || "Checkout failed" }; }
-  }, [api, cart, cashierName]);
+      return { ok: true, transaction: result.transaction, entitlement: result.entitlement };
+    } catch (error) {
+      const message = error.code === "PLAN_TRANSACTION_LIMIT_REACHED"
+        ? "Kuota trial telah habis"
+        : error.message || "Checkout failed";
+      setNotice(message);
+      if (error.code === "PLAN_TRANSACTION_LIMIT_REACHED") await loadEntitlement({ force: true });
+      return { ok: false, code: error.code, error: message };
+    }
+  }, [api, cart, cashierName, loadEntitlement]);
 
   const createStockMovement = React.useCallback(async (input) => {
     try {
@@ -303,7 +344,8 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
 
   const updateSettings = React.useCallback(async (input) => {
     try {
-      const saved = await api.updateSettings({ ...input, taxRate: Number(input.taxRate) || 0, taxEnabled: Boolean(input.taxEnabled) });
+      const { updatedAt, ...payload } = input;
+      const saved = await api.updateSettings({ ...payload, taxRate: Number(payload.taxRate) || 0, taxEnabled: Boolean(payload.taxEnabled) });
       settingsRef.current = saved;
       loadedRef.current = { ...loadedRef.current, settings: true };
       setSettings(saved);
@@ -315,17 +357,17 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
   }, [api]);
 
   const activeProducts = React.useMemo(() => products.filter((item) => item.active), [products]);
-  const isLoading = loading.products || loading.settings || loading.categories || loading.units;
+  const isLoading = loading.products || loading.settings || loading.categories || loading.units || loading.entitlement;
 
   const value = React.useMemo(() => ({
-    api, products, activeProducts, categories, units, cart, settings, notice, isLoading, loading, loaded,
+    api, products, activeProducts, categories, units, cart, settings, notice, entitlement, entitlementError, isLoading, loading, loaded,
     addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout,
     createStockMovement, updateSettings, getDashboardSummary: api.getDashboardSummary,
-    loadProducts, loadSettings, loadCategories, loadUnits, searchProducts,
+    loadProducts, loadSettings, loadCategories, loadUnits, loadEntitlement, searchProducts,
     createCategory, renameCategory, archiveCategory, restoreCategory,
     createUnit, renameUnit, archiveUnit, restoreUnit,
     setNotice, clearNotice: () => setNotice(""),
-  }), [products, activeProducts, categories, units, cart, settings, notice, isLoading, loading, loaded, addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout, createStockMovement, updateSettings, api, loadProducts, loadSettings, loadCategories, loadUnits, searchProducts, createCategory, renameCategory, archiveCategory, restoreCategory, createUnit, renameUnit, archiveUnit, restoreUnit]);
+  }), [products, activeProducts, categories, units, cart, settings, notice, entitlement, entitlementError, isLoading, loading, loaded, addToCart, updateCartQty, clearCart, saveProduct, addScannedProductToCart, deactivateProduct, checkout, createStockMovement, updateSettings, api, loadProducts, loadSettings, loadCategories, loadUnits, loadEntitlement, searchProducts, createCategory, renameCategory, archiveCategory, restoreCategory, createUnit, renameUnit, archiveUnit, restoreUnit]);
 
   return <POSStoreContext.Provider value={value}>{children}</POSStoreContext.Provider>;
 }

@@ -16,6 +16,12 @@ test("runtime POS components live outside showcase modules", async () => {
   assert.match(cashFeedback, /export function CashPaymentFeedback/);
 });
 
+test("mobile checkout can remain inspectable when final submission is plan-blocked", async () => {
+  const page = await readFile(new URL("../../pages/RetailPosPage.jsx", import.meta.url), "utf8");
+  assert.match(page, /const mobilePanelDisabled = store\.cart\.length === 0 \|\| checkoutPending/);
+  assert.match(page, /const checkoutDisabled = mobilePanelDisabled \|\| planBlocksCheckout/);
+});
+
 test("POS product card is an explicit variant", async () => {
   const source = await readFile(new URL("./ProductCard.jsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../../index.css", import.meta.url), "utf8");
@@ -58,8 +64,9 @@ test("cart controls and payment choices stay visually compact with coarse-pointe
   assert.match(cart, /cart-item-summary-actions grid justify-items-end gap-2/);
   assert.match(cart, /flex flex-wrap items-center justify-end gap-2/);
   assert.match(product, /className="product-add-button pos-touch-target"/);
-  assert.match(product, /product-card-content grid gap-2 px-2 py-3/);
-  assert.match(payment, /className="pos-touch-target gap-1\.5"/);
+  assert.match(product, /<Button variant="primary" className="product-add-button pos-touch-target"/);
+  assert.match(product, /className="product-card-content grid gap-2 px-2 py-3"/);
+  assert.match(payment, /className="pos-touch-target w-full justify-center gap-1\.5"/);
   assert.doesNotMatch(cart, /size-11|min-h-11|h-11/);
   assert.doesNotMatch(product, /product-add-button h-11/);
   assert.doesNotMatch(payment, /className="h-11 gap-1\.5"/);

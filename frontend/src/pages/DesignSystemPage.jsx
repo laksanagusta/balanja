@@ -26,6 +26,7 @@ import ProductPhotoShowcase from "../components/design/ProductPhotoShowcase.jsx"
 import NavigationPatternsShowcase from "../components/design/NavigationPatternsShowcase.jsx";
 import MasterDataPatternsShowcase from "../components/design/MasterDataPatternsShowcase.jsx";
 import OrganizationOnboardingShowcase from "../components/design/OrganizationOnboardingShowcase.jsx";
+import EntitlementPatternsShowcase from "../components/design/EntitlementPatternsShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
@@ -61,13 +62,14 @@ export default function DesignSystemPage({ onNavigate }) {
         <TypographyPanel />
         <MarketingPatternsShowcase />
         <OrganizationOnboardingShowcase />
+        <EntitlementPatternsShowcase />
         <section className="rounded-panel border border-border bg-surface p-4 shadow-low">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-success">Login page pattern</p>
           <h3 className="mt-2 text-xl font-semibold text-text">Centered sign-in surface without top bar</h3>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
-            The login route keeps the Clerk sign-in card and signed-in confirmation centered in the viewport, with no
-            header logo row or back button. That keeps the auth entry point visually quiet and distinct from public
-            landing chrome.
+            The login route uses dynamic viewport height and one full-width, max-400px container so a single Clerk card
+            stays centered without horizontal overflow from 320px upward. There is no duplicate outer card, header logo
+            row, or back button; signed-in confirmation follows the same compact mobile-first geometry.
           </p>
         </section>
         <div>

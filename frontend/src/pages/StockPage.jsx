@@ -210,9 +210,8 @@ function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
   const quantity = parseQuantityInput(quantityText);
   const preview = calculateStockPreview({ type, currentStock: product?.stock || 0, quantity });
   const quantityError = getQuantityError({ type, quantityText, quantity, product, preview });
-  const reasonError = !reason.trim() ? "Alasan wajib diisi untuk audit trail." : "";
   const productError = !product ? "Pilih produk aktif." : "";
-  const canSubmit = !productError && !quantityError && !reasonError && !isSaving;
+  const canSubmit = !productError && !quantityError && !isSaving;
   const showErrors = submitAttempted;
 
   async function submit(event) {
@@ -243,7 +242,6 @@ function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
       )}
     >
       <form id="stock-movement-form" onSubmit={submit} className="grid gap-4 text-text">
-        <p className="text-sm text-text-muted">Alasan wajib diisi karena setiap pergerakan menjadi audit trail.</p>
         <div className="grid gap-4">
           <ProductSearchPicker
             label="Produk"
@@ -266,9 +264,8 @@ function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
             }}
           />
           <Input
-            label="Alasan"
+            label="Alasan (opsional)"
             placeholder="Barang masuk, rusak, koreksi stok opname"
-            error={showErrors ? reasonError : ""}
             inputProps={{ value: reason, onChange: (event) => setReason(event.target.value) }}
           />
 

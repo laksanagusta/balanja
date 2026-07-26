@@ -13,6 +13,7 @@ import (
 	"balanja/backend/internal/checkout"
 	"balanja/backend/internal/config"
 	"balanja/backend/internal/dashboard"
+	"balanja/backend/internal/entitlement"
 	"balanja/backend/internal/platform/database"
 	"balanja/backend/internal/platform/httpserver"
 	"balanja/backend/internal/platform/objectstore"
@@ -72,6 +73,7 @@ func run() error {
 	transactionHandler := transaction.NewHandler(transaction.NewService(runner, transaction.PostgresRepository{}))
 	dashboardHandler := dashboard.NewHandler(dashboard.NewService(runner, dashboard.PostgresRepository{}))
 	checkoutHandler := checkout.NewHandler(checkout.NewService(runner, checkout.PostgresRepository{}))
+	entitlementHandler := entitlement.NewHandler(entitlement.NewService(runner, entitlement.PostgresRepository{}))
 	stockHandler := stock.NewHandler(stock.NewService(runner, stock.PostgresRepository{}))
 	reportHandler := report.NewHandler(report.NewService(runner, report.PostgresRepository{}))
 	unitHandler := unit.NewHandler(unit.NewService(runner, unit.PostgresRepository{}))
@@ -86,6 +88,7 @@ func run() error {
 			transactionHandler.Register(router)
 			dashboardHandler.Register(router)
 			checkoutHandler.Register(router)
+			entitlementHandler.Register(router)
 			stockHandler.Register(router)
 			reportHandler.Register(router)
 			unitHandler.Register(router)

@@ -47,7 +47,7 @@ func checkoutError(c fiber.Ctx, err error) error {
 		target        error
 		status        int
 		code, message string
-	}{{ErrInvalidCheckout, 422, "INVALID_CHECKOUT", "checkout request is invalid"}, {ErrIdempotencyKeyReused, 409, "IDEMPOTENCY_KEY_REUSED", "idempotency key was used for another request"}, {ErrProductNotFound, 404, "PRODUCT_NOT_FOUND", "a product was not found"}, {ErrProductInactive, 409, "PRODUCT_INACTIVE", "a product is unavailable"}, {ErrInsufficientStock, 409, "INSUFFICIENT_STOCK", "product stock is insufficient"}, {ErrInsufficientCash, 422, "INSUFFICIENT_CASH", "cash received is less than total"}}
+	}{{ErrInvalidCheckout, 422, "INVALID_CHECKOUT", "checkout request is invalid"}, {ErrIdempotencyKeyReused, 409, "IDEMPOTENCY_KEY_REUSED", "idempotency key was used for another request"}, {ErrProductNotFound, 404, "PRODUCT_NOT_FOUND", "a product was not found"}, {ErrProductInactive, 409, "PRODUCT_INACTIVE", "a product is unavailable"}, {ErrInsufficientStock, 409, "INSUFFICIENT_STOCK", "product stock is insufficient"}, {ErrInsufficientCash, 422, "INSUFFICIENT_CASH", "cash received is less than total"}, {ErrTransactionLimitReached, http.StatusPaymentRequired, "PLAN_TRANSACTION_LIMIT_REACHED", "the trial transaction limit has been reached"}}
 	for _, m := range mappings {
 		if errors.Is(err, m.target) {
 			return respond.Error(c, apperror.New(m.status, m.code, m.message))

@@ -16,9 +16,9 @@ export default function MarketingPatternsShowcase() {
       <div className="grid gap-6 p-4 sm:p-6">
         <div className="grid gap-6 rounded-panel bg-app-bg p-5 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">POS untuk UMKM Indonesia</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Fitur baru: Scan barcode langsung dari kasir</p>
             <p className="mt-4 max-w-4xl text-[42px] font-semibold leading-[0.98] tracking-[-0.055em] text-text sm:text-[56px] lg:text-[72px]">
-              Satu tempat untuk jualan, <span className="text-text-subtle">stok, dan transaksi.</span>
+              Jualan rapi. Stok terkendali. <span className="text-text-subtle">Toko lebih tenang.</span>
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -68,7 +68,11 @@ export default function MarketingPatternsShowcase() {
         </div>
 
         <p className="rounded-card border border-border bg-surface-muted p-4 text-sm leading-6 text-text-muted">
-          Public controls use a minimum 44px touch target, visible keyboard focus, and immediate press feedback. The hero visual uses the same outer page gutter and inner 1152px container as the header, keeping its edges aligned with the logo and authentication action. Product items inside the POS mockup use neutral placeholders rather than stock photography. A compact 32px header action keeps a transparent 44px hit area. FAQ answers remain mounted and use the morphing indicator above. Smooth scrolling becomes immediate for reduced motion; translucent chrome becomes solid for reduced transparency or increased contrast.
+          Landing copy follows StoryBrand: the merchant is the protagonist, scattered operations are the problem, and
+          Balanja is the practical guide. Lead with operational outcomes, use specific workflow language, and never invent
+          testimonials, customer counts, pricing, guarantees, urgency, or unsupported claims. Public controls use a
+          minimum 44px touch target, visible keyboard focus, and immediate press feedback. The hero visual uses the same
+          outer page gutter and inner 1152px container as the header.
         </p>
       </div>
     </section>

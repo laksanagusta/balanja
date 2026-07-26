@@ -36,12 +36,19 @@ test("app shell does not cast a shadow through the sidebar-content gap", async (
 });
 
 test("app shell uses dashboard as home and renders grouped localized navigation", async () => {
-  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+  const [source, shared] = await Promise.all([
+    readFile(new URL("./AppShell.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../shared.jsx", import.meta.url), "utf8"),
+  ]);
 
   assert.match(source, /go\(routes\.dashboard\)/);
   assert.match(source, /group\.label/);
   assert.doesNotMatch(source, /systemNavItems|SystemNavigation/);
   assert.match(source, /aria-current=\{pathname === path \? "page" : undefined\}/);
+  assert.match(source, /import \{ Logo, navGroups, routes \} from "\.\.\/shared\.jsx"/);
+  assert.equal(source.match(/<Logo \/>/g)?.length, 3);
+  assert.doesNotMatch(source, />\s*balanja\s*</i);
+  assert.match(shared, /text-lg font-extrabold tracking-normal text-text/);
 });
 
 test("settings lives inside the shared account popover", async () => {

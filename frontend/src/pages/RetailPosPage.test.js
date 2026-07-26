@@ -36,6 +36,16 @@ test("status copy and background refresh follow the interface contract", async (
   assert.doesNotMatch(source, /Cari produk atau barcode\.\.\.|Menyelesaikan\.\.\./);
 });
 
+test("trial quota blocks only final checkout and keeps upgrade recovery visible", async () => {
+  const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
+  assert.match(source, /QuotaStatus/);
+  assert.match(source, /planBlocksCheckout/);
+  assert.match(source, /Upgrade untuk melanjutkan/);
+  assert.match(source, /VITE_UPGRADE_WHATSAPP_NUMBER/);
+  assert.match(source, /recordEntitlementEvent/);
+  assert.match(source, /disabled=\{mobilePanelDisabled\}/);
+});
+
 test("cart barcode scanning stays inside the visible cashier workspace", async () => {
   const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
 

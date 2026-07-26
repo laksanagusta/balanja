@@ -210,3 +210,10 @@ test("product saves can rethrow API errors for field-level feedback", async () =
   assert.match(source, /throwOnError/);
   assert.match(source, /if \(throwOnError\) throw error/);
 });
+
+test("POS store retains stable entitlement error codes and updates checkout entitlement", async () => {
+  const source = await readFile(new URL("./store.jsx", import.meta.url), "utf8");
+  assert.match(source, /PLAN_TRANSACTION_LIMIT_REACHED/);
+  assert.match(source, /setEntitlement\(result\.entitlement\)/);
+  assert.match(source, /code:\s*error\.code/);
+});

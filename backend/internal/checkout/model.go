@@ -1,6 +1,7 @@
 package checkout
 
 import (
+	"balanja/backend/internal/entitlement"
 	"github.com/google/uuid"
 	"time"
 )
@@ -41,9 +42,10 @@ type Transaction struct {
 	CreatedAt     time.Time `json:"createdAt"`
 }
 type Result struct {
-	Transaction Transaction    `json:"transaction"`
-	Products    []ProductStock `json:"products"`
-	Replay      bool           `json:"-"`
+	Transaction Transaction         `json:"transaction"`
+	Products    []ProductStock      `json:"products"`
+	Entitlement entitlement.Summary `json:"entitlement"`
+	Replay      bool                `json:"-"`
 }
 type ProductStock struct {
 	ID        uuid.UUID `json:"id"`

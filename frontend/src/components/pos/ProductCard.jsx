@@ -50,10 +50,9 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
         </div>
       </div>
       <div className="product-card-content grid gap-2 px-2 py-3">
-        <Badge>{product.category}</Badge>
         <div className="grid content-start gap-1.5">
           <h3 className="line-clamp-1 text-sm font-semibold leading-tight text-text">{product.name}</h3>
-          <p className="text-sm font-medium text-text-muted">
+          <p className="text-xs font-medium text-text-muted">
             <span className="font-mono tabular-nums">{product.price}</span> / {product.unit || "pcs"}
           </p>
         </div>

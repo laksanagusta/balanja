@@ -5,6 +5,7 @@ import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { CartRow } from "../components/pos/CartRow.jsx";
 import { CashPaymentFeedback } from "../components/pos/CashPaymentFeedback.jsx";
+import QuotaStatus from "../components/entitlements/QuotaStatus.jsx";
 import { MobileCheckoutPanel } from "../components/pos/MobileCheckoutPanel.jsx";
 import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { ProductCatalog } from "../components/pos/ProductCatalog.jsx";
@@ -15,11 +16,17 @@ import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
 import { formatPrice } from "../shared.jsx";
+import { upgradeContacts } from "../entitlements/contact-links.js";
 import {
   cashPaymentState,
   resistedCartSwipeDistance,
   shouldDismissCartSwipe,
 } from "./retail-pos-utils.js";
+
+const formatThousands = (value) => {
+  if (!value) return value;
+  return new Intl.NumberFormat("id-ID").format(Number(value));
+};
 
 const CART_EXIT_MS = 200;
 const FOCUSABLE_SELECTOR = [
@@ -74,7 +81,15 @@ export default function RetailPosPage() {
   const isInitialLoad = isPageLoading;
   const isUpdatingPOS = (store.loading.products || store.loading.settings) && store.loaded.products && store.loaded.settings;
   const cashState = cashPaymentState(cashReceived, totals.total, store.cart.length);
-  const checkoutDisabled = store.cart.length === 0 || checkoutPending;
+  const planBlocksCheckout = store.entitlement?.canCheckout === false;
+  const mobilePanelDisabled = store.cart.length === 0 || checkoutPending;
+  const checkoutDisabled = mobilePanelDisabled || planBlocksCheckout;
+  const upgradeContactLinks = React.useMemo(() => upgradeContacts({
+    whatsapp: import.meta.env.VITE_UPGRADE_WHATSAPP_NUMBER,
+    email: import.meta.env.VITE_UPGRADE_EMAIL,
+    storeName: store.settings.storeName,
+    supportReference: store.entitlement?.supportReference,
+  }), [store.entitlement?.supportReference, store.settings.storeName]);
   const totalCartItems = store.cart.reduce((sum, item) => sum + item.qty, 0);
   const cashFeedback = cashState.showChange
     ? { status: "change", value: formatPrice(cashState.change) }
@@ -111,6 +126,10 @@ export default function RetailPosPage() {
       setCheckoutPending(false);
     }
   };
+
+  const recordEntitlementContact = React.useCallback((event) => {
+    store.api.recordEntitlementEvent(event).catch(() => {});
+  }, [store.api]);
 
   const clearFilters = React.useCallback(() => {
     setQuery("");
@@ -371,7 +390,7 @@ export default function RetailPosPage() {
             </div>
           </div>
 
-          <div className="px-3 py-3 sm:px-6">
+          <div className="px-3 pb-2 pt-4 sm:px-6">
             <div
               ref={categoryTabsRef}
               className="category-tabs relative flex w-full min-w-0 gap-1 overflow-x-auto rounded-control border border-border bg-surface-muted p-1"
@@ -399,7 +418,7 @@ export default function RetailPosPage() {
                   type="button"
                   aria-pressed={category === item}
                   onClick={() => setCategory(item)}
-                  className={`pos-touch-target relative z-10 h-8 min-w-max flex-1 basis-0 rounded-md px-3 text-sm font-medium transition-colors duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                  className={`pos-touch-target relative z-10 h-6 min-w-max flex-1 basis-0 rounded-md px-3 text-sm font-medium transition-colors duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                     category === item
                       ? categoryIndicator.ready
                         ? "text-text"
@@ -522,14 +541,15 @@ export default function RetailPosPage() {
             {paymentMethod === "cash" && (
               <Input
                 label="Nominal tunai"
-                placeholder="Contoh: 150000…"
+                placeholder="Contoh: 150.000…"
                 error={visibleCashError}
                 inputProps={{
                   name: "cashReceived",
                   autoComplete: "off",
-                  value: cashReceived,
+                  value: cashReceived ? formatThousands(cashReceived) : cashReceived,
                   onChange: (event) => {
-                    setCashReceived(event.target.value);
+                    const raw = event.target.value.replace(/\D/g, "");
+                    setCashReceived(raw);
                     setCashError("");
                   },
                   inputMode: "numeric",
@@ -548,8 +568,19 @@ export default function RetailPosPage() {
               </div>
             )}
 
+            <QuotaStatus
+              entitlement={store.entitlement}
+              error={store.entitlementError}
+              loading={
+                store.loading.entitlement ||
+                (!store.loaded.entitlement && !store.entitlementError)
+              }
+              contacts={upgradeContactLinks}
+              onRefresh={() => store.loadEntitlement({ force: true })}
+              onContact={recordEntitlementContact}
+            />
             <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
-              {checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
+              {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
             </Button>
             <Button
               variant="secondary"
@@ -567,7 +598,7 @@ export default function RetailPosPage() {
               onExpand={() => setMobileCheckoutExpanded(true)}
               onCollapse={() => setMobileCheckoutExpanded(false)}
               grandTotal={formatPrice(totals.total)}
-              disabled={checkoutDisabled}
+              disabled={mobilePanelDisabled}
               triggerRef={mobileCheckoutTriggerRef}
             >
               <div className="grid gap-3">
@@ -586,14 +617,15 @@ export default function RetailPosPage() {
                 {paymentMethod === "cash" && (
                   <Input
                     label="Nominal tunai"
-                    placeholder="Contoh: 150000…"
+                    placeholder="Contoh: 150.000…"
                     error={visibleCashError}
                     inputProps={{
                       name: "mobileCashReceived",
                       autoComplete: "off",
-                      value: cashReceived,
+                      value: cashReceived ? formatThousands(cashReceived) : cashReceived,
                       onChange: (event) => {
-                        setCashReceived(event.target.value);
+                        const raw = event.target.value.replace(/\D/g, "");
+                        setCashReceived(raw);
                         setCashError("");
                       },
                       inputMode: "numeric",
@@ -612,8 +644,19 @@ export default function RetailPosPage() {
                   </div>
                 )}
 
+                <QuotaStatus
+                  entitlement={store.entitlement}
+                  error={store.entitlementError}
+                  loading={
+                    store.loading.entitlement ||
+                    (!store.loaded.entitlement && !store.entitlementError)
+                  }
+                  contacts={upgradeContactLinks}
+                  onRefresh={() => store.loadEntitlement({ force: true })}
+                  onContact={recordEntitlementContact}
+                />
                 <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
-                  {checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
+                  {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
                 </Button>
                 <Button
                   variant="secondary"

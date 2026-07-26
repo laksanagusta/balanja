@@ -8,11 +8,11 @@ test("landing content covers verified retail workflows", () => {
   assert.deepEqual(
     features.map((feature) => feature.title),
     [
-      "Kasir cepat",
-      "Katalog produk",
-      "Riwayat transaksi",
-      "Dashboard penjualan",
-      "Pemindaian barcode",
+      "Layani pembeli tanpa pindah layar",
+      "Katalog yang mudah dirapikan",
+      "Temukan transaksi saat dibutuhkan",
+      "Lihat kondisi toko sekilas",
+      "Scan barcode, kurangi salah pilih",
     ],
   );
   assert.equal(faqs.length, 6);
@@ -22,10 +22,15 @@ test("landing page keeps the approved hero and public calls to action", async ()
   const source = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const faq = await readFile(new URL("../landing/FaqSection.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /Baru — mendukung pemindaian barcode/);
-  assert.match(source, /Satu tempat untuk jualan/);
-  assert.match(source, /stok, dan transaksi/);
-  assert.match(source, /Mulai dengan Balanja/);
+  assert.match(source, /Fitur baru: Scan barcode langsung dari kasir/);
+  assert.match(source, /Jualan rapi/);
+  assert.match(source, /Stok terkendali/);
+  assert.match(source, /Toko lebih tenang/);
+  assert.match(source, /Mulai kelola toko/);
+  assert.match(source, /Lihat cara kerjanya/);
+  assert.match(source, /Satu alur, bukan banyak catatan/);
+  assert.match(source, /Siapkan toko, layani pembeli, pantau hasilnya/);
+  assert.match(source, /Siap membuat operasional toko lebih rapi/);
   assert.match(source, /routes\.login/);
   assert.match(source, /id="fitur"/);
   assert.match(source, /id="cara-kerja"/);
