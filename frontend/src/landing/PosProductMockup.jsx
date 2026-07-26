@@ -1,6 +1,5 @@
 import React from "react";
 import { Icon } from "../components/primitives.jsx";
-import { Logo } from "../shared.jsx";
 
 const products = [
   { name: "Shampoo Botol 170ml", price: "Rp23.500", stock: "14 pcs" },
@@ -42,7 +41,10 @@ export default function PosProductMockup({ compact = false }) {
       <div className={`flex ${compact ? "h-[280px]" : "h-[360px] sm:h-[470px] lg:h-[520px]"}`}>
         <aside className="hidden w-[150px] shrink-0 flex-col border-r border-border bg-surface sm:flex lg:w-[185px]">
           <div className="flex items-center gap-2 px-4 py-4">
-            <Logo className="h-4" decorative />
+            <span className="grid size-6 place-items-center rounded-control bg-accent text-white">
+              <Icon name="receipt" className="size-3.5" />
+            </span>
+            <span className="text-xs font-bold text-text">balanja</span>
           </div>
           <nav className="grid gap-2 px-2">
             {sidebarGroups.map((group) => (

@@ -36,16 +36,11 @@ export const navGroups = [
   },
 ];
 
-export function Logo({ className = "h-7", decorative = false }) {
+export function Logo() {
   return (
-    <img
-      src="/brand/balanja-logo.png"
-      alt={decorative ? "" : "Balanja"}
-      aria-hidden={decorative ? "true" : undefined}
-      width="260"
-      height="124"
-      className={`block w-auto shrink-0 object-contain ${className}`}
-    />
+    <div className="flex items-center">
+      <span className="text-lg font-bold tracking-normal text-text">Balanja</span>
+    </div>
   );
 }
 

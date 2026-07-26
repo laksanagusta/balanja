@@ -14,22 +14,6 @@ Master-data lists use one primary bordered surface with flat rows and quiet divi
 
 Balanja is a retail point-of-sale surface for Indonesian UMKM shops. The interface should stay simple, dense, quiet, and fast for repeated cashier work: white surfaces, soft borders, compact controls, product-image cards, clear stock signals, and near-black primary checkout actions.
 
-## Brand identity
-
-The canonical Balanja brand mark is `/public/brand/balanja-logo.png`, a 260×124
-RGBA image. Use the shared `Logo` component for public navigation, the app
-sidebar, mobile app chrome, the public footer, and design-system examples.
-Preserve the original 65:31 aspect ratio, transparent background, dark fill,
-and rounded geometry. Never stretch, crop, recolor, outline, rotate, add a
-container, or rebuild the mark from CSS shapes.
-
-Use a 28px-high mark in public and design-system navigation, 20px in
-operational app chrome, and 16px only inside decorative product mockups. The
-mark belongs on light `surface`, `surface-muted`, or `app-bg` backgrounds;
-there is no approved reversed/light variant. Meaningful instances use the
-accessible name `Balanja`; instances inside an already decorative mockup use an
-empty alt value.
-
 ## Tokens
 
 Color tokens live in `src/index.css` through Tailwind v4 `@theme`: `app-bg`, `surface`, `surface-muted`, `border`, `text`, `text-muted`, `accent`, `danger`, `success`, `warning`, and `focus`.
