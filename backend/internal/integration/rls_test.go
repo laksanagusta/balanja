@@ -29,7 +29,22 @@ func TestTenantRLS(t *testing.T) {
 	if _, err := connection.Exec(ctx, up); err != nil {
 		t.Fatalf("apply up migration: %v", err)
 	}
+	if _, err := connection.Exec(ctx, `
+		create table categories (org_id text not null);
+		create table units (org_id text not null);
+		create table stock_movements (org_id text not null)`); err != nil {
+		t.Fatalf("create entitlement migration prerequisites: %v", err)
+	}
+	if _, err := connection.Exec(ctx, readMigration(t, "000012_organization_entitlements.up.sql")); err != nil {
+		t.Fatalf("apply entitlement migration: %v", err)
+	}
 	t.Cleanup(func() {
+		if _, err := connection.Exec(context.Background(), readMigration(t, "000012_organization_entitlements.down.sql")); err != nil {
+			t.Errorf("apply entitlement down migration: %v", err)
+		}
+		if _, err := connection.Exec(context.Background(), "drop table if exists stock_movements, units, categories"); err != nil {
+			t.Errorf("drop entitlement migration prerequisites: %v", err)
+		}
 		if _, err := connection.Exec(context.Background(), down); err != nil {
 			t.Errorf("apply down migration: %v", err)
 		}
@@ -40,6 +55,14 @@ func TestTenantRLS(t *testing.T) {
 		values ('org_a','A product','a','test',100,1,'pcs'),
 		       ('org_b','B product','b','test',100,1,'pcs')`); err != nil {
 		t.Fatalf("seed products: %v", err)
+	}
+	if _, err := connection.Exec(ctx, `
+		insert into organization_entitlements
+			(org_id,status,transaction_limit,transactions_used,support_reference)
+		values
+			('org_a','trial',50,3,'TESTORGA'),
+			('org_b','trial',50,7,'TESTORGB')`); err != nil {
+		t.Fatalf("seed entitlements: %v", err)
 	}
 
 	tx, err := connection.Begin(ctx)
@@ -63,6 +86,19 @@ func TestTenantRLS(t *testing.T) {
 	}
 	if _, err := tx.Exec(ctx, "insert into products (org_id,name,barcode,category,price,stock,unit) values ('org_b','forbidden','x','test',100,1,'pcs')"); err == nil {
 		t.Fatal("cross-tenant insert succeeded")
+	}
+
+	if err := tx.QueryRow(ctx, "select count(*) from organization_entitlements").Scan(&count); err != nil {
+		t.Fatalf("count visible entitlements: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("visible entitlements = %d, want 1", count)
+	}
+	if _, err := tx.Exec(ctx, `
+		insert into organization_entitlement_audit
+			(org_id,actor,previous_status,new_status,note)
+		values ('org_a','runtime-user','trial','paid_active','forbidden')`); err == nil {
+		t.Fatal("runtime role inserted an entitlement audit row")
 	}
 }
 

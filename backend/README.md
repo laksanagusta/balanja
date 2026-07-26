@@ -152,12 +152,15 @@ privileged database URL. Never use the runtime `balanja_api` connection and
 never pass the database URL as a command-line flag.
 
 ```bash
-ADMIN_DATABASE_URL=postgres://owner:password@host/postgres \
+read -rsp 'Admin database URL: ' ADMIN_DATABASE_URL
+echo
+export ADMIN_DATABASE_URL
 go run ./cmd/entitlement \
   --org-id org_123 \
   --status paid_active \
   --actor operator@example.com \
   --note "invoice INV-12 paid"
+unset ADMIN_DATABASE_URL
 ```
 
 Use `--status paid_suspended` to stop new checkout without deleting tenant data.
