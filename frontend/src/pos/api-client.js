@@ -152,6 +152,16 @@ export function createAPIClient({
     async getSettings(options = {}) {
       return (await request("/api/v1/settings", options)).data;
     },
+    async getEntitlement(options = {}) {
+      return (await request("/api/v1/entitlement", options)).data;
+    },
+    async recordEntitlementEvent(name, options = {}) {
+      return (await request("/api/v1/entitlement/events", {
+        ...options,
+        method: "POST",
+        body: { name },
+      })).data;
+    },
     async updateSettings(settings, options = {}) {
       return (await request("/api/v1/settings", { ...options, method: "PUT", body: settings })).data;
     },

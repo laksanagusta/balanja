@@ -155,6 +155,34 @@ test("checkout sends only product identifiers and quantities with an idempotency
   assert.equal(JSON.parse(request.body).cashierUserId, undefined);
 });
 
+test("loads the active organization entitlement", async () => {
+  let requestURL;
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async (url) => {
+      requestURL = url;
+      return new Response(JSON.stringify({ data: { status: "trial", remaining: 50 } }));
+    },
+  });
+  const value = await api.getEntitlement();
+  assert.equal(requestURL, "/api/v1/entitlement");
+  assert.equal(value.remaining, 50);
+});
+
+test("records only the named entitlement event payload", async () => {
+  let request;
+  const api = createAPIClient({
+    getToken: async () => "token",
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return new Response(JSON.stringify({ data: { name: "upgrade_email_clicked" } }), { status: 201 });
+    },
+  });
+  await api.recordEntitlementEvent("upgrade_email_clicked");
+  assert.equal(request.url, "/api/v1/entitlement/events");
+  assert.deepEqual(JSON.parse(request.options.body), { name: "upgrade_email_clicked" });
+});
+
 test("listStockMovements sends stock movement filters", async () => {
   let requestURL;
   const api = createAPIClient({
