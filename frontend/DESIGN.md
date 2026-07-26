@@ -130,6 +130,15 @@ The signed-out landing page lives at `/`; Clerk sign-in lives at `/login`. An au
 
 Marketing display headings use 40px to 48px on mobile and 64px to 72px on wide screens, with a tight 0.98 to 1.04 line height. Keep hero headlines to two or three lines. Major section spacing scales from 80px on mobile to 112px on tablet and 144px on wide screens.
 
+Landing copy follows StoryBrand. The merchant is the protagonist, scattered
+operational records are the problem, and Balanja is the practical guide that
+provides one clear workflow. Lead with concrete outcomes—faster service,
+controlled stock, searchable transactions, and clearer daily decisions—before
+describing features. CTAs name the next useful outcome, such as
+`Mulai kelola toko`; avoid generic actions. Never invent testimonials,
+customer counts, performance numbers, pricing, free access, guarantees,
+scarcity, or urgency that the product cannot substantiate.
+
 Use the existing semantic palette, 8px/12px/16px radius hierarchy, soft borders, near-black primary CTA, and bordered secondary CTA. Product visuals may use real current Balanja screenshots or faithful UI mockups built from the same tokens and information architecture. Hero mockups use a stable landscape frame, may sit over a restrained retail photograph, and share the header's outer page gutter plus inner 1152px container so their visible edges align exactly with the logo and authentication action. They must preserve readable product hierarchy without inventing capabilities. When a manual screenshot replaces a mockup, include intrinsic dimensions, descriptive alt text, and a muted failure fallback.
 
 Product items inside public POS mockups use a neutral placeholder instead of stock photography. Keep the everyday UMKM shelf-goods names—such as shampoo, snack, susu, air minum, tissue, and detergent—so the interface still reads as Indonesian retail. This rule applies to both catalog cards and cart-row thumbnails; the larger retail backdrop may remain photographic.

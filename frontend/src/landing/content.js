@@ -1,53 +1,53 @@
 export const navItems = [
   { label: "Fitur", href: "#fitur" },
-  { label: "Cara Kerja", href: "#cara-kerja" },
+  { label: "Cara kerja", href: "#cara-kerja" },
   { label: "FAQ", href: "#faq" },
 ];
 
 export const features = [
   {
-    title: "Kasir cepat",
-    description: "Cari produk, atur jumlah, dan selesaikan transaksi dari satu layar yang fokus.",
+    title: "Layani pembeli tanpa pindah layar",
+    description: "Cari atau pindai produk, atur jumlah, pilih pembayaran, lalu selesaikan penjualan dari satu layar kasir.",
     visual: "pos",
     size: "wide",
   },
   {
-    title: "Katalog produk",
-    description: "Kelola nama, kategori, harga, barcode, dan status produk dengan rapi.",
+    title: "Katalog yang mudah dirapikan",
+    description: "Simpan nama, kategori, harga, barcode, dan status produk agar kasir selalu memakai informasi yang sama.",
     visual: "products",
     size: "standard",
   },
   {
-    title: "Riwayat transaksi",
-    description: "Temukan kembali transaksi berdasarkan nomor, metode pembayaran, atau tanggal.",
+    title: "Temukan transaksi saat dibutuhkan",
+    description: "Cari kembali transaksi berdasarkan nomor, metode pembayaran, atau tanggal tanpa membongkar catatan terpisah.",
     visual: "transactions",
     size: "standard",
   },
   {
-    title: "Dashboard penjualan",
-    description: "Baca ringkasan performa toko dari data transaksi yang sudah selesai.",
+    title: "Lihat kondisi toko sekilas",
+    description: "Baca ringkasan penjualan dan stok menipis dari transaksi yang sudah selesai agar langkah berikutnya lebih jelas.",
     visual: "dashboard",
     size: "standard",
   },
   {
-    title: "Pemindaian barcode",
-    description: "Tambahkan produk ke keranjang langsung dari barcode saat melayani pembeli.",
+    title: "Scan barcode, kurangi salah pilih",
+    description: "Tambahkan produk yang tepat ke keranjang langsung dari barcode saat antrean sedang berjalan.",
     visual: "barcode",
     size: "standard",
   },
 ];
 
 export const workflowPoints = [
-  "Produk dan stok tersedia langsung untuk alur kasir.",
-  "Transaksi selesai tersimpan dalam riwayat.",
-  "Dashboard merangkum performa penjualan toko.",
+  "Masukkan produk, harga, barcode, dan stok awal.",
+  "Cari atau pindai produk, lalu selesaikan penjualan dari layar kasir.",
+  "Pantau transaksi, pergerakan stok, dan ringkasan penjualan dari data yang sama.",
 ];
 
 export const faqs = [
   {
-    question: "Untuk jenis usaha apa Balanja dibuat?",
+    question: "Apakah Balanja cocok untuk toko kecil?",
     answer:
-      "Balanja dirancang untuk operasional UMKM retail yang membutuhkan kasir, katalog produk, pencatatan stok, dan riwayat transaksi dalam satu aplikasi.",
+      "Ya. Balanja dirancang untuk UMKM retail yang membutuhkan kasir, katalog produk, pencatatan stok, dan riwayat transaksi dalam satu aplikasi yang mudah dipakai.",
   },
   {
     question: "Apakah Balanja mendukung pemindaian barcode?",
@@ -67,11 +67,11 @@ export const faqs = [
   {
     question: "Perangkat apa yang dapat digunakan?",
     answer:
-      "Balanja berjalan sebagai aplikasi web responsif. Gunakan browser modern pada komputer atau tablet dengan ukuran layar yang memadai untuk alur kasir.",
+      "Balanja berjalan sebagai aplikasi web responsif di komputer, tablet, dan smartphone modern. Untuk sesi kasir yang panjang, layar yang lebih besar tetap memberi ruang kerja yang lebih nyaman.",
   },
   {
     question: "Bagaimana cara mulai menggunakan Balanja?",
     answer:
-      "Masuk melalui halaman login, siapkan katalog dan stok produk, lalu buka layar POS untuk mulai mencatat penjualan.",
+      "Masuk ke aplikasi, siapkan produk dan stok awal, lalu buka layar Kasir untuk mencatat penjualan pertama.",
   },
 ];
