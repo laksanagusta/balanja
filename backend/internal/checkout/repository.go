@@ -1,6 +1,7 @@
 package checkout
 
 import (
+	"balanja/backend/internal/entitlement"
 	"balanja/backend/internal/platform/database"
 	"context"
 	"encoding/json"
@@ -34,8 +35,24 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 			return Result{}, ErrIdempotencyKeyReused
 		}
 		if transactionID != nil {
-			return loadExisting(ctx, tx, id.OrgID, *transactionID)
+			result, loadErr := loadExisting(ctx, tx, id.OrgID, *transactionID)
+			if loadErr != nil {
+				return Result{}, loadErr
+			}
+			record, loadErr := loadEntitlement(ctx, tx, id.OrgID, false)
+			if loadErr != nil {
+				return Result{}, loadErr
+			}
+			result.Entitlement = entitlement.Summarize(record)
+			return result, nil
 		}
+	}
+	entitlementRecord, err := loadEntitlement(ctx, tx, id.OrgID, true)
+	if err != nil {
+		return Result{}, err
+	}
+	if !entitlement.Summarize(entitlementRecord).CanCheckout {
+		return Result{}, ErrTransactionLimitReached
 	}
 	ids := make([]uuid.UUID, len(input.Items))
 	for i, item := range input.Items {
@@ -130,7 +147,80 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 	if _, err := tx.Exec(ctx, `update checkout_idempotency set transaction_id=$3 where org_id=$1 and idempotency_key=$2`, id.OrgID, key, result.Transaction.ID); err != nil {
 		return Result{}, fmt.Errorf("complete checkout idempotency: %w", err)
 	}
+	if err := tx.QueryRow(ctx, `
+		update organization_entitlements
+		set transactions_used=transactions_used+1,updated_at=now()
+		where org_id=$1
+		returning org_id,status,transaction_limit,transactions_used,support_reference
+	`, id.OrgID).Scan(
+		&entitlementRecord.OrgID,
+		&entitlementRecord.Status,
+		&entitlementRecord.TransactionLimit,
+		&entitlementRecord.TransactionsUsed,
+		&entitlementRecord.SupportReference,
+	); err != nil {
+		return Result{}, fmt.Errorf("increment entitlement usage: %w", err)
+	}
+	result.Entitlement = entitlement.Summarize(entitlementRecord)
+	if entitlementRecord.Status == entitlement.StatusTrial {
+		if event := transactionMilestone(entitlementRecord.TransactionsUsed); event != "" {
+			if _, err := tx.Exec(ctx, `
+				insert into entitlement_events (org_id,name)
+				values ($1,$2)
+				on conflict (org_id,name) where name like 'transaction_%' do nothing
+			`, id.OrgID, event); err != nil {
+				return Result{}, fmt.Errorf("record transaction milestone: %w", err)
+			}
+		}
+	}
 	return result, nil
+}
+
+func loadEntitlement(ctx context.Context, tx database.Tx, orgID string, lock bool) (entitlement.Record, error) {
+	if _, err := tx.Exec(ctx, `
+		insert into organization_entitlements (org_id,status,transaction_limit)
+		values ($1,'trial',50)
+		on conflict (org_id) do nothing
+	`, orgID); err != nil {
+		return entitlement.Record{}, fmt.Errorf("provision checkout entitlement: %w", err)
+	}
+	query := `
+		select org_id,status,transaction_limit,transactions_used,support_reference
+		from organization_entitlements
+		where org_id=$1`
+	if lock {
+		query += " for update"
+	}
+	var record entitlement.Record
+	if err := tx.QueryRow(ctx, query, orgID).Scan(
+		&record.OrgID,
+		&record.Status,
+		&record.TransactionLimit,
+		&record.TransactionsUsed,
+		&record.SupportReference,
+	); err != nil {
+		return entitlement.Record{}, fmt.Errorf("load checkout entitlement: %w", err)
+	}
+	return record, nil
+}
+
+func transactionMilestone(used int64) string {
+	switch used {
+	case 10, 25, 40, 45, 50:
+		return fmt.Sprintf("transaction_%d", used)
+	default:
+		return ""
+	}
+}
+
+func (PostgresRepository) RecordLimitRejected(ctx context.Context, tx database.Tx, orgID string) error {
+	if _, err := tx.Exec(ctx, `
+		insert into entitlement_events (org_id,name)
+		values ($1,'limit_rejected')
+	`, orgID); err != nil {
+		return fmt.Errorf("record rejected checkout: %w", err)
+	}
+	return nil
 }
 func loadExisting(ctx context.Context, tx database.Tx, org string, id uuid.UUID) (Result, error) {
 	var result Result

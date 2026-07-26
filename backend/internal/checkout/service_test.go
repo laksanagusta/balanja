@@ -84,3 +84,7 @@ func (f *fakeCheckoutRepository) Execute(_ context.Context, _ database.Tx, _ dat
 	f.fingerprint = fingerprint
 	return Result{}, nil
 }
+
+func (f *fakeCheckoutRepository) RecordLimitRejected(_ context.Context, _ database.Tx, _ string) error {
+	return nil
+}

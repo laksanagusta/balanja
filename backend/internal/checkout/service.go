@@ -12,12 +12,13 @@ import (
 )
 
 var (
-	ErrInvalidCheckout      = errors.New("invalid checkout")
-	ErrIdempotencyKeyReused = errors.New("idempotency key reused")
-	ErrProductNotFound      = errors.New("product not found")
-	ErrProductInactive      = errors.New("product inactive")
-	ErrInsufficientStock    = errors.New("insufficient stock")
-	ErrInsufficientCash     = errors.New("insufficient cash")
+	ErrInvalidCheckout         = errors.New("invalid checkout")
+	ErrIdempotencyKeyReused    = errors.New("idempotency key reused")
+	ErrProductNotFound         = errors.New("product not found")
+	ErrProductInactive         = errors.New("product inactive")
+	ErrInsufficientStock       = errors.New("insufficient stock")
+	ErrInsufficientCash        = errors.New("insufficient cash")
+	ErrTransactionLimitReached = errors.New("transaction limit reached")
 )
 
 type Runner interface {
@@ -25,6 +26,7 @@ type Runner interface {
 }
 type Repository interface {
 	Execute(context.Context, database.Tx, database.Identity, string, string, Input) (Result, error)
+	RecordLimitRejected(context.Context, database.Tx, string) error
 }
 type Service struct {
 	runner     Runner
@@ -67,6 +69,11 @@ func (s *Service) Checkout(ctx context.Context, id database.Identity, key string
 		result, e = s.repository.Execute(ctx, tx, id, key, fingerprint, input)
 		return e
 	})
+	if errors.Is(err, ErrTransactionLimitReached) {
+		_ = s.runner.Run(ctx, id, func(tx database.Tx) error {
+			return s.repository.RecordLimitRejected(ctx, tx, id.OrgID)
+		})
+	}
 	return result, err
 }
 func validKey(key string) bool {
