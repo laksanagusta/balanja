@@ -14,6 +14,10 @@ Master-data lists use one primary bordered surface with flat rows and quiet divi
 
 Balanja is a retail point-of-sale surface for Indonesian UMKM shops. The interface should stay simple, dense, quiet, and fast for repeated cashier work: white surfaces, soft borders, compact controls, product-image cards, clear stock signals, and near-black primary checkout actions.
 
+### Brand identity
+
+The favicon is the compact brand mark: an abstract isometric retail volume made from exactly three uninterrupted architectural planes inside a 32px square with an 8px corner radius and 2px optical inset. Keep `public/favicon.svg` as the active browser favicon so it remains crisp at tab sizes. The volume contains no door, window, letterform, or text and stays intentionally restrained—no gradient, shadow, border, literal shopping symbol, or fine detail. `favicon-soft.svg` and `favicon-inverse.svg` are approved tonal explorations of the same geometry; variants may change only the neutral plane and background colors, never the silhouette, coordinates, or number of planes. The mark complements the shared `Balanja` wordmark but does not replace it in application headers.
+
 ## Tokens
 
 Color tokens live in `src/index.css` through Tailwind v4 `@theme`: `app-bg`, `surface`, `surface-muted`, `border`, `text`, `text-muted`, `accent`, `danger`, `success`, `warning`, and `focus`.
