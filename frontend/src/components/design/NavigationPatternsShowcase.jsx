@@ -17,7 +17,8 @@ export default function NavigationPatternsShowcase() {
           Dashboard is home, Kasir is the explicit sales workspace, and each supporting destination is grouped by the work it contains. Produk uses the tag icon while Stok uses the archive-box icon, so the destinations remain distinguishable in the collapsed 72px icon rail.
         </p>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
-          The Balanja wordmark uses an 800 weight consistently in public, desktop, mobile, and overlay navigation headers.
+          Public and authenticated headers render the same shared Logo component, preserving identical Manrope type,
+          800 weight, capitalization, size, and tracking across landing, sidebar, mobile, and overlay navigation.
         </p>
       </div>
 

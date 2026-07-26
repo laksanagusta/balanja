@@ -45,9 +45,9 @@ test("app shell uses dashboard as home and renders grouped localized navigation"
   assert.match(source, /group\.label/);
   assert.doesNotMatch(source, /systemNavItems|SystemNavigation/);
   assert.match(source, /aria-current=\{pathname === path \? "page" : undefined\}/);
-  assert.equal(source.match(/font-extrabold lowercase text-text/g)?.length, 2);
-  assert.match(source, /text-base font-extrabold/);
-  assert.doesNotMatch(source, /font-(?:semi)?bold lowercase text-text/);
+  assert.match(source, /import \{ Logo, navGroups, routes \} from "\.\.\/shared\.jsx"/);
+  assert.equal(source.match(/<Logo \/>/g)?.length, 3);
+  assert.doesNotMatch(source, />\s*balanja\s*</i);
   assert.match(shared, /text-lg font-extrabold tracking-normal text-text/);
 });
 
