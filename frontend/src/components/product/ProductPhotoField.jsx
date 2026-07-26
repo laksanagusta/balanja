@@ -29,7 +29,7 @@ export function ProductPhotoField({ product, previewURL, filename, error, disabl
           <p className="truncate text-sm font-medium text-text">
             {visibleFilename || "Belum ada foto"}
           </p>
-          <p className="text-xs text-text-muted">JPG, PNG, atau WebP. Maksimal 5 MB.</p>
+          <p className="text-xs text-text-muted">JPG, PNG, atau WebP. Maksimal 5 MB, otomatis dikompres hingga 200 KB.</p>
         </div>
         <label
           htmlFor={id}

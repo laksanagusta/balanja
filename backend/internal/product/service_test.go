@@ -7,6 +7,7 @@ import (
 	"errors"
 	"image"
 	"image/color"
+	"image/jpeg"
 	"image/png"
 	"slices"
 	"testing"
@@ -172,15 +173,52 @@ func TestValidateProductImageRejectsOversizedFile(t *testing.T) {
 	}
 }
 
-func TestValidateProductImageAcceptsPNG(t *testing.T) {
+func TestValidateProductImageCompressesPNGToJPEG(t *testing.T) {
 	t.Parallel()
 
 	validated, err := validateProductImage(ImageUpload{Filename: "photo.fake", Data: validPNG(t)})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if validated.ContentType != "image/png" || validated.Extension != "png" {
+	if validated.ContentType != "image/jpeg" || validated.Extension != "jpg" {
 		t.Fatalf("validated image = %#v", validated)
+	}
+	if len(validated.Data) > MaxStoredProductImageBytes {
+		t.Fatalf("compressed image size = %d, want <= %d", len(validated.Data), MaxStoredProductImageBytes)
+	}
+	if _, format, err := image.Decode(bytes.NewReader(validated.Data)); err != nil || format != "jpeg" {
+		t.Fatalf("compressed image format = %q, error = %v", format, err)
+	}
+}
+
+func TestValidateProductImageShrinksLargeDetailedImageBelowStorageLimit(t *testing.T) {
+	t.Parallel()
+
+	source := image.NewRGBA(image.Rect(0, 0, 1600, 1200))
+	for y := 0; y < source.Bounds().Dy(); y++ {
+		for x := 0; x < source.Bounds().Dx(); x++ {
+			source.SetRGBA(x, y, color.RGBA{
+				R: uint8((x*31 + y*17) % 256),
+				G: uint8((x*13 + y*47) % 256),
+				B: uint8((x*61 + y*7) % 256),
+				A: 255,
+			})
+		}
+	}
+	var upload bytes.Buffer
+	if err := jpeg.Encode(&upload, source, &jpeg.Options{Quality: 100}); err != nil {
+		t.Fatal(err)
+	}
+	if upload.Len() > MaxProductImageBytes {
+		t.Fatalf("test upload size = %d, want <= %d", upload.Len(), MaxProductImageBytes)
+	}
+
+	validated, err := validateProductImage(ImageUpload{Filename: "detailed.jpg", Data: upload.Bytes()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(validated.Data) > MaxStoredProductImageBytes {
+		t.Fatalf("compressed image size = %d, want <= %d", len(validated.Data), MaxStoredProductImageBytes)
 	}
 }
 
