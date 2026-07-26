@@ -156,9 +156,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
   }, [api]);
 
   React.useEffect(() => {
-    const controller = new AbortController();
-    loadEntitlement({ signal: controller.signal });
-    return () => controller.abort();
+    loadEntitlement();
   }, [loadEntitlement]);
 
   const mergeMasterItem = React.useCallback((setter, ref, item) => {

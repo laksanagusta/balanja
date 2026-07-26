@@ -16,6 +16,12 @@ test("runtime POS components live outside showcase modules", async () => {
   assert.match(cashFeedback, /export function CashPaymentFeedback/);
 });
 
+test("mobile checkout can remain inspectable when final submission is plan-blocked", async () => {
+  const page = await readFile(new URL("../../pages/RetailPosPage.jsx", import.meta.url), "utf8");
+  assert.match(page, /const mobilePanelDisabled = store\.cart\.length === 0 \|\| checkoutPending/);
+  assert.match(page, /const checkoutDisabled = mobilePanelDisabled \|\| planBlocksCheckout/);
+});
+
 test("POS product card is an explicit variant", async () => {
   const source = await readFile(new URL("./ProductCard.jsx", import.meta.url), "utf8");
 
