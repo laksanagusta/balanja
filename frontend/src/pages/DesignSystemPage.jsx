@@ -26,6 +26,7 @@ import ProductPhotoShowcase from "../components/design/ProductPhotoShowcase.jsx"
 import NavigationPatternsShowcase from "../components/design/NavigationPatternsShowcase.jsx";
 import MasterDataPatternsShowcase from "../components/design/MasterDataPatternsShowcase.jsx";
 import OrganizationOnboardingShowcase from "../components/design/OrganizationOnboardingShowcase.jsx";
+import BrandPatternsShowcase from "../components/design/BrandPatternsShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
@@ -57,6 +58,7 @@ export default function DesignSystemPage({ onNavigate }) {
             operational spacing for UMKM cashier workflows.
           </p>
         </div>
+        <BrandPatternsShowcase />
         <TokenGrid />
         <TypographyPanel />
         <MarketingPatternsShowcase />
