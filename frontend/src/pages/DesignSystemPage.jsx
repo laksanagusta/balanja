@@ -58,6 +58,23 @@ export default function DesignSystemPage({ onNavigate }) {
             operational spacing for UMKM cashier workflows.
           </p>
         </div>
+        <section className="rounded-panel border border-border bg-surface p-4 shadow-low">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Brand identity</p>
+          <div className="mt-4 flex items-start gap-4">
+            <div className="flex shrink-0 gap-2" aria-label="Approved favicon variations">
+              <img src="/favicon.svg" alt="Primary dark favicon" className="size-12" />
+              <img src="/favicon-soft.svg" alt="Soft dark favicon" className="size-12" />
+              <img src="/favicon-inverse.svg" alt="Inverse light favicon" className="size-12" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-lg font-semibold text-text">Isometric Balanja mark variations</h3>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-text-muted">
+                The active browser mark uses the primary dark treatment. Soft and inverse treatments vary only
+                the neutral tones; all versions keep the same uninterrupted three-plane geometry without doors or text.
+              </p>
+            </div>
+          </div>
+        </section>
         <TokenGrid />
         <TypographyPanel />
         <MarketingPatternsShowcase />
