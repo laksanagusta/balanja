@@ -72,13 +72,11 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const saved = await store.updateSettings({
+      await store.updateSettings({
         ...draft,
         taxRate: Number(draft.taxRate) || 0,
         taxEnabled: Boolean(draft.taxEnabled),
       });
-      if (saved) toast.success("Settings saved");
-      else toast.error("Failed to save settings");
     } finally {
       setIsSaving(false);
     }
@@ -119,13 +117,13 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-text">Profil toko</p>
-                          <p className="text-xs text-text-muted">Used on cashier screens and transaction context.</p>
+                          <p className="text-xs text-text-muted">Digunakan di layar kasir dan konteks transaksi.</p>
                         </div>
                       </div>
                     </div>
 
                     <Input
-                      label="Store name"
+                      label="Nama toko"
                       placeholder="Toko Balanja"
                       inputProps={{
                         value: draft.storeName,
@@ -135,7 +133,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                       }}
                     />
                     <Input
-                      label="Store address"
+                      label="Alamat toko"
                       placeholder="Jl. UMKM No. 1"
                       inputProps={{
                         value: draft.storeAddress,
@@ -144,7 +142,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                       }}
                     />
                     <Input
-                      label="QRIS label"
+                      label="Label QRIS"
                       placeholder="QRIS Toko Balanja"
                       inputProps={{
                         value: draft.qrisLabel,
@@ -155,7 +153,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
 
                     <div className="grid gap-3 rounded-card border border-border bg-surface-muted p-4">
                       <label className="flex min-h-11 min-w-0 items-center justify-between gap-4 text-sm font-semibold text-text">
-                        Enable tax
+                        Aktifkan pajak
                         <input
                           type="checkbox"
                           checked={draft.taxEnabled}
@@ -164,7 +162,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                         />
                       </label>
                       <Input
-                        label="Tax rate"
+                        label="Tarif pajak"
                         placeholder="11"
                         inputProps={{
                           value: draft.taxRate,
@@ -192,7 +190,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                     <div className="settings-form-actions">
                       <Button type="submit" variant="primary" disabled={isSaving}>
                         <Icon name="check" className="size-4" />
-                        {isSaving ? "Saving..." : "Save settings"}
+                        {isSaving ? "Menyimpan..." : "Simpan pengaturan"}
                       </Button>
                     </div>
                   </form>

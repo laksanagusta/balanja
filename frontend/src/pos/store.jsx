@@ -303,7 +303,8 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
 
   const updateSettings = React.useCallback(async (input) => {
     try {
-      const saved = await api.updateSettings({ ...input, taxRate: Number(input.taxRate) || 0, taxEnabled: Boolean(input.taxEnabled) });
+      const { updatedAt, ...payload } = input;
+      const saved = await api.updateSettings({ ...payload, taxRate: Number(payload.taxRate) || 0, taxEnabled: Boolean(payload.taxEnabled) });
       settingsRef.current = saved;
       loadedRef.current = { ...loadedRef.current, settings: true };
       setSettings(saved);

@@ -48,7 +48,7 @@ test("cart controls and payment choices stay visually compact with coarse-pointe
   assert.match(product, /className="product-add-button pos-touch-target"/);
   assert.match(product, /<Button variant="primary" className="product-add-button pos-touch-target"/);
   assert.match(product, /className="grid gap-2 px-2 py-3"/);
-  assert.match(payment, /className="pos-touch-target gap-1\.5"/);
+  assert.match(payment, /className="pos-touch-target w-full justify-center gap-1\.5"/);
   assert.doesNotMatch(cart, /size-11|min-h-11|h-11/);
   assert.doesNotMatch(product, /product-add-button h-11/);
   assert.doesNotMatch(payment, /className="h-11 gap-1\.5"/);
