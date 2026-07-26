@@ -16,6 +16,9 @@ export default function NavigationPatternsShowcase() {
         <p className="mt-1 max-w-3xl text-sm leading-6 text-text-muted">
           Dashboard is home, Kasir is the explicit sales workspace, and each supporting destination is grouped by the work it contains. Produk uses the tag icon while Stok uses the archive-box icon, so the destinations remain distinguishable in the collapsed 72px icon rail.
         </p>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
+          The Balanja wordmark uses bold weight consistently in desktop, mobile, and overlay navigation headers.
+        </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">

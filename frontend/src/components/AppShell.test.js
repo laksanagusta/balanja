@@ -42,6 +42,8 @@ test("app shell uses dashboard as home and renders grouped localized navigation"
   assert.match(source, /group\.label/);
   assert.doesNotMatch(source, /systemNavItems|SystemNavigation/);
   assert.match(source, /aria-current=\{pathname === path \? "page" : undefined\}/);
+  assert.equal(source.match(/font-bold lowercase text-text/g)?.length, 2);
+  assert.doesNotMatch(source, /font-semibold lowercase text-text/);
 });
 
 test("settings lives inside the shared account popover", async () => {
