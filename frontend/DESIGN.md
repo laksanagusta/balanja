@@ -134,7 +134,14 @@ The public footer contains brand context and product navigation only; do not dup
 
 Public buttons, links, and compact header actions use at least a 44px touch target and immediate press feedback on pointer-down. A compact header action may keep a 32px visual height only when a transparent hit area expands its clickable footprint to 44px. Navigation links must reuse the shared press transition without a competing transition utility. Programmatic anchor scrolling checks `prefers-reduced-motion` and becomes immediate when reduction is requested. Translucent public chrome becomes solid under `prefers-reduced-transparency`, while `prefers-contrast: more` uses an opaque surface and defined border. Decorative product mockups stay `aria-hidden` and use neutral containers rather than introducing nested page landmarks such as `main`.
 
-The login page lives as a centered sign-in surface without a top bar. It keeps the SignIn card and signed-in confirmation centered in the viewport, with no logo rail or back button in the page chrome.
+The login page lives as a centered sign-in surface without a top bar. It uses
+dynamic viewport height instead of `100vh`, 12px mobile page insets, and a
+full-width container capped at 400px. Clerk `rootBox`, `cardBox`, and `card`
+must resolve to the available inline size so the page has no horizontal
+overflow from 320px upward. Keep a single Clerk card as the only bordered and
+elevated surface—never wrap it in a second decorative card. The signed-in
+confirmation follows the same compact mobile-first geometry, with no logo rail
+or back button in the page chrome.
 
 Public hero reveals use the shared strong ease over 420ms with short stagger delays no greater than 180ms, without retaining `will-change` after entry. FAQ answers remain mounted and expand with a brief opacity and grid-track transition while a single plus indicator morphs into a minus; reduced-motion contexts remove both transitions. Product mockups keep interface copy in Indonesian and render item imagery as token-based neutral placeholders.
 
