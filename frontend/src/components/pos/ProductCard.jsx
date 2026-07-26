@@ -49,7 +49,7 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
           </div>
         </div>
       </div>
-      <div className="grid gap-2 px-2 py-3">
+      <div className="product-card-content grid gap-2 px-2 py-3">
         <div className="grid content-start gap-1.5">
           <h3 className="line-clamp-1 text-sm font-semibold leading-tight text-text">{product.name}</h3>
           <p className="text-xs font-medium text-text-muted">
