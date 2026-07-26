@@ -39,6 +39,8 @@ func TestCheckoutSerializesFinalStock(t *testing.T) {
 		"000008_server_list_indexes.up.sql",
 		"000009_product_image_key.up.sql",
 		"000010_category_unit_master_data.up.sql",
+		"000011_stock_movement_user_name.up.sql",
+		"000012_organization_entitlements.up.sql",
 	} {
 		if _, err := admin.Exec(ctx, readMigration(t, migration)); err != nil {
 			t.Fatalf("apply migration %s: %v", migration, err)
