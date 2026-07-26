@@ -82,9 +82,9 @@ Cash feedback uses one compact live region beneath the cash input. A sufficient 
 
 Dashboard is the stable authenticated home: signed-in `/`, unknown authenticated paths, and the Balanja brand all resolve to `/dashboard`. The cashier workspace remains at `/pos` and uses the direct Indonesian label `Kasir` rather than the technical abbreviation `POS`.
 
-The Balanja wordmark uses bold weight in every header surface: public
+The Balanja wordmark uses an 800 weight in every header surface: public
 navigation, expanded desktop sidebar, compact mobile header, and mobile
-navigation overlay. Do not reduce header branding to semibold.
+navigation overlay. Do not reduce header branding to 600 or 700.
 
 Operational navigation uses visible groups and consistent Indonesian labels: `Ringkasan` contains Dashboard; `Operasional` contains Kasir, Produk, and Stok; and `Catatan` contains Transaksi. On desktop, a labeled 16px panel-left icon control collapses the 236px sidebar into a 72px icon rail and rotates between its expanded and collapsed states; every icon retains its accessible name and tooltip, the active destination remains visible, and the account trigger remains available. Pengaturan lives inside the account popover rather than competing with daily destinations in the sidebar. Navigation selection uses a quiet neutral surface, never the primary action treatment reserved for the single forward or commit action in its local region.
 
