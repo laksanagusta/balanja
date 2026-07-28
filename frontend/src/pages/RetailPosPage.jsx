@@ -1,4 +1,6 @@
 import React from "react";
+import { animate } from "motion";
+import { useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import BarcodeScanner from "../components/BarcodeScanner.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
@@ -9,7 +11,14 @@ import QuotaStatus from "../components/entitlements/QuotaStatus.jsx";
 import { MobileCheckoutPanel } from "../components/pos/MobileCheckoutPanel.jsx";
 import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { ProductCatalog } from "../components/pos/ProductCatalog.jsx";
-import { Badge, Button, Dialog, Icon, Input } from "../components/primitives.jsx";
+import {
+  Badge,
+  Button,
+  Dialog,
+  FloatingPopover,
+  Icon,
+  Input,
+} from "../components/primitives.jsx";
 import { RetailPosSkeleton } from "../components/page-loading.jsx";
 import { calculateCartTotals } from "../pos/domain.js";
 import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
@@ -18,8 +27,10 @@ import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
 import { formatPrice } from "../shared.jsx";
 import { upgradeContacts } from "../entitlements/contact-links.js";
 import {
+  cartSwipeVelocity,
   cashPaymentState,
-  resistedCartSwipeDistance,
+  isCartFocusCandidate,
+  resistedCartTranslation,
   shouldDismissCartSwipe,
 } from "./retail-pos-utils.js";
 
@@ -27,6 +38,8 @@ const formatThousands = (value) => {
   if (!value) return value;
   return new Intl.NumberFormat("id-ID").format(Number(value));
 };
+
+const formatCartRowPrice = (value) => formatPrice(value).replace(/^Rp/, "");
 
 const CART_EXIT_MS = 200;
 const FOCUSABLE_SELECTOR = [
@@ -38,21 +51,47 @@ const FOCUSABLE_SELECTOR = [
 
 function focusableElements(container) {
   return container
-    ? Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter((element) => element.getClientRects().length > 0)
+    ? Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(isCartFocusCandidate)
     : [];
+}
+
+function getCartTranslateX(element) {
+  if (!element || typeof window === "undefined") return 0;
+  const transform = window.getComputedStyle(element).transform;
+  if (!transform || transform === "none") return 0;
+
+  if (typeof DOMMatrixReadOnly === "function") {
+    try {
+      return new DOMMatrixReadOnly(transform).m41;
+    } catch {
+      // Fall through to the matrix parser for older WebViews.
+    }
+  }
+
+  const matrix3d = transform.match(/^matrix3d\((.+)\)$/);
+  if (matrix3d) return Number(matrix3d[1].split(",")[12]) || 0;
+  const matrix2d = transform.match(/^matrix\((.+)\)$/);
+  return matrix2d ? Number(matrix2d[1].split(",")[4]) || 0 : 0;
 }
 
 export default function RetailPosPage() {
   const store = usePOSStore();
+  const shouldReduceMotion = useReducedMotion();
+  const retailPosRef = React.useRef(null);
   const searchInputRef = React.useRef(null);
   const categoryTabsRef = React.useRef(null);
   const categoryTabRefs = React.useRef(new Map());
   const cartTriggerRef = React.useRef(null);
   const cartCloseRef = React.useRef(null);
+  const cartMenuTriggerRef = React.useRef(null);
+  const cartMenuRef = React.useRef(null);
+  const cartMenuItemRef = React.useRef(null);
   const cartPaneRef = React.useRef(null);
   const cartScrimRef = React.useRef(null);
   const cartReturnFocusRef = React.useRef(null);
   const cartCloseTimerRef = React.useRef(null);
+  const cartAnimationRef = React.useRef(null);
+  const cartAnimationTargetRef = React.useRef(null);
   const cartDragRef = React.useRef(null);
   const mobileCheckoutTriggerRef = React.useRef(null);
   const [categoryIndicator, setCategoryIndicator] = React.useState({ left: 0, width: 0, ready: false });
@@ -61,10 +100,12 @@ export default function RetailPosPage() {
   const [paymentMethod, setPaymentMethod] = React.useState("cash");
   const [cashReceived, setCashReceived] = React.useState("");
   const [clearCartOpen, setClearCartOpen] = React.useState(false);
+  const [cartMenuOpen, setCartMenuOpen] = React.useState(false);
   const [isPageLoading, setIsPageLoading] = React.useState(() => !(store.loaded.products && store.loaded.settings));
   const [checkoutPending, setCheckoutPending] = React.useState(false);
   const [cashError, setCashError] = React.useState("");
   const [scannerOpen, setScannerOpen] = React.useState(false);
+  const [isCompactCart, setIsCompactCart] = React.useState(false);
   const [cartExpanded, setCartExpanded] = React.useState(false);
   const [cartPresent, setCartPresent] = React.useState(false);
   const [mobileCheckoutExpanded, setMobileCheckoutExpanded] = React.useState(false);
@@ -146,8 +187,15 @@ export default function RetailPosPage() {
     if (store.cart.length === 0) return;
     store.clearCart();
     setMobileCheckoutExpanded(false);
+    setCartMenuOpen(false);
     setClearCartOpen(false);
     toast.success("Keranjang dikosongkan");
+  };
+
+  const requestClearCart = () => {
+    setCartMenuOpen(false);
+    cartMenuTriggerRef.current?.focus({ preventScroll: true });
+    setClearCartOpen(true);
   };
 
   const resetCartDragStyles = React.useCallback(() => {
@@ -156,63 +204,167 @@ export default function RetailPosPage() {
     cartScrimRef.current?.style.removeProperty("opacity");
   }, []);
 
+  const stopCartAnimation = React.useCallback(() => {
+    cartAnimationRef.current?.stop();
+    cartAnimationRef.current = null;
+    cartAnimationTargetRef.current = null;
+  }, []);
+
+  const applyCartTranslation = React.useCallback((translation, width) => {
+    const pane = cartPaneRef.current;
+    if (!pane) return;
+    const dimension = Math.max(Number(width) || pane.getBoundingClientRect().width || 1, 1);
+    pane.style.transition = "none";
+    pane.style.transform = `translate3d(${translation}px, 0, 0)`;
+    if (cartScrimRef.current) {
+      cartScrimRef.current.style.opacity = String(
+        Math.max(0, Math.min(1, 1 - translation / dimension)),
+      );
+    }
+  }, []);
+
   const finishCartClose = React.useCallback(() => {
     window.clearTimeout(cartCloseTimerRef.current);
     resetCartDragStyles();
+    setCartExpanded(false);
     setCartPresent(false);
     cartReturnFocusRef.current?.focus?.({ preventScroll: true });
     cartReturnFocusRef.current = null;
   }, [resetCartDragStyles]);
 
+  const settleCart = React.useCallback(({
+    open,
+    velocity = 0,
+    from,
+  }) => {
+    const pane = cartPaneRef.current;
+    if (!pane) return;
+    const width = Math.max(pane.getBoundingClientRect().width, 1);
+    const currentX = Number.isFinite(from) ? from : getCartTranslateX(pane);
+    const targetX = open ? 0 : width;
+
+    stopCartAnimation();
+    cartAnimationTargetRef.current = open;
+    if (open) setCartExpanded(true);
+    cartAnimationRef.current = animate(currentX, targetX, {
+      type: "spring",
+      stiffness: 340,
+      damping: 34,
+      mass: 0.86,
+      velocity,
+      onUpdate: (latest) => applyCartTranslation(latest, width),
+      onComplete: () => {
+        cartAnimationRef.current = null;
+        cartAnimationTargetRef.current = null;
+        resetCartDragStyles();
+        if (open) {
+          setCartExpanded(true);
+        } else {
+          finishCartClose();
+        }
+      },
+    });
+  }, [applyCartTranslation, finishCartClose, resetCartDragStyles, stopCartAnimation]);
+
   const closeCart = React.useCallback(() => {
     setMobileCheckoutExpanded(false);
-    setCartExpanded(false);
+    setCartMenuOpen(false);
     window.clearTimeout(cartCloseTimerRef.current);
-    cartCloseTimerRef.current = window.setTimeout(finishCartClose, CART_EXIT_MS);
-  }, [finishCartClose]);
+    if (shouldReduceMotion) {
+      stopCartAnimation();
+      setCartExpanded(false);
+      cartCloseTimerRef.current = window.setTimeout(finishCartClose, CART_EXIT_MS);
+      return;
+    }
+    settleCart({ open: false });
+  }, [finishCartClose, settleCart, shouldReduceMotion, stopCartAnimation]);
 
   const openCart = React.useCallback(() => {
     window.clearTimeout(cartCloseTimerRef.current);
+    stopCartAnimation();
     resetCartDragStyles();
     setMobileCheckoutExpanded(false);
     cartReturnFocusRef.current = document.activeElement;
     setCartPresent(true);
     setCartExpanded(true);
-    window.requestAnimationFrame(() => cartCloseRef.current?.focus({ preventScroll: true }));
-  }, [resetCartDragStyles]);
+    window.requestAnimationFrame(() => {
+      const pane = cartPaneRef.current;
+      if (!shouldReduceMotion && pane) {
+        const width = Math.max(pane.getBoundingClientRect().width, 1);
+        applyCartTranslation(width, width);
+        settleCart({ open: true, from: width });
+      }
+      cartCloseRef.current?.focus({ preventScroll: true });
+    });
+  }, [
+    applyCartTranslation,
+    resetCartDragStyles,
+    settleCart,
+    shouldReduceMotion,
+    stopCartAnimation,
+  ]);
 
   const handleCartPointerDown = React.useCallback((event) => {
+    if (shouldReduceMotion) return;
     const pane = cartPaneRef.current;
-    if (!cartExpanded || !pane || cartDragRef.current || event.target.closest("button")) return;
+    if (!isCompactCart || !cartPresent || !pane || cartDragRef.current || event.target.closest("button")) return;
     if (window.getComputedStyle(pane).position !== "absolute") return;
     const bounds = pane.getBoundingClientRect();
+    const targetOpen = cartAnimationTargetRef.current ?? cartExpanded;
+    const currentX = getCartTranslateX(pane);
+    stopCartAnimation();
     event.currentTarget.setPointerCapture(event.pointerId);
-    pane.style.transition = "none";
+    applyCartTranslation(currentX, bounds.width);
     cartDragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
-      lastX: event.clientX,
-      lastTime: event.timeStamp,
-      velocity: 0,
-      distance: 0,
+      startY: event.clientY,
+      startTranslation: currentX,
+      translation: currentX,
+      targetOpen,
+      committed: false,
+      moved: false,
+      samples: [{ x: event.clientX, time: event.timeStamp }],
       width: bounds.width,
     };
-  }, [cartExpanded]);
+  }, [
+    applyCartTranslation,
+    cartExpanded,
+    cartPresent,
+    isCompactCart,
+    shouldReduceMotion,
+    stopCartAnimation,
+  ]);
 
   const handleCartPointerMove = React.useCallback((event) => {
     const drag = cartDragRef.current;
     const pane = cartPaneRef.current;
     if (!drag || drag.pointerId !== event.pointerId || !pane) return;
-    const elapsed = Math.max(event.timeStamp - drag.lastTime, 1);
-    drag.velocity = (event.clientX - drag.lastX) / elapsed;
-    drag.lastX = event.clientX;
-    drag.lastTime = event.timeStamp;
-    drag.distance = resistedCartSwipeDistance(event.clientX - drag.startX, drag.width);
-    pane.style.transform = `translate3d(${drag.distance}px, 0, 0)`;
-    if (cartScrimRef.current) {
-      cartScrimRef.current.style.opacity = String(Math.max(0, 1 - Math.max(drag.distance, 0) / drag.width));
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+
+    if (!drag.committed) {
+      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 8) return;
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        cartDragRef.current = null;
+        settleCart({ open: drag.targetOpen, from: drag.translation });
+        return;
+      }
+      drag.committed = true;
     }
-  }, []);
+
+    drag.moved = true;
+    drag.samples.push({ x: event.clientX, time: event.timeStamp });
+    if (drag.samples.length > 8) drag.samples.shift();
+    drag.translation = resistedCartTranslation(
+      drag.startTranslation + deltaX,
+      drag.width,
+    );
+    applyCartTranslation(drag.translation, drag.width);
+  }, [applyCartTranslation, settleCart]);
 
   const releaseCartPointer = React.useCallback((event, cancelled = false) => {
     const drag = cartDragRef.current;
@@ -221,14 +373,23 @@ export default function RetailPosPage() {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     cartDragRef.current = null;
-    const dismiss = !cancelled && shouldDismissCartSwipe({
-      distance: drag.distance,
-      velocity: drag.velocity,
+    const samples = [
+      ...drag.samples,
+      { x: event.clientX, time: event.timeStamp },
+    ];
+    const velocity = cartSwipeVelocity(samples);
+    const dismiss = shouldDismissCartSwipe({
+      distance: drag.translation,
+      velocity: velocity / 1000,
       width: drag.width,
     });
-    if (dismiss) closeCart();
-    window.requestAnimationFrame(resetCartDragStyles);
-  }, [closeCart, resetCartDragStyles]);
+    const open = cancelled || !drag.moved ? drag.targetOpen : !dismiss;
+    settleCart({
+      open,
+      velocity,
+      from: drag.translation,
+    });
+  }, [settleCart]);
 
   const updateCategoryIndicator = React.useCallback(() => {
     const activeTab = categoryTabRefs.current.get(category);
@@ -240,6 +401,41 @@ export default function RetailPosPage() {
         : next;
     });
   }, [category]);
+
+  React.useLayoutEffect(() => {
+    if (isInitialLoad) return undefined;
+    const node = retailPosRef.current;
+    if (!node) return undefined;
+
+    const updateCartMode = () => {
+      setIsCompactCart(node.getBoundingClientRect().width <= 639);
+    };
+    updateCartMode();
+
+    const observer = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(updateCartMode);
+    observer?.observe(node);
+    window.addEventListener("resize", updateCartMode);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateCartMode);
+    };
+  }, [isInitialLoad]);
+
+  React.useLayoutEffect(() => {
+    if (!isCompactCart) {
+      window.clearTimeout(cartCloseTimerRef.current);
+      cartDragRef.current = null;
+      stopCartAnimation();
+      resetCartDragStyles();
+      setMobileCheckoutExpanded(false);
+      setCartExpanded(false);
+      setCartPresent(false);
+      cartReturnFocusRef.current = null;
+    }
+  }, [isCompactCart, resetCartDragStyles, stopCartAnimation]);
 
   React.useLayoutEffect(() => {
     if (isInitialLoad) return undefined;
@@ -275,8 +471,46 @@ export default function RetailPosPage() {
   }, []);
 
   React.useEffect(() => {
-    if (!cartExpanded) return undefined;
+    if (!cartMenuOpen) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      cartMenuItemRef.current?.focus({ preventScroll: true });
+    });
+    const closeOnOutsidePress = (event) => {
+      if (
+        !cartMenuTriggerRef.current?.contains(event.target) &&
+        !cartMenuRef.current?.contains(event.target)
+      ) {
+        setCartMenuOpen(false);
+      }
+    };
+    const handleMenuKeyDown = (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (cartMenuOpen) {
+        setCartMenuOpen(false);
+        cartMenuTriggerRef.current?.focus({ preventScroll: true });
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    document.addEventListener("keydown", handleMenuKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("pointerdown", closeOnOutsidePress);
+      document.removeEventListener("keydown", handleMenuKeyDown);
+    };
+  }, [cartMenuOpen]);
+
+  React.useEffect(() => {
+    if (store.cart.length === 0) setCartMenuOpen(false);
+  }, [store.cart.length]);
+
+  React.useEffect(() => {
+    if (!(isCompactCart && cartExpanded)) return undefined;
     const handleCartKeyDown = (event) => {
+      if (clearCartOpen) return;
+      if (cartMenuOpen) return;
       if (event.key === "Escape") {
         event.preventDefault();
         if (mobileCheckoutExpanded) {
@@ -302,9 +536,19 @@ export default function RetailPosPage() {
     };
     window.addEventListener("keydown", handleCartKeyDown);
     return () => window.removeEventListener("keydown", handleCartKeyDown);
-  }, [cartExpanded, closeCart, mobileCheckoutExpanded]);
+  }, [
+    cartExpanded,
+    cartMenuOpen,
+    clearCartOpen,
+    closeCart,
+    isCompactCart,
+    mobileCheckoutExpanded,
+  ]);
 
-  React.useEffect(() => () => window.clearTimeout(cartCloseTimerRef.current), []);
+  React.useEffect(() => () => {
+    window.clearTimeout(cartCloseTimerRef.current);
+    cartAnimationRef.current?.stop();
+  }, []);
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -332,9 +576,9 @@ export default function RetailPosPage() {
   }
 
   return (
-    <div className="retail-pos-query h-full min-h-0">
+    <div ref={retailPosRef} className="retail-pos-query h-full min-h-0">
       <div className="retail-pos-workspace grid h-full min-h-0 bg-app-bg">
-        <main inert={cartPresent ? true : undefined} className="retail-pos-catalog-pane flex min-w-0 flex-col border-border bg-surface">
+        <main inert={isCompactCart && cartPresent ? true : undefined} className="retail-pos-catalog-pane flex min-w-0 flex-col border-border bg-surface">
         <div className="bg-surface">
           <div className="flex flex-col gap-3 border-b border-border px-3 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center justify-between gap-3">
@@ -457,12 +701,14 @@ export default function RetailPosPage() {
         <aside
           ref={cartPaneRef}
           id="retail-pos-cart"
-          role={cartPresent ? "dialog" : undefined}
-          aria-modal={cartPresent ? "true" : undefined}
+          role={isCompactCart && cartPresent ? "dialog" : undefined}
+          aria-modal={isCompactCart && cartPresent ? "true" : undefined}
           aria-label="Keranjang belanja"
           className={`retail-pos-cart-pane flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
           onTransitionEnd={(event) => {
-            if (!cartExpanded && event.target === event.currentTarget) finishCartClose();
+            if (shouldReduceMotion && !cartExpanded && event.target === event.currentTarget) {
+              finishCartClose();
+            }
           }}
         >
         <>
@@ -479,6 +725,47 @@ export default function RetailPosPage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge tone="accent">{totalCartItems} item</Badge>
+              <button
+                ref={cartMenuTriggerRef}
+                type="button"
+                aria-label="Opsi keranjang"
+                aria-haspopup="menu"
+                aria-expanded={cartMenuOpen}
+                aria-controls="retail-pos-cart-menu"
+                onClick={() => setCartMenuOpen((open) => !open)}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setCartMenuOpen(true);
+                  }
+                }}
+                disabled={store.cart.length === 0}
+                className="pos-touch-target grid min-w-9 place-items-center rounded-control text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-35"
+              >
+                <Icon name="more" className="size-4" />
+              </button>
+              <FloatingPopover
+                ref={cartMenuRef}
+                anchorRef={cartMenuTriggerRef}
+                open={cartMenuOpen}
+                align="end"
+                matchAnchorWidth={false}
+                className="min-w-52 origin-top-right rounded-card border border-border bg-surface p-1 shadow-panel"
+              >
+                <div id="retail-pos-cart-menu" role="menu" aria-label="Opsi keranjang">
+                  <button
+                    ref={cartMenuItemRef}
+                    type="button"
+                    role="menuitem"
+                    onClick={requestClearCart}
+                    disabled={checkoutPending}
+                    className="pos-touch-target flex w-full items-center gap-2 rounded-control px-3 text-left text-sm font-semibold text-danger transition-colors duration-fast hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-35"
+                  >
+                    <Icon name="trash" className="size-4" />
+                    Kosongkan keranjang
+                  </button>
+                </div>
+              </FloatingPopover>
               <button
                 ref={cartCloseRef}
                 type="button"
@@ -503,7 +790,7 @@ export default function RetailPosPage() {
                 descriptionClassName="text-sm"
               />
             ) : (
-              <div className="-mx-4 divide-y divide-border">
+              <div className="cart-item-list -mx-4">
                 {store.cart.map((item) => {
                   const product = cartProducts.get(item.productId);
                   return (
@@ -511,14 +798,14 @@ export default function RetailPosPage() {
                       key={item.productId}
                       item={{
                         ...item,
-                        category: resolveMasterName(store.categories, product?.categoryId, product?.category || item.barcode),
                         image: product?.image,
                       }}
-                      subtotal={formatPrice(item.price * item.qty)}
-                      unitPrice={`${formatPrice(item.price)} / ${resolveMasterName(store.units, product?.unitId, product?.unit || item.unit || "pcs")}`}
+                      subtotal={formatCartRowPrice(item.price * item.qty)}
+                      unitPrice={`${formatCartRowPrice(item.price)} / ${resolveMasterName(store.units, product?.unitId, product?.unit || item.unit || "pcs")}`}
                       maxQty={product?.stock ?? item.stockAtAdd}
-                      onUpdateQty={checkoutPending ? undefined : (qty) => store.updateCartQty(item.productId, qty)}
-                      onRemove={checkoutPending ? undefined : () => store.updateCartQty(item.productId, 0)}
+                      onUpdateQty={(qty) => store.updateCartQty(item.productId, qty)}
+                      onRemove={() => store.updateCartQty(item.productId, 0)}
+                      disabled={checkoutPending}
                     />
                   );
                 })}
@@ -581,14 +868,6 @@ export default function RetailPosPage() {
             />
             <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
               {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
-            </Button>
-            <Button
-              variant="secondary"
-              className="pos-touch-target"
-              onClick={() => setClearCartOpen(true)}
-              disabled={store.cart.length === 0 || checkoutPending}
-            >
-              Kosongkan keranjang
             </Button>
           </div>
 
@@ -657,14 +936,6 @@ export default function RetailPosPage() {
                 />
                 <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
                   {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="pos-touch-target"
-                  onClick={() => setClearCartOpen(true)}
-                  disabled={store.cart.length === 0 || checkoutPending}
-                >
-                  Kosongkan keranjang
                 </Button>
               </div>
             </MobileCheckoutPanel>

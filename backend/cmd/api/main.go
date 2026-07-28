@@ -81,6 +81,9 @@ func run() error {
 		Ready:          pool.Ping,
 		Auth:           auth.Middleware(verifier),
 		AllowedOrigins: cfg.AllowedOrigins,
+		PublicRoutes: func(router fiber.Router) {
+			productHandler.RegisterPublic(router)
+		},
 		Routes: func(router fiber.Router) {
 			productHandler.Register(router)
 			categoryHandler.Register(router)

@@ -12,6 +12,8 @@ test("the document installs the shared SVG favicon", async () => {
 
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml" \/>/);
   assert.match(favicon, /viewBox="0 0 32 32"/);
+  assert.match(favicon, /<rect width="32" height="32" rx="8"/);
+  assert.match(favicon, /m16 5 11 6-11 6-11-6 11-6Z/);
   assert.match(favicon, /fill="#171717"/);
   assert.match(favicon, /fill="#fff"/);
   assert.match(favicon, /fill="#d4d4d4"/);

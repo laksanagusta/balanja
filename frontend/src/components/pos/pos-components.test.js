@@ -34,13 +34,29 @@ test("POS product card is an explicit variant", async () => {
   assert.match(source, /product-card-content/);
   assert.match(source, /product-card-actions/);
   assert.match(source, /variant="primary"\s+className="product-add-button pos-touch-target"/);
+  assert.doesNotMatch(source, /min-h-\[304px\]|product-card-actions mt-auto|border-t border-border/);
+  assert.match(source, /className="product-card-content grid gap-2 px-2 pb-0 pt-3"/);
+  assert.match(source, /className="product-card-actions grid gap-2 px-2 pb-2 pt-2"/);
   assert.doesNotMatch(source, /PosProductCard[\s\S]*compactVisual/);
   assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.product-catalog-grid\s*\{[\s\S]*gap:\s*0\.5rem;[\s\S]*padding:\s*0\.5rem;/);
   assert.match(css, /\.pos-product-card \.product-card-media\s*\{[\s\S]*aspect-ratio:\s*1;/);
-  assert.match(css, /\.pos-product-card \.product-card-actions\s*\{[\s\S]*margin-block-start:\s*0;/);
+  assert.match(css, /\.pos-product-card \.product-card-content\s*\{[\s\S]*padding-block:\s*0\.5rem 0;/);
+  assert.match(css, /\.pos-product-card \.product-card-actions\s*\{[\s\S]*padding-block-start:\s*0\.25rem;/);
   assert.match(css, /\.pos-product-card \.product-add-button\s*\{[\s\S]*min-block-size:\s*2\.75rem;[\s\S]*background:\s*transparent !important;/);
   assert.match(css, /\.pos-product-card \.product-add-button \.button-label-pop\s*\{[\s\S]*block-size:\s*2\.25rem;/);
+  assert.match(source, /<span className="font-mono tabular-nums">\{product\.price\}<\/span>/);
   assert.doesNotMatch(source, /showStepper|allowRepeatAdd/);
+});
+
+test("POS catalog groups compact price and add action without repeating Rp", async () => {
+  const catalog = await readFile(new URL("./ProductCatalog.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../design/POSPatterns.jsx", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(catalog, /price:\s*formatPrice\(product\.price\)\.replace\(\/\^Rp\/,\s*""\)/);
+  assert.match(showcase, /price:\s*"72\.000"/);
+  assert.match(showcase, /jarak visual tetap 8px tanpa divider/);
+  assert.match(design, /Product-card prices omit the repeated `Rp` prefix/);
 });
 
 test("cart controls and payment choices stay visually compact with coarse-pointer targets", async () => {
@@ -61,11 +77,11 @@ test("cart controls and payment choices stay visually compact with coarse-pointe
   assert.match(product, /aria-label="Tambah jumlah"/);
   assert.match(payment, /aria-pressed=\{paymentMethod === method\.id\}/);
   assert.match(cart, /pos-touch-target/);
-  assert.match(cart, /cart-item-summary-actions grid justify-items-end gap-2/);
-  assert.match(cart, /flex flex-wrap items-center justify-end gap-2/);
+  assert.match(cart, /cart-item-action-rail/);
+  assert.match(cart, /items-center justify-between gap-3/);
   assert.match(product, /className="product-add-button pos-touch-target"/);
   assert.match(product, /<Button variant="primary" className="product-add-button pos-touch-target"/);
-  assert.match(product, /className="product-card-content grid gap-2 px-2 py-3"/);
+  assert.match(product, /className="product-card-content grid gap-2 px-2 pb-0 pt-3"/);
   assert.match(payment, /className="pos-touch-target w-full justify-center gap-1\.5"/);
   assert.doesNotMatch(cart, /size-11|min-h-11|h-11/);
   assert.doesNotMatch(product, /product-add-button h-11/);
@@ -77,12 +93,34 @@ test("cart and payment values adapt without overflowing narrow containers", asyn
   const payment = await readFile(new URL("./PaymentSummary.jsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../../index.css", import.meta.url), "utf8");
 
-  assert.match(cart, /cart-item-heading-row/);
+  assert.match(cart, /cart-item-identity-row/);
   assert.match(cart, /whitespace-nowrap/);
   assert.match(payment, /payment-summary-row/);
   assert.match(payment, /whitespace-nowrap/);
   assert.match(css, /container-name:\s*retail-pos-cart/);
   assert.match(css, /@container retail-pos-cart \(max-width:\s*360px\)/);
+});
+
+test("cart rows use the streamlined product hierarchy and compact Rupiah format", async () => {
+  const cart = await readFile(new URL("./CartRow.jsx", import.meta.url), "utf8");
+  const page = await readFile(new URL("../../pages/RetailPosPage.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../design/CartItemShowcase.jsx", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../../DESIGN.md", import.meta.url), "utf8");
+  const css = await readFile(new URL("../../index.css", import.meta.url), "utf8");
+
+  assert.match(cart, /size-12/);
+  assert.match(cart, /line-clamp-2/);
+  assert.match(cart, /cart-item-identity-row/);
+  assert.match(cart, /cart-item-action-rail/);
+  assert.doesNotMatch(cart, /item\.category|item\.barcode|item\.addons/);
+  assert.match(cart, /tabular-nums text-text/);
+  assert.doesNotMatch(cart, /font-mono text-sm font-semibold tabular-nums text-text/);
+  assert.match(page, /const formatCartRowPrice = \(value\) => formatPrice\(value\)\.replace\(\/\^Rp\/, ""\);/);
+  assert.match(page, /subtotal=\{formatCartRowPrice\(item\.price \* item\.qty\)\}/);
+  assert.match(page, /unitPrice=\{`\$\{formatCartRowPrice\(item\.price\)\} \//);
+  assert.match(showcase, /formatCartRowPrice/);
+  assert.match(css, /\.cart-item-row \+ \.cart-item-row::before/);
+  assert.match(design, /Row prices omit the repeated `Rp` prefix/);
 });
 
 test("product add feedback is announced without exposing decoration", async () => {

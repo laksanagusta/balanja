@@ -14,3 +14,12 @@ test("floating popovers portal above dialogs and avoid scroll-container clipping
   assert.match(masterDataSelect, /<FloatingPopover/);
   assert.match(stockPage, /<FloatingPopover/);
 });
+
+test("floating popovers can end-align an intrinsic-width action menu", async () => {
+  const primitives = await readFile(new URL("./primitives.jsx", import.meta.url), "utf8");
+
+  assert.match(primitives, /matchAnchorWidth = true/);
+  assert.match(primitives, /align = "start"/);
+  assert.match(primitives, /align === "end"/);
+  assert.match(primitives, /width: matchAnchorWidth \? anchorRect\.width : undefined/);
+});

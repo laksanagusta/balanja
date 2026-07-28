@@ -174,10 +174,23 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
 
         <FaqSection />
 
-        <section className="px-4 py-24 text-center sm:px-6 sm:py-32 lg:py-40">
-          <h2 className="mx-auto max-w-3xl text-[42px] font-semibold leading-[1] tracking-[-0.045em] text-text sm:text-[60px]">Siap membuat operasional toko lebih rapi?</h2>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-text-muted">Siapkan katalog, catat penjualan pertama, lalu pantau stok dan riwayat dari alur yang sama.</p>
-          <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row"><Button type="button" variant="primary" size="lg" onClick={openApp}>Mulai kelola toko</Button><Button type="button" size="lg" onClick={() => scrollIntoViewRespectingMotion(document.querySelector("#cara-kerja"))}>Lihat cara kerjanya</Button></div>
+        <section className="px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
+          <div className="relative isolate mx-auto grid min-h-[520px] max-w-6xl place-content-center overflow-hidden rounded-panel px-4 py-24 text-center sm:px-6 lg:aspect-[720/406] lg:min-h-0 lg:py-16">
+            <img
+              src="/images/landing/closing-cta-gradient.png"
+              alt=""
+              width="720"
+              height="406"
+              className="absolute inset-0 -z-20 size-full object-cover object-center lg:object-contain"
+            />
+            <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/55" />
+            <h2 className="mx-auto max-w-3xl text-[42px] font-semibold leading-[1] tracking-[-0.045em] text-white sm:text-[60px]">Siap membuat operasional toko lebih rapi?</h2>
+            <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-white/75">Siapkan katalog, catat penjualan pertama, lalu pantau stok dan riwayat dari alur yang sama.</p>
+            <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
+              <Button type="button" variant="primary" size="lg" className="!bg-white !text-text hover:!bg-white/90" onClick={openApp}>Mulai kelola toko</Button>
+              <Button type="button" size="lg" className="!border-white/25 !bg-white/10 !text-white !shadow-none backdrop-blur-md hover:!bg-white/15" onClick={() => scrollIntoViewRespectingMotion(document.querySelector("#cara-kerja"))}>Lihat cara kerjanya</Button>
+            </div>
+          </div>
         </section>
       </main>
 

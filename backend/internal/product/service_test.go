@@ -9,6 +9,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"slices"
 	"testing"
 
@@ -34,6 +35,27 @@ func TestServiceListNormalizesProductQuery(t *testing.T) {
 	}
 	if page.Items == nil || page.HasNextPage {
 		t.Fatalf("page = %#v", page)
+	}
+}
+
+func TestServiceListUsesFirstPartyURLForOwnedProductImages(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeRepository{listRows: []Product{{
+		ID:       uuid.New(),
+		Image:    "https://example.r2.dev/products/org/photo.jpg",
+		ImageKey: "products/org/photo.jpg",
+	}}}
+	page, err := NewService(fakeRunner{}, repository, WithImageStore(&fakeImageStore{})).List(
+		context.Background(),
+		database.Identity{OrgID: "org"},
+		ListFilter{Limit: 20},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := page.Items[0].Image; got != "/api/v1/product-images/products/org/photo.jpg" {
+		t.Fatalf("image URL = %q", got)
 	}
 }
 
@@ -359,12 +381,21 @@ func (f *fakeRepository) UnitIsActive(_ context.Context, _ database.Tx, _ string
 type fakeImageStore struct {
 	put       objectstore.StoredObject
 	putErr    error
+	get       objectstore.Object
+	getErr    error
 	deleted   []string
 	deleteErr error
 }
 
 func (f *fakeImageStore) Put(context.Context, objectstore.PutInput) (objectstore.StoredObject, error) {
 	return f.put, f.putErr
+}
+
+func (f *fakeImageStore) Get(context.Context, string) (objectstore.Object, error) {
+	if f.get.Body == nil {
+		f.get.Body = io.NopCloser(bytes.NewReader(nil))
+	}
+	return f.get, f.getErr
 }
 
 func (f *fakeImageStore) Delete(_ context.Context, key string) error {

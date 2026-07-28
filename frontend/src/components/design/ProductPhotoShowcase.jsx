@@ -23,8 +23,8 @@ export default function ProductPhotoShowcase() {
       <p className="mb-3 max-w-2xl text-sm leading-6 text-text-muted">
         Field ini menampilkan status foto langsung di baris utama, tanpa caption nama file terpisah, supaya form tetap
         ringkas saat padat. Upload menerima JPG, PNG, atau WebP hingga 5 MB dan backend menyimpan hasil kompresi maksimal
-        200 KB. Produk dengan URL foto tersimpan mempertahankan identitas gambarnya: kegagalan sementara menampilkan
-        placeholder netral selama retry Cloudflare bertahap, bukan menggantinya dengan foto kategori lain.
+        200 KB. Foto tersimpan dimuat lewat endpoint first-party aplikasi dengan cache immutable, bukan langsung melalui
+        endpoint development R2. Kegagalan sementara tetap menampilkan placeholder netral selama retry bertahap.
       </p>
       <div className="rounded-panel border border-border bg-surface p-4">
         <ProductPhotoField

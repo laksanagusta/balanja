@@ -73,6 +73,13 @@ func NewService(runner TenantRunner, repository Repository, options ...ServiceOp
 	return service
 }
 
+func (s *Service) withDeliveredImage(product Product) Product {
+	if s.images != nil && product.ImageKey != "" {
+		product.Image = "/api/v1/product-images/" + product.ImageKey
+	}
+	return product
+}
+
 func normalizeListFilter(filter ListFilter) (ListFilter, error) {
 	filter.Query = strings.TrimSpace(filter.Query)
 	if filter.Limit == 0 {
@@ -182,6 +189,9 @@ func (s *Service) List(ctx context.Context, identity database.Identity, filter L
 		page.HasNextPage = true
 		products = products[:requestedLimit]
 	}
+	for index := range products {
+		products[index] = s.withDeliveredImage(products[index])
+	}
 	page.Items = products
 	if page.HasNextPage {
 		last := products[len(products)-1]
@@ -239,6 +249,7 @@ func (s *Service) Create(ctx context.Context, identity database.Identity, input 
 	if err != nil && newImageKey != "" {
 		s.deleteImage(ctx, newImageKey, "compensate failed product create")
 	}
+	created = s.withDeliveredImage(created)
 	return
 }
 func (s *Service) Update(ctx context.Context, identity database.Identity, id uuid.UUID, input UpdateInput, mutations ...ImageMutation) (updated Product, err error) {
@@ -313,7 +324,15 @@ func (s *Service) Update(ctx context.Context, identity database.Identity, id uui
 	if result.PreviousImageKey != "" && result.PreviousImageKey != updated.ImageKey {
 		s.deleteImage(ctx, result.PreviousImageKey, "delete replaced product image")
 	}
+	updated = s.withDeliveredImage(updated)
 	return
+}
+
+func (s *Service) GetImage(ctx context.Context, key string) (objectstore.Object, error) {
+	if s.images == nil {
+		return objectstore.Object{}, objectstore.ErrNotFound
+	}
+	return s.images.Get(ctx, key)
 }
 
 func (s *Service) deleteImage(ctx context.Context, key, operation string) {
@@ -330,5 +349,6 @@ func (s *Service) Deactivate(ctx context.Context, identity database.Identity, id
 		updated, updateErr = s.repository.Deactivate(ctx, tx, identity.OrgID, id)
 		return updateErr
 	})
+	updated = s.withDeliveredImage(updated)
 	return
 }
