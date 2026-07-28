@@ -137,7 +137,7 @@ export default function POSPatterns() {
                 type="button"
                 aria-pressed={cat === selectedCategory}
                 onClick={() => setSelectedCategory(cat)}
-                className={`pos-touch-target relative z-10 h-8 min-w-max flex-1 basis-0 rounded-md px-5 text-sm font-medium transition-colors duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                className={`pos-touch-target relative z-10 h-8 min-w-max flex-1 basis-0 rounded-button px-5 text-sm font-medium transition-colors duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                   cat === selectedCategory
                     ? "text-text"
                     : "text-text-muted hover:text-text"
@@ -158,7 +158,7 @@ export default function POSPatterns() {
                   type="button"
                   aria-pressed={paymentMethod === m.id}
                   onClick={() => setPaymentMethod(m.id)}
-                  className={`grid min-h-11 place-items-center gap-1 rounded-md border px-3 py-2.5 text-xs font-semibold transition ${
+                  className={`grid min-h-11 place-items-center gap-1 rounded-button border px-3 py-2.5 text-xs font-semibold transition ${
                     paymentMethod === m.id
                       ? "border-accent bg-accent-soft text-accent"
                       : "border-border text-text-muted hover:bg-surface-muted"

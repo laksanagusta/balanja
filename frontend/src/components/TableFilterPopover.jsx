@@ -57,7 +57,7 @@ export function TableFilterPopover({
         aria-expanded={open}
         aria-controls={contentId}
         onClick={() => onOpenChange(!open)}
-        className={`relative z-40 inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-text-muted transition-[background-color,border-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${triggerClassName}`}
+        className={`relative z-40 inline-flex h-9 items-center gap-2 rounded-button border border-border bg-surface px-3 text-sm font-semibold text-text-muted transition-[background-color,border-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${triggerClassName}`}
       >
         <Icon name="filter" className="size-4" />
         Filters

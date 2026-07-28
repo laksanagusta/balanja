@@ -115,7 +115,7 @@ export default function MasterDataSelectField({
             setOpen(true);
           }
         }}
-        className={`flex h-11 items-center justify-between rounded-card border bg-surface px-3.5 text-left text-sm font-medium shadow-inner-soft transition-[border-color,box-shadow] duration-fast ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 md:h-9 ${
+        className={`flex h-11 items-center justify-between rounded-button border bg-surface px-3.5 text-left text-sm font-medium shadow-inner-soft transition-[border-color,box-shadow] duration-fast ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 md:h-9 ${
           error ? "border-danger" : open ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
         }`}
       >
@@ -174,7 +174,7 @@ export default function MasterDataSelectField({
                   role="option"
                   aria-selected={option.value === value}
                   onClick={() => selectOption(option.value)}
-                  className={`flex h-10 w-full items-center justify-between rounded-control px-3 text-left text-sm font-medium transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus ${option.value === value ? "bg-surface-muted text-text" : "text-text-muted"}`}
+                  className={`flex h-10 w-full items-center justify-between rounded-button px-3 text-left text-sm font-medium transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus ${option.value === value ? "bg-surface-muted text-text" : "text-text-muted"}`}
                 >
                   <span>{option.label}</span>
                   {option.value === value ? <Icon name="check" className="size-4 text-accent" /> : null}
@@ -190,16 +190,16 @@ export default function MasterDataSelectField({
               <div className="grid gap-1 p-1">
                 {inlineError ? <p id={inlineErrorId} aria-live="polite" className="px-2 text-xs font-medium text-danger">{inlineError}</p> : null}
                 <div className="flex items-center justify-end gap-1">
-                  <button type="button" disabled={pending} onClick={() => { setCreateMode(false); setDraft(""); setInlineError(""); }} className="h-9 rounded-control px-3 text-xs font-semibold text-text-muted hover:bg-surface-muted hover:text-text">
+                  <button type="button" disabled={pending} onClick={() => { setCreateMode(false); setDraft(""); setInlineError(""); }} className="h-9 rounded-button px-3 text-xs font-semibold text-text-muted hover:bg-surface-muted hover:text-text">
                     Batal
                   </button>
-                  <button type="button" disabled={!draft.trim() || pending} onClick={archivedMatch ? restoreInline : createInline} className="h-9 rounded-control px-3 text-xs font-semibold text-accent transition-colors duration-fast ease-standard hover:bg-accent-soft disabled:pointer-events-none disabled:opacity-40">
+                  <button type="button" disabled={!draft.trim() || pending} onClick={archivedMatch ? restoreInline : createInline} className="h-9 rounded-button px-3 text-xs font-semibold text-accent transition-colors duration-fast ease-standard hover:bg-accent-soft disabled:pointer-events-none disabled:opacity-40">
                     {pending ? "Menyimpan…" : archivedMatch ? `Pulihkan “${archivedMatch.name}”` : "Tambah"}
                   </button>
                 </div>
               </div>
             ) : (
-              <button type="button" onClick={beginCreate} className="flex h-10 w-full items-center gap-2 rounded-control px-3 text-left text-sm font-semibold text-accent transition-colors duration-fast ease-standard hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus">
+              <button type="button" onClick={beginCreate} className="flex h-10 w-full items-center gap-2 rounded-button px-3 text-left text-sm font-semibold text-accent transition-colors duration-fast ease-standard hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus">
                 <Icon name="plus" className="size-4" />
                 Tambah {entityLabel.toLowerCase()} baru…
               </button>

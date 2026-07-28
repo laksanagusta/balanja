@@ -76,7 +76,7 @@ export default function DashboardPage({ onNavigate }) {
                 type="button"
                 aria-pressed={days === period}
                 onClick={() => setDays(period)}
-                className={`h-8 rounded-md px-3 text-xs font-semibold transition active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                className={`h-8 rounded-button px-3 text-xs font-semibold transition active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                   days === period ? "bg-surface text-text" : "text-text-muted hover:text-text"
                 }`}
               >

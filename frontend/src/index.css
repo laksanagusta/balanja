@@ -33,6 +33,7 @@
   --color-chart-other: var(--color-chart-amber);
 
   --radius-control: 8px;
+  --radius-button: var(--radius-control);
   --radius-card: 12px;
   --radius-panel: 16px;
 
@@ -588,7 +589,7 @@
       block-size: 2.25rem;
       align-items: center;
       justify-content: center;
-      border-radius: var(--radius-control);
+      border-radius: var(--radius-button);
       background: var(--color-accent);
       box-shadow: none;
       color: white;

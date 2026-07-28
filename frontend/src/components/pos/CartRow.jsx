@@ -142,7 +142,7 @@ export function CartRow({
                 type="button"
                 onClick={onRemove}
                 disabled={disabled}
-                className="pos-touch-target ml-auto flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold text-text-muted transition hover:bg-danger-soft hover:text-danger active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+                className="pos-touch-target ml-auto flex items-center gap-1.5 rounded-button px-2.5 text-xs font-semibold text-text-muted transition hover:bg-danger-soft hover:text-danger active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
               >
                 <Icon name="trash" className="size-3.5" />
                 Hapus

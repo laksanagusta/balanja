@@ -33,7 +33,7 @@ export function ProductPhotoField({ product, previewURL, filename, error, disabl
         </div>
         <label
           htmlFor={id}
-          className="inline-flex h-9 cursor-pointer items-center rounded-control border border-border px-3 text-sm font-semibold text-text"
+          className="inline-flex h-9 cursor-pointer items-center rounded-button border border-border px-3 text-sm font-semibold text-text"
         >
           {visible ? "Ganti" : "Pilih foto"}
         </label>
@@ -51,7 +51,7 @@ export function ProductPhotoField({ product, previewURL, filename, error, disabl
             type="button"
             disabled={disabled}
             onClick={onRemove}
-            className="h-9 rounded-control px-3 text-sm font-semibold text-danger"
+            className="h-9 rounded-button px-3 text-sm font-semibold text-danger"
           >
             Hapus
           </button>

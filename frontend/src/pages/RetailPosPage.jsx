@@ -591,7 +591,7 @@ export default function RetailPosPage() {
                 aria-expanded={cartExpanded}
                 aria-controls="retail-pos-cart"
                 onClick={openCart}
-                className="retail-pos-cart-open pos-touch-target ml-auto min-w-11 items-center gap-2 rounded-control border border-border px-3 text-sm font-semibold text-text transition-colors duration-fast hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                className="retail-pos-cart-open pos-touch-target ml-auto min-w-11 items-center gap-2 rounded-button border border-border px-3 text-sm font-semibold text-text transition-colors duration-fast hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
                 <Icon name="cart" className="size-4" />
                 <span>{totalCartItems}</span>
@@ -662,7 +662,7 @@ export default function RetailPosPage() {
                   type="button"
                   aria-pressed={category === item}
                   onClick={() => setCategory(item)}
-                  className={`pos-touch-target relative z-10 h-6 min-w-max flex-1 basis-0 rounded-md px-3 text-sm font-medium transition-[transform,color,background-color] duration-base ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                  className={`pos-touch-target relative z-10 h-6 min-w-max flex-1 basis-0 rounded-button px-3 text-sm font-medium transition-[transform,color,background-color] duration-base ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                     category === item
                       ? categoryIndicator.ready
                         ? "text-text"
@@ -740,7 +740,7 @@ export default function RetailPosPage() {
                   }
                 }}
                 disabled={store.cart.length === 0}
-                className="pos-touch-target grid min-w-9 place-items-center rounded-control text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-35"
+                className="pos-touch-target grid min-w-9 place-items-center rounded-button text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-35"
               >
                 <Icon name="more" className="size-4" />
               </button>
@@ -759,7 +759,7 @@ export default function RetailPosPage() {
                     role="menuitem"
                     onClick={requestClearCart}
                     disabled={checkoutPending}
-                    className="pos-touch-target flex w-full items-center gap-2 rounded-control px-3 text-left text-sm font-semibold text-danger transition-colors duration-fast hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-35"
+                    className="pos-touch-target flex w-full items-center gap-2 rounded-button px-3 text-left text-sm font-semibold text-danger transition-colors duration-fast hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-35"
                   >
                     <Icon name="trash" className="size-4" />
                     Kosongkan keranjang
@@ -770,7 +770,7 @@ export default function RetailPosPage() {
                 ref={cartCloseRef}
                 type="button"
                 onClick={closeCart}
-                className="retail-pos-cart-toggle pos-touch-target rounded-control px-3 text-sm font-semibold text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                className="retail-pos-cart-toggle pos-touch-target rounded-button px-3 text-sm font-semibold text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
                 Tutup
               </button>

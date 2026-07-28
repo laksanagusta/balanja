@@ -220,6 +220,7 @@ export const tokenGroups = [
     name: "Radius",
     tokens: [
       ["XS - Controls", "--radius-control", "8px"],
+      ["XS - Buttons", "--radius-button", "8px"],
       ["S - Cards & Inputs", "--radius-card", "12px"],
       ["M - Modals & Panels", "--radius-panel", "16px"],
     ],

@@ -19,7 +19,7 @@ function NavItem({ item, pathname, onNavigate, collapsed = false }) {
       aria-label={collapsed ? label : undefined}
       title={collapsed ? label : undefined}
       onClick={() => onNavigate(path)}
-      className={`pos-touch-target flex h-9 w-full items-center rounded-control text-left text-sm font-semibold transition-[background-color,color,transform] duration-fast ease-standard active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:active:scale-100 ${collapsed ? "justify-center px-0" : "gap-2.5 px-3"} ${
+      className={`pos-touch-target flex h-9 w-full items-center rounded-button text-left text-sm font-semibold transition-[background-color,color,transform] duration-fast ease-standard active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:active:scale-100 ${collapsed ? "justify-center px-0" : "gap-2.5 px-3"} ${
         active
           ? "bg-surface-muted text-text"
           : "text-text-muted hover:bg-surface-muted hover:text-text"
@@ -59,7 +59,7 @@ function AccountMenu({ user, onSettings, onSignOut, className = "" }) {
         <button
           type="button"
           onClick={onSettings}
-          className="flex h-10 w-full items-center gap-2 rounded-control px-3 text-left text-sm font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text"
+          className="flex h-10 w-full items-center gap-2 rounded-button px-3 text-left text-sm font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text"
         >
           <Icon name="settings" className="size-4" />
           Pengaturan
@@ -68,7 +68,7 @@ function AccountMenu({ user, onSettings, onSignOut, className = "" }) {
           <button
             type="button"
             onClick={onSignOut}
-            className="flex h-10 w-full items-center gap-2 rounded-control px-3 text-left text-sm font-semibold text-danger transition hover:bg-danger-soft"
+            className="flex h-10 w-full items-center gap-2 rounded-button px-3 text-left text-sm font-semibold text-danger transition hover:bg-danger-soft"
           >
             <Icon name="x" className="size-4" />
             Keluar
@@ -142,7 +142,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
                 setSidebarCollapsed((collapsed) => !collapsed);
                 setAccountOpen(false);
               }}
-              className="pos-icon-touch-target grid size-9 shrink-0 place-items-center rounded-control text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              className="pos-icon-touch-target grid size-9 shrink-0 place-items-center rounded-button text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               <Icon name="sidebar" className={`size-4 transition-transform duration-base motion-reduce:transition-none ${sidebarCollapsed ? "rotate-180" : ""}`} />
             </button>
@@ -169,7 +169,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
               aria-label="Buka menu akun"
               aria-expanded={accountOpen}
               onClick={() => setAccountOpen((open) => !open)}
-              className={`flex w-full items-center rounded-control border border-border bg-surface py-1.5 text-left transition-[background-color,transform] duration-fast ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${sidebarCollapsed ? "justify-center px-1" : "gap-3 px-2"} ${accountOpen ? "bg-surface-muted" : "hover:bg-surface-muted"}`}
+              className={`flex w-full items-center rounded-button border border-border bg-surface py-1.5 text-left transition-[background-color,transform] duration-fast ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${sidebarCollapsed ? "justify-center px-1" : "gap-3 px-2"} ${accountOpen ? "bg-surface-muted" : "hover:bg-surface-muted"}`}
             >
               <span className="account-avatar size-9 shrink-0 overflow-hidden rounded-full bg-surface-muted">
                 <GradientAvatar seed={avatarSeed} size={36} />
@@ -193,7 +193,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
               aria-expanded={mobileNavOpen}
               aria-controls="mobile-navigation"
               onClick={() => setMobileNavOpen(true)}
-              className="grid size-11 place-items-center rounded-control border border-border bg-surface transition-transform duration-fast ease-standard active:scale-[0.96] motion-reduce:active:scale-100"
+              className="grid size-11 place-items-center rounded-button border border-border bg-surface transition-transform duration-fast ease-standard active:scale-[0.96] motion-reduce:active:scale-100"
             >
               <Icon name="menu" className="size-5" />
             </button>
@@ -248,7 +248,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
                     type="button"
                     aria-label="Tutup menu navigasi"
                     onClick={() => setMobileNavOpen(false)}
-                    className="grid size-11 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text"
+                    className="grid size-11 place-items-center rounded-button text-text-muted hover:bg-surface-muted hover:text-text"
                   >
                     <Icon name="x" className="size-5" />
                   </button>

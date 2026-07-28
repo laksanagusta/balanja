@@ -20,7 +20,7 @@ export default function PaymentShowcase() {
               <button
                 key={m.name}
                 onClick={() => setSelected(m.name)}
-                className={`grid place-items-center gap-1.5 rounded-card border p-4 text-sm font-semibold transition ${
+                className={`grid place-items-center gap-1.5 rounded-button border p-4 text-sm font-semibold transition ${
                   selected === m.name
                     ? "border-accent bg-accent-soft text-accent"
                     : "border-border bg-surface text-text-muted hover:bg-surface-muted"

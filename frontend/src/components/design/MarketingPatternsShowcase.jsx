@@ -40,20 +40,12 @@ export default function MarketingPatternsShowcase() {
           </div>
         </div>
 
-        <div className="relative isolate mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel px-5 py-16 text-center">
-          <img
-            src="/images/landing/closing-cta-gradient.png"
-            alt=""
-            width="720"
-            height="406"
-            className="absolute inset-0 -z-20 size-full object-contain object-center"
-          />
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/55" />
+        <div className="mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel bg-accent px-5 py-16 text-center">
           <p className="mx-auto max-w-2xl text-[36px] font-semibold leading-none tracking-[-0.04em] text-white">
-            Closing CTA over a restrained image
+            Closing CTA on a quiet solid surface
           </p>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/75">
-            Preserve readable white copy with a dark overlay and keep both actions clearly separated from the image.
+            Keep the closing action focused with a solid near-black background, readable white copy, and no decorative image.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button variant="primary" size="lg" className="!bg-white !text-text hover:!bg-white/90">Primary CTA</Button>

@@ -68,7 +68,7 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
 	assert.match(primitives, /className="flex h-11 w-full items-center bg-transparent p-0 text-left md:h-9/);
 	assert.match(primitives, /className={`flex h-9 w-full items-center justify-between/);
 	assert.match(primitives, /className="group flex h-11 w-full items-center bg-transparent p-0 text-left"/);
-	assert.match(primitives, /className={`flex h-10 w-full items-center rounded-control/);
+	assert.match(primitives, /className={`flex h-10 w-full items-center rounded-button/);
 	assert.doesNotMatch(primitives, /flex h-11 md:h-9 items-center justify-between/);
 	assert.match(primitives, /focus-visible:outline-2/);
 

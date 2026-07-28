@@ -1,7 +1,7 @@
 import React from "react";
 import { Badge, Button } from "../primitives.jsx";
 
-const contactClass = "inline-flex min-h-11 items-center justify-center rounded-control border px-3 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-fast ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:translate-y-px";
+const contactClass = "inline-flex min-h-11 items-center justify-center rounded-button border px-3 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-fast ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:translate-y-px";
 
 export default function QuotaStatus({
   entitlement,
