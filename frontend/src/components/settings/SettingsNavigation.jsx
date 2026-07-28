@@ -27,7 +27,7 @@ export default function SettingsNavigation({ items, activeId, onChange }) {
             onClick={() => onChange(item.id)}
             data-href={item.href}
             aria-current={isActive ? "page" : undefined}
-            className={`settings-navigation-item rounded-control border px-3 text-left text-sm font-semibold transition-[background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+            className={`settings-navigation-item rounded-button border px-3 text-left text-sm font-semibold transition-[background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
               isActive
                 ? "border-border bg-surface-muted text-text"
                 : "border-transparent text-text-muted hover:bg-surface-muted hover:text-text"

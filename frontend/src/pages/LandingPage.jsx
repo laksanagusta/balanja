@@ -64,7 +64,7 @@ function PublicHeader({ isSignedIn, onNavigate }) {
   return (
     <header className="public-header sticky top-0 z-30 border-b border-border/70 bg-surface/65 px-4 py-3 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-surface/45 sm:px-6">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-        <button type="button" onClick={() => scrollToTopRespectingMotion(window)} aria-label="Kembali ke bagian atas" className="press-feedback inline-flex min-h-11 min-w-11 items-center rounded-control focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus">
+        <button type="button" onClick={() => scrollToTopRespectingMotion(window)} aria-label="Kembali ke bagian atas" className="press-feedback inline-flex min-h-11 min-w-11 items-center rounded-button focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus">
           <Logo />
         </button>
         <nav aria-label="Navigasi utama" className="hidden items-center gap-8 md:flex">
@@ -175,15 +175,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
         <FaqSection />
 
         <section className="px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
-          <div className="relative isolate mx-auto grid min-h-[520px] max-w-6xl place-content-center overflow-hidden rounded-panel px-4 py-24 text-center sm:px-6 lg:aspect-[720/406] lg:min-h-0 lg:py-16">
-            <img
-              src="/images/landing/closing-cta-gradient.png"
-              alt=""
-              width="720"
-              height="406"
-              className="absolute inset-0 -z-20 size-full object-cover object-center lg:object-contain"
-            />
-            <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/55" />
+          <div className="mx-auto grid min-h-[520px] max-w-6xl place-content-center overflow-hidden rounded-panel bg-accent px-4 py-24 text-center sm:px-6 lg:aspect-[720/406] lg:min-h-0 lg:py-16">
             <h2 className="mx-auto max-w-3xl text-[42px] font-semibold leading-[1] tracking-[-0.045em] text-white sm:text-[60px]">Siap membuat operasional toko lebih rapi?</h2>
             <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-white/75">Siapkan katalog, catat penjualan pertama, lalu pantau stok dan riwayat dari alur yang sama.</p>
             <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">

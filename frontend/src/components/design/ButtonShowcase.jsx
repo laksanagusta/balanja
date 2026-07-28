@@ -6,7 +6,7 @@ const tokens = [
   ["Accent Hover", "--color-accent-hover", "#151517"],
   ["Danger", "--color-danger", "#ef4444"],
   ["Danger Soft", "--color-danger-soft", "#fff1f1"],
-  ["Radius", "--radius-control", "8px"],
+  ["Button radius", "--radius-button", "8px"],
   ["Focus", "--color-focus", "#4a4a4d"],
   ["Fast duration", "--duration-fast", "120ms"],
 ];
@@ -16,7 +16,7 @@ export default function ButtonShowcase() {
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Button</h3>
-        <p className="mt-1 text-sm text-text-muted">Buttons use one flat Uber-inspired system without gradients, bevels, or elevation shadows. Primary uses a solid near-black surface for the leading action; secondary uses a quiet border, ghost relies on text and hover fill, and danger uses the semantic soft-red surface. Every variant keeps the same focus outline, disabled opacity, and subtle press scale.</p>
+        <p className="mt-1 text-sm text-text-muted">Buttons use one flat Uber-inspired system without gradients, bevels, or elevation shadows. Primary uses a solid near-black surface for the leading action; secondary uses a quiet border, ghost relies on text and hover fill, and danger uses the semantic soft-red surface. Every standard rectangular button keeps the same 8px radius, focus outline, disabled opacity, and subtle press scale at every responsive size.</p>
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="flex flex-wrap items-start gap-3">

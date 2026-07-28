@@ -22,7 +22,7 @@ export default function TabListShowcase() {
             {["Overview", "Orders", "Kitchen"].map((tab, index) => (
               <button
                 key={tab}
-                className={`h-10 flex-1 rounded-md text-sm font-semibold ${
+                className={`h-10 flex-1 rounded-button text-sm font-semibold ${
                   index === 0 ? "bg-surface text-text" : "text-text-muted"
                 }`}
               >

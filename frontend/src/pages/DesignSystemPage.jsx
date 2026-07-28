@@ -38,7 +38,7 @@ export default function DesignSystemPage({ onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate(routes.products)}
-              className="h-[42px] rounded-control px-4 text-sm font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              className="h-[42px] rounded-button px-4 text-sm font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               Products
             </button>

@@ -364,17 +364,17 @@ export function Button({ children, variant = "secondary", size = "md", compactVi
   };
 
   const sizes = {
-    xs: "h-6 gap-1 rounded-control px-2 text-xs",
-    sm: "h-8 gap-1.5 rounded-control px-2.5 text-sm",
-    base: "h-9 gap-2 rounded-control px-3.5 text-sm",
-    md: "h-9 gap-2 rounded-control px-3.5 text-sm",
-    lg: "h-11 gap-2.5 rounded-control px-5 text-lg",
-    xl: "h-13 gap-3 rounded-control px-6 text-xl",
+    xs: "h-6 gap-1 rounded-button px-2 text-xs",
+    sm: "h-8 gap-1.5 rounded-button px-2.5 text-sm",
+    base: "h-9 gap-2 rounded-button px-3.5 text-sm",
+    md: "h-9 gap-2 rounded-button px-3.5 text-sm",
+    lg: "h-11 gap-2.5 rounded-button px-5 text-lg",
+    xl: "h-13 gap-3 rounded-button px-6 text-xl",
   };
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${compactVisual ? "h-11 rounded-control bg-transparent px-1.5 text-sm" : `${variants[variant]} ${sizes[size]}`} ${className}`}
+      className={`inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${compactVisual ? "h-11 rounded-button bg-transparent px-1.5 text-sm" : `${variants[variant]} ${sizes[size]}`} ${className}`}
       {...props}
     >
       {compactVisual ? (
@@ -553,7 +553,7 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
                 className="group flex h-11 w-full items-center bg-transparent p-0 text-left"
               >
                 <span
-                  className={`flex h-10 w-full items-center rounded-control px-3 text-sm font-medium transition duration-fast ease-standard ${
+                  className={`flex h-10 w-full items-center rounded-button px-3 text-sm font-medium transition duration-fast ease-standard ${
                     inline ? "group-hover:bg-surface" : "group-hover:bg-surface-muted"
                   } ${selectedValue === optionValue
                     ? inline ? "bg-surface text-text" : "bg-surface-muted text-text"
@@ -589,7 +589,7 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
                   className="group flex h-11 w-full items-center bg-transparent p-0 text-left"
                 >
                   <span
-                    className={`flex h-10 w-full items-center rounded-control px-3 text-sm font-medium transition duration-fast ease-standard ${
+                    className={`flex h-10 w-full items-center rounded-button px-3 text-sm font-medium transition duration-fast ease-standard ${
                       selectedValue === optionValue ? "bg-surface-muted text-text" : "text-text-muted group-hover:bg-surface-muted"
                     }`}
                   >
@@ -682,7 +682,7 @@ export function DataTable({
                     <button
                       type="button"
                       onClick={() => onSort?.(col.key)}
-                      className={`inline-flex h-8 w-full items-center gap-1.5 rounded-control font-semibold uppercase tracking-[0.08em] transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.98] ${
+                      className={`inline-flex h-8 w-full items-center gap-1.5 rounded-button font-semibold uppercase tracking-[0.08em] transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.98] ${
                         sortKey === col.key ? "text-text" : "text-text-subtle"
                       } ${col.align === "right" ? "justify-end" : "justify-start"}`}
                     >

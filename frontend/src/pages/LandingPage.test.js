@@ -31,10 +31,10 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.match(source, /Satu alur, bukan banyak catatan/);
   assert.match(source, /Siapkan toko, layani pembeli, pantau hasilnya/);
   assert.match(source, /Siap membuat operasional toko lebih rapi/);
-  assert.match(source, /closing-cta-gradient\.png/);
+  assert.doesNotMatch(source, /closing-cta-gradient\.png/);
   assert.match(source, /lg:aspect-\[720\/406\]/);
-  assert.match(source, /lg:object-contain/);
-  assert.match(source, /bg-black\/55/);
+  assert.match(source, /rounded-panel bg-accent/);
+  assert.doesNotMatch(source, /bg-black\/55/);
   assert.match(source, /text-white\/75/);
   assert.match(source, /routes\.login/);
   assert.match(source, /id="fitur"/);
@@ -47,15 +47,15 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.match(faq, /id="faq"/);
 });
 
-test("design system owns the image-backed closing CTA treatment", async () => {
+test("design system owns the solid closing CTA treatment", async () => {
   const showcase = await readFile(new URL("../components/design/MarketingPatternsShowcase.jsx", import.meta.url), "utf8");
   const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
-  assert.match(showcase, /closing-cta-gradient\.png/);
+  assert.doesNotMatch(showcase, /closing-cta-gradient\.png/);
   assert.match(showcase, /aspect-\[720\/406\]/);
-  assert.match(showcase, /object-contain/);
-  assert.match(showcase, /Closing CTA over a restrained image/);
-  assert.match(designGuide, /closing landing CTA uses `public\/images\/landing\/closing-cta-gradient\.png`/);
+  assert.match(showcase, /rounded-panel bg-accent/);
+  assert.match(showcase, /Closing CTA on a quiet solid surface/);
+  assert.match(designGuide, /closing landing CTA uses a quiet solid near-black `accent` surface/);
 });
 
 test("hero uses the faithful POS mockup over the generated retail image", async () => {

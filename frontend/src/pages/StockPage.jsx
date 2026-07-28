@@ -365,7 +365,7 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
                   setQuery(formatProductOption(product));
                   setIsOpen(false);
                 }}
-                className={`grid rounded-control px-3 py-2 text-left transition duration-fast ease-standard hover:bg-surface-muted ${
+                className={`grid rounded-button px-3 py-2 text-left transition duration-fast ease-standard hover:bg-surface-muted ${
                   product.id === value ? "bg-surface-muted" : ""
                 }`}
               >

@@ -68,7 +68,7 @@ test("desktop account control owns its separation without a footer divider", asy
 
   assert.match(source, /className="relative mt-auto p-3"/);
   assert.doesNotMatch(source, /className="relative mt-auto border-t/);
-  assert.match(source, /rounded-control border border-border bg-surface/);
+  assert.match(source, /rounded-button border border-border bg-surface/);
   assert.doesNotMatch(source, /Buka menu akun[\s\S]*shadow-low/);
 });
 

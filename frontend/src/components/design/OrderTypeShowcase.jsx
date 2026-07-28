@@ -26,7 +26,7 @@ export default function OrderTypeShowcase() {
               <button
                 key={t.id}
                 onClick={() => setActive(t.id)}
-                className={`flex-1 rounded-md py-2 text-sm font-semibold transition ${
+                className={`flex-1 rounded-button py-2 text-sm font-semibold transition ${
                   active === t.id ? "bg-surface text-text" : "text-text-muted hover:text-text"
                 }`}
               >
