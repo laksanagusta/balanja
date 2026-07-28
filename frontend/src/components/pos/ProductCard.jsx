@@ -26,7 +26,7 @@ function useAddFeedback({ onAdd, disabled }) {
 function ProductCardFrame({ product, outOfStock = false, addFeedback = false, className = "", children }) {
   return (
     <article
-      className={`product-card-frame menu-card-enter flex min-h-[304px] flex-col overflow-hidden rounded-card border border-border bg-surface shadow-low transition-transform duration-base ease-standard motion-reduce:transition-none ${outOfStock ? "is-out-of-stock opacity-55" : ""} ${className}`}
+      className={`product-card-frame menu-card-enter flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-low transition-transform duration-base ease-standard motion-reduce:transition-none ${outOfStock ? "is-out-of-stock opacity-55" : ""} ${className}`}
     >
       <div className="product-card-media-shell p-2 pb-0">
         <div className="product-card-media relative aspect-[4/3] w-full overflow-hidden rounded-md border border-border bg-surface-muted">
@@ -49,7 +49,7 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
           </div>
         </div>
       </div>
-      <div className="product-card-content grid gap-2 px-2 py-3">
+      <div className="product-card-content grid gap-2 px-2 pb-0 pt-3">
         <div className="grid content-start gap-1.5">
           <h3 className="line-clamp-1 text-sm font-semibold leading-tight text-text">{product.name}</h3>
           <p className="text-xs font-medium text-text-muted">
@@ -57,7 +57,7 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
           </p>
         </div>
       </div>
-      <div className="product-card-actions mt-auto grid gap-2 border-t border-border p-2">{children}</div>
+      <div className="product-card-actions grid gap-2 px-2 pb-2 pt-2">{children}</div>
     </article>
   );
 }

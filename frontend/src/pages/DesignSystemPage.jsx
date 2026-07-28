@@ -70,7 +70,7 @@ export default function DesignSystemPage({ onNavigate }) {
               <h3 className="text-lg font-semibold text-text">Isometric Balanja mark variations</h3>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-muted">
                 The active browser mark uses the primary dark treatment. Soft and inverse treatments vary only
-                the neutral tones; all versions keep the same uninterrupted three-plane geometry without doors or text.
+                the neutral tones; all versions use the same enlarged, uninterrupted three-plane geometry without doors or text.
               </p>
             </div>
           </div>

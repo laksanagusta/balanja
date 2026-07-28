@@ -57,7 +57,7 @@ export const ProductCatalog = React.memo(function ProductCatalog({
               product={{
                 ...product,
                 stock: remainingStock,
-                price: formatPrice(product.price),
+                price: formatPrice(product.price).replace(/^Rp/, ""),
                 qty: qtyInCart,
               }}
               actionLabel={qtyInCart > 0 ? "Tambah lagi" : "Tambah ke keranjang"}

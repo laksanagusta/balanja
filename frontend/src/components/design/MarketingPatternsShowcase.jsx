@@ -40,6 +40,27 @@ export default function MarketingPatternsShowcase() {
           </div>
         </div>
 
+        <div className="relative isolate mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel px-5 py-16 text-center">
+          <img
+            src="/images/landing/closing-cta-gradient.png"
+            alt=""
+            width="720"
+            height="406"
+            className="absolute inset-0 -z-20 size-full object-contain object-center"
+          />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/55" />
+          <p className="mx-auto max-w-2xl text-[36px] font-semibold leading-none tracking-[-0.04em] text-white">
+            Closing CTA over a restrained image
+          </p>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/75">
+            Preserve readable white copy with a dark overlay and keep both actions clearly separated from the image.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Button variant="primary" size="lg" className="!bg-white !text-text hover:!bg-white/90">Primary CTA</Button>
+            <Button size="lg" className="!border-white/25 !bg-white/10 !text-white !shadow-none backdrop-blur-md hover:!bg-white/15">Secondary CTA</Button>
+          </div>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
           <div className="rounded-panel border border-border p-4">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-subtle">Section spacing</p>

@@ -54,3 +54,41 @@ test("cart swipe resistance softens movement past the open boundary", () => {
   assert.ok(resisted < 0);
   assert.ok(Math.abs(resisted) < 80);
 });
+
+test("cart swipe velocity uses recent pointer history and decays after a hold", () => {
+  assert.equal(
+    retailPosUtils.cartSwipeVelocity([
+      { x: 0, time: 0 },
+      { x: 30, time: 50 },
+    ]),
+    600,
+  );
+  assert.equal(
+    retailPosUtils.cartSwipeVelocity([
+      { x: 0, time: 0 },
+      { x: 30, time: 50 },
+      { x: 30, time: 200 },
+    ]),
+    0,
+  );
+});
+
+test("cart translation rubber-bands beyond both open and closed edges", () => {
+  const beforeOpen = retailPosUtils.resistedCartTranslation(-80, 360);
+  const pastClosed = retailPosUtils.resistedCartTranslation(440, 360);
+  assert.ok(beforeOpen < 0 && Math.abs(beforeOpen) < 80);
+  assert.ok(pastClosed > 360 && pastClosed < 440);
+});
+
+test("cart focus candidates exclude mounted inert descendants", () => {
+  const visible = {
+    closest: () => null,
+    getClientRects: () => [{ width: 44, height: 44 }],
+  };
+  const inert = {
+    closest: (selector) => (selector.includes("[inert]") ? {} : null),
+    getClientRects: () => [{ width: 44, height: 44 }],
+  };
+  assert.equal(retailPosUtils.isCartFocusCandidate(visible), true);
+  assert.equal(retailPosUtils.isCartFocusCandidate(inert), false);
+});

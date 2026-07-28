@@ -3,6 +3,7 @@ package objectstore
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,7 +11,10 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
+
+const immutableImageCacheControl = "public, max-age=31536000, immutable"
 
 type Config struct {
 	Endpoint        string
@@ -22,6 +26,7 @@ type Config struct {
 
 type s3Client interface {
 	PutObject(context.Context, *s3.PutObjectInput, ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	GetObject(context.Context, *s3.GetObjectInput, ...func(*s3.Options)) (*s3.GetObjectOutput, error)
 	DeleteObject(context.Context, *s3.DeleteObjectInput, ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
 }
 
@@ -56,10 +61,11 @@ func newWithClient(client s3Client, cfg Config) Store {
 
 func (s *r2Store) Put(ctx context.Context, input PutInput) (StoredObject, error) {
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(s.bucket),
-		Key:         aws.String(input.Key),
-		ContentType: aws.String(input.ContentType),
-		Body:        bytes.NewReader(input.Body),
+		Bucket:       aws.String(s.bucket),
+		CacheControl: aws.String(immutableImageCacheControl),
+		Key:          aws.String(input.Key),
+		ContentType:  aws.String(input.ContentType),
+		Body:         bytes.NewReader(input.Body),
 	})
 	if err != nil {
 		return StoredObject{}, fmt.Errorf("put R2 object: %w", err)
@@ -67,6 +73,29 @@ func (s *r2Store) Put(ctx context.Context, input PutInput) (StoredObject, error)
 	return StoredObject{
 		Key: input.Key,
 		URL: s.publicBaseURL + "/" + strings.TrimLeft(input.Key, "/"),
+	}, nil
+}
+
+func (s *r2Store) Get(ctx context.Context, key string) (Object, error) {
+	output, err := s.client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		var noSuchKey *types.NoSuchKey
+		if errors.As(err, &noSuchKey) {
+			return Object{}, ErrNotFound
+		}
+		return Object{}, fmt.Errorf("get R2 object: %w", err)
+	}
+	if output.Body == nil {
+		return Object{}, fmt.Errorf("get R2 object: empty body")
+	}
+	return Object{
+		Body:          output.Body,
+		ContentType:   aws.ToString(output.ContentType),
+		ContentLength: aws.ToInt64(output.ContentLength),
+		ETag:          aws.ToString(output.ETag),
 	}, nil
 }
 

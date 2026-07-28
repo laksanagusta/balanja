@@ -4,13 +4,21 @@ import { ProductImage } from "../product/ProductImage.jsx";
 
 function CartImage({ item }) {
   return (
-    <span className="mt-0.5 block size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted">
+    <span className="block size-12 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted">
       <ProductImage product={item} />
     </span>
   );
 }
 
-export function CartRow({ item, subtotal, unitPrice, maxQty, onUpdateQty, onRemove }) {
+export function CartRow({
+  item,
+  subtotal,
+  unitPrice,
+  maxQty,
+  onUpdateQty,
+  onRemove,
+  disabled = false,
+}) {
   const stockLimit = Number(maxQty);
   const hasStockLimit = Number.isFinite(stockLimit);
   const plusDisabled = hasStockLimit && item.qty >= stockLimit;
@@ -55,6 +63,7 @@ export function CartRow({ item, subtotal, unitPrice, maxQty, onUpdateQty, onRemo
   React.useEffect(() => () => qtySlideAnimationRef.current?.cancel(), []);
 
   const commitQuantity = () => {
+    if (disabled) return;
     const parsedQty = Number.parseInt(draftQty, 10);
     if (!Number.isSafeInteger(parsedQty)) {
       setDraftQty(String(item.qty));
@@ -72,78 +81,73 @@ export function CartRow({ item, subtotal, unitPrice, maxQty, onUpdateQty, onRemo
   };
 
   return (
-    <div className="flex items-start gap-4 px-4 py-4">
+    <div className="cart-item-row grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-x-3 px-4 py-3">
       <CartImage item={item} />
       <div className="min-w-0 flex-1">
-        <div className="cart-item-heading-row items-start gap-2">
+        <div className="cart-item-identity-row grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-text">{item.name}</p>
-            {item.category && <p className="truncate text-xs text-text-muted">{item.category}</p>}
-            {(unitPrice || item.barcode) && (
-              <p className="truncate font-mono text-[11px] text-text-subtle">{unitPrice || item.barcode}</p>
+            <p className="line-clamp-2 text-sm font-semibold leading-5 text-text">{item.name}</p>
+            {unitPrice && (
+              <p className="mt-0.5 truncate text-xs tabular-nums text-text-muted">{unitPrice}</p>
             )}
           </div>
-          <div className="cart-item-summary-actions grid justify-items-end gap-2">
-            {subtotal && <span className="shrink-0 whitespace-nowrap font-mono text-sm font-semibold tabular-nums text-text">{subtotal}</span>}
-            {(onUpdateQty || onRemove) && (
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {onRemove && (
-                  <button type="button" onClick={onRemove} className="pos-touch-target flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold text-text-muted transition hover:bg-surface hover:text-danger active:scale-[0.97]">
-                    <Icon name="trash" className="size-3.5" />
-                    Hapus
-                  </button>
-                )}
-                {onUpdateQty && (
-                  <div className="flex h-7 items-center rounded-md border border-border bg-surface">
-                    <button
-                      type="button"
-                      aria-label="Decrease quantity"
-                      onClick={() => onUpdateQty(item.qty === 1 ? 0 : item.qty - 1)}
-                      className="pos-compact-icon-target grid place-items-center text-text-muted transition hover:bg-surface-muted active:scale-[0.97]"
-                    >
-                      <Icon name="minus" className="size-3.5" />
-                    </button>
-                    <input
-                      ref={qtyInputRef}
-                      aria-label="Kuantitas"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={draftQty}
-                      onChange={handleQuantityInputChange}
-                      onBlur={commitQuantity}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") event.currentTarget.blur();
-                        if (event.key === "Escape") {
-                          setDraftQty(String(item.qty));
-                          event.currentTarget.blur();
-                        }
-                      }}
-                      className="cart-qty-input h-full w-8 bg-transparent text-center font-mono text-xs font-semibold tabular-nums text-text outline-none focus-visible:bg-surface-muted"
-                      style={qtyInputMotion ? { animationName: qtyInputMotion } : undefined}
-                    />
-                    <button
-                      type="button"
-                      aria-label="Increase quantity"
-                      onClick={() => onUpdateQty(item.qty + 1)}
-                      disabled={plusDisabled}
-                      title={plusDisabled ? "Stock limit reached" : undefined}
-                      className="pos-compact-icon-target grid place-items-center text-text-muted transition hover:bg-surface-muted active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
-                    >
-                      <Icon name="plus" className="size-3.5" />
-                    </button>
-                  </div>
-                )}
+          {subtotal && <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-text">{subtotal}</span>}
+        </div>
+        {(onUpdateQty || onRemove) && (
+          <div className="cart-item-action-rail mt-2 flex items-center justify-between gap-3">
+            {onUpdateQty && (
+              <div className="flex h-8 items-center overflow-hidden rounded-md border border-border bg-surface">
+                <button
+                  type="button"
+                  aria-label="Decrease quantity"
+                  onClick={() => onUpdateQty(item.qty === 1 ? 0 : item.qty - 1)}
+                  disabled={disabled}
+                  className="pos-compact-icon-target grid place-items-center text-text-muted transition hover:bg-surface-muted active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+                >
+                  <Icon name="minus" className="size-3.5" />
+                </button>
+                <input
+                  ref={qtyInputRef}
+                  aria-label="Kuantitas"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={draftQty}
+                  disabled={disabled}
+                  onChange={handleQuantityInputChange}
+                  onBlur={commitQuantity}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") event.currentTarget.blur();
+                    if (event.key === "Escape") {
+                      setDraftQty(String(item.qty));
+                      event.currentTarget.blur();
+                    }
+                  }}
+                  className="cart-qty-input h-full w-8 bg-transparent text-center text-xs font-semibold tabular-nums text-text outline-none focus-visible:bg-surface-muted"
+                  style={qtyInputMotion ? { animationName: qtyInputMotion } : undefined}
+                />
+                <button
+                  type="button"
+                  aria-label="Increase quantity"
+                  onClick={() => onUpdateQty(item.qty + 1)}
+                  disabled={disabled || plusDisabled}
+                  title={plusDisabled ? "Stock limit reached" : undefined}
+                  className="pos-compact-icon-target grid place-items-center text-text-muted transition hover:bg-surface-muted active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+                >
+                  <Icon name="plus" className="size-3.5" />
+                </button>
               </div>
             )}
-          </div>
-        </div>
-        {item.addons?.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {item.addons.map((addon) => (
-              <span key={addon} className="inline-flex items-center rounded-md border border-border bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-text-muted">
-                {addon}
-              </span>
-            ))}
+            {onRemove && (
+              <button
+                type="button"
+                onClick={onRemove}
+                disabled={disabled}
+                className="pos-touch-target ml-auto flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold text-text-muted transition hover:bg-danger-soft hover:text-danger active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+              >
+                <Icon name="trash" className="size-3.5" />
+                Hapus
+              </button>
+            )}
           </div>
         )}
       </div>

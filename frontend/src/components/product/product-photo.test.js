@@ -12,11 +12,15 @@ test("validates supported product photo type and size", () => {
 test("design system publishes product photo patterns", async () => {
   const design = await readFile(new URL("../../pages/DesignSystemPage.jsx", import.meta.url), "utf8");
   const table = await readFile(new URL("../design/DataTableShowcase.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../design/ProductPhotoShowcase.jsx", import.meta.url), "utf8");
   const field = await readFile(new URL("./ProductPhotoField.jsx", import.meta.url), "utf8");
+  const guide = await readFile(new URL("../../../DESIGN.md", import.meta.url), "utf8");
   assert.match(design, /ProductPhotoShowcase/);
   assert.match(table, /ProductThumbnail/);
+  assert.match(showcase, /first-party/i);
   assert.match(field, /inferFilename/);
   assert.match(field, /capture="environment"/);
+  assert.match(guide, /first-party/i);
   assert.doesNotMatch(field, /Nama file saat ini/);
   assert.doesNotMatch(field, /Nama file/);
 });

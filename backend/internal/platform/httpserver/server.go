@@ -13,6 +13,7 @@ import (
 type Dependencies struct {
 	Ready          func(context.Context) error
 	Auth           fiber.Handler
+	PublicRoutes   func(fiber.Router)
 	Routes         func(fiber.Router)
 	AllowedOrigins []string
 }
@@ -46,6 +47,10 @@ func New(dependencies Dependencies) *fiber.App {
 		}
 		return c.Status(http.StatusOK).JSON(fiber.Map{"data": fiber.Map{"status": "ready"}})
 	})
+
+	if dependencies.PublicRoutes != nil {
+		dependencies.PublicRoutes(app)
+	}
 
 	if dependencies.Auth != nil {
 		api := app.Group("/api/v1", dependencies.Auth)

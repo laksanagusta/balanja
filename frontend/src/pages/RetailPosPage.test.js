@@ -95,6 +95,10 @@ test("the design system documents and demonstrates the production POS contract",
   assert.match(showcase, /MobileCheckoutPanel/);
   assert.match(design, /639px or less/i);
   assert.match(design, /continuity transition/i);
+  assert.match(design, /live presentation transform/i);
+  assert.match(design, /mounted `inert` descendants/i);
+  assert.match(showcase, /posisi layar terkini/i);
+  assert.match(showcase, /satu tekanan hanya menutup satu layer/i);
 });
 
 test("compact POS uses one scroller and switches layout from its container width", async () => {
@@ -148,9 +152,9 @@ test("compact cart is an accessible horizontal drawer while desktop cart stays v
   assert.match(source, /const \[cartExpanded, setCartExpanded\]/);
   assert.match(source, /ref=\{cartTriggerRef\}/);
   assert.match(source, /ref=\{cartCloseRef\}/);
-  assert.match(source, /role=\{cartPresent \? "dialog" : undefined\}/);
-  assert.match(source, /aria-modal=\{cartPresent \? "true" : undefined\}/);
-  assert.match(source, /inert=\{cartPresent \? true : undefined\}/);
+  assert.match(source, /role=\{isCompactCart && cartPresent \? "dialog" : undefined\}/);
+  assert.match(source, /aria-modal=\{isCompactCart && cartPresent \? "true" : undefined\}/);
+  assert.match(source, /inert=\{isCompactCart && cartPresent \? true : undefined\}/);
   assert.match(source, /cartCloseRef\.current\?\.focus/);
   assert.match(source, /cartReturnFocusRef\.current\?\.focus/);
   assert.match(source, /focusableElements/);
@@ -176,6 +180,89 @@ test("compact cart is an accessible horizontal drawer while desktop cart stays v
   assert.match(css, /@container retail-pos \(min-width:\s*640px\)[\s\S]*\.retail-pos-cart-pane[\s\S]*position:\s*static[\s\S]*visibility:\s*visible/);
 });
 
+test("compact cart modal semantics follow the measured container mode", async () => {
+  const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /ref=\{retailPosRef\}/);
+  assert.match(source, /const \[isCompactCart, setIsCompactCart\]/);
+  assert.match(source, /new ResizeObserver\(updateCartMode\)/);
+  assert.match(source, /inert=\{isCompactCart && cartPresent \? true : undefined\}/);
+  assert.match(source, /role=\{isCompactCart && cartPresent \? "dialog" : undefined\}/);
+  assert.match(source, /if \(!isCompactCart\)[\s\S]*setCartPresent\(false\)/);
+});
+
+test("cart focus and Escape handling respect nested inactive layers", async () => {
+  const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
+  const utils = await readFile(new URL("./retail-pos-utils.js", import.meta.url), "utf8");
+
+  assert.match(source, /filter\(isCartFocusCandidate\)/);
+  assert.match(source, /if \(clearCartOpen\) return;/);
+  assert.match(utils, /closest\(.{0,40}\[inert\]/s);
+  assert.match(utils, /aria-hidden="true"/);
+});
+
+test("cart swipe settles with an interruptible velocity-aware spring", async () => {
+  const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /import \{ animate \} from "motion"/);
+  assert.match(source, /useReducedMotion/);
+  assert.match(source, /cartAnimationRef\.current\?\.stop\(\)/);
+  assert.match(source, /getCartTranslateX/);
+  assert.match(source, /animate\(currentX, targetX,/);
+  assert.match(source, /type:\s*"spring"/);
+  assert.match(source, /velocity,/);
+  assert.match(source, /cartSwipeVelocity/);
+  assert.match(source, /if \(shouldReduceMotion\) return;/);
+});
+
+test("pending checkout keeps cart row controls mounted and disabled", async () => {
+  const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
+  const row = await readFile(new URL("../components/pos/CartRow.jsx", import.meta.url), "utf8");
+
+  assert.doesNotMatch(source, /onUpdateQty=\{checkoutPending \? undefined/);
+  assert.doesNotMatch(source, /onRemove=\{checkoutPending \? undefined/);
+  assert.match(source, /disabled=\{checkoutPending\}/);
+  assert.match(row, /disabled = false/);
+  assert.match(row, /disabled=\{disabled \|\| plusDisabled\}/);
+  assert.match(row, /disabled=\{disabled\}/);
+});
+
+test("clear cart is a destructive header overflow action instead of a checkout peer", async () => {
+  const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+  const showcase = await readFile(
+    new URL("../components/design/POSPatterns.jsx", import.meta.url),
+    "utf8",
+  );
+  const standardCheckout = source.slice(
+    source.indexOf("retail-pos-standard-checkout"),
+    source.indexOf("retail-pos-mobile-checkout"),
+  );
+  const mobileCheckout = source.slice(
+    source.indexOf("retail-pos-mobile-checkout"),
+    source.indexOf("</MobileCheckoutPanel>"),
+  );
+
+  assert.doesNotMatch(standardCheckout, /Kosongkan keranjang/);
+  assert.doesNotMatch(mobileCheckout, /Kosongkan keranjang/);
+  assert.equal(
+    source.match(/setClearCartOpen\(true\)/g)?.length ?? 0,
+    1,
+  );
+  assert.match(source, /aria-label="Opsi keranjang"/);
+  assert.match(source, /aria-haspopup="menu"/);
+  assert.match(source, /role="menu"/);
+  assert.match(source, /role="menuitem"/);
+  assert.match(source, /matchAnchorWidth=\{false\}/);
+  assert.match(source, /align="end"/);
+  assert.match(source, /text-danger/);
+  assert.match(source, /disabled=\{checkoutPending\}/);
+  assert.match(source, /if \(cartMenuOpen\)[\s\S]*setCartMenuOpen\(false\)/);
+  assert.match(source, /if \(store\.cart\.length === 0\) setCartMenuOpen\(false\);/);
+  assert.match(design, /header overflow menu/i);
+  assert.match(showcase, /overflow menu header/i);
+});
+
 test("smartphone cart is full width and progressively discloses checkout without changing larger layouts", async () => {
   const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
   const component = await readFile(new URL("../components/pos/MobileCheckoutPanel.jsx", import.meta.url), "utf8");
@@ -186,7 +273,7 @@ test("smartphone cart is full width and progressively discloses checkout without
   assert.match(source, /retail-pos-mobile-checkout/);
   assert.match(source, /<MobileCheckoutPanel/);
   assert.match(source, /if \(mobileCheckoutExpanded\)[\s\S]*setMobileCheckoutExpanded\(false\)[\s\S]*mobileCheckoutTriggerRef\.current\?\.focus/);
-  assert.match(source, /getClientRects\(\)\.length > 0/);
+  assert.match(source, /filter\(isCartFocusCandidate\)/);
   assert.match(component, /from "motion\/react"/);
   assert.match(component, /AnimatePresence/);
   assert.doesNotMatch(component, /LayoutGroup|layout="size"|mode="popLayout"/);

@@ -8,11 +8,13 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"regexp"
 	"strconv"
 
 	"balanja/backend/internal/auth"
 	"balanja/backend/internal/platform/apperror"
 	"balanja/backend/internal/platform/database"
+	"balanja/backend/internal/platform/objectstore"
 	"balanja/backend/internal/platform/respond"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -20,12 +22,41 @@ import (
 
 type Handler struct{ service *Service }
 
+var productImageKeyPattern = regexp.MustCompile(`^products/[A-Za-z0-9_-]+/[0-9a-fA-F-]+\.(?:jpg|jpeg|png|webp)$`)
+
 func NewHandler(service *Service) *Handler { return &Handler{service: service} }
+func (h *Handler) RegisterPublic(router fiber.Router) {
+	router.Get("/api/v1/product-images/*", h.image)
+}
 func (h *Handler) Register(group fiber.Router) {
 	group.Get("/products", h.list)
 	group.Post("/products", h.create)
 	group.Put("/products/:id", h.update)
 	group.Delete("/products/:id", h.deactivate)
+}
+
+func (h *Handler) image(c fiber.Ctx) error {
+	key := c.Params("*")
+	if !productImageKeyPattern.MatchString(key) {
+		return c.SendStatus(http.StatusNotFound)
+	}
+	object, err := h.service.GetImage(c.Context(), key)
+	if errors.Is(err, objectstore.ErrNotFound) {
+		return c.SendStatus(http.StatusNotFound)
+	}
+	if err != nil {
+		return c.SendStatus(http.StatusServiceUnavailable)
+	}
+	if object.ContentType != "image/jpeg" && object.ContentType != "image/png" && object.ContentType != "image/webp" {
+		object.Body.Close()
+		return c.SendStatus(http.StatusUnsupportedMediaType)
+	}
+	c.Set(fiber.HeaderContentType, object.ContentType)
+	c.Set(fiber.HeaderCacheControl, "public, max-age=31536000, immutable")
+	if object.ETag != "" {
+		c.Set(fiber.HeaderETag, object.ETag)
+	}
+	return c.SendStream(object.Body, int(object.ContentLength))
 }
 func identity(c fiber.Ctx) (database.Identity, error) {
 	id, ok := auth.FromContext(c)

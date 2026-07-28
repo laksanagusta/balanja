@@ -39,7 +39,15 @@ import { nextSelectIndex } from "./select-field-navigation.js";
 import { ScrollEdge } from "./ScrollEdge.jsx";
 
 export const FloatingPopover = React.forwardRef(function FloatingPopover(
-  { anchorRef, open, className = "", gap = 8, children },
+  {
+    anchorRef,
+    open,
+    className = "",
+    gap = 8,
+    align = "start",
+    matchAnchorWidth = true,
+    children,
+  },
   forwardedRef,
 ) {
   const localRef = React.useRef(null);
@@ -60,16 +68,20 @@ export const FloatingPopover = React.forwardRef(function FloatingPopover(
 
       const anchorRect = anchor.getBoundingClientRect();
       const popoverHeight = popover.offsetHeight;
+      const popoverWidth = matchAnchorWidth ? anchorRect.width : popover.offsetWidth;
       const roomBelow = window.innerHeight - anchorRect.bottom - gap;
       const shouldOpenAbove = roomBelow < popoverHeight && anchorRect.top > roomBelow;
       const top = shouldOpenAbove
         ? Math.max(gap, anchorRect.top - popoverHeight - gap)
         : Math.min(anchorRect.bottom + gap, window.innerHeight - popoverHeight - gap);
+      const desiredLeft = align === "end"
+        ? anchorRect.right - popoverWidth
+        : anchorRect.left;
 
       setPosition({
-        left: Math.max(gap, Math.min(anchorRect.left, window.innerWidth - anchorRect.width - gap)),
+        left: Math.max(gap, Math.min(desiredLeft, window.innerWidth - popoverWidth - gap)),
         top,
-        width: anchorRect.width,
+        width: matchAnchorWidth ? anchorRect.width : undefined,
       });
     };
 
@@ -86,7 +98,7 @@ export const FloatingPopover = React.forwardRef(function FloatingPopover(
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [anchorRef, gap, open]);
+  }, [align, anchorRef, gap, matchAnchorWidth, open]);
 
   if (!open || typeof document === "undefined") return null;
 
