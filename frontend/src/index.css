@@ -38,20 +38,11 @@
 
   --shadow-low: 0 1px 2px rgb(0 0 0 / 0.05);
   --shadow-panel: 0 18px 45px rgb(18 18 18 / 0.06);
-  --shadow-accent: 0 12px 22px rgb(29 29 31 / 0.18);
   --shadow-avatar:
     0px 23px 60px -15px #7359f299,
     14px 30px 65px -15px #fa59807d,
     0px 38px 70px -15px #ffeb4062,
     -13px 30px 74px -15px #33d9f246;
-  --primary-button-ring: #1d1d1f;
-  --primary-button-inner-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.04),
-    inset 0 1px 0.5px rgb(255 255 255 / 0.18);
-  --primary-button-close-shadow: 0 2px 2px -1px rgb(35 35 39 / 0.22);
-  --primary-button-far-shadow:
-    0 4px 4px -2px rgb(35 35 39 / 0.2),
-    0 8px 12px -6px rgb(35 35 39 / 0.18);
   --shadow-inner-soft: inset 0 0 0 1px rgb(0 0 0 / 0.01);
 
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -167,12 +158,7 @@
   }
 
   .header-compact-action:active .header-compact-action-surface {
-    transform: scale(0.98);
-  }
-
-  .header-compact-action:active .header-compact-action-surface.primary-button::before,
-  .header-compact-action:active .header-compact-action-surface.primary-button::after {
-    opacity: 0;
+    transform: scale(0.97);
   }
 
   .faq-answer-grid {
@@ -466,26 +452,6 @@
     inline-size: 100%;
   }
 
-  .pos-toolbar-scan .header-compact-action-surface.primary-button {
-    box-shadow:
-      var(--primary-button-inner-shadow),
-      0 0 0 1px var(--primary-button-ring);
-  }
-
-  .pos-toolbar-scan .header-compact-action-surface.primary-button::after {
-    display: none;
-  }
-
-  .mobile-checkout-trigger.primary-button {
-    box-shadow:
-      var(--primary-button-inner-shadow),
-      0 0 0 1px var(--primary-button-ring);
-  }
-
-  .mobile-checkout-trigger.primary-button::after {
-    display: none;
-  }
-
   .pos-icon-touch-target {
     inline-size: 2rem;
     block-size: 2rem;
@@ -624,10 +590,7 @@
       justify-content: center;
       border-radius: var(--radius-control);
       background: var(--color-accent);
-      box-shadow:
-        var(--primary-button-inner-shadow),
-        0 0 0 1px var(--primary-button-ring),
-        var(--primary-button-close-shadow);
+      box-shadow: none;
       color: white;
       transition:
         transform var(--duration-fast) var(--ease-standard),
@@ -733,10 +696,6 @@
     container: retail-pos / inline-size;
   }
 
-  .product-add-button:active {
-    transform: scale(0.97);
-  }
-
   .product-add-ring {
     position: absolute;
     inset: 0;
@@ -818,89 +777,23 @@
   }
 
   .primary-button {
-    position: relative;
-    isolation: isolate;
-    transform: translateY(0);
-    text-shadow: 0 1px 1px rgb(20 20 22 / 0.24);
-    box-shadow:
-      var(--primary-button-inner-shadow),
-      var(--primary-button-close-shadow),
-      0 0 0 1px var(--primary-button-ring);
+    box-shadow: none;
+    text-shadow: none;
   }
 
   .primary-button::before,
   .primary-button::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-  }
-
-  .primary-button::before {
-    z-index: -1;
-    background: linear-gradient(to bottom, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0));
-    opacity: 1;
-    transition: opacity var(--duration-base) var(--ease-standard);
-  }
-
-  .primary-button::after {
-    z-index: -2;
-    box-shadow: var(--primary-button-far-shadow);
-    opacity: 1;
-    transition: opacity var(--duration-base) var(--ease-standard);
+    display: none;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .product-card-frame:not(.is-out-of-stock):hover {
       transform: translateY(-2px);
     }
-
-    .header-compact-action:hover .header-compact-action-surface.primary-button::before {
-      opacity: 0;
-    }
-
-    .primary-button:hover::before {
-      opacity: 0;
-    }
   }
 
   .primary-button:active {
-    transform: scale(0.98);
-  }
-
-  .primary-button:active::before,
-  .primary-button:active::after {
-    opacity: 0;
-  }
-
-  .checkout-3d {
-    transform: perspective(720px) rotateX(0deg) translateY(0);
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.16) inset,
-      0 10px 0 #0b0b0c,
-      0 22px 34px rgb(29 29 31 / 0.22);
-    transition:
-      transform var(--duration-base) var(--ease-standard),
-      box-shadow var(--duration-base) var(--ease-standard),
-      background-color var(--duration-base) var(--ease-standard);
-    transform-style: preserve-3d;
-  }
-
-  .checkout-3d:hover {
-    transform: perspective(720px) rotateX(5deg) translateY(-2px);
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.2) inset,
-      0 12px 0 #0b0b0c,
-      0 28px 42px rgb(29 29 31 / 0.26);
-  }
-
-  .checkout-3d:active {
-    transform: perspective(720px) rotateX(1deg) translateY(6px);
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.12) inset,
-      0 4px 0 #0b0b0c,
-      0 12px 20px rgb(29 29 31 / 0.2);
+    transform: scale(0.97);
   }
 
   .marketing-reveal {
@@ -1088,15 +981,12 @@
     transform: none;
   }
 
-  .checkout-3d,
   .press-feedback,
   .press-feedback:active,
   .product-add-button,
   .product-add-button:active,
   .primary-button,
-  .primary-button:active,
-  .checkout-3d:hover,
-  .checkout-3d:active {
+  .primary-button:active {
     transform: none;
     transition: none;
   }

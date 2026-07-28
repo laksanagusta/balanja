@@ -662,11 +662,11 @@ export default function RetailPosPage() {
                   type="button"
                   aria-pressed={category === item}
                   onClick={() => setCategory(item)}
-                  className={`pos-touch-target relative z-10 h-6 min-w-max flex-1 basis-0 rounded-md px-3 text-sm font-medium transition-colors duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                  className={`pos-touch-target relative z-10 h-6 min-w-max flex-1 basis-0 rounded-md px-3 text-sm font-medium transition-[transform,color,background-color] duration-base ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                     category === item
                       ? categoryIndicator.ready
                         ? "text-text"
-                        : "bg-surface text-text shadow-low"
+                        : "bg-surface text-text"
                       : "text-text-muted hover:text-text"
                   }`}
                 >

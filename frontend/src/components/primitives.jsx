@@ -355,9 +355,9 @@ export function Icon({ name, className = "size-5" }) {
 export function Button({ children, variant = "secondary", size = "md", compactVisual = false, className = "", ...props }) {
   const variants = {
     primary:
-      "primary-button bg-accent text-white hover:bg-accent-hover",
+      "primary-button bg-accent text-white hover:bg-accent-hover active:scale-[0.97] motion-reduce:active:scale-100",
     secondary:
-      "border border-border bg-surface text-text shadow-low hover:bg-surface-muted active:scale-[0.97] motion-reduce:active:scale-100",
+      "border border-border bg-surface text-text hover:bg-surface-muted active:scale-[0.97] motion-reduce:active:scale-100",
     ghost: "text-text-muted hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100",
     danger:
       "bg-danger-soft text-danger hover:bg-danger-soft/80 border border-transparent active:scale-[0.97] motion-reduce:active:scale-100",
@@ -556,7 +556,7 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
                   className={`flex h-10 w-full items-center rounded-control px-3 text-sm font-medium transition duration-fast ease-standard ${
                     inline ? "group-hover:bg-surface" : "group-hover:bg-surface-muted"
                   } ${selectedValue === optionValue
-                    ? inline ? "bg-surface text-text shadow-low" : "bg-surface-muted text-text"
+                    ? inline ? "bg-surface text-text" : "bg-surface-muted text-text"
                     : "text-text-muted"}`}
                 >
                   {optionLabel}
@@ -627,10 +627,10 @@ export function Badge({ children, tone = "neutral", className = "" }) {
 export function Pill({ children, tone = "neutral", selected = false, className = "", ...props }) {
   const tones = {
     neutral: selected
-      ? "border-accent bg-surface text-text shadow-low"
+      ? "border-accent bg-surface text-text"
       : "border-border bg-surface-muted text-text-muted hover:bg-surface hover:text-text",
     accent: selected
-      ? "border-accent bg-accent text-white shadow-accent"
+      ? "border-accent bg-accent text-white"
       : "border-accent/20 bg-accent-soft text-accent hover:bg-accent-soft/70",
     success: "border-success/20 bg-success-soft text-success hover:bg-success-soft/70",
     warning: "border-warning/20 bg-warning-soft text-warning hover:bg-warning-soft/70",
@@ -640,7 +640,7 @@ export function Pill({ children, tone = "neutral", selected = false, className =
   return (
     <button
       type="button"
-      className={`inline-flex h-8 min-w-fit items-center justify-center rounded-full border px-3 text-sm font-medium transition duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${tones[tone]} ${className}`}
+      className={`inline-flex h-8 min-w-fit items-center justify-center rounded-full border px-3 text-sm font-medium transition duration-base ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${tones[tone]} ${className}`}
       {...props}
     >
       {children}

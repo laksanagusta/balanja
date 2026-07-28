@@ -138,7 +138,8 @@ test("category tabs keep a measured sliding indicator while horizontally overflo
   assert.match(source, /ResizeObserver/);
   assert.match(source, /if \(isInitialLoad\) return undefined;/);
   assert.match(source, /\[category, categoryTabs\.length, isInitialLoad, updateCategoryIndicator\]/);
-  assert.match(source, /categoryIndicator\.ready[\s\S]*bg-surface text-text shadow-low/);
+  assert.match(source, /categoryIndicator\.ready[\s\S]*bg-surface text-text/);
+  assert.doesNotMatch(source, /categoryIndicator\.ready[\s\S]{0,180}shadow-low/);
   assert.match(source, /category-tabs-indicator/);
   assert.match(source, /category-tabs[^"\n]*border border-border/);
   assert.match(css, /\.category-tabs-indicator[\s\S]*transition-property:\s*transform, width, opacity/);
@@ -289,8 +290,7 @@ test("smartphone cart is full width and progressively discloses checkout without
   assert.match(component, /aria-expanded=\{expanded\}/);
   assert.match(component, /aria-controls=\{detailId\}/);
   assert.match(component, /headingRef\.current\?\.focus/);
-  assert.match(css, /\.mobile-checkout-trigger\.primary-button[\s\S]*box-shadow:/);
-  assert.match(css, /\.mobile-checkout-trigger\.primary-button::after[\s\S]*display:\s*none/);
+  assert.doesNotMatch(css, /\.mobile-checkout-trigger\.primary-button\s*\{[\s\S]*box-shadow:/);
   assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.retail-pos-cart-pane[\s\S]*width:\s*100%[\s\S]*border-left:\s*0/);
   assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.retail-pos-standard-checkout[\s\S]*display:\s*none/);
   assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.retail-pos-mobile-checkout[\s\S]*display:\s*block/);
@@ -308,7 +308,6 @@ test("cashier controls keep compact visuals and expand only for coarse pointers"
   assert.match(source, /pos-toolbar-scan[\s\S]*compactVisual|compactVisual[\s\S]*pos-toolbar-scan/);
   assert.match(css, /\.pos-touch-target\s*\{[\s\S]*min-block-size:\s*2\.25rem/);
   assert.match(css, /\.pos-toolbar-control-surface,[\s\S]*block-size:\s*2\.25rem/);
-  assert.match(css, /\.pos-toolbar-scan \.header-compact-action-surface\.primary-button[\s\S]*box-shadow:/);
-  assert.match(css, /\.pos-toolbar-scan \.header-compact-action-surface\.primary-button::after[\s\S]*display:\s*none/);
+  assert.doesNotMatch(css, /\.pos-toolbar-scan \.header-compact-action-surface\.primary-button\s*\{[\s\S]*box-shadow:/);
   assert.match(css, /@media \(pointer:\s*coarse\)[\s\S]*\.pos-touch-target[\s\S]*min-block-size:\s*2\.75rem/);
 });

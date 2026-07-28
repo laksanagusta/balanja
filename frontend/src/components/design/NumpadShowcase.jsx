@@ -55,7 +55,7 @@ export default function NumpadShowcase() {
                 <Icon name="x" className="size-4" />
                 Clear
               </button>
-              <button className="flex h-12 flex-[2] items-center justify-center rounded-md bg-accent text-base font-semibold text-white shadow-accent transition hover:bg-accent-hover active:scale-95">
+              <button className="flex h-12 flex-[2] items-center justify-center rounded-md bg-accent text-base font-semibold text-white hover:bg-accent-hover">
                 Enter
               </button>
             </div>

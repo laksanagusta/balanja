@@ -116,7 +116,7 @@ export default function DesignSystemPage({ onNavigate }) {
             <div className="flex flex-wrap items-end gap-3">
               <Button variant="primary" size="base">
                 <Icon name="scan" className="size-4" />
-                Primary 3D button
+                Primary flat button
               </Button>
             </div>
           </div>
