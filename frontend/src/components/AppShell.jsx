@@ -169,7 +169,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
               aria-label="Buka menu akun"
               aria-expanded={accountOpen}
               onClick={() => setAccountOpen((open) => !open)}
-              className={`flex w-full items-center rounded-control border border-border bg-surface py-1.5 text-left shadow-low transition-[background-color,transform] duration-fast ease-standard active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${sidebarCollapsed ? "justify-center px-1" : "gap-3 px-2"} ${accountOpen ? "bg-surface-muted" : "hover:bg-surface-muted"}`}
+              className={`flex w-full items-center rounded-control border border-border bg-surface py-1.5 text-left transition-[background-color,transform] duration-fast ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${sidebarCollapsed ? "justify-center px-1" : "gap-3 px-2"} ${accountOpen ? "bg-surface-muted" : "hover:bg-surface-muted"}`}
             >
               <span className="account-avatar size-9 shrink-0 overflow-hidden rounded-full bg-surface-muted">
                 <GradientAvatar seed={avatarSeed} size={36} />

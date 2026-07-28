@@ -229,7 +229,6 @@ export const tokenGroups = [
     tokens: [
       ["Low", "--shadow-low", "0 1px 2px rgb(0 0 0 / 0.05)"],
       ["Panel", "--shadow-panel", "0 18px 45px rgb(18 18 18 / 0.06)"],
-      ["Accent", "--shadow-accent", "0 12px 22px rgb(29 29 31 / 0.18)"],
       ["Inner Soft", "--shadow-inner-soft", "inset 0 0 0 1px rgb(0 0 0 / 0.01)"],
     ],
   },

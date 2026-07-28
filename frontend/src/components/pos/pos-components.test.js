@@ -43,7 +43,10 @@ test("POS product card is an explicit variant", async () => {
   assert.match(css, /\.pos-product-card \.product-card-content\s*\{[\s\S]*padding-block:\s*0\.5rem 0;/);
   assert.match(css, /\.pos-product-card \.product-card-actions\s*\{[\s\S]*padding-block-start:\s*0\.25rem;/);
   assert.match(css, /\.pos-product-card \.product-add-button\s*\{[\s\S]*min-block-size:\s*2\.75rem;[\s\S]*background:\s*transparent !important;/);
-  assert.match(css, /\.pos-product-card \.product-add-button \.button-label-pop\s*\{[\s\S]*block-size:\s*2\.25rem;/);
+  assert.match(css, /\.pos-product-card \.product-add-button \.button-label-pop\s*\{[\s\S]*block-size:\s*2\.25rem;[\s\S]*box-shadow:\s*none;/);
+  assert.match(css, /\.primary-button\s*\{[\s\S]*box-shadow:\s*none;[\s\S]*text-shadow:\s*none;/);
+  assert.match(css, /\.primary-button::before,[\s\S]*\.primary-button::after\s*\{[\s\S]*display:\s*none;/);
+  assert.match(css, /\.primary-button:active\s*\{[\s\S]*transform:\s*scale\(0\.97\)/);
   assert.match(source, /<span className="font-mono tabular-nums">\{product\.price\}<\/span>/);
   assert.doesNotMatch(source, /showStepper|allowRepeatAdd/);
 });
@@ -56,7 +59,9 @@ test("POS catalog groups compact price and add action without repeating Rp", asy
   assert.match(catalog, /price:\s*formatPrice\(product\.price\)\.replace\(\/\^Rp\/,\s*""\)/);
   assert.match(showcase, /price:\s*"72\.000"/);
   assert.match(showcase, /jarak visual tetap 8px tanpa divider/);
+  assert.match(showcase, /treatment flat global ala Uber/);
   assert.match(design, /Product-card prices omit the repeated `Rp` prefix/);
+  assert.match(design, /Every button follows one Uber-inspired flat system/);
 });
 
 test("cart controls and payment choices stay visually compact with coarse-pointer targets", async () => {

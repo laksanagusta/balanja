@@ -23,7 +23,7 @@ export default function TabListShowcase() {
               <button
                 key={tab}
                 className={`h-10 flex-1 rounded-md text-sm font-semibold ${
-                  index === 0 ? "bg-surface text-text shadow-low" : "text-text-muted"
+                  index === 0 ? "bg-surface text-text" : "text-text-muted"
                 }`}
               >
                 {tab}

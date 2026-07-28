@@ -83,7 +83,7 @@ export default function PosProductMockup({ compact = false }) {
 
           <div className="mt-3 flex gap-1 rounded-card bg-surface-muted p-1 text-text-muted">
             {["Semua", "Minuman", "Snack", "Perawatan", "Rumah Tangga"].map((category, index) => (
-              <span key={category} className={`rounded-control px-2.5 py-1.5 ${index === 0 ? "bg-surface font-semibold text-text shadow-low" : ""}`}>
+              <span key={category} className={`rounded-control px-2.5 py-1.5 ${index === 0 ? "bg-surface font-semibold text-text" : ""}`}>
                 {category}
               </span>
             ))}
@@ -129,7 +129,7 @@ export default function PosProductMockup({ compact = false }) {
           <div className="mt-auto border-t border-border pt-4">
             <div className="flex justify-between text-text-muted"><span>Subtotal</span><span>Rp35.000</span></div>
             <div className="mt-2 flex justify-between text-sm font-semibold text-text"><span>Total pembayaran</span><span>Rp35.000</span></div>
-            <div className="mt-4 flex h-9 items-center justify-center rounded-control bg-accent font-semibold text-white shadow-accent">Selesaikan transaksi</div>
+            <div className="mt-4 flex h-9 items-center justify-center rounded-control bg-accent font-semibold text-white">Selesaikan transaksi</div>
           </div>
         </aside>
       </div>

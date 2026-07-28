@@ -115,7 +115,7 @@ test("compact header action keeps a 44px transparent hit area without changing i
   assert.match(primitives, /compactVisual[\s\S]*h-11/);
   assert.match(primitives, /header-compact-action-surface/);
   assert.match(css, /header-compact-action:active \.header-compact-action-surface[\s\S]*scale\(0\.98\)/);
-  assert.match(css, /header-compact-action:hover \.header-compact-action-surface\.primary-button::before/);
+  assert.match(css, /header-compact-action:active \.header-compact-action-surface[\s\S]*scale\(0\.97\)/);
   assert.doesNotMatch(css, /header-compact-action::after/);
 });
 
@@ -149,18 +149,16 @@ test("marketing reveal stays concise and does not retain a permanent compositor 
   assert.doesNotMatch(page, /"--reveal-delay": "260ms"/);
 });
 
-test("primary button uses Clerk-style highlight and pressed depth without a gray border", async () => {
+test("primary button uses the global flat surface and press feedback", async () => {
   const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
   const primaryStart = css.indexOf(".primary-button {");
   const primaryBase = css.slice(primaryStart, css.indexOf(".primary-button::before", primaryStart));
-  const primaryInteractionStart = css.indexOf(".primary-button:hover::before", primaryStart);
-  const primaryInteraction = css.slice(primaryInteractionStart, css.indexOf(".checkout-3d", primaryInteractionStart));
+  const primaryInteraction = css.slice(css.indexOf(".primary-button:active", primaryStart));
 
-  assert.match(primaryBase, /var\(--primary-button-ring\)/);
-  assert.doesNotMatch(primaryBase, /rgb\(0 0 0 \/ 0\.16\)/);
-  assert.match(primaryInteraction, /hover::before[\s\S]*opacity: 0/);
-  assert.match(primaryInteraction, /scale\(0\.98\)/);
-  assert.match(primaryInteraction, /active::after[\s\S]*opacity: 0/);
+  assert.match(primaryBase, /box-shadow: none/);
+  assert.match(primaryBase, /text-shadow: none/);
+  assert.match(primaryInteraction, /scale\(0\.97\)/);
+  assert.doesNotMatch(css, /--primary-button-ring|--primary-button-far-shadow|checkout-3d/);
 });
 
 test("landing keeps the retail backdrop while product items remain placeholders", async () => {
