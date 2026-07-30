@@ -174,7 +174,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                       role="switch"
                       aria-checked={scanSoundEnabled}
                       onClick={() => setScanSoundEnabled(!scanSoundEnabled)}
-                      className="flex min-h-11 w-full items-center justify-between gap-4 rounded-card border border-border bg-surface px-4 py-3 text-left transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                      className="flex min-h-11 w-full items-center justify-between gap-4 rounded-button border border-border bg-surface px-4 py-3 text-left transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                     >
                       <span>
                         <span className="block text-sm font-semibold text-text">Bunyi pemindaian</span>

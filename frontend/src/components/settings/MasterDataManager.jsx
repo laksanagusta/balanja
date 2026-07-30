@@ -45,7 +45,7 @@ function ItemActionsMenu({ itemName, disabled, onRename, onArchive }) {
         aria-expanded={open}
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
-        className="settings-touch-target inline-flex size-11 items-center justify-center rounded-control text-text-muted transition-colors duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+        className="settings-touch-target inline-flex size-11 items-center justify-center rounded-button text-text-muted transition-colors duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
       >
         <Icon name="more" className="size-5" />
       </button>
@@ -61,7 +61,7 @@ function ItemActionsMenu({ itemName, disabled, onRename, onArchive }) {
             type="button"
             role="menuitem"
             onClick={() => choose(onRename)}
-            className="flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium text-text transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
+            className="flex h-10 w-full items-center rounded-button px-3 text-left text-sm font-medium text-text transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
           >
             Ubah nama
           </button>
@@ -69,7 +69,7 @@ function ItemActionsMenu({ itemName, disabled, onRename, onArchive }) {
             type="button"
             role="menuitem"
             onClick={() => choose(onArchive)}
-            className="flex h-10 w-full items-center rounded-control px-3 text-left text-sm font-medium text-danger transition-colors duration-fast ease-standard hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
+            className="flex h-10 w-full items-center rounded-button px-3 text-left text-sm font-medium text-danger transition-colors duration-fast ease-standard hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
           >
             Arsipkan
           </button>

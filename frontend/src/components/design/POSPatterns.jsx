@@ -118,7 +118,7 @@ export default function POSPatterns() {
                   type="button"
                   aria-pressed={paymentMethod === m.id}
                   onClick={() => setPaymentMethod(m.id)}
-                  className={`grid min-h-11 place-items-center gap-1 rounded-md border px-3 py-2.5 text-xs font-semibold transition ${
+                  className={`grid min-h-11 place-items-center gap-1 rounded-button border px-3 py-2.5 text-xs font-semibold transition ${
                     paymentMethod === m.id
                       ? "border-accent bg-accent-soft text-accent"
                       : "border-border text-text-muted hover:bg-surface-muted"

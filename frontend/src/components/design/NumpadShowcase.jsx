@@ -40,7 +40,7 @@ export default function NumpadShowcase() {
                   <button
                     key={k}
                     onClick={() => handleKey(k)}
-                    className="flex h-12 flex-1 items-center justify-center rounded-md border border-border bg-surface text-base font-semibold text-text transition hover:bg-surface-muted active:scale-95"
+                    className="flex h-12 flex-1 items-center justify-center rounded-button border border-border bg-surface text-base font-semibold text-text transition hover:bg-surface-muted active:scale-95"
                   >
                     {k}
                   </button>
@@ -50,12 +50,12 @@ export default function NumpadShowcase() {
             <div className="flex gap-2">
               <button
                 onClick={handleBackspace}
-                className="flex h-12 flex-1 items-center justify-center gap-1 rounded-md border border-border bg-surface text-sm font-semibold text-text-muted transition hover:bg-surface-muted active:scale-95"
+                className="flex h-12 flex-1 items-center justify-center gap-1 rounded-button border border-border bg-surface text-sm font-semibold text-text-muted transition hover:bg-surface-muted active:scale-95"
               >
                 <Icon name="x" className="size-4" />
                 Clear
               </button>
-              <button className="flex h-12 flex-[2] items-center justify-center rounded-md bg-accent text-base font-semibold text-white hover:bg-accent-hover">
+              <button className="flex h-12 flex-[2] items-center justify-center rounded-button bg-accent text-base font-semibold text-white hover:bg-accent-hover">
                 Enter
               </button>
             </div>

@@ -419,7 +419,7 @@ export default function ProductsPage() {
               aria-checked={editing.active}
               disabled={savingProduct}
               onClick={() => updateEditing("active", !editing.active)}
-              className="flex h-10 items-center justify-between rounded-card border border-border bg-surface px-3.5 text-sm font-semibold text-text shadow-inner-soft transition hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+              className="flex h-10 items-center justify-between rounded-button border border-border bg-surface px-3.5 text-sm font-semibold text-text shadow-inner-soft transition hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
             >
               <span>Aktif</span>
               <Switch checked={editing.active} tone="success" decorative />
