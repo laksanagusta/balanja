@@ -9,7 +9,7 @@ export default function ModalShowcase() {
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Modal & Dialog</h3>
       <div className="rounded-panel border border-border bg-surface p-4">
-        <p className="mb-3 text-sm text-text-muted">Overlay dialogs for confirmations, product details, and payment.</p>
+        <p className="mb-3 text-sm text-text-muted">Overlay dialogs keep their opaque header and actions visually isolated, with 16px below the title before only the body content scrolls.</p>
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setOpen(true)}>Open modal</Button>
           <Button variant="primary" onClick={() => setConfirmOpen(true)}>Confirm dialog</Button>
