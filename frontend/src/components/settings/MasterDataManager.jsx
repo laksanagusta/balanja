@@ -126,7 +126,7 @@ export default function MasterDataManager({
   }
 
   return (
-    <Panel className="master-data-manager">
+    <Panel className="master-data-manager shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3 p-4">
         <div>
           <p className="text-sm font-semibold text-text">{pluralLabel}</p>

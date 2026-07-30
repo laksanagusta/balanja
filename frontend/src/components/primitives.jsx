@@ -839,8 +839,27 @@ export function useDialogPresence(open, duration = 200) {
   return { isPresent, isVisible };
 }
 
+let overlayDepthCount = 0;
+
+export function useOverlayDepth(active) {
+  React.useLayoutEffect(() => {
+    if (!active || typeof document === "undefined") return undefined;
+
+    overlayDepthCount += 1;
+    document.body.classList.add("overlay-depth-active");
+
+    return () => {
+      overlayDepthCount = Math.max(0, overlayDepthCount - 1);
+      if (overlayDepthCount === 0) {
+        document.body.classList.remove("overlay-depth-active");
+      }
+    };
+  }, [active]);
+}
+
 export function Dialog({ open, onClose, size = "md", title, icon, iconBg, children, footer }) {
   const { isPresent, isVisible } = useDialogPresence(open);
+  useOverlayDepth(isVisible);
   const titleId = React.useId();
   const dialogRef = React.useRef(null);
   const snap = React.useRef({ children, title, icon, iconBg, footer });
@@ -880,7 +899,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isVisible, onClose]);
 
-  if (!isPresent) return null;
+  if (!isPresent || typeof document === "undefined") return null;
 
   const sizes = {
     sm: "max-w-sm",
@@ -890,21 +909,21 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
 
   const c = snap.current;
 
-  return (
+  return createPortal((
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ease-standard motion-reduce:transition-opacity ${
         isVisible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
       aria-hidden={!isVisible}
     >
-      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
+      <div className="dialog-scrim fixed inset-0 bg-white/30" onClick={onClose} />
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={c.title ? titleId : undefined}
         tabIndex={-1}
-        className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-panel border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
+        className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-overlay border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
           isVisible ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
         } ${
           !c.footer && !c.icon ? "text-center" : ""
@@ -929,7 +948,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
         {c.footer && <div className="mt-6 flex justify-end gap-2">{c.footer}</div>}
       </div>
     </div>
-  );
+  ), document.body);
 }
 
 export function Switch({ checked = false, tone = "accent", decorative = false }) {

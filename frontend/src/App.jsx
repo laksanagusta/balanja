@@ -77,7 +77,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-app-bg text-text antialiased">
+    <div className="app-depth-surface min-h-screen bg-app-bg text-text antialiased">
       <Toaster
         position="bottom-right"
         closeButton

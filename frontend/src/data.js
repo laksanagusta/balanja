@@ -221,7 +221,8 @@ export const tokenGroups = [
     tokens: [
       ["XS - Controls", "--radius-control", "8px"],
       ["S - Cards & Inputs", "--radius-card", "16px"],
-      ["M - Modals & Panels", "--radius-panel", "24px"],
+      ["M - Panels", "--radius-panel", "16px"],
+      ["L - Modals & Drawers", "--radius-overlay", "32px"],
     ],
   },
   {

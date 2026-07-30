@@ -55,12 +55,12 @@ test("product barcode scan action is separate from the manual field", async () =
   assert.doesNotMatch(source, /<Icon name="barcode"/);
 });
 
-test("product creation is a round icon action beside search", async () => {
+test("product creation is a floating action button at bottom-right", async () => {
   const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
   assert.match(source, /aria-label="Tambah produk"/);
-  assert.match(source, /className="grid size-11 shrink-0 place-items-center rounded-full bg-accent/);
   assert.match(source, /<Icon name="plus" className="size-5"/);
-  assert.match(source, /mobile-search-control[\s\S]{0,1200}aria-label="Tambah produk"/);
+  assert.match(source, /absolute bottom-4 right-4/);
+  assert.doesNotMatch(source, /mobile-search-control[\s\S]{0,1200}aria-label="Tambah produk"/);
 });
 
 test("product sorting, category, and status stay together in the top-bar drawer", async () => {

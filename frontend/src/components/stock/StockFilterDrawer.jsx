@@ -1,6 +1,6 @@
 import React from "react";
 import { Drawer } from "vaul";
-import { Icon } from "../primitives.jsx";
+import { Icon, useOverlayDepth } from "../primitives.jsx";
 
 const DEFAULT_MOVEMENT_TYPE = "Semua pergerakan";
 const MOVEMENT_TYPE_OPTIONS = [
@@ -18,6 +18,7 @@ export function StockFilterDrawer({
   onTypeChange,
   label = "Filter stok",
 }) {
+  useOverlayDepth(open);
   const [draftType, setDraftType] = React.useState(type);
   const activeFilterCount = Number(draftType !== DEFAULT_MOVEMENT_TYPE);
 
@@ -61,10 +62,10 @@ export function StockFilterDrawer({
       </Drawer.Trigger>
 
       <Drawer.Portal>
-        <Drawer.Overlay className="product-filter-drawer-overlay fixed inset-0 z-[70] bg-black/25" />
+        <Drawer.Overlay className="product-filter-drawer-overlay fixed inset-0 z-[70] bg-white/30 backdrop-blur-sm" />
         <Drawer.Content
           aria-describedby={undefined}
-          className="product-filter-drawer fixed inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[min(86svh,40rem)] w-full max-w-[1200px] flex-col rounded-t-panel border border-border bg-surface outline-none shadow-panel"
+          className="product-filter-drawer fixed inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[min(86svh,40rem)] w-full max-w-[1200px] flex-col overflow-hidden rounded-t-overlay border border-border bg-surface outline-none shadow-panel"
         >
           <Drawer.Handle className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-border" />
 

@@ -210,7 +210,7 @@ export default function ProductsPage() {
   return (
     <>
       {topBarActions}
-      <div className="flex h-full min-h-0 flex-col bg-surface">
+      <div className="relative flex h-full min-h-0 flex-col bg-surface">
         <header className="px-4 py-3">
           <div className="grid w-full">
             <div className="flex w-full min-w-0 items-center gap-2">
@@ -224,16 +224,7 @@ export default function ProductsPage() {
                   onChange={(event) => setQuery(event.target.value)}
                 />
               </div>
-              <button
-                type="button"
-                aria-label="Tambah produk"
-                title="Tambah produk"
-                disabled={isProductsMutating}
-                onClick={() => openEditor(emptyProduct(defaultCategoryId, defaultUnitId))}
-                className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-white transition-[background-color,transform] duration-fast ease-standard hover:bg-accent-hover active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
-              >
-                <Icon name="plus" className="size-5" />
-              </button>
+
             </div>
           </div>
         </header>
@@ -285,6 +276,18 @@ export default function ProductsPage() {
           </div>
         </div>
 
+        <button
+          type="button"
+          aria-label="Tambah produk"
+          title="Tambah produk"
+          disabled={isProductsMutating}
+          onClick={() => openEditor(emptyProduct(defaultCategoryId, defaultUnitId))}
+          className="absolute bottom-4 right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel transition-[background-color,transform,box-shadow] duration-fast ease-standard hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+        >
+          <Icon name="plus" className="size-5" />
+        </button>
+      </div>
+
       <Dialog
         open={Boolean(editing)}
         onClose={() => {
@@ -329,31 +332,35 @@ export default function ProductsPage() {
             />
 
             <div className="grid gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={savingProduct}
-                onClick={() => {
-                  void primeScanSuccessSound();
-                  setScannerOpen(true);
-                }}
-                className="w-full"
-              >
-                <Icon name="scan" className="size-5" />
-                Pindai barcode
-              </Button>
-              <Input
-                label="Barcode"
-                placeholder="8991001000011"
-                error={productErrors.barcode}
-                inputClassName="font-mono tabular-nums tracking-[0.01em]"
-                inputProps={{
-                  value: editing.barcode,
-                  onChange: (event) => updateEditing("barcode", event.target.value),
-                  required: true,
-                  disabled: savingProduct,
-                }}
-              />
+              <span className="text-sm font-semibold text-text">Barcode</span>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder="8991001000011"
+                    error={productErrors.barcode}
+                    inputClassName="font-mono tabular-nums tracking-[0.01em]"
+                    inputProps={{
+                      value: editing.barcode,
+                      onChange: (event) => updateEditing("barcode", event.target.value),
+                      required: true,
+                      disabled: savingProduct,
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Pindai barcode"
+                  title="Pindai barcode"
+                  disabled={savingProduct}
+                  onClick={() => {
+                    void primeScanSuccessSound();
+                    setScannerOpen(true);
+                  }}
+                  className="grid size-9 shrink-0 place-items-center rounded-control text-text-muted transition-[background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                >
+                  <Icon name="scan" className="size-5" />
+                </button>
+              </div>
             </div>
 
             <MasterDataSelectField
@@ -394,11 +401,7 @@ export default function ProductsPage() {
                   disabled: Boolean(editing.id) || savingProduct,
                 }}
               />
-              {editing.id && (
-                <p className="sm:col-span-2 -mt-1 rounded-control bg-surface-muted px-3 py-2 text-xs font-medium leading-5 text-text-muted">
-                  Stok diperbarui oleh aktivitas transaksi. Pengubahan stok langsung memang dinonaktifkan pada produk yang sudah ada.
-                </p>
-              )}
+
               <div className="sm:col-span-2">
                 <MasterDataSelectField
                   entityLabel="Satuan"
@@ -442,7 +445,6 @@ export default function ProductsPage() {
           };
         }}
       />
-      </div>
     </>
   );
 }

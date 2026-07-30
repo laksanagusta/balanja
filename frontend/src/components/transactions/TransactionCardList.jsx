@@ -63,7 +63,7 @@ export function TransactionCardList({ transactions, formatDate, onSelect }) {
               type="button"
               aria-label={`Lihat detail transaksi ${transaction.number}`}
               onClick={() => onSelect?.(transaction)}
-              className="group grid min-h-32 w-full gap-4 rounded-panel border border-border bg-surface p-4 text-left shadow-low transition-[background-color,transform,border-color] duration-fast ease-standard hover:border-border-strong hover:bg-surface-muted/45 active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              className="group grid min-h-32 w-full gap-4 rounded-card border border-border bg-surface p-4 text-left shadow-low transition-[background-color,transform,border-color] duration-fast ease-standard hover:border-border-strong hover:bg-surface-muted/45 active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               <span className="flex min-w-0 items-start justify-between gap-3">
                 <span className="min-w-0">

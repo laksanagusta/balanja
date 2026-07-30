@@ -1,6 +1,6 @@
 import React from "react";
 import { Drawer } from "vaul";
-import { Icon } from "../primitives.jsx";
+import { Icon, useOverlayDepth } from "../primitives.jsx";
 
 export function PosFilterDrawer({
   open,
@@ -15,6 +15,7 @@ export function PosFilterDrawer({
   iconOnly = false,
   className = "",
 }) {
+  useOverlayDepth(open);
   const categoryTabsRef = React.useRef(null);
   const categoryTabRefs = React.useRef(new Map());
   const [categoryIndicator, setCategoryIndicator] = React.useState({
@@ -93,10 +94,10 @@ export function PosFilterDrawer({
       </Drawer.Trigger>
 
       <Drawer.Portal>
-        <Drawer.Overlay className="pos-filter-drawer-overlay fixed inset-0 z-[70] bg-black/25" />
+        <Drawer.Overlay className="pos-filter-drawer-overlay fixed inset-0 z-[70] bg-white/30 backdrop-blur-sm" />
         <Drawer.Content
           aria-describedby={undefined}
-          className="pos-filter-drawer fixed inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[min(86svh,42rem)] w-full max-w-[1200px] flex-col rounded-t-panel border border-border bg-surface outline-none shadow-panel"
+          className="pos-filter-drawer fixed inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[min(86svh,42rem)] w-full max-w-[1200px] flex-col overflow-hidden rounded-t-overlay border border-border bg-surface outline-none shadow-panel"
         >
           <div className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-border" aria-hidden="true" />
 

@@ -29,8 +29,8 @@ export function ProductPhotoField({ product, previewURL, filename, error, disabl
   const displayedFilename = displayedValue.filename;
 
   return (
-    <fieldset disabled={disabled} className="grid gap-2">
-      <legend className="text-sm font-semibold text-text">Foto produk</legend>
+    <div className="grid gap-2 text-sm font-semibold text-text">
+      <span>Foto produk</span>
       <div
         className={`relative overflow-hidden rounded-card border border-dashed bg-surface-muted/55 transition-[background-color,border-color] duration-fast ${
           error ? "border-danger" : "border-border-strong"
@@ -104,6 +104,6 @@ export function ProductPhotoField({ product, previewURL, filename, error, disabl
           {error}
         </p>
       )}
-    </fieldset>
+    </div>
   );
 }

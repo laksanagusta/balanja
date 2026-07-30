@@ -153,14 +153,14 @@ function LowStockCard({ product, threshold, onRestock }) {
   );
 
   if (!onRestock) {
-    return <article className="rounded-panel border border-border bg-surface p-4 shadow-low">{content}</article>;
+    return <article className="rounded-card border border-border bg-surface p-4 shadow-low">{content}</article>;
   }
 
   return (
     <button
       type="button"
       onClick={() => onRestock(product)}
-      className="min-h-24 w-full rounded-panel border border-border bg-surface p-4 text-left shadow-low transition-[background-color,transform] duration-fast ease-standard hover:bg-surface-muted/60 active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+      className="min-h-24 w-full rounded-card border border-border bg-surface p-4 text-left shadow-low transition-[background-color,transform] duration-fast ease-standard hover:bg-surface-muted/60 active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       aria-label={`Tambah stok untuk ${product.name}`}
     >
       {content}
@@ -175,7 +175,7 @@ function MovementCard({ movement }) {
   const quantityTone = quantity > 0 ? "text-success" : quantity < 0 ? "text-danger" : "text-text";
 
   return (
-    <article className="grid min-h-24 grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3 rounded-panel border border-border bg-surface p-4 shadow-low">
+    <article className="grid min-h-24 grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3 rounded-card border border-border bg-surface p-4 shadow-low">
       <span className={`grid size-12 place-items-center rounded-card ${movementToneClasses[presentation.tone]}`}>
         <Icon name={presentation.icon} className="size-6" />
       </span>
