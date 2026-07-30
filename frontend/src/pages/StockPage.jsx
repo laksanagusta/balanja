@@ -95,10 +95,10 @@ export default function StockPage() {
   return (
     <>
       {topBarActions}
-      <div className="flex h-full min-h-0 flex-col bg-surface">
+      <div className="relative flex h-full min-h-0 flex-col bg-surface">
         <header className="px-4 py-3">
           <div className="flex w-full min-w-0 items-center gap-2">
-            <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+            <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
               <Icon name="search" className="size-4 text-text-muted" />
               <input
                 aria-label="Cari aktivitas stok"
@@ -108,18 +108,6 @@ export default function StockPage() {
                 onChange={(event) => setQuery(event.target.value)}
               />
             </div>
-            <button
-              type="button"
-              aria-label="Pergerakan baru"
-              title="Pergerakan baru"
-              onClick={() => {
-                setDialogProductId("");
-                setDialogOpen(true);
-              }}
-              className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-white transition-[background-color,transform] duration-fast ease-standard hover:bg-accent-hover active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-            >
-              <Icon name="plus" className="size-5" />
-            </button>
           </div>
         </header>
 
@@ -140,6 +128,19 @@ export default function StockPage() {
             />
           </div>
         </main>
+
+        <button
+          type="button"
+          aria-label="Pergerakan baru"
+          title="Pergerakan baru"
+          onClick={() => {
+            setDialogProductId("");
+            setDialogOpen(true);
+          }}
+          className="absolute bottom-4 right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel transition-[background-color,transform,box-shadow] duration-fast ease-standard hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        >
+          <Icon name="plus" className="size-5" />
+        </button>
 
         {dialogOpen && (
           <MovementDialog
@@ -217,7 +218,7 @@ function MovementDialog({ products, searchProducts, initialProductId = "", onClo
             value={productId}
             onChange={setProductId}
             error={showErrors ? productError : ""}
-            placeholder="Cari produk, barcode, kategori"
+            placeholder="Nama produk"
           />
           <SelectField label="Jenis pergerakan" value={typeLabel} options={movementOptions} onChange={setTypeLabel} />
           <Input
@@ -351,7 +352,7 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
 }
 
 function formatProductOption(product) {
-  return `${product.name}${product.barcode ? ` - ${product.barcode}` : ""}`;
+  return product.name;
 }
 
 function getQuantityError({ type, quantityText, quantity, product, preview }) {

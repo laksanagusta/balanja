@@ -156,7 +156,7 @@ export function RetailPosSkeleton() {
         </div>
       </main>
 
-      <aside className="retail-pos-cart-pane flex min-w-0 flex-col border-border bg-surface">
+      <aside className="retail-pos-cart-pane rounded-l-overlay flex min-w-0 flex-col border-border bg-surface">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="grid gap-2">
             <Skeleton className="h-5 w-20 bg-surface-muted/80" />
@@ -389,7 +389,7 @@ export function TransactionsPageSkeleton() {
             <RiseSkeleton
               key={index}
               delay={index * 60}
-              className="grid min-h-32 gap-4 rounded-panel border border-border bg-surface p-4 shadow-low"
+              className="grid min-h-32 gap-4 rounded-card border border-border bg-surface p-4 shadow-low"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="grid gap-2">
@@ -446,7 +446,7 @@ export function StockPageSkeleton() {
                   <RiseSkeleton
                     key={index}
                     delay={(sectionIndex * 3 + index) * 60}
-                    className="min-h-24 rounded-panel bg-surface p-4 shadow-low"
+                    className="min-h-24 rounded-card bg-surface p-4 shadow-low"
                   >
                     {sectionIndex ? (
                       <div className="grid h-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3">

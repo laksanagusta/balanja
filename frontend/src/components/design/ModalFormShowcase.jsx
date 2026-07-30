@@ -52,17 +52,21 @@ export default function ModalFormShowcase() {
         >
           <div className="mt-4 grid gap-4">
             <Input label="Product name" placeholder="e.g. Beras Premium 5kg" inputProps={{ defaultValue: "" }} />
-            <Input
-              label="Barcode"
-              placeholder="8997001230011"
-              inputClassName="font-mono tabular-nums tracking-[0.01em]"
-              leftSlot={(
-                <button type="button" aria-label="Scan barcode" className="mobile-compact-control -ml-1 grid size-9 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
+            <div className="grid gap-2">
+              <span className="text-sm font-semibold text-text">Barcode</span>
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <Input
+                    placeholder="8997001230011"
+                    inputClassName="font-mono tabular-nums tracking-[0.01em]"
+                    inputProps={{ defaultValue: "" }}
+                  />
+                </div>
+                <button type="button" aria-label="Scan barcode" className="grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
                   <Icon name="scan" className="size-5" />
                 </button>
-              )}
-              inputProps={{ defaultValue: "" }}
-            />
+              </div>
+            </div>
             <SelectField label="Category" value="Sembako" options={["Sembako", "Minuman", "Makanan Instan", "Rumah Tangga", "Perawatan"]} />
             <Input label="Price" placeholder="72000" inputClassName="font-mono tabular-nums" inputProps={{ type: "number", defaultValue: "" }} />
             <Input label="Stock" placeholder="18" inputClassName="font-mono tabular-nums" inputProps={{ type: "number", defaultValue: "" }} />

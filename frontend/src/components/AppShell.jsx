@@ -48,7 +48,7 @@ function MobileBottomNavigation({ pathname, onNavigate, moreOpen, onToggleMore }
             }`}
           >
             <span className={`grid size-8 place-items-center rounded-full transition-colors duration-fast ${active ? "bg-accent-soft" : ""}`}>
-              <Icon name={icon} className="size-5" />
+              <Icon name={icon} className="size-6" />
             </span>
             <span className="max-w-full truncate">{label}</span>
           </button>
@@ -64,7 +64,7 @@ function MobileBottomNavigation({ pathname, onNavigate, moreOpen, onToggleMore }
         }`}
       >
         <span className={`grid size-8 place-items-center rounded-full transition-colors duration-fast ${moreActive || moreOpen ? "bg-accent-soft" : ""}`}>
-          <Icon name="more" className="size-5" />
+          <Icon name="more" className="size-6" />
         </span>
         <span>Lainnya</span>
       </button>
@@ -74,33 +74,29 @@ function MobileBottomNavigation({ pathname, onNavigate, moreOpen, onToggleMore }
 
 function AccountMenu({ user, onSettings, onSignOut, className = "" }) {
   return (
-    <div className={`rounded-card border border-border bg-surface p-2 shadow-panel ${className}`}>
+    <div className={`flex flex-col gap-1 rounded-card border border-border bg-surface p-2 shadow-panel ${className}`}>
       <div className="px-3 py-2">
         <p className="truncate text-sm font-semibold text-text">{user?.fullName || "Kasir"}</p>
         <p className="truncate text-xs text-text-muted">
           {user?.primaryEmailAddress?.emailAddress || "Sudah masuk"}
         </p>
       </div>
-      <div className="pt-1">
-        <button
-          type="button"
-          onClick={onSettings}
-          className="mobile-standard-control flex h-10 w-full items-center gap-2 rounded-control px-3 text-left text-sm font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text"
-        >
-          <Icon name="settings" className="size-4" />
-          Pengaturan
-        </button>
-        <div className="mt-1 pt-1">
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="mobile-standard-control flex h-10 w-full items-center gap-2 rounded-control px-3 text-left text-sm font-semibold text-danger transition hover:bg-danger-soft"
-          >
-            <Icon name="x" className="size-4" />
-            Keluar
-          </button>
-        </div>
-      </div>
+      <button
+        type="button"
+        onClick={onSettings}
+        className="flex h-9 w-full items-center gap-2 rounded-control px-2 text-left text-sm font-semibold text-text-muted transition hover:bg-surface-muted hover:text-text"
+      >
+        <Icon name="settings" className="size-4" />
+        Pengaturan
+      </button>
+      <button
+        type="button"
+        onClick={onSignOut}
+        className="flex h-9 w-full items-center gap-2 rounded-control px-2 text-left text-sm font-semibold text-danger transition hover:bg-danger-soft"
+      >
+        <Icon name="x" className="size-4" />
+        Keluar
+      </button>
     </div>
   );
 }
@@ -205,7 +201,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Navigasi lainnya"
-                className="mobile-more-navigation absolute left-3 right-3 z-10 grid gap-1 rounded-panel border border-border bg-surface p-2 shadow-panel"
+                className="mobile-more-navigation absolute left-3 right-3 z-10 grid gap-1 rounded-overlay border border-border bg-surface p-2 shadow-panel"
               >
                 <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-subtle">
                   Lainnya

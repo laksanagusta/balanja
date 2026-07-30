@@ -219,9 +219,11 @@ export const tokenGroups = [
   {
     name: "Radius",
     tokens: [
-      ["XS - Controls", "--radius-control", "8px"],
+      ["XS - Utility Buttons", "--radius-button", "8px"],
+      ["S - Controls & Inputs", "--radius-control", "10px"],
       ["S - Cards & Inputs", "--radius-card", "16px"],
-      ["M - Modals & Panels", "--radius-panel", "24px"],
+      ["M - Panels", "--radius-panel", "16px"],
+      ["L - Modals & Drawers", "--radius-overlay", "32px"],
     ],
   },
   {

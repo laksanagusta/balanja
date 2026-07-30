@@ -544,7 +544,7 @@ export default function RetailPosPage() {
       <div className="retail-pos-workspace grid h-full min-h-0 bg-app-bg">
         <main inert={isCompactCart && cartPresent ? true : undefined} className="retail-pos-catalog-pane flex min-w-0 flex-col border-border bg-surface">
         <header className="grid flex-none gap-2 px-4 py-3">
-          <div className="mobile-search-control flex h-11 min-w-0 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+          <div className="mobile-search-control flex h-11 min-w-0 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
             <Icon name="search" className="size-4 shrink-0 text-text-muted" />
             <input
               ref={searchInputRef}
@@ -642,7 +642,7 @@ export default function RetailPosPage() {
           role={isCompactCart && cartPresent ? "dialog" : undefined}
           aria-modal={isCompactCart && cartPresent ? "true" : undefined}
           aria-label="Keranjang belanja"
-          className={`retail-pos-cart-pane flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
+          className={`retail-pos-cart-pane rounded-l-overlay flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
           onTransitionEnd={(event) => {
             if (shouldReduceMotion && !cartExpanded && event.target === event.currentTarget) {
               finishCartClose();

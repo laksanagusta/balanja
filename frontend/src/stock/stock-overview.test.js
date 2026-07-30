@@ -49,8 +49,8 @@ test("stock overview keeps activity to two lines and owns load-more disclosure",
 test("stock alert and activity cards use the shared semantic border", async () => {
   const source = await readFile(new URL("../components/stock/StockOverview.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /rounded-panel border border-border bg-surface p-4 shadow-low/);
-  assert.match(source, /grid min-h-24[\s\S]*rounded-panel border border-border bg-surface p-4 shadow-low/);
+  assert.match(source, /rounded-card border border-border bg-surface p-4 shadow-low/);
+  assert.match(source, /grid min-h-24[\s\S]*rounded-card border border-border bg-surface p-4 shadow-low/);
 });
 
 test("stock section headings use compact tracked JetBrains labels", async () => {
