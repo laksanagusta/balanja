@@ -57,7 +57,7 @@ export function MobileCheckoutPanel({
   return (
     <motion.section
       aria-label="Pembayaran cart"
-      className="mobile-checkout-panel relative z-10 border-t border-border bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]"
+      className="mobile-checkout-panel relative z-10 bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]"
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
         <div className="relative min-h-11 min-w-0">
@@ -145,7 +145,7 @@ export function MobileCheckoutPanel({
           transition={expanded ? blendInTransition : blendOutTransition}
           className="min-h-0"
         >
-          <div className="mt-3 border-t border-border pt-3">
+          <div className="mt-3 pt-3">
             {children}
           </div>
         </motion.div>

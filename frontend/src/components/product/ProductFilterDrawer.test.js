@@ -1,0 +1,48 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+
+test("product filters use an accessible icon-only Vaul bottom drawer", async () => {
+  const source = await readFile(new URL("./ProductFilterDrawer.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../../index.css", import.meta.url), "utf8");
+  const guide = await readFile(new URL("../../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(source, /<Drawer\.Root/);
+  assert.match(source, /direction="bottom"/);
+  assert.match(source, /modal/);
+  assert.match(source, /shouldScaleBackground=\{false\}/);
+  assert.match(source, /aria-describedby=\{undefined\}/);
+  assert.doesNotMatch(source, /<Drawer\.Description/);
+  assert.match(source, /aria-label=\{label\}/);
+  assert.match(source, /<Icon name="filter"/);
+  assert.match(source, /Urutkan/);
+  assert.match(source, /Terbaru ditambahkan/);
+  assert.match(source, /Nama A–Z/);
+  assert.match(source, /Harga tertinggi/);
+  assert.match(source, /Kategori/);
+  assert.match(source, /Status/);
+  assert.match(source, /fieldset className="grid gap-2"/);
+  assert.match(source, /h-8/);
+  assert.match(source, /min-h-11/);
+  assert.match(source, /Atur ulang/);
+  assert.match(source, /Terapkan/);
+  assert.match(source, /const \[draftSort, setDraftSort\]/);
+  assert.match(source, /const \[draftCategory, setDraftCategory\]/);
+  assert.match(source, /const \[draftStatus, setDraftStatus\]/);
+  assert.match(source, /if \(!open\) return/);
+  assert.match(source, /const applyFilters = \(\) =>/);
+  assert.match(source, /onOpenChange\(false\)/);
+  assert.match(source, /const resetDraft = \(\) =>/);
+  assert.doesNotMatch(source, /onClick=\{onReset\}/);
+  assert.match(source, /relative px-6 pt-6/);
+  assert.match(source, /absolute right-6 top-4 grid size-11/);
+  assert.match(source, /product-filter-drawer-scroll[^"]*px-6 pt-6/);
+  assert.match(source, /className="grid gap-4"/);
+  assert.match(source, /product-filter-drawer-footer[^"]*px-6 pt-6/);
+  assert.doesNotMatch(source, /Tampilkan produk/);
+  assert.match(css, /\.product-filter-drawer/);
+  assert.match(guide, /icon-only Vaul bottom drawer/);
+  assert.match(guide, /do not add a separate sort icon/);
+  assert.match(guide, /remain local drafts until `Terapkan`/);
+  assert.match(guide, /Match the product modal optically/);
+});

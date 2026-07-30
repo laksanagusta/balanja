@@ -43,12 +43,12 @@ function FeatureVisual({ type }) {
   return (
     <div className="grid h-full content-center p-4">
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-low">
-        <div className="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2 text-[10px] text-text-muted">
+        <div className="flex items-center gap-2 bg-surface-muted px-3 py-2 text-[10px] text-text-muted">
           <Icon name="search" className="size-3" />
           Cari {type === "transactions" ? "transaksi" : "produk"}
         </div>
         {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between border-b border-border px-3 py-2.5 text-[10px] last:border-b-0">
+          <div key={label} className="flex items-center justify-between px-3 py-2.5 text-[10px]">
             <span className="font-semibold text-text">{label}</span>
             <span className={type === "stock" && value.startsWith("+") ? "text-success" : "text-text-muted"}>{value}</span>
           </div>
@@ -62,7 +62,7 @@ const eyebrowLabelClassName = "text-xs font-mono font-medium uppercase tracking-
 
 function PublicHeader({ isSignedIn, onNavigate }) {
   return (
-    <header className="public-header sticky top-0 z-30 border-b border-border/70 bg-surface/65 px-4 py-3 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-surface/45 sm:px-6">
+    <header className="public-header sticky top-0 z-30 bg-surface/65 px-4 py-3 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-surface/45 sm:px-6">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
         <button type="button" onClick={() => scrollToTopRespectingMotion(window)} aria-label="Kembali ke bagian atas" className="press-feedback inline-flex min-h-11 min-w-11 items-center rounded-control focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus">
           <Logo />
@@ -127,7 +127,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
                     className={`grid overflow-hidden rounded-panel border border-border bg-surface shadow-low ${index === 0 ? "lg:col-span-7" : "lg:col-span-5"}`}
                   >
                     <div className="min-h-48 bg-surface-muted">{feature.visual === "pos" ? <div className="p-4"><PosProductMockup compact /></div> : <FeatureVisual type={feature.visual} />}</div>
-                    <div className="border-t border-border p-4">
+                    <div className="p-4">
                       <h3 className="text-base font-semibold text-text">{feature.title}</h3>
                       <p className="mt-2 text-sm leading-6 text-text-muted">{feature.description}</p>
                     </div>
@@ -139,7 +139,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
                 {features.slice(2).map((feature) => (
                   <article key={feature.title} className="grid overflow-hidden rounded-panel border border-border bg-surface shadow-low">
                     <div className="min-h-48 bg-surface-muted">{feature.visual === "pos" ? <div className="p-4"><PosProductMockup compact /></div> : <FeatureVisual type={feature.visual} />}</div>
-                    <div className="border-t border-border p-4">
+                    <div className="p-4">
                       <h3 className="text-base font-semibold text-text">{feature.title}</h3>
                       <p className="mt-2 text-sm leading-6 text-text-muted">{feature.description}</p>
                     </div>
@@ -195,12 +195,12 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
       </main>
 
       <footer className="px-4 pb-8 sm:px-6">
-        <div className="mx-auto max-w-6xl border-t border-border pt-12">
+        <div className="mx-auto max-w-6xl pt-12">
           <div className="grid gap-10 sm:grid-cols-[1fr_auto] sm:gap-16">
             <div><Logo /><p className="mt-4 max-w-sm text-sm leading-6 text-text-muted">POS sederhana untuk UMKM retail yang ingin melayani pembeli, mengatur stok, dan memantau transaksi dari satu alur.</p></div>
             <div><p className={eyebrowLabelClassName}>Produk</p><div className="mt-2 grid">{navItems.map((item) => <a key={item.href} href={item.href} className="press-feedback inline-flex min-h-11 items-center text-sm text-text-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{item.label}</a>)}</div></div>
           </div>
-          <div className="mt-12 flex flex-col gap-2 border-t border-border pt-5 font-mono text-xs text-text-subtle sm:flex-row sm:items-center sm:justify-between"><span>© balanja · v0.1.4</span><span>Balanja POS</span></div>
+          <div className="mt-12 flex flex-col gap-2 pt-5 font-mono text-xs text-text-subtle sm:flex-row sm:items-center sm:justify-between"><span>© balanja · v0.1.4</span><span>Balanja POS</span></div>
         </div>
       </footer>
     </div>

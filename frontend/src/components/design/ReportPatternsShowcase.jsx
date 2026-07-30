@@ -25,7 +25,7 @@ export default function ReportPatternsShowcase() {
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Pola laporan penjualan</h3>
       <div className="grid gap-4 rounded-panel border border-border bg-app-bg p-4">
         <p className="text-sm leading-6 text-text-muted">Periode WIB, pembanding sama panjang, void terpisah, dan breakdown historis memakai snapshot transaksi.</p>
-        <p className="text-sm leading-6 text-text-muted">Chart mempertahankan scroll vertikal native dan menyediakan tabel aksesibel untuk seluruh nilai; reduced motion langsung menampilkan kondisi akhir. Pada halaman produksi, filter compact memakai disclosure yang menjaga draft filter, permukaan tombol dan dropdown tidak membesar di smartphone, sedangkan nilai KPI selalu utuh tanpa truncation.</p>
+        <p className="text-sm leading-6 text-text-muted">Chart mempertahankan scroll vertikal native dan menyediakan tabel aksesibel untuk seluruh nilai; reduced motion langsung menampilkan kondisi akhir. Pada halaman produksi, filter compact memakai disclosure yang menjaga draft filter di setiap ukuran layar, field tetap stacked dengan target sentuh smartphone, sedangkan nilai KPI selalu utuh tanpa truncation.</p>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <ReportMetricCard label="Penjualan bersih" value={money(1086000)} comparison={comparison} formatAbsolute={money} />
           <ReportMetricCard label="Pajak" value={money(119460)} comparison={{ absolute: 0, percent: null, direction: "neutral" }} formatAbsolute={money} />

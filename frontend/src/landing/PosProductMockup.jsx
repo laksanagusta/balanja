@@ -32,7 +32,7 @@ export default function PosProductMockup({ compact = false }) {
       aria-hidden="true"
       className={`overflow-hidden rounded-t-xl border border-b-0 border-border-strong bg-app-bg shadow-[0_40px_90px_-50px_rgba(0,0,0,0.5)] ${compact ? "text-[9px]" : "text-[10px] lg:text-[11px]"}`}
     >
-      <div className="flex items-center gap-1.5 border-b border-border bg-surface-muted px-3 py-2.5">
+      <div className="flex items-center gap-1.5 bg-surface-muted px-3 py-2.5">
         <span className="size-2.5 rounded-full bg-text/20" />
         <span className="size-2.5 rounded-full bg-text/12" />
         <span className="size-2.5 rounded-full bg-text/[0.08]" />
@@ -62,7 +62,7 @@ export default function PosProductMockup({ compact = false }) {
               </div>
             ))}
           </nav>
-          <div className="mt-auto flex items-center gap-2 border-t border-border px-3 py-3 text-text-muted">
+          <div className="mt-auto flex items-center gap-2 px-3 py-3 text-text-muted">
             <span className="size-6 rounded-full bg-[conic-gradient(#f59e0b,#8b5cf6,#06b6d4,#f59e0b)]" />
             <span className="min-w-0 flex-1 truncate">Toko Balanja</span>
             <Icon name="chevron" className="size-3" />
@@ -100,7 +100,7 @@ export default function PosProductMockup({ compact = false }) {
                   <p className="truncate font-semibold text-text">{product.name}</p>
                   <p className="mt-0.5 text-text-muted">{product.price}</p>
                 </div>
-                <div className="border-t border-border px-2 py-1.5 text-center font-semibold text-text">Tambah ke keranjang</div>
+                <div className="px-2 py-1.5 text-center font-semibold text-text">Tambah ke keranjang</div>
               </article>
             ))}
           </div>
@@ -116,7 +116,7 @@ export default function PosProductMockup({ compact = false }) {
           </div>
           <div className="mt-4 grid gap-3">
             {products.slice(1, 4).map((product, index) => (
-              <div key={product.name} className="flex items-center gap-2 border-b border-border pb-3">
+              <div key={product.name} className="flex items-center gap-2 pb-3">
                 <ProductImagePlaceholder className="size-9 shrink-0 rounded-control" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-text">{product.name}</p>
@@ -126,10 +126,10 @@ export default function PosProductMockup({ compact = false }) {
               </div>
             ))}
           </div>
-          <div className="mt-auto border-t border-border pt-4">
+          <div className="mt-auto pt-4">
             <div className="flex justify-between text-text-muted"><span>Subtotal</span><span>Rp35.000</span></div>
             <div className="mt-2 flex justify-between text-sm font-semibold text-text"><span>Total pembayaran</span><span>Rp35.000</span></div>
-            <div className="mt-4 flex h-9 items-center justify-center rounded-control bg-accent font-semibold text-white">Selesaikan transaksi</div>
+            <div className="mt-4 flex h-9 items-center justify-center rounded-card bg-accent font-semibold text-white">Selesaikan transaksi</div>
           </div>
         </aside>
       </div>

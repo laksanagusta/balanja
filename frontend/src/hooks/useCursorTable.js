@@ -36,7 +36,10 @@ export function useCursorTable({
   queryRef.current = { sortKey, sortDir, pageSize };
   cursorStateRef.current = cursorState;
 
-  const runRequest = React.useCallback(async (targetState, { fallbackOnEmpty = true, resetInvalidCursor = true } = {}) => {
+  const runRequest = React.useCallback(async (
+    targetState,
+    { append = false, fallbackOnEmpty = true, resetInvalidCursor = true } = {},
+  ) => {
     requestRef.current.controller?.abort();
     const controller = new AbortController();
     const requestId = requestRef.current.id + 1;
@@ -59,12 +62,16 @@ export function useCursorTable({
 
       const items = Array.isArray(page?.items) ? page.items : [];
       if (items.length === 0 && targetState.previous.length > 0 && fallbackOnEmpty) {
-        return runRequest(movePrevious(targetState), { fallbackOnEmpty: false, resetInvalidCursor });
+        return runRequest(movePrevious(targetState), {
+          append: false,
+          fallbackOnEmpty: false,
+          resetInvalidCursor,
+        });
       }
 
       cursorStateRef.current = targetState;
       setCursorState(targetState);
-      setRows(items);
+      setRows((current) => append ? [...current, ...items] : items);
       setNextCursor(page?.nextCursor || "");
       setHasNextPage(page?.hasNextPage === true);
       setHasSettled(true);
@@ -72,7 +79,11 @@ export function useCursorTable({
     } catch (requestError) {
       if (requestRef.current.id !== requestId || requestError?.name === "AbortError") return null;
       if (requestError?.code === "INVALID_CURSOR" && targetState.cursor && resetInvalidCursor) {
-        return runRequest(initialCursorState(), { fallbackOnEmpty: false, resetInvalidCursor: false });
+        return runRequest(initialCursorState(), {
+          append: false,
+          fallbackOnEmpty: false,
+          resetInvalidCursor: false,
+        });
       }
       setError(requestError);
       return null;
@@ -104,6 +115,14 @@ export function useCursorTable({
     return runRequest(moveNext(cursorStateRef.current, nextCursor));
   }, [nextCursor, runRequest]);
 
+  const loadMore = React.useCallback(() => {
+    if (loadingRef.current || !nextCursor) return Promise.resolve(null);
+    return runRequest(moveNext(cursorStateRef.current, nextCursor), {
+      append: true,
+      fallbackOnEmpty: false,
+    });
+  }, [nextCursor, runRequest]);
+
   const previous = React.useCallback(() => {
     if (loadingRef.current || cursorStateRef.current.previous.length === 0) return Promise.resolve(null);
     return runRequest(movePrevious(cursorStateRef.current), { fallbackOnEmpty: false });
@@ -119,6 +138,12 @@ export function useCursorTable({
     setSortDir("asc");
   }, [sortKey]);
 
+  const setSort = React.useCallback((key, direction) => {
+    if (!key || !["asc", "desc"].includes(direction)) return;
+    setSortKey(key);
+    setSortDir(direction);
+  }, []);
+
   const setPageSize = React.useCallback((size) => {
     const normalized = Number(size);
     if (normalized > 0) setPageSizeState(normalized);
@@ -126,6 +151,10 @@ export function useCursorTable({
 
   const retry = React.useCallback(() => runRequest(cursorStateRef.current), [runRequest]);
   const refresh = React.useCallback(() => runRequest(cursorStateRef.current), [runRequest]);
+  const reset = React.useCallback(
+    () => runRequest(initialCursorState(), { fallbackOnEmpty: false }),
+    [runRequest],
+  );
   const range = React.useMemo(
     () => pageRange(cursorState.previous.length, pageSize, rows.length),
     [cursorState.previous.length, pageSize, rows.length],
@@ -143,11 +172,15 @@ export function useCursorTable({
     error,
     canPrevious: !loading && cursorState.previous.length > 0,
     canNext: !loading && hasNextPage && Boolean(nextCursor),
+    hasMore: hasNextPage && Boolean(nextCursor),
     sortBy,
+    setSort,
     next,
+    loadMore,
     previous,
     setPageSize,
     retry,
     refresh,
+    reset,
   };
 }

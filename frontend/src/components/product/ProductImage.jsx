@@ -89,5 +89,6 @@ export function ProductImage({ product, fallback = "category", className = "h-fu
   return <img src={src} alt="" className={className} loading="lazy" decoding="async" onError={handleError} />;
 }
 export function ProductThumbnail({ product, size = "md", fallback = "category" }) {
-  return <span className={`${size === "lg" ? "size-16" : "size-10"} block shrink-0 overflow-hidden rounded-card border border-border bg-surface-muted`}><ProductImage product={product} fallback={fallback} /></span>;
+  const sizeClass = size === "xl" ? "size-20" : size === "lg" ? "size-16" : "size-10";
+  return <span className={`${sizeClass} block shrink-0 overflow-hidden rounded-card border border-border bg-surface-muted`}><ProductImage product={product} fallback={fallback} /></span>;
 }

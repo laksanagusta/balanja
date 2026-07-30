@@ -189,7 +189,7 @@ export const tokenGroups = [
   {
     name: "Color",
     tokens: [
-      ["Background", "--color-app-bg", "#fafafa"],
+      ["Background", "--color-app-bg", "#ffffff"],
       ["Surface", "--color-surface", "#ffffff"],
       ["Muted Surface", "--color-surface-muted", "#f6f6f6"],
       ["Border", "--color-border", "#ececec"],
@@ -220,14 +220,19 @@ export const tokenGroups = [
     name: "Radius",
     tokens: [
       ["XS - Controls", "--radius-control", "8px"],
-      ["S - Cards & Inputs", "--radius-card", "12px"],
-      ["M - Modals & Panels", "--radius-panel", "16px"],
+      ["S - Cards & Inputs", "--radius-card", "16px"],
+      ["M - Modals & Panels", "--radius-panel", "32px"],
+      ["Corner smoothing", "--corner-smoothing", "60%"],
+      ["Superellipse K", "--corner-superellipse", "2.0036"],
+      ["Overlay smoothing", "--corner-smoothing-overlay", "20%"],
+      ["Overlay superellipse K", "--corner-superellipse-overlay", "1.4179"],
     ],
   },
   {
     name: "Shadow",
     tokens: [
       ["Low", "--shadow-low", "0 1px 2px rgb(0 0 0 / 0.05)"],
+      ["Navigation", "--shadow-navigation", "0 -4px 12px rgb(18 18 18 / 0.05)"],
       ["Panel", "--shadow-panel", "0 18px 45px rgb(18 18 18 / 0.06)"],
       ["Inner Soft", "--shadow-inner-soft", "inset 0 0 0 1px rgb(0 0 0 / 0.01)"],
     ],

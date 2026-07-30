@@ -88,11 +88,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
-      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto] lg:items-center">
-        <h1 className="text-base font-semibold text-text">Pengaturan</h1>
-        <div className="hidden lg:block" />
-        <BackgroundUpdateStatus active={isUpdatingSettings || isUpdatingMasterData} label="Memperbarui pengaturan" />
-      </header>
+      <BackgroundUpdateStatus active={isUpdatingSettings || isUpdatingMasterData} label="Memperbarui pengaturan" />
 
       <main className="settings-workspace min-h-0 flex-1 overflow-auto">
         <div className="settings-workspace-layout">
@@ -113,7 +109,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
               {tab === "profile" ? (
                 <Panel className="p-4">
                   <form onSubmit={save} className="grid gap-4">
-                    <div className="border-b border-border pb-3">
+                    <div className="pb-3">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-text">Profil toko</p>

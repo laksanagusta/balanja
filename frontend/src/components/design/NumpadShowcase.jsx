@@ -85,7 +85,7 @@ export default function NumpadShowcase() {
               {["$ 1.00", "$ 5.00", "$ 10.00", "$ 20.00", "$ 50.00", "$ 100.00"].map((amt) => (
                 <button
                   key={amt}
-                  className="h-10 rounded-md border border-border bg-surface text-sm font-semibold text-text transition hover:bg-surface-muted active:scale-95"
+                  className="mobile-compact-control h-10 rounded-md border border-border bg-surface text-sm font-semibold text-text transition hover:bg-surface-muted active:scale-95"
                 >
                   {amt}
                 </button>

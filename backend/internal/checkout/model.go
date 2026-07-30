@@ -23,6 +23,7 @@ type Item struct {
 	ProductID uuid.UUID `json:"productId"`
 	Name      string    `json:"name"`
 	Barcode   string    `json:"barcode"`
+	Image     string    `json:"image,omitempty"`
 	Price     int       `json:"price"`
 	Quantity  int       `json:"qty"`
 }

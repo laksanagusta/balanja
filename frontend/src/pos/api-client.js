@@ -165,7 +165,7 @@ export function createAPIClient({
     async updateSettings(settings, options = {}) {
       return (await request("/api/v1/settings", { ...options, method: "PUT", body: settings })).data;
     },
-    async getDashboardSummary({ days = 7, signal } = {}) {
+    async getDashboardSummary({ days = 1, signal } = {}) {
       return (await request(`/api/v1/dashboard/summary?days=${days}`, { signal })).data;
     },
     async getSalesReport({ signal, ...filters } = {}) {

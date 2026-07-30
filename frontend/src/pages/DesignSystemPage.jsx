@@ -27,11 +27,12 @@ import NavigationPatternsShowcase from "../components/design/NavigationPatternsS
 import MasterDataPatternsShowcase from "../components/design/MasterDataPatternsShowcase.jsx";
 import OrganizationOnboardingShowcase from "../components/design/OrganizationOnboardingShowcase.jsx";
 import EntitlementPatternsShowcase from "../components/design/EntitlementPatternsShowcase.jsx";
+import StockPatternsShowcase from "../components/design/StockPatternsShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
     <main className="min-h-screen bg-app-bg">
-      <header className="sticky top-0 z-30 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur sm:px-6">
+      <header className="sticky top-0 z-30 bg-surface/95 px-4 py-3 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-4">
           <Logo />
           <div className="flex items-center gap-2">
@@ -138,18 +139,7 @@ export default function DesignSystemPage({ onNavigate }) {
         <MasterDataPatternsShowcase />
         <ModalFormShowcase />
         <DataTableShowcase />
-        <section className="rounded-panel border border-border bg-surface p-4 shadow-low">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-success">Operational pattern</p>
-          <h3 className="mt-2 text-xl font-semibold text-text">Stock movement dialogs</h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
-            Perubahan stok memakai pola header dan tabel operasional yang sama plus dialog alasan wajib isi. Pencarian, jenis pergerakan,
-            dan Pergerakan baru tetap berada di header halaman. Form pergerakan memakai picker produk searchable dengan debounce yang
-            terhubung ke API produk dengan enam hasil, lalu menampilkan stok saat ini, delta bertanda, dan stok setelah perubahan di bawah field.
-            Tabel operasional memakai cursor pagination server dengan Sebelumnya dan Berikutnya, ukuran halaman 20, 50, dan 100, tanpa total
-            yang tidak terverifikasi. Refetch mempertahankan baris yang ada dengan indikator memperbarui yang ringkas dan opacity yang dilembutkan.
-            Kolom audit stok menggunakan label Nama user dari snapshot saat aktivitas dicatat; riwayat lama tanpa nama menampilkan Tidak diketahui, bukan id internal.
-          </p>
-        </section>
+        <StockPatternsShowcase />
         <EmptyStateShowcase />
         <KpiCardShowcase />
         <DashboardPatternsShowcase />

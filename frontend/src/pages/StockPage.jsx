@@ -1,14 +1,17 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
-import { TablePagination } from "../components/TablePagination.jsx";
-import { Badge, Button, DataTable, Dialog, FloatingPopover, Icon, Input, Panel, SelectField } from "../components/primitives.jsx";
+import { Button, Dialog, FloatingPopover, Icon, Input, SelectField } from "../components/primitives.jsx";
 import { StockPageSkeleton } from "../components/page-loading.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
+import StockOverview from "../components/stock/StockOverview.jsx";
+import { StockFilterDrawer } from "../components/stock/StockFilterDrawer.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { loadStockMovementPage } from "../pos/store-data.js";
 import { calculateStockPreview, parseQuantityInput } from "../stock/movement-preview.js";
+import { getLowStockProducts } from "../stock/stock-overview.js";
 
 const movementOptions = ["Tambah stok", "Kurangi stok", "Set stok pasti"];
 const movementValueByLabel = {
@@ -16,13 +19,6 @@ const movementValueByLabel = {
   "Kurangi stok": "reduce",
   "Set stok pasti": "set_exact",
 };
-const movementLabelByValue = {
-  sale: "Penjualan",
-  restock: "Tambah stok",
-  reduce: "Kurangi stok",
-  set_exact: "Set pasti",
-};
-const movementFilterOptions = ["Semua pergerakan", "Penjualan", "Tambah stok", "Kurangi stok", "Set pasti"];
 const movementFilterValue = {
   "Semua pergerakan": "",
   Penjualan: "sale",
@@ -48,7 +44,10 @@ export default function StockPage() {
   const { activeProducts, loading, loaded, loadProducts, searchProducts, createStockMovement } = store;
   const [query, setQuery] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState("Semua pergerakan");
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [dialogProductId, setDialogProductId] = React.useState("");
+  const [topBarActionsTarget, setTopBarActionsTarget] = React.useState(null);
   const debouncedQuery = useDebouncedValue(query, 220);
   const movementFilters = React.useMemo(() => ({
     q: debouncedQuery.trim(),
@@ -63,143 +62,111 @@ export default function StockPage() {
     filters: movementFilters,
     initialSortKey: "createdAt",
     initialSortDir: "desc",
+    initialPageSize: 6,
   });
 
   React.useEffect(() => {
     loadProducts();
   }, [loadProducts]);
 
-  const columns = React.useMemo(() => [
-    { key: "createdAt", label: "Tanggal", sortable: true, render: (row) => formatDate(row.createdAt) },
-    {
-      key: "productName",
-      label: "Produk",
-      sortable: true,
-      render: (row) => (
-        <div className="min-w-[180px]">
-          <p className="font-semibold text-text">{row.productName}</p>
-          <p className="text-xs text-text-muted">{row.productBarcode || row.productCategory || "Tanpa barcode"}</p>
-        </div>
-      ),
-    },
-    { key: "type", label: "Jenis", sortable: true, render: (row) => <MovementBadge type={row.type} /> },
-    {
-      key: "quantityDelta",
-      label: "Selisih",
-      align: "right",
-      sortable: true,
-      render: (row) => (
-        <span className={`font-mono font-semibold tabular-nums ${row.quantityDelta > 0 ? "text-success" : "text-danger"}`}>
-          {row.quantityDelta > 0 ? "+" : ""}{numberFormatter.format(row.quantityDelta)}
-        </span>
-      ),
-    },
-    {
-      key: "stockAfter",
-      label: "Sebelum - Sesudah",
-      sortable: true,
-      render: (row) => (
-        <span className="font-mono text-sm tabular-nums text-text-muted">
-          {numberFormatter.format(row.stockBefore)} - {numberFormatter.format(row.stockAfter)}
-        </span>
-      ),
-    },
-    { key: "reason", label: "Alasan", render: (row) => <span className="line-clamp-2 max-w-[240px]">{row.reason}</span> },
-    { key: "createdByUserName", label: "Nama user", render: (row) => <span className="text-xs text-text-muted">{row.createdByUserName || "Tidak diketahui"}</span> },
-    { key: "referenceType", label: "Referensi", render: (row) => row.referenceType || "Manual" },
-  ], []);
+  React.useEffect(() => {
+    setTopBarActionsTarget(document.getElementById("app-top-bar-actions"));
+  }, []);
+
+  const lowStockProducts = React.useMemo(() => getLowStockProducts(activeProducts), [activeProducts]);
+
   if ((loading.products && !loaded.products) || table.isInitialLoading) return <StockPageSkeleton />;
 
+  const topBarActions = topBarActionsTarget
+    ? createPortal(
+      <>
+        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui riwayat stok" />
+        <StockFilterDrawer
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          type={typeFilter}
+          onTypeChange={setTypeFilter}
+        />
+      </>,
+      topBarActionsTarget,
+    )
+    : null;
+
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface">
-      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto_auto] lg:items-center">
-        <h1 className="text-base font-semibold text-text">Stok</h1>
-        <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
-          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
-            <Icon name="search" className="size-4 text-text-muted" />
-            <input
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-              placeholder="Produk, barcode, kategori"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
+    <>
+      {topBarActions}
+      <div className="flex h-full min-h-0 flex-col bg-surface">
+        <header className="px-4 py-3">
+          <div className="flex w-full min-w-0 items-center gap-2">
+            <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+              <Icon name="search" className="size-4 text-text-muted" />
+              <input
+                aria-label="Cari aktivitas stok"
+                className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
+                placeholder="Produk, barcode, kategori"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              aria-label="Pergerakan baru"
+              title="Pergerakan baru"
+              onClick={() => {
+                setDialogProductId("");
+                setDialogOpen(true);
+              }}
+              className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-white transition-[background-color,transform] duration-fast ease-standard hover:bg-accent-hover active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
+              <Icon name="plus" className="size-5" />
+            </button>
+          </div>
+        </header>
+
+        <main className="min-h-0 flex-1 overflow-auto bg-app-bg p-4">
+          <div className="w-full">
+            <StockOverview
+              lowStockProducts={lowStockProducts}
+              movements={table.rows}
+              movementError={table.error}
+              onRetry={table.retry}
+              hasMoreMovements={table.hasMore}
+              loadingMore={table.loading}
+              onLoadMore={() => table.error && !table.hasMore ? table.retry() : table.loadMore()}
+              onRestock={(product) => {
+                setDialogProductId(product.id);
+                setDialogOpen(true);
+              }}
             />
           </div>
-        </div>
-        <div className="w-full lg:w-[220px]">
-          <SelectField
-            label="Jenis"
-            hideLabel
-            value={typeFilter}
-            options={movementFilterOptions}
-            onChange={setTypeFilter}
-          />
-        </div>
-        <Button variant="primary" className="whitespace-nowrap lg:justify-self-end" onClick={() => setDialogOpen(true)}>
-          <Icon name="plus" className="size-4" />
-          Pergerakan baru
-        </Button>
-        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui riwayat stok" />
-      </header>
+        </main>
 
-      <main className="min-h-0 flex-1 overflow-auto p-4">
-        <Panel className="overflow-hidden">
-          {table.rows.length === 0 ? (
-            <div className="grid place-items-center gap-2 px-4 py-12 text-center">
-              <Icon name={table.error ? "help" : "package"} className="size-9 text-text-subtle" />
-              <p className="font-semibold text-text">{table.error ? "Riwayat pergerakan stok gagal dimuat" : "Belum ada pergerakan stok"}</p>
-              <p className="max-w-md text-sm text-text-muted">
-                {table.error ? table.error.message : "Buat pergerakan manual atau selesaikan transaksi untuk mengisi riwayat."}
-              </p>
-              {table.error && <Button size="sm" variant="secondary" onClick={table.retry}>Coba lagi</Button>}
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={table.rows}
-              sortKey={table.sortKey}
-              sortDir={table.sortDir}
-              onSort={table.sortBy}
-            />
-          )}
-          <TablePagination
-            {...table.range}
-            pageSize={table.pageSize}
-            canPrevious={table.canPrevious}
-            canNext={table.canNext}
-            onPrevious={table.previous}
-            onNext={table.next}
-            onPageSizeChange={table.setPageSize}
-            loading={table.loading}
-          />
-        </Panel>
-      </main>
-
-      {dialogOpen && (
-        <MovementDialog
-          products={activeProducts}
-          searchProducts={searchProducts}
-          onClose={() => setDialogOpen(false)}
-          onSubmit={async (input) => {
-            const result = await createStockMovement(input);
-            if (result) {
-              await table.refresh();
-              toast.success("Pergerakan stok disimpan");
+        {dialogOpen && (
+          <MovementDialog
+            products={activeProducts}
+            searchProducts={searchProducts}
+            initialProductId={dialogProductId}
+            onClose={() => {
               setDialogOpen(false);
-            }
-          }}
-        />
-      )}
-    </div>
+              setDialogProductId("");
+            }}
+            onSubmit={async (input) => {
+              const result = await createStockMovement(input);
+              if (result) {
+                await table.reset();
+                toast.success("Pergerakan stok disimpan");
+                setDialogOpen(false);
+              }
+            }}
+          />
+        )}
+      </div>
+    </>
   );
 }
 
-function MovementBadge({ type }) {
-  const tone = type === "restock" ? "success" : type === "reduce" ? "danger" : type === "sale" ? "warning" : "neutral";
-  return <Badge tone={tone}>{movementLabelByValue[type] || type}</Badge>;
-}
-
-function MovementDialog({ products, searchProducts, onClose, onSubmit }) {
-  const [productId, setProductId] = React.useState(products[0]?.id || "");
+function MovementDialog({ products, searchProducts, initialProductId = "", onClose, onSubmit }) {
+  const [productId, setProductId] = React.useState(initialProductId || products[0]?.id || "");
   const [typeLabel, setTypeLabel] = React.useState("Tambah stok");
   const [quantityText, setQuantityText] = React.useState("");
   const [reason, setReason] = React.useState("");
@@ -328,7 +295,7 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
     <div ref={containerRef} className="relative grid gap-2 text-sm font-semibold text-text">
       <span>{label}</span>
       <div
-        className={`flex h-10 items-center gap-3 rounded-card border bg-surface px-3.5 shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
+        className={`mobile-search-control flex h-10 items-center gap-3 rounded-card border bg-surface px-3.5 shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
           error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
         }`}
       >
@@ -405,9 +372,4 @@ function PreviewMetric({ label, value, tone = "neutral" }) {
       <p className={`mt-1 font-mono text-lg font-semibold tabular-nums ${toneClass}`}>{value}</p>
     </div>
   );
-}
-
-function formatDate(value) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }

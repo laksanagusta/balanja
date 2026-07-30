@@ -1,13 +1,17 @@
 import React from "react";
 import DashboardKpiCard from "../components/dashboard/DashboardKpiCard.jsx";
-import { PaymentMixPanel, RevenueTrendPanel, TopProductsPanel } from "../components/dashboard/DashboardCharts.jsx";
+import { RevenueTrendPanel, TopProductsPanel } from "../components/dashboard/DashboardCharts.jsx";
 import LowStockPanel from "../components/dashboard/LowStockPanel.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { DashboardPageSkeleton } from "../components/page-loading.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice, routes } from "../shared.jsx";
 
-const periods = [7, 30];
+const periods = [
+  { value: 1, label: "Hari ini" },
+  { value: 7, label: "7 hari" },
+  { value: 30, label: "30 hari" },
+];
 const emptyAnalytics = {
   revenue: 0,
   transactionCount: 0,
@@ -19,7 +23,6 @@ const emptyAnalytics = {
     average: { direction: "neutral", percent: null },
   },
   revenueTrend: [],
-  paymentMix: [],
   topProducts: [],
   lowStock: [],
 };
@@ -27,7 +30,7 @@ const emptyAnalytics = {
 export default function DashboardPage({ onNavigate }) {
   const store = usePOSStore();
   const { settings, getDashboardSummary, setNotice } = store;
-  const [days, setDays] = React.useState(7);
+  const [days, setDays] = React.useState(1);
   const [analytics, setAnalytics] = React.useState(null);
   const [isSummaryLoading, setIsSummaryLoading] = React.useState(true);
 
@@ -55,6 +58,7 @@ export default function DashboardPage({ onNavigate }) {
   const visibleAnalytics = analytics ?? emptyAnalytics;
   const shouldShowSkeleton = isSummaryLoading && !analytics;
   const isUpdatingSummary = isSummaryLoading && Boolean(analytics);
+  const comparisonContext = days === 1 ? "vs kemarin pada jam yang sama" : "vs periode sebelumnya";
 
   if (shouldShowSkeleton) {
     return <DashboardPageSkeleton />;
@@ -62,59 +66,55 @@ export default function DashboardPage({ onNavigate }) {
 
   return (
     <div className="h-full overflow-auto bg-app-bg">
-      <header className="flex flex-col gap-3 border-b border-border bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-base font-semibold text-text">Dashboard</h1>
-          <p className="mt-0.5 truncate text-xs text-text-muted">Ringkasan performa toko {settings.storeName}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <BackgroundUpdateStatus active={isUpdatingSummary} label="Memperbarui ringkasan dashboard" />
-          <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1" aria-label="Periode dashboard">
-            {periods.map((period) => (
-              <button
-                key={period}
-                type="button"
-                aria-pressed={days === period}
-                onClick={() => setDays(period)}
-                className={`h-8 rounded-md px-3 text-xs font-semibold transition active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
-                  days === period ? "bg-surface text-text" : "text-text-muted hover:text-text"
-                }`}
-              >
-                {period} hari
-              </button>
-            ))}
+      <main className="grid gap-4 p-4" aria-busy={isSummaryLoading}>
+        <section className="flex flex-wrap items-center justify-between gap-3" aria-label="Periode ringkasan">
+          <p className="min-w-0 truncate text-sm font-semibold text-text">
+            Performa {settings.storeName || "toko"}
+          </p>
+          <div className="flex items-center gap-2">
+            <BackgroundUpdateStatus active={isUpdatingSummary} label="Memperbarui ringkasan dashboard" />
+            <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1" aria-label="Periode dashboard">
+              {periods.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={days === value}
+                  onClick={() => setDays(value)}
+                  className={`h-8 rounded-md px-3 text-xs font-semibold transition active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                    days === value ? "bg-surface text-text" : "text-text-muted hover:text-text"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </header>
+        </section>
 
-      <main className="grid gap-4 p-4">
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indikator kinerja utama">
-          <DashboardKpiCard label="Pendapatan" value={formatPrice(visibleAnalytics.revenue)} icon="cash" comparison={visibleAnalytics.comparisons.revenue} tone="success" />
-          <DashboardKpiCard label="Transaksi selesai" value={visibleAnalytics.transactionCount.toLocaleString("id-ID")} icon="receipt" comparison={visibleAnalytics.comparisons.transactions} />
-          <DashboardKpiCard label="Rata-rata transaksi" value={formatPrice(visibleAnalytics.averageTransactionValue)} icon="ticket" comparison={visibleAnalytics.comparisons.average} />
-          <DashboardKpiCard label="Stok menipis" value={visibleAnalytics.lowStockCount.toLocaleString("id-ID")} icon="package" tone={visibleAnalytics.lowStockCount ? "warning" : "success"} supportingText={visibleAnalytics.lowStockCount ? "Perlu restok" : "Level stok terlihat sehat"} />
+          <div className="min-w-0 sm:col-span-2 xl:col-span-2">
+            <DashboardKpiCard label="Pendapatan" value={formatPrice(visibleAnalytics.revenue)} comparison={visibleAnalytics.comparisons.revenue} comparisonContext={comparisonContext} emphasis />
+          </div>
+          <DashboardKpiCard label="Transaksi selesai" value={visibleAnalytics.transactionCount.toLocaleString("id-ID")} comparison={visibleAnalytics.comparisons.transactions} comparisonContext={comparisonContext} />
+          <DashboardKpiCard label="Rata-rata transaksi" value={formatPrice(visibleAnalytics.averageTransactionValue)} comparison={visibleAnalytics.comparisons.average} comparisonContext={comparisonContext} />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-12">
-          <div className="min-w-0 xl:col-span-8 grid grid-rows-1">
-            <RevenueTrendPanel data={visibleAnalytics.revenueTrend} hasData={visibleAnalytics.transactionCount > 0} days={days} />
-          </div>
-          <div className="min-w-0 xl:col-span-4 grid grid-rows-1">
-            <PaymentMixPanel data={visibleAnalytics.paymentMix} />
-          </div>
-        </section>
-
-        <section className="grid gap-4 xl:grid-cols-12">
-          <div className="min-w-0 xl:col-span-7 grid grid-rows-1">
-            <TopProductsPanel data={visibleAnalytics.topProducts} />
-          </div>
-          <div className="min-w-0 xl:col-span-5 grid grid-rows-1">
+          <div className="min-w-0 xl:col-span-4 xl:col-start-9 xl:row-start-1">
             <LowStockPanel
               products={visibleAnalytics.lowStock}
               onManageStock={() => onNavigate(routes.stock)}
             />
           </div>
+          <div className="min-w-0 xl:col-span-8 xl:col-start-1 xl:row-start-1">
+            <RevenueTrendPanel data={visibleAnalytics.revenueTrend} hasData={visibleAnalytics.transactionCount > 0} days={days} />
+          </div>
         </section>
+
+        <TopProductsPanel
+          data={visibleAnalytics.topProducts}
+          onViewReport={() => onNavigate(routes.reportsSales)}
+        />
       </main>
     </div>
   );

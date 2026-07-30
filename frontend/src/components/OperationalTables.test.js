@@ -36,8 +36,8 @@ test("shared tables compose accessible translucent scroll fades", async () => {
   assert.match(primitives, /<div className={`data-table-frame min-w-0 w-full \$\{className\}`}>/);
   assert.match(primitives, /<table className="min-w-max w-full border-separate border-spacing-0 text-sm">/);
   assert.match(primitives, /<tr>\s*\{columns\.map/);
-  assert.match(primitives, /className={`h-11 whitespace-nowrap border-b border-border px-3/);
-  assert.match(primitives, /i === data\.length - 1 \? "border-b-0" : "border-b border-border"/);
+  assert.match(primitives, /className={`h-11 whitespace-nowrap px-3/);
+  assert.doesNotMatch(primitives, /\bborder-b\b/);
   assert.doesNotMatch(primitives, /showEdgeBlur|edgeBlurEnabled/);
   assert.match(scrollEdge, /getScrollEdgeState/);
   assert.match(scrollEdge, /ResizeObserver/);

@@ -3,7 +3,7 @@ import { Badge, Panel } from "../primitives.jsx";
 import { orderItems } from "../../data.js";
 
 const tokens = [
-  ["Card Radius", "--radius-card", "12px"],
+  ["Card Radius", "--radius-card", "16px"],
   ["Low Shadow", "--shadow-low", "0 1px 2px rgb(0 0 0 / 0.05)"],
   ["Muted Surface", "--color-surface-muted", "#f6f6f6"],
   ["Text Subtle", "--color-text-subtle", "#a1a1a1"],
@@ -22,7 +22,7 @@ export default function TabListShowcase() {
             {["Overview", "Orders", "Kitchen"].map((tab, index) => (
               <button
                 key={tab}
-                className={`h-10 flex-1 rounded-md text-sm font-semibold ${
+                className={`mobile-standard-control h-10 flex-1 rounded-md text-sm font-semibold ${
                   index === 0 ? "bg-surface text-text" : "text-text-muted"
                 }`}
               >

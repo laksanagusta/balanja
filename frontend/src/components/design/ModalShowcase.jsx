@@ -18,8 +18,8 @@ export default function ModalShowcase() {
         {open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setOpen(false)} />
-            <div className="relative w-full max-w-md rounded-panel border border-border bg-surface p-6 shadow-panel">
-              <div className="mb-5 flex items-center justify-between">
+            <div className="corner-smoothing-overlay relative max-h-[calc(100svh-2rem)] w-full max-w-md overflow-y-auto rounded-panel border border-border bg-surface p-6 shadow-panel">
+              <div className="overlay-sticky-header mb-5 flex items-center justify-between">
                 <h4 className="text-lg font-semibold text-text">Product details</h4>
                 <button onClick={() => setOpen(false)} className="text-text-muted hover:text-text">
                   <Icon name="x" className="size-5" />
@@ -51,11 +51,11 @@ export default function ModalShowcase() {
         {confirmOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
-            <div className="relative w-full max-w-sm rounded-panel border border-border bg-surface p-6 shadow-panel text-center">
+            <div className="corner-smoothing-overlay relative max-h-[calc(100svh-2rem)] w-full max-w-sm overflow-y-auto rounded-panel border border-border bg-surface p-6 text-center shadow-panel">
               <div className="mb-4 mx-auto flex size-12 items-center justify-center rounded-full bg-danger-soft text-danger">
                 <Icon name="x" className="size-6" />
               </div>
-              <h4 className="mb-2 text-lg font-semibold text-text">Void this sale?</h4>
+              <h4 className="overlay-sticky-header mb-2 text-lg font-semibold text-text">Void this sale?</h4>
               <p className="mb-6 text-sm text-text-muted">This action cannot be undone. All items will be removed.</p>
               <div className="flex justify-center gap-2">
                 <Button onClick={() => setConfirmOpen(false)}>Keep sale</Button>

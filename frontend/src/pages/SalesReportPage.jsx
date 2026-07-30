@@ -110,9 +110,8 @@ export default function SalesReportPage({ onNavigate }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-app-bg">
-      <header className="border-b border-border bg-surface px-4 py-3">
-        <h1 className="text-base font-semibold text-text">Laporan Penjualan</h1>
-        <p className="mt-1 text-xs text-text-muted">Analisis transaksi selesai dan void berdasarkan kalender WIB.</p>
+      <header className="bg-surface px-4 py-3">
+        <p className="text-xs text-text-muted">Analisis transaksi selesai dan void berdasarkan kalender WIB.</p>
       </header>
       <SalesReportToolbar
         filters={filters}

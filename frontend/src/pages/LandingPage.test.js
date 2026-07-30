@@ -43,7 +43,8 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.match(source, /marketing-reveal w-full px-4 sm:px-6/);
   assert.match(source, /relative mx-auto max-w-6xl overflow-hidden rounded-panel/);
   assert.doesNotMatch(source, />Akses</);
-  assert.match(source, /border-t border-border pt-5 font-mono text-xs/);
+  assert.match(source, /mt-12 flex flex-col gap-2 pt-5 font-mono text-xs/);
+  assert.doesNotMatch(source, /\bborder-t\b/);
   assert.match(faq, /id="faq"/);
 });
 

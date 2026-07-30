@@ -11,12 +11,12 @@ test("validates supported product photo type and size", () => {
 
 test("design system publishes product photo patterns", async () => {
   const design = await readFile(new URL("../../pages/DesignSystemPage.jsx", import.meta.url), "utf8");
-  const table = await readFile(new URL("../design/DataTableShowcase.jsx", import.meta.url), "utf8");
+  const list = await readFile(new URL("./ProductList.jsx", import.meta.url), "utf8");
   const showcase = await readFile(new URL("../design/ProductPhotoShowcase.jsx", import.meta.url), "utf8");
   const field = await readFile(new URL("./ProductPhotoField.jsx", import.meta.url), "utf8");
   const guide = await readFile(new URL("../../../DESIGN.md", import.meta.url), "utf8");
   assert.match(design, /ProductPhotoShowcase/);
-  assert.match(table, /ProductThumbnail/);
+  assert.match(list, /ProductThumbnail/);
   assert.match(showcase, /first-party/i);
   assert.match(field, /inferFilename/);
   assert.match(field, /capture="environment"/);
@@ -29,8 +29,25 @@ test("empty product photo field uses a neutral photo placeholder", async () => {
   const field = await readFile(new URL("./ProductPhotoField.jsx", import.meta.url), "utf8");
   const image = await readFile(new URL("./ProductImage.jsx", import.meta.url), "utf8");
   assert.match(field, /fallback="placeholder"/);
+  assert.match(field, /border-dashed/);
+  assert.match(field, /name="camera"/);
+  assert.match(field, /Tambahkan foto produk/);
+  assert.match(field, /JPG, PNG, atau WebP · maksimal 5 MB/);
   assert.match(image, /fallback === "placeholder"/);
   assert.match(image, /name="image"/);
+});
+
+test("product photo selection and removal stay inside one upload surface", async () => {
+  const field = await readFile(new URL("./ProductPhotoField.jsx", import.meta.url), "utf8");
+
+  assert.match(field, /Ganti foto produk/);
+  assert.match(field, /aria-label="Hapus foto produk"/);
+  assert.match(field, /<Icon name="trash"/);
+  assert.match(field, /min-h-32/);
+  assert.match(field, /useSwapTransition/);
+  assert.match(field, /scale-\[0\.98\] opacity-0 duration-fast/);
+  assert.match(field, /scale-\[0\.98\] opacity-0 duration-0/);
+  assert.match(field, /motion-reduce:scale-100 motion-reduce:duration-fast/);
 });
 
 test("POS and cart share the product image fallback renderer", async () => {

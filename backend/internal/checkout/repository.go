@@ -16,6 +16,8 @@ type PostgresRepository struct{}
 type lockedProduct struct {
 	ID            uuid.UUID
 	Name, Barcode string
+	Image         string
+	ImageKey      string
 	Price, Stock  int
 	Active        bool
 }
@@ -58,14 +60,14 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 	for i, item := range input.Items {
 		ids[i] = item.ProductID
 	}
-	rows, err := tx.Query(ctx, `select id,name,barcode,price,stock,active from products where org_id=$1 and id=any($2::uuid[]) order by id for update`, id.OrgID, ids)
+	rows, err := tx.Query(ctx, `select id,name,barcode,image,image_key,price,stock,active from products where org_id=$1 and id=any($2::uuid[]) order by id for update`, id.OrgID, ids)
 	if err != nil {
 		return Result{}, fmt.Errorf("lock checkout products: %w", err)
 	}
 	products := map[uuid.UUID]lockedProduct{}
 	for rows.Next() {
 		var p lockedProduct
-		if err := rows.Scan(&p.ID, &p.Name, &p.Barcode, &p.Price, &p.Stock, &p.Active); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Barcode, &p.Image, &p.ImageKey, &p.Price, &p.Stock, &p.Active); err != nil {
 			rows.Close()
 			return Result{}, fmt.Errorf("scan checkout product: %w", err)
 		}
@@ -94,7 +96,11 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 			return Result{}, ErrInsufficientStock
 		}
 		subtotal += p.Price * requested.Quantity
-		items = append(items, Item{ProductID: p.ID, Name: p.Name, Barcode: p.Barcode, Price: p.Price, Quantity: requested.Quantity})
+		image := p.Image
+		if p.ImageKey != "" {
+			image = "/api/v1/product-images/" + p.ImageKey
+		}
+		items = append(items, Item{ProductID: p.ID, Name: p.Name, Barcode: p.Barcode, Image: image, Price: p.Price, Quantity: requested.Quantity})
 	}
 	tax := 0
 	if taxEnabled {

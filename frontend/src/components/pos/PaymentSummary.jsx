@@ -31,7 +31,7 @@ export function PaymentSummary({
             <dd className="whitespace-nowrap font-mono font-semibold tabular-nums">{value}</dd>
           </div>
         ))}
-        <div className="border-t border-dashed border-border pt-3">
+        <div className="pt-3">
           <div className="payment-summary-row text-base font-semibold text-text">
             <dt>Total akhir</dt>
             <dd className="whitespace-nowrap font-mono tabular-nums">{formatPrice(grandTotal)}</dd>
