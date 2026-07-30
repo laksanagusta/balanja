@@ -25,16 +25,20 @@ export default function FormShowcase() {
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="grid max-w-md gap-4">
           <Input label="Input field" placeholder="Placeholder text" error="This field needs attention" rightSlot={<Icon name="search" className="size-4" />} />
-          <Input
-            label="Barcode with leading scan action"
-            placeholder="8997001230011"
-            inputClassName="font-mono tabular-nums tracking-[0.01em]"
-            leftSlot={(
-              <button type="button" aria-label="Scan barcode" className="mobile-compact-control -ml-1 grid size-9 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
+          <div className="grid gap-2">
+            <span className="text-sm font-semibold text-text">Barcode with scan action</span>
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <Input
+                  placeholder="8997001230011"
+                  inputClassName="font-mono tabular-nums tracking-[0.01em]"
+                />
+              </div>
+              <button type="button" aria-label="Scan barcode" className="grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
                 <Icon name="scan" className="size-5" />
               </button>
-            )}
-          />
+            </div>
+          </div>
           <Input size="large" label="Large input field" placeholder="Large mobile input" />
           <SelectField label="Popover select" value={category} options={["Sembako", "Minuman", "Snack"]} onChange={setCategory} />
           <div className="flex items-center justify-between rounded-card border border-border p-4">

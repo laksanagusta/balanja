@@ -55,13 +55,12 @@ test("mobile controls follow the shared height and hit-area contract", async () 
   assert.match(primitives, /data-mobile-size=\{resolvedMobileSize\}/);
   assert.match(primitives, /data-ui-size=\{size\}/);
   assert.match(primitives, /className="ui-button-mobile-hit-area"/);
-  assert.match(primitives, /const radius = compactVisual \|\| size === "xs" \|\| size === "sm"/);
-  assert.match(primitives, /\? "rounded-control"\s*:\s*"rounded-card"/);
+  assert.match(primitives, /const radius = "rounded-control"/);
   assert.match(buttonShowcase, /Standard radius/);
-  assert.match(buttonShowcase, /Compact radius/);
+  assert.match(buttonShowcase, /Utility radius/);
   assert.match(buttonShowcase, /Primary besar · 52/);
   assert.match(formShowcase, /<Input size="large"/);
   assert.match(design, /standard buttons are 44px, large primary buttons are 52px/);
   assert.match(design, /standard inputs and selects are 48px, large inputs are 56px/);
-  assert.match(design, /standard action buttons/);
+  assert.match(design, /`control` is 10px for shared buttons/);
 });

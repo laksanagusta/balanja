@@ -6,8 +6,8 @@ const tokens = [
   ["Accent Hover", "--color-accent-hover", "#151517"],
   ["Danger", "--color-danger", "#ef4444"],
   ["Danger Soft", "--color-danger-soft", "#fff1f1"],
-  ["Standard radius", "--radius-card", "16px"],
-  ["Compact radius", "--radius-control", "8px"],
+  ["Standard radius", "--radius-control", "10px"],
+  ["Utility radius", "--radius-button", "8px"],
   ["Mobile standard", "--control-height-mobile-button", "44px"],
   ["Mobile primary large", "--control-height-mobile-button-large", "52px"],
   ["Mobile compact visual", "--control-height-mobile-compact", "36px"],
@@ -20,7 +20,7 @@ export default function ButtonShowcase() {
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Button</h3>
-        <p className="mt-1 text-sm text-text-muted">Buttons use one flat Uber-inspired system without gradients, bevels, or elevation shadows. Standard actions use a 16px radius to align with form controls, while compact and utility actions keep an 8px radius. On mobile, standard actions are 44px, large primary actions are 52px, and compact buttons keep a 36px visual surface inside a minimum 44px hit area. Desktop retains the compact operational scale. Every variant keeps the same focus outline, disabled opacity, and immediate press scale.</p>
+        <p className="mt-1 text-sm text-text-muted">Buttons use one flat Uber-inspired system without gradients, bevels, or elevation shadows. Shared Button actions use the 10px control radius, while compact option and utility rows may use the dedicated 8px button radius. On mobile, standard actions are 44px, large primary actions are 52px, and compact buttons keep a 36px visual surface inside a minimum 44px hit area. Desktop retains the compact operational scale. Every variant keeps the same focus outline, disabled opacity, and immediate press scale.</p>
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="grid gap-5">

@@ -27,7 +27,8 @@ test("product machine data uses mono without changing human-facing labels", asyn
   const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
   const primitives = await readFile(new URL("../components/primitives.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /label="Barcode"[\s\S]{0,180}inputClassName="font-mono tabular-nums tracking-\[0\.01em\]"/);
+  assert.match(source, />Barcode<\/span>/);
+  assert.match(source, /inputClassName="font-mono tabular-nums tracking-\[0\.01em\]"/);
   assert.match(source, /label="Harga"[\s\S]{0,180}inputClassName="font-mono tabular-nums"/);
   assert.match(source, /label="Stok"[\s\S]{0,260}inputClassName="font-mono tabular-nums"/);
   assert.match(primitives, /inputClassName = ""/);
@@ -48,9 +49,18 @@ test("product editor uses category and unit IDs with inline creation", async () 
   assert.match(source, /MasterDataSelectField/);
 });
 
-test("product barcode scan action is separate from the manual field", async () => {
+test("product barcode scan action shares the labeled row with manual entry", async () => {
   const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
-  assert.match(source, /<Button[\s\S]{0,400}<Icon name="scan" className="size-5" \/>[\s\S]{0,80}Pindai barcode[\s\S]{0,180}<Input[\s\S]{0,80}label="Barcode"/);
+  const barcodeLabelIndex = source.indexOf(">Barcode</span>");
+  const barcodeInputIndex = source.indexOf('placeholder="8991001000011"', barcodeLabelIndex);
+  const scanActionIndex = source.indexOf('aria-label="Pindai barcode"', barcodeInputIndex);
+  const scanIconIndex = source.indexOf('<Icon name="scan" className="size-5" />', scanActionIndex);
+
+  assert.ok(barcodeLabelIndex >= 0);
+  assert.ok(barcodeInputIndex > barcodeLabelIndex);
+  assert.ok(scanActionIndex > barcodeInputIndex);
+  assert.ok(scanIconIndex > scanActionIndex);
+  assert.match(source, /className="flex items-center gap-2"/);
   assert.doesNotMatch(source, /leftSlot=\{\(/);
   assert.doesNotMatch(source, /<Icon name="barcode"/);
 });

@@ -23,7 +23,7 @@ test("stock filter mirrors the product draft-and-apply bottom drawer", async () 
   assert.match(source, /Terapkan/);
   assert.match(source, /relative px-6 pt-6/);
   assert.match(source, /absolute right-6 top-4 grid size-11/);
-  assert.match(source, /product-filter-drawer-scroll[^"]*px-6 pt-6/);
+  assert.match(source, /className="relative z-0 min-h-0 flex-1 overflow-y-auto px-6 pt-6"/);
   assert.match(source, /product-filter-drawer-footer[^"]*px-6 pt-6/);
 
   assert.match(page, /createPortal/);

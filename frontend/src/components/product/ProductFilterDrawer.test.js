@@ -36,7 +36,7 @@ test("product filters use an accessible icon-only Vaul bottom drawer", async () 
   assert.doesNotMatch(source, /onClick=\{onReset\}/);
   assert.match(source, /relative px-6 pt-6/);
   assert.match(source, /absolute right-6 top-4 grid size-11/);
-  assert.match(source, /product-filter-drawer-scroll[^"]*px-6 pt-6/);
+  assert.match(source, /className="relative z-0 min-h-0 flex-1 overflow-y-auto px-6 pt-6"/);
   assert.match(source, /className="grid gap-4"/);
   assert.match(source, /product-filter-drawer-footer[^"]*px-6 pt-6/);
   assert.doesNotMatch(source, /Tampilkan produk/);
