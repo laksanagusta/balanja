@@ -921,33 +921,39 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
         aria-modal="true"
         aria-labelledby={c.title ? titleId : undefined}
         tabIndex={-1}
-        className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto outline-none ${sizes[size]} rounded-overlay border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
+        className={`relative flex max-h-[calc(100svh-2rem)] w-full flex-col overflow-hidden outline-none ${sizes[size]} rounded-overlay border border-border bg-surface shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
           isVisible ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
         } ${
           !c.footer && !c.icon ? "text-center" : ""
         }`}
       >
-        {c.icon && (
-          <div className={`mb-4 mx-auto flex size-12 items-center justify-center rounded-full ${c.iconBg || "bg-accent-soft text-accent"}`}>
-            <Icon name={c.icon} className="size-6" />
-          </div>
-        )}
-        {c.title && (
-          <div className="overlay-sticky-header flex items-center justify-between">
-            <h4 id={titleId} className="text-lg font-semibold text-text">{c.title}</h4>
-            {onClose && (
-              <button type="button" onClick={onClose} className="text-text-muted hover:text-text">
-                <Icon name="x" className="size-5" />
-              </button>
+        {(c.icon || c.title) && (
+          <div className="overlay-sticky-header shrink-0 px-6 pb-4 pt-6">
+            {c.icon && (
+              <div className={`mb-4 mx-auto flex size-12 items-center justify-center rounded-full ${c.iconBg || "bg-accent-soft text-accent"}`}>
+                <Icon name={c.icon} className="size-6" />
+              </div>
+            )}
+            {c.title && (
+              <div className="flex items-center justify-between">
+                <h4 id={titleId} className="text-lg font-semibold text-text">{c.title}</h4>
+                {onClose && (
+                  <button type="button" onClick={onClose} className="text-text-muted hover:text-text">
+                    <Icon name="x" className="size-5" />
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
         {c.children && (
-          <div className={`relative z-0 text-sm text-text-muted ${c.title ? 'mt-2' : ''}`}>
+          <div className={`min-h-0 overflow-y-auto overscroll-contain px-6 text-sm text-text-muted ${
+            c.title || c.icon ? "" : "pt-6"
+          } ${c.footer ? "" : "pb-6"}`}>
             {c.children}
           </div>
         )}
-        {c.footer && <div className="mt-6 flex justify-end gap-2">{c.footer}</div>}
+        {c.footer && <div className="shrink-0 bg-surface px-6 pb-6 pt-6 flex justify-end gap-2">{c.footer}</div>}
       </div>
     </div>
   ), document.body);

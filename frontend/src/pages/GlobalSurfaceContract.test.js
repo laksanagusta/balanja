@@ -54,6 +54,11 @@ test("rounded rectangles use cross-browser border radius without corner smoothin
   assert.match(styles, /--radius-overlay:\s*32px;/);
   assert.doesNotMatch(styles, /corner-shape|corner-smoothing|corner-superellipse/);
   assert.match(styles, /\.overlay-sticky-header\s*\{\s*position:\s*sticky;\s*inset-block-start:\s*0;/);
+  assert.match(styles, /\.overlay-sticky-header\s*\{[\s\S]*isolation:\s*isolate;/);
+  assert.match(
+    await readFile(new URL("../components/primitives.jsx", import.meta.url), "utf8"),
+    /flex max-h-\[calc\(100svh-2rem\)\][\s\S]*overflow-hidden[\s\S]*overlay-sticky-header shrink-0 px-6 pb-4 pt-6[\s\S]*min-h-0 overflow-y-auto overscroll-contain/,
+  );
   assert.match(tokens, /\["XS - Utility Buttons", "--radius-button", "8px"\]/);
   assert.match(tokens, /\["S - Controls & Inputs", "--radius-control", "10px"\]/);
   assert.match(tokens, /\["S - Cards & Inputs", "--radius-card", "16px"\]/);
@@ -64,6 +69,8 @@ test("rounded rectangles use cross-browser border radius without corner smoothin
   assert.match(design, /Use standard CSS `border-radius` geometry consistently across browsers/);
   assert.match(design, /do not apply `corner-shape`, superellipse, corner smoothing/);
   assert.match(design, /Modal and drawer headers use the shared sticky-header contract/);
+  assert.match(design, /opaque header, scrollable body, and opaque footer/);
+  assert.match(design, /modal titles keep 16px of space/);
 });
 
 test("dialogs use a restrained blur and respect reduced transparency", async () => {

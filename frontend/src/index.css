@@ -109,6 +109,7 @@
     position: sticky;
     inset-block-start: 0;
     z-index: 10;
+    isolation: isolate;
     flex: none;
     background: var(--color-surface);
   }
