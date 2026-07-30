@@ -22,7 +22,7 @@ test("design system documents production sales report patterns", async () => {
   assert.match(design, /dashboard revenue.*localized.*Rupiah/i);
   assert.match(design, /vertical touch scrolling/i);
   assert.match(design, /screen-reader table/i);
-  assert.match(design, /compact filter disclosure/i);
+  assert.match(design, /compact disclosure/i);
   assert.match(design, /never truncate/i);
   assert.match(showcase, /scroll vertikal/i);
   assert.match(showcase, /tabel aksesibel/i);

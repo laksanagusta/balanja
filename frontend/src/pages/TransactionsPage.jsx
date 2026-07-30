@@ -1,10 +1,11 @@
 import React from "react";
-import { TableFilterPopover } from "../components/TableFilterPopover.jsx";
-import { TablePagination } from "../components/TablePagination.jsx";
-import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField } from "../components/primitives.jsx";
+import { createPortal } from "react-dom";
+import { Button, Dialog, Icon } from "../components/primitives.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { TransactionsPageSkeleton } from "../components/page-loading.jsx";
+import { TransactionCardList } from "../components/transactions/TransactionCardList.jsx";
+import { TransactionFilterDrawer } from "../components/transactions/TransactionFilterDrawer.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { usePOSStore } from "../pos/store.jsx";
@@ -28,6 +29,7 @@ export default function TransactionsPage() {
   const [paymentMethod, setPaymentMethod] = React.useState(initialFilters.paymentMethod);
   const [dateFrom, setDateFrom] = React.useState(initialFilters.dateFrom);
   const [dateTo, setDateTo] = React.useState(initialFilters.dateTo);
+  const [topBarActionsTarget, setTopBarActionsTarget] = React.useState(null);
   const debouncedQuery = useDebouncedValue(query, 220);
   const transactionFilters = React.useMemo(() => ({
     q: debouncedQuery.trim(),
@@ -44,108 +46,64 @@ export default function TransactionsPage() {
     filters: transactionFilters,
     initialSortKey: "createdAt",
     initialSortDir: "desc",
+    initialPageSize: 6,
   });
   const activeFilterCount = [paymentMethod, dateFrom, dateTo].filter(Boolean).length;
+
+  React.useEffect(() => {
+    setTopBarActionsTarget(document.getElementById("app-top-bar-actions"));
+  }, []);
 
   if (table.isInitialLoading) {
     return <TransactionsPageSkeleton />;
   }
 
-  const columns = [
-    { key: "number", label: "Transaksi", sortable: true, render: (row) => <span className="font-semibold">{row.number}</span> },
-    { key: "createdAt", label: "Waktu", sortable: true, render: (row) => <span className="text-text-muted">{formatDate(row.createdAt)}</span> },
-    { key: "items", label: "Item", render: (row) => row.items.reduce((sum, item) => sum + item.qty, 0) },
-    { key: "paymentMethod", label: "Pembayaran", sortable: true, render: (row) => row.paymentMethod === "cash" ? "Tunai" : row.paymentMethod.toUpperCase() },
-    { key: "total", label: "Total", sortable: true, render: (row) => <span className="font-mono font-semibold tabular-nums">{formatPrice(row.total)}</span> },
-    { key: "status", label: "Status", render: (row) => <Badge tone="success">{row.status === "completed" ? "Selesai" : row.status}</Badge> },
-    {
-      key: "actions",
-      label: "Aksi",
-      align: "right",
-      render: (row) => (
-        <Button variant="secondary" size="sm" onClick={() => setSelected(row)}>
-          <Icon name="eye" className="size-4" />
-          Detail
-        </Button>
-      ),
-    },
-  ];
-
-  return (
-    <div className="flex h-full min-h-0 flex-col bg-surface">
-      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto] lg:items-center">
-        <h1 className="text-base font-semibold text-text">Transaksi</h1>
-        <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
-          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
-            <Icon name="search" className="size-4 text-text-muted" />
-            <input
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-              placeholder="Transaksi, kasir, pembayaran"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </div>
-        </div>
-        <TableFilterPopover
+  const topBarActions = topBarActionsTarget
+    ? createPortal(
+      <>
+        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui daftar transaksi" />
+        <TransactionFilterDrawer
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
-          activeCount={activeFilterCount}
-          className="w-full lg:w-auto"
-          triggerClassName="w-full justify-center lg:w-auto"
-        >
-          <SelectField
-            label="Metode pembayaran"
-            value={paymentMethod}
-            options={[
-              { value: "", label: "Semua metode" },
-              { value: "cash", label: "Tunai" },
-              { value: "qris", label: "QRIS" },
-            ]}
-            onChange={setPaymentMethod}
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label="Tanggal dari"
-              inputProps={{
-                type: "date",
-                value: dateFrom,
-                max: dateTo || undefined,
-                onChange: (event) => setDateFrom(event.target.value),
-              }}
-            />
-            <Input
-              label="Tanggal sampai"
-              inputProps={{
-                type: "date",
-                value: dateTo,
-                min: dateFrom || undefined,
-                onChange: (event) => setDateTo(event.target.value),
-              }}
-            />
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            disabled={activeFilterCount === 0}
-            onClick={() => { setPaymentMethod(""); setDateFrom(""); setDateTo(""); }}
-          >
-            Reset filter
-          </Button>
-        </TableFilterPopover>
-        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui daftar transaksi" />
-      </header>
+          sort={`${table.sortKey}:${table.sortDir}`}
+          onSortChange={(nextSort) => {
+            const [sortKey, sortDir] = nextSort.split(":");
+            table.setSort(sortKey, sortDir);
+          }}
+          paymentMethod={paymentMethod}
+          onPaymentMethodChange={setPaymentMethod}
+          dateFrom={dateFrom}
+          onDateFromChange={setDateFrom}
+          dateTo={dateTo}
+          onDateToChange={setDateTo}
+        />
+      </>,
+      topBarActionsTarget,
+    )
+    : null;
 
-      <div className="min-h-0 flex-1 overflow-auto p-4">
-        <div className="grid rounded-panel border border-border bg-surface p-0">
+  return (
+    <>
+      {topBarActions}
+      <div className="flex h-full min-h-0 flex-col bg-surface">
+        <header className="px-4 py-3">
+          <div className="flex w-full min-w-0">
+            <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+              <Icon name="search" className="size-4 text-text-muted" />
+              <input
+                aria-label="Cari transaksi"
+                className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
+                placeholder="Transaksi, kasir, pembayaran"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-auto px-4 pb-4">
           {table.rows.length ? (
-            <DataTable
-              columns={columns}
-              data={table.rows}
-              sortKey={table.sortKey}
-              sortDir={table.sortDir}
-              onSort={table.sortBy}
-            />
+            <TransactionCardList transactions={table.rows} formatDate={formatDate} onSelect={setSelected} />
           ) : (
             <EmptyState
               icon={query || activeFilterCount ? "search" : "receipt"}
@@ -155,32 +113,34 @@ export default function TransactionsPage() {
               className="m-4 min-h-[240px]"
             />
           )}
-          <TablePagination
-            {...table.range}
-            pageSize={table.pageSize}
-            canPrevious={table.canPrevious}
-            canNext={table.canNext}
-            onPrevious={table.previous}
-            onNext={table.next}
-            onPageSizeChange={table.setPageSize}
-            loading={table.loading}
-          />
+          {(table.hasMore || (table.error && table.rows.length > 0)) && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                type="button"
+                variant="secondary"
+                className="min-w-36"
+                disabled={table.loading}
+                onClick={() => table.loadMore()}
+              >
+                {table.loading ? "Memuat..." : table.error ? "Coba lagi" : "Muat lebih banyak"}
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
 
-      <Dialog
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        title={selected?.number || "Detail transaksi"}
-        size="lg"
-        footer={<Button onClick={() => setSelected(null)}>Tutup</Button>}
-      >
-        {selected && (
-          <div className="mt-4 grid gap-4">
+        <Dialog
+          open={Boolean(selected)}
+          onClose={() => setSelected(null)}
+          title={selected?.number || "Detail transaksi"}
+          size="lg"
+          footer={<Button onClick={() => setSelected(null)}>Tutup</Button>}
+        >
+          {selected && (
+            <div className="mt-4 grid gap-4">
             <div className="grid gap-2 rounded-card border border-border bg-surface-muted p-4 text-sm">
               <div className="flex justify-between gap-4">
                 <span className="text-text-muted">Kasir</span>
-                <span className="font-semibold text-text">{selected.cashierName || selected.cashierUserId || "-"}</span>
+                <span className="font-semibold text-text">{selected.cashierName || "Tidak diketahui"}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-text-muted">Pembayaran</span>
@@ -192,7 +152,7 @@ export default function TransactionsPage() {
               </div>
             </div>
 
-            <div className="divide-y divide-border rounded-card border border-border">
+            <div className="rounded-card border border-border">
               {selected.items.map((item) => (
                 <div key={item.productId} className="flex items-start justify-between gap-4 px-4 py-3">
                   <div className="min-w-0">
@@ -216,14 +176,15 @@ export default function TransactionsPage() {
                 <dt>Pajak</dt>
                 <dd className="font-mono font-semibold">{formatPrice(selected.tax)}</dd>
               </div>
-              <div className="flex justify-between border-t border-dashed border-border pt-3 text-lg font-semibold text-text">
+              <div className="flex justify-between pt-3 text-lg font-semibold text-text">
                 <dt>Total</dt>
                 <dd className="font-mono">{formatPrice(selected.total)}</dd>
               </div>
             </dl>
-          </div>
-        )}
-      </Dialog>
-    </div>
+            </div>
+          )}
+        </Dialog>
+      </div>
+    </>
   );
 }

@@ -32,7 +32,7 @@ func NewService(r Runner, repo Repository) *Service {
 	return &Service{runner: r, repository: repo, location: location}
 }
 func (s *Service) Summary(ctx context.Context, id database.Identity, days int, now time.Time) (Summary, error) {
-	if days != 7 && days != 30 {
+	if days != 1 && days != 7 && days != 30 {
 		return Summary{}, ErrInvalidPeriod
 	}
 	local := now.In(s.location)
@@ -56,8 +56,14 @@ func BuildSummary(txs []Transaction, products []Product, days int, now time.Time
 	start := today.AddDate(0, 0, -(days - 1))
 	end := today.AddDate(0, 0, 1)
 	previous := start.AddDate(0, 0, -days)
-	current := filter(txs, start, end)
-	prior := filter(txs, previous, start)
+	currentEnd := end
+	previousEnd := start
+	if days == 1 {
+		currentEnd = now
+		previousEnd = previous.Add(now.Sub(today))
+	}
+	current := filter(txs, start, currentEnd)
+	prior := filter(txs, previous, previousEnd)
 	revenue := sum(current)
 	priorRevenue := sum(prior)
 	avg := 0.0
@@ -80,7 +86,7 @@ func BuildSummary(txs []Transaction, products []Product, days int, now time.Time
 		}
 		return low[i].Stock < low[j].Stock
 	})
-	summary := Summary{Revenue: revenue, TransactionCount: len(current), AverageTransactionValue: avg, LowStockCount: len(low), Comparisons: map[string]Comparison{"revenue": compare(float64(revenue), float64(priorRevenue)), "transactions": compare(float64(len(current)), float64(len(prior))), "average": compare(avg, priorAvg)}, RevenueTrend: trend(current, start, days), PaymentMix: paymentMix(current), TopProducts: topProducts(current), LowStock: low}
+	summary := Summary{Revenue: revenue, TransactionCount: len(current), AverageTransactionValue: avg, LowStockCount: len(low), Comparisons: map[string]Comparison{"revenue": compare(float64(revenue), float64(priorRevenue)), "transactions": compare(float64(len(current)), float64(len(prior))), "average": compare(avg, priorAvg)}, RevenueTrend: trend(current, start, days, now), PaymentMix: paymentMix(current), TopProducts: topProducts(current), LowStock: low}
 	if len(summary.LowStock) > 5 {
 		summary.LowStock = summary.LowStock[:5]
 	}
@@ -115,7 +121,26 @@ func compare(current, previous float64) Comparison {
 	}
 	return Comparison{Direction: direction, Percent: &percent}
 }
-func trend(txs []Transaction, start time.Time, days int) []TrendPoint {
+func trend(txs []Transaction, start time.Time, days int, now time.Time) []TrendPoint {
+	if days == 1 {
+		totals := map[int]int{}
+		for _, tx := range txs {
+			totals[tx.CreatedAt.In(start.Location()).Hour()] += tx.Total
+		}
+		currentHour := now.In(start.Location()).Hour()
+		out := make([]TrendPoint, currentHour+1)
+		for hour := 0; hour <= currentHour; hour++ {
+			bucket := start.Add(time.Duration(hour) * time.Hour)
+			out[hour] = TrendPoint{
+				Date:          bucket.Format(time.RFC3339),
+				Label:         bucket.Format("15.00"),
+				CurrentBucket: bucket.Format(time.RFC3339),
+				Revenue:       totals[hour],
+			}
+		}
+		return out
+	}
+
 	totals := map[string]int{}
 	for _, tx := range txs {
 		totals[tx.CreatedAt.In(start.Location()).Format("2006-01-02")] += tx.Total

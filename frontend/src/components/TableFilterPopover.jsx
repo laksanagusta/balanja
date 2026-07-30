@@ -7,6 +7,9 @@ export function TableFilterPopover({
   open,
   onOpenChange,
   activeCount = 0,
+  iconOnly = false,
+  label = "Filter",
+  dialogLabel = "Filter tabel",
   className = "",
   triggerClassName = "",
   children,
@@ -54,15 +57,17 @@ export function TableFilterPopover({
       <button
         ref={triggerRef}
         type="button"
+        aria-label={iconOnly ? label : undefined}
+        title={iconOnly ? label : undefined}
         aria-expanded={open}
         aria-controls={contentId}
         onClick={() => onOpenChange(!open)}
-        className={`relative z-40 inline-flex h-9 items-center gap-2 rounded-button border border-border bg-surface px-3 text-sm font-semibold text-text-muted transition-[background-color,border-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${triggerClassName}`}
+        className={`mobile-compact-control relative z-40 inline-flex items-center rounded-control text-sm font-semibold text-text-muted transition-[background-color,border-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${iconOnly ? "size-11 justify-center border-0 bg-transparent px-0" : "h-9 gap-2 border border-border bg-surface px-3"} ${triggerClassName}`}
       >
         <Icon name="filter" className="size-4" />
-        Filters
+        {!iconOnly && label}
         {activeCount > 0 && (
-          <span className="inline-flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-bold tabular-nums text-white">
+          <span className={`${iconOnly ? "absolute -right-1 -top-1 ring-2 ring-surface" : ""} inline-flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-bold tabular-nums text-white`}>
             {activeCount}
           </span>
         )}
@@ -71,7 +76,7 @@ export function TableFilterPopover({
         <>
           <button
             type="button"
-            aria-label="Close filters"
+            aria-label={`Tutup ${label.toLowerCase()}`}
             onClick={() => onOpenChange(false)}
             className="fixed inset-0 z-30 cursor-default"
           />
@@ -79,7 +84,7 @@ export function TableFilterPopover({
             ref={contentRef}
             id={contentId}
             role="dialog"
-            aria-label="Table filters"
+            aria-label={dialogLabel}
             className="absolute right-0 top-[calc(100%+8px)] z-40 grid w-[min(22rem,calc(100vw-2rem))] gap-4 rounded-card border border-border bg-surface p-4 shadow-panel"
           >
             {children}

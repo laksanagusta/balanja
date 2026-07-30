@@ -44,9 +44,9 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
   assert.match(toolbar, /Perubahan belum diterapkan/);
   assert.match(toolbar, /aria-expanded=\{filtersExpanded\}/);
   assert.match(toolbar, /aria-controls=\{filterPanelId\}/);
-  assert.match(toolbar, /md:hidden/);
+  assert.doesNotMatch(toolbar, /md:hidden/);
   assert.match(toolbar, /max-h-\[min\(70svh,32rem\)\]/);
-  assert.match(toolbar, /md:max-h-none/);
+  assert.doesNotMatch(toolbar, /md:max-h-none|md:grid|xl:grid-cols/);
   assert.match(toolbar, /refreshError/);
   assert.match(toolbar, /actionsDisabled/);
   assert.match(toolbar, /CSV harian/);
@@ -65,8 +65,8 @@ test("report components expose comparisons, dual trend, breakdowns, and accessib
 	assert.match(primitives, /aria-selected/);
 	assert.match(primitives, /document\.addEventListener\("pointerdown"/);
 	assert.match(primitives, /event\.key === "Escape"/);
-	assert.match(primitives, /className="flex h-11 w-full items-center bg-transparent p-0 text-left md:h-9/);
-	assert.match(primitives, /className={`flex h-9 w-full items-center justify-between/);
+	assert.match(primitives, /className="ui-select-hitbox flex h-11 w-full items-center bg-transparent p-0 text-left md:h-9/);
+	assert.match(primitives, /className={`ui-select-surface flex h-9 w-full items-center justify-between/);
 	assert.match(primitives, /className="group flex h-11 w-full items-center bg-transparent p-0 text-left"/);
 	assert.match(primitives, /className={`flex h-10 w-full items-center rounded-button/);
 	assert.doesNotMatch(primitives, /flex h-11 md:h-9 items-center justify-between/);

@@ -135,7 +135,7 @@ export default function MasterDataManager({
         <BackgroundUpdateStatus active={loading} label={`Memperbarui ${pluralLabel.toLowerCase()}`} />
       </div>
 
-      <div className="master-data-create border-t border-border p-4">
+      <div className="master-data-create p-4">
         <Input
           label={`Tambah ${singularLabel.toLowerCase()}`}
           placeholder={`Nama ${singularLabel.toLowerCase()}`}
@@ -169,7 +169,7 @@ export default function MasterDataManager({
         {error ? <p aria-live="polite" className="master-data-create-error text-xs font-medium text-danger">{error}</p> : null}
       </div>
 
-      <div className={`master-data-list divide-y divide-border border-t border-border ${loading ? "opacity-70" : ""}`}>
+      <div className={`master-data-list ${loading ? "opacity-70" : ""}`}>
         {activeItems.length === 0 ? (
           <p className="px-4 py-5 text-sm text-text-muted">Belum ada {pluralLabel.toLowerCase()}.</p>
         ) : activeItems.map((item) => (
@@ -229,12 +229,12 @@ export default function MasterDataManager({
       </div>
 
       {archivedItems.length > 0 ? (
-        <details className="group border-t border-border">
+        <details className="group">
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-2 text-sm font-medium text-text-muted transition-colors duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
             <span>Diarsipkan · {archivedItems.length}</span>
             <Icon name="chevron" className="size-4 transition-transform duration-base ease-standard group-open:rotate-180 motion-reduce:transition-none" />
           </summary>
-          <div className="divide-y divide-border border-t border-border">
+          <div>
             {archivedItems.map((item) => (
               <div key={item.id} className="master-data-archived-row min-h-13 items-center px-4 py-1">
                 <p className="master-data-item-name text-sm font-medium text-text-muted">{item.name}</p>

@@ -1,19 +1,20 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import BarcodeScanner from "../components/BarcodeScanner.jsx";
-import { TablePagination } from "../components/TablePagination.jsx";
-import { Badge, Button, DataTable, Dialog, Icon, Input, SelectField, Switch } from "../components/primitives.jsx";
+import { Button, Dialog, Icon, Input, Switch } from "../components/primitives.jsx";
 import { ProductsPageSkeleton } from "../components/page-loading.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { parseNumberInput, validateProduct } from "../pos/domain.js";
 import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
-import { formatPrice } from "../shared.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
-import { ProductThumbnail } from "../components/product/ProductImage.jsx";
+import { SwapText } from "../components/motion/SwapText.jsx";
+import { ProductList } from "../components/product/ProductList.jsx";
 import MasterDataSelectField from "../components/product/MasterDataSelectField.jsx";
+import { ProductFilterDrawer } from "../components/product/ProductFilterDrawer.jsx";
 import { ProductPhotoField } from "../components/product/ProductPhotoField.jsx";
 import { validateProductPhoto } from "../components/product/product-photo.js";
 import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
@@ -39,13 +40,14 @@ export default function ProductsPage() {
   const [query, setQuery] = React.useState("");
   const [categoryId, setCategoryId] = React.useState("");
   const [status, setStatus] = React.useState("");
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [editing, setEditing] = React.useState(null);
   const [productErrors, setProductErrors] = React.useState({});
-  const [deactivating, setDeactivating] = React.useState(null);
   const [scannerOpen, setScannerOpen] = React.useState(false);
   const [savingProduct, setSavingProduct] = React.useState(false);
-  const [deactivatingProduct, setDeactivatingProduct] = React.useState(false);
   const [photoPreviewURL, setPhotoPreviewURL] = React.useState("");
+  const [enteringProductIds, setEnteringProductIds] = React.useState([]);
+  const [topBarActionsTarget, setTopBarActionsTarget] = React.useState(null);
   const debouncedQuery = useDebouncedValue(query, 220);
   const productFilters = React.useMemo(() => ({
     q: debouncedQuery.trim(),
@@ -71,22 +73,35 @@ export default function ProductsPage() {
     filters: productFilters,
     initialSortKey: "createdAt",
     initialSortDir: "desc",
+    initialPageSize: 6,
   });
 
   React.useEffect(() => () => {
-    if (photoPreviewURL) URL.revokeObjectURL(photoPreviewURL);
+    if (photoPreviewURL) {
+      window.setTimeout(() => URL.revokeObjectURL(photoPreviewURL), 200);
+    }
   }, [photoPreviewURL]);
+
+  React.useEffect(() => {
+    if (enteringProductIds.length === 0) return undefined;
+    const timeout = window.setTimeout(() => setEnteringProductIds([]), 220);
+    return () => window.clearTimeout(timeout);
+  }, [enteringProductIds]);
 
   React.useEffect(() => {
     loadCategories();
     loadUnits();
   }, [loadCategories, loadUnits]);
 
+  React.useEffect(() => {
+    setTopBarActionsTarget(document.getElementById("app-top-bar-actions"));
+  }, []);
+
   if (table.isInitialLoading) {
     return <ProductsPageSkeleton />;
   }
 
-  const isProductsMutating = savingProduct || deactivatingProduct;
+  const isProductsMutating = savingProduct;
 
   const closeEditor = () => {
     setPhotoPreviewURL("");
@@ -132,7 +147,7 @@ export default function ProductsPage() {
         description: saved.name,
       });
       closeEditor();
-      await Promise.all([table.refresh(), loadProducts({ force: true })]);
+      await Promise.all([table.reset(), loadProducts({ force: true })]);
     } catch (error) {
       const imageMessages = {
         INVALID_IMAGE: "Gunakan file JPG, PNG, atau WebP yang valid.",
@@ -160,165 +175,115 @@ export default function ProductsPage() {
     }
   };
 
-  const deactivate = async () => {
-    if (!deactivating || deactivatingProduct) return;
-    setDeactivatingProduct(true);
-    try {
-      const result = await store.deactivateProduct(deactivating.id);
-      if (result.ok) {
-        toast.success("Produk dinonaktifkan", {
-          description: deactivating.name,
-        });
-        setDeactivating(null);
-        await Promise.all([table.refresh(), loadProducts({ force: true })]);
-      } else {
-        toast.error(result.error || "Gagal menonaktifkan produk");
-      }
-    } finally {
-      setDeactivatingProduct(false);
-    }
+  const loadMoreProducts = async () => {
+    const page = await table.loadMore();
+    const nextIds = (page?.items || [])
+      .map((product) => product.id || product.sku)
+      .filter(Boolean);
+    setEnteringProductIds(nextIds);
   };
 
-  const columns = [
-    {
-      key: "name",
-      label: "Produk",
-      sortable: true,
-      render: (product) => (
-        <div className="flex min-w-[180px] items-center gap-3">
-          <ProductThumbnail product={product} />
-          <span className="font-semibold">{product.name}</span>
-        </div>
-      ),
-    },
-    { key: "barcode", label: "Barcode", render: (product) => <span className="font-mono text-xs text-text-muted">{product.barcode}</span> },
-    {
-      key: "category",
-      label: "Kategori",
-      sortable: true,
-      render: (product) => resolveMasterName(store.categories, product.categoryId, product.category),
-    },
-    { key: "price", label: "Harga", sortable: true, render: (product) => <span className="font-mono font-semibold tabular-nums">{formatPrice(product.price)}</span> },
-    {
-      key: "stock",
-      label: "Stok",
-      sortable: true,
-      render: (product) => (
-        <span className={`font-mono tabular-nums ${product.stock <= 5 ? "font-semibold text-warning" : "text-text"}`}>
-          {formatNumberInput(product.stock)}
-          <span className="text-text-subtle"> {resolveMasterName(store.units, product.unitId, product.unit)}</span>
-        </span>
-      ),
-    },
-    { key: "active", label: "Status", render: (product) => <Badge tone={product.active ? "success" : "danger"}>{product.active ? "Aktif" : "Nonaktif"}</Badge> },
-    {
-      key: "actions",
-      label: "Aksi",
-      align: "right",
-      render: (product) => (
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" size="sm" disabled={isProductsMutating} onClick={() => openEditor(product)}>
-            Ubah
-          </Button>
-          <Button variant="danger" size="sm" disabled={isProductsMutating} onClick={() => setDeactivating(product)}>
-            Nonaktifkan
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const topBarActions = topBarActionsTarget
+    ? createPortal(
+      <>
+        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui daftar produk" />
+        <ProductFilterDrawer
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          label="Filter produk"
+          sort={`${table.sortKey}:${table.sortDir}`}
+          onSortChange={(nextSort) => {
+            const [sortKey, sortDir] = nextSort.split(":");
+            table.setSort(sortKey, sortDir);
+          }}
+          category={categoryId}
+          categoryOptions={categoryOptions}
+          onCategoryChange={setCategoryId}
+          status={status}
+          onStatusChange={setStatus}
+        />
+      </>,
+      topBarActionsTarget,
+    )
+    : null;
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface">
-      <header className="grid gap-3 border-b border-border px-6 py-3 lg:grid-cols-[auto_1fr_auto_auto_auto] lg:items-center">
-        <h1 className="text-base font-semibold text-text">Produk</h1>
-        <div className="flex w-full min-w-0 lg:ml-auto lg:w-[420px]">
-          <div className="flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
-            <Icon name="search" className="size-4 text-text-muted" />
-            <input
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-              placeholder="Nama, barcode, kategori"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
+    <>
+      {topBarActions}
+      <div className="flex h-full min-h-0 flex-col bg-surface">
+        <header className="px-4 py-3">
+          <div className="grid w-full">
+            <div className="flex w-full min-w-0 items-center gap-2">
+              <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+                <Icon name="search" className="size-4 text-text-muted" />
+                <input
+                  aria-label="Cari produk"
+                  className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
+                  placeholder="Nama, barcode, kategori"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </div>
+              <button
+                type="button"
+                aria-label="Tambah produk"
+                title="Tambah produk"
+                disabled={isProductsMutating}
+                onClick={() => openEditor(emptyProduct(defaultCategoryId, defaultUnitId))}
+                className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-white transition-[background-color,transform] duration-fast ease-standard hover:bg-accent-hover active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+              >
+                <Icon name="plus" className="size-5" />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-auto p-4">
+          <div className="grid w-full gap-3">
+            <div className="overflow-hidden rounded-panel border border-border bg-surface">
+              {table.rows.length ? (
+                <ProductList
+                  products={table.rows}
+                  disabled={isProductsMutating}
+                  onSelect={openEditor}
+                  getCategory={(product) => resolveMasterName(store.categories, product.categoryId, product.category)}
+                  getUnit={(product) => resolveMasterName(store.units, product.unitId, product.unit)}
+                  enteringIds={enteringProductIds}
+                />
+              ) : (
+                <EmptyState
+                  icon="search"
+                  title={table.error ? "Produk gagal dimuat" : "Produk tidak ditemukan"}
+                  description={table.error ? table.error.message : "Coba nama, barcode, kategori, atau status lain."}
+                  action={table.error ? (
+                    <Button size="sm" variant="secondary" onClick={table.retry}>Coba lagi</Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isProductsMutating}
+                      onClick={() => { setQuery(""); setCategoryId(""); setStatus(""); }}
+                    >
+                      Atur ulang filter
+                    </Button>
+                  )}
+                  className="m-4 min-h-[240px]"
+                />
+              )}
+            </div>
+            {(table.hasMore || (table.error && table.rows.length > 0)) && (
+              <Button
+                type="button"
+                variant="secondary"
+                className="mx-auto min-w-36"
+                disabled={table.loading}
+                onClick={loadMoreProducts}
+              >
+                {table.loading ? "Memuat..." : table.error ? "Coba lagi" : "Muat lebih banyak"}
+              </Button>
+            )}
           </div>
         </div>
-        <div className="w-full lg:w-[160px]">
-          <SelectField
-            label="Kategori"
-            hideLabel
-            value={categoryId}
-            options={categoryOptions}
-            onChange={setCategoryId}
-          />
-        </div>
-        <div className="w-full lg:w-[130px]">
-          <SelectField
-            label="Status"
-            hideLabel
-            value={status}
-            options={[
-              { value: "", label: "Semua status" },
-              { value: "active", label: "Aktif" },
-              { value: "inactive", label: "Nonaktif" },
-            ]}
-            onChange={setStatus}
-          />
-        </div>
-        <Button
-          variant="primary"
-          className="w-full whitespace-nowrap lg:w-auto lg:justify-self-end"
-          disabled={isProductsMutating}
-          onClick={() => openEditor(emptyProduct(defaultCategoryId, defaultUnitId))}
-        >
-          <Icon name="plus" className="size-4" />
-          Tambah produk
-        </Button>
-        <BackgroundUpdateStatus active={table.isUpdating} label="Memperbarui daftar produk" />
-      </header>
-
-      <div className="min-h-0 flex-1 overflow-auto p-4">
-        <div className="grid rounded-panel border border-border bg-surface p-0">
-          {table.rows.length ? (
-            <DataTable
-              columns={columns}
-              data={table.rows}
-              sortKey={table.sortKey}
-              sortDir={table.sortDir}
-              onSort={table.sortBy}
-            />
-          ) : (
-            <EmptyState
-              icon="search"
-              title={table.error ? "Produk gagal dimuat" : "Produk tidak ditemukan"}
-              description={table.error ? table.error.message : "Coba nama, barcode, kategori, atau status lain."}
-              action={table.error ? (
-                <Button size="sm" variant="secondary" onClick={table.retry}>Coba lagi</Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={isProductsMutating}
-                  onClick={() => { setQuery(""); setCategoryId(""); setStatus(""); }}
-                >
-                  Atur ulang filter
-                </Button>
-              )}
-              className="m-4 min-h-[240px]"
-            />
-          )}
-          <TablePagination
-            {...table.range}
-            pageSize={table.pageSize}
-            canPrevious={table.canPrevious}
-            canNext={table.canNext}
-            onPrevious={table.previous}
-            onNext={table.next}
-            onPageSizeChange={table.setPageSize}
-            loading={table.loading}
-          />
-        </div>
-      </div>
 
       <Dialog
         open={Boolean(editing)}
@@ -333,8 +298,8 @@ export default function ProductsPage() {
             <Button type="button" disabled={savingProduct} onClick={closeEditor}>
               Batal
             </Button>
-            <Button type="submit" variant="primary" form="product-form" disabled={savingProduct}>
-              {savingProduct ? "Menyimpan..." : "Simpan produk"}
+            <Button type="submit" variant="primary" form="product-form" disabled={savingProduct} className="min-w-32">
+              <SwapText value={savingProduct ? "Menyimpan..." : "Simpan produk"} />
             </Button>
           </>
         }
@@ -363,18 +328,7 @@ export default function ProductsPage() {
               onRemove={removePhoto}
             />
 
-            <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-              <Input
-                label="Barcode"
-                placeholder="8991001000011"
-                error={productErrors.barcode}
-                inputProps={{
-                  value: editing.barcode,
-                  onChange: (event) => updateEditing("barcode", event.target.value),
-                  required: true,
-                  disabled: savingProduct,
-                }}
-              />
+            <div className="grid gap-2">
               <Button
                 type="button"
                 variant="secondary"
@@ -383,10 +337,23 @@ export default function ProductsPage() {
                   void primeScanSuccessSound();
                   setScannerOpen(true);
                 }}
+                className="w-full"
               >
-                <Icon name="scan" className="size-4" />
-                Pindai
+                <Icon name="scan" className="size-5" />
+                Pindai barcode
               </Button>
+              <Input
+                label="Barcode"
+                placeholder="8991001000011"
+                error={productErrors.barcode}
+                inputClassName="font-mono tabular-nums tracking-[0.01em]"
+                inputProps={{
+                  value: editing.barcode,
+                  onChange: (event) => updateEditing("barcode", event.target.value),
+                  required: true,
+                  disabled: savingProduct,
+                }}
+              />
             </div>
 
             <MasterDataSelectField
@@ -405,6 +372,7 @@ export default function ProductsPage() {
                 label="Harga"
                 placeholder="72000"
                 error={productErrors.price}
+                inputClassName="font-mono tabular-nums"
                 inputProps={{
                   value: formatNumberInput(editing.price),
                   onChange: (event) => updateEditing("price", normalizeNumberField(event.target.value)),
@@ -417,6 +385,7 @@ export default function ProductsPage() {
                 label="Stok"
                 placeholder={editing.id ? "Dikelola oleh transaksi penjualan dan penyesuaian stok" : "18"}
                 error={productErrors.stock}
+                inputClassName="font-mono tabular-nums"
                 inputProps={{
                   value: formatNumberInput(editing.stock),
                   onChange: editing.id ? undefined : (event) => updateEditing("stock", normalizeNumberField(event.target.value)),
@@ -446,33 +415,17 @@ export default function ProductsPage() {
 
             <button
               type="button"
+              role="switch"
+              aria-checked={editing.active}
               disabled={savingProduct}
               onClick={() => updateEditing("active", !editing.active)}
               className="flex h-10 items-center justify-between rounded-button border border-border bg-surface px-3.5 text-sm font-semibold text-text shadow-inner-soft transition hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
             >
               <span>Aktif</span>
-              <Switch checked={editing.active} tone="success" />
+              <Switch checked={editing.active} tone="success" decorative />
             </button>
           </form>
         )}
-      </Dialog>
-
-      <Dialog
-        open={Boolean(deactivating)}
-        onClose={() => {
-          if (!deactivatingProduct) setDeactivating(null);
-        }}
-        title="Nonaktifkan produk?"
-        footer={
-          <>
-            <Button type="button" disabled={deactivatingProduct} onClick={() => setDeactivating(null)}>Tetap aktif</Button>
-            <Button type="button" variant="danger" disabled={deactivatingProduct} onClick={deactivate}>
-              {deactivatingProduct ? "Menonaktifkan..." : "Nonaktifkan"}
-            </Button>
-          </>
-        }
-      >
-        <p className="mt-4">{deactivating?.name} akan dihapus dari katalog produk aktif dan keranjang saat ini.</p>
       </Dialog>
 
       <BarcodeScanner
@@ -489,6 +442,7 @@ export default function ProductsPage() {
           };
         }}
       />
-    </div>
+      </div>
+    </>
   );
 }

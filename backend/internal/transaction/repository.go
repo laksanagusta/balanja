@@ -2,7 +2,9 @@ package transaction
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"balanja/backend/internal/platform/database"
 	"github.com/google/uuid"
@@ -72,5 +74,121 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, orgID string
 	if err != nil {
 		return nil, fmt.Errorf("scan transactions: %w", err)
 	}
+	rows.Close()
+
+	productIDs := transactionImageProductIDs(items)
+	if len(productIDs) == 0 {
+		return items, nil
+	}
+	productImages, err := findTransactionProductImages(ctx, tx, orgID, productIDs)
+	if err != nil {
+		return nil, err
+	}
+	if err := enrichTransactionItemImages(items, productImages); err != nil {
+		return nil, fmt.Errorf("enrich transaction item images: %w", err)
+	}
 	return items, nil
+}
+
+func transactionImageProductIDs(transactions []Transaction) []uuid.UUID {
+	productIDs := make([]uuid.UUID, 0)
+	seen := make(map[uuid.UUID]struct{})
+	for _, transaction := range transactions {
+		var items []map[string]json.RawMessage
+		if err := json.Unmarshal(transaction.Items, &items); err != nil {
+			continue
+		}
+		for _, item := range items {
+			if transactionItemHasImage(item) {
+				continue
+			}
+			var productID uuid.UUID
+			if err := json.Unmarshal(item["productId"], &productID); err != nil || productID == uuid.Nil {
+				continue
+			}
+			if _, exists := seen[productID]; exists {
+				continue
+			}
+			seen[productID] = struct{}{}
+			productIDs = append(productIDs, productID)
+		}
+	}
+	return productIDs
+}
+
+func transactionItemHasImage(item map[string]json.RawMessage) bool {
+	var image string
+	if err := json.Unmarshal(item["image"], &image); err != nil {
+		return false
+	}
+	return strings.TrimSpace(image) != ""
+}
+
+func findTransactionProductImages(ctx context.Context, tx database.Tx, orgID string, productIDs []uuid.UUID) (map[uuid.UUID]string, error) {
+	rows, err := tx.Query(ctx, `
+		select id,image,image_key
+		from products
+		where org_id=$1 and id=any($2::uuid[])`, orgID, productIDs)
+	if err != nil {
+		return nil, fmt.Errorf("find transaction product images: %w", err)
+	}
+	defer rows.Close()
+
+	images := make(map[uuid.UUID]string, len(productIDs))
+	for rows.Next() {
+		var productID uuid.UUID
+		var image string
+		var imageKey string
+		if err := rows.Scan(&productID, &image, &imageKey); err != nil {
+			return nil, fmt.Errorf("scan transaction product image: %w", err)
+		}
+		if imageKey != "" {
+			image = "/api/v1/product-images/" + imageKey
+		}
+		if strings.TrimSpace(image) != "" {
+			images[productID] = image
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate transaction product images: %w", err)
+	}
+	return images, nil
+}
+
+func enrichTransactionItemImages(transactions []Transaction, productImages map[uuid.UUID]string) error {
+	for transactionIndex := range transactions {
+		var items []map[string]json.RawMessage
+		if err := json.Unmarshal(transactions[transactionIndex].Items, &items); err != nil {
+			return err
+		}
+		changed := false
+		for _, item := range items {
+			if transactionItemHasImage(item) {
+				continue
+			}
+			var productID uuid.UUID
+			if err := json.Unmarshal(item["productId"], &productID); err != nil {
+				continue
+			}
+			image := productImages[productID]
+			if strings.TrimSpace(image) == "" {
+				continue
+			}
+			encodedImage, err := json.Marshal(image)
+			if err != nil {
+				return err
+			}
+			item["image"] = encodedImage
+			changed = true
+		}
+		if !changed {
+			continue
+		}
+		encodedItems, err := json.Marshal(items)
+		if err != nil {
+			return err
+		}
+		transactions[transactionIndex].Items = encodedItems
+	}
+	return nil
 }

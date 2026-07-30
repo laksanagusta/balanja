@@ -12,14 +12,14 @@ export default function FaqSection() {
           Pertanyaan yang sering ditanyakan.
         </h2>
 
-        <div className="mt-10 border-t border-border">
+        <div className="mt-10">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             const buttonId = `faq-button-${index}`;
             const panelId = `faq-panel-${index}`;
 
             return (
-              <div key={faq.question} className="border-b border-border">
+              <div key={faq.question}>
                 <button
                   id={buttonId}
                   type="button"

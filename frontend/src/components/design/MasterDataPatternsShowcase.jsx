@@ -23,9 +23,9 @@ export default function MasterDataPatternsShowcase() {
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-success">Master data pattern</p>
         <h3 className="mt-2 text-xl font-semibold text-text">Settings manager and finite selector stay aligned</h3>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
-          Settings memakai container query agar rail 14rem hanya muncul saat workspace benar-benar cukup lebar. Tab content memakai
+          Settings mempertahankan tab horizontal overflow-safe dan komposisi smartphone di seluruh ukuran layar. Tab content memakai
           direction-aware transition yang mengikuti urutan navigasi, sementara reduced motion menggantinya dengan crossfade singkat.
-          Daftar master data memakai flat rows, divider tipis, dan satu overflow menu untuk aksi sekunder. Input dan permukaan tombol
+          Daftar master data memakai flat rows tanpa divider dan satu overflow menu untuk aksi sekunder. Input dan permukaan tombol
           form sejajar pada tinggi visual 36px, sementara tombol mempertahankan target sentuh 44px.
         </p>
       </div>

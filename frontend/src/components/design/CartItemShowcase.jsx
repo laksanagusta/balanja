@@ -56,7 +56,7 @@ export default function CartItemShowcase() {
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Cart list item</h3>
       <div className="rounded-panel border border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3">
           <p className="text-sm font-semibold text-text">Cart items</p>
           <Badge tone="accent">{items.length} items</Badge>
         </div>
@@ -72,7 +72,7 @@ export default function CartItemShowcase() {
             />
           ))}
         </div>
-        <div className="border-t border-border px-4 py-3">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-text-muted">Subtotal</span>
             <span className="font-mono font-semibold tabular-nums text-text">

@@ -23,13 +23,13 @@ func (h *Handler) summary(c fiber.Ctx) error {
 	if !ok {
 		return respond.Error(c, apperror.New(401, "AUTH_REQUIRED", "authentication is required"))
 	}
-	days, err := strconv.Atoi(c.Query("days", "7"))
+	days, err := strconv.Atoi(c.Query("days", "1"))
 	if err != nil {
 		return respond.Error(c, apperror.New(400, "INVALID_PERIOD", "dashboard period is invalid"))
 	}
 	value, err := h.service.Summary(c.Context(), database.Identity{OrgID: id.OrgID, UserID: id.UserID}, days, h.now())
 	if errors.Is(err, ErrInvalidPeriod) {
-		return respond.Error(c, apperror.New(400, "INVALID_PERIOD", "dashboard period must be 7 or 30 days"))
+		return respond.Error(c, apperror.New(400, "INVALID_PERIOD", "dashboard period must be 1, 7, or 30 days"))
 	}
 	if err != nil {
 		return respond.Error(c, err)

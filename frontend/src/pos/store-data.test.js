@@ -13,18 +13,20 @@ test("catalog page loading does not replace the shared POS products", async () =
 test("transactions use a page-local cursor query", async () => {
   const source = await readFile(new URL("../pages/TransactionsPage.jsx", import.meta.url), "utf8");
   assert.match(source, /useCursorTable/);
-  assert.match(source, /TableFilterPopover/);
+  assert.match(source, /TransactionFilterDrawer/);
+  assert.match(source, /TransactionCardList/);
   assert.doesNotMatch(source, /store\.transactions\.filter/);
   assert.doesNotMatch(source, /sortRows/);
 });
 
 test("stock history uses server cursor sorting", async () => {
   const source = await readFile(new URL("../pages/StockPage.jsx", import.meta.url), "utf8");
+  const overview = await readFile(new URL("../components/stock/StockOverview.jsx", import.meta.url), "utf8");
   assert.match(source, /useCursorTable/);
   assert.doesNotMatch(source, /sortRows/);
   assert.doesNotMatch(source, /loadStockMovements/);
-  assert.match(source, /createdByUserName \|\| "Tidak diketahui"/);
-  assert.doesNotMatch(source, /createdByUserName \|\| row\.createdByUserId/);
+  assert.match(overview, /createdByUserName \|\| "Tidak diketahui"/);
+  assert.doesNotMatch(overview, /createdByUserName \|\| movement\.createdByUserId/);
 });
 
 test("loads products without fetching unrelated POS resources", async () => {

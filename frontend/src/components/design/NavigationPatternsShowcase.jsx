@@ -1,10 +1,12 @@
 import React from "react";
 import { Icon, Panel } from "../primitives.jsx";
 
-const groups = [
-  { label: "Ringkasan", items: [["Dashboard", "grid"]] },
-  { label: "Operasional", items: [["Kasir", "receipt"], ["Produk", "box"], ["Stok", "package"]] },
-  { label: "Catatan", items: [["Transaksi", "file"]] },
+const mobileItems = [
+  ["Beranda", "home"],
+  ["Kasir", "receipt"],
+  ["Produk", "box"],
+  ["Stok", "package"],
+  ["Lainnya", "more"],
 ];
 
 export default function NavigationPatternsShowcase() {
@@ -14,45 +16,18 @@ export default function NavigationPatternsShowcase() {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">Wayfinding pattern</p>
         <h3 className="mt-2 text-xl font-semibold text-text">Navigation and entry points</h3>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-text-muted">
-          Dashboard is home, Kasir is the explicit sales workspace, and each supporting destination is grouped by the work it contains. Produk uses the tag icon while Stok uses the archive-box icon, so the destinations remain distinguishable in the collapsed 72px icon rail.
+          Dashboard is home, Kasir is the explicit sales workspace, and the same smartphone information architecture remains visible at every viewport width.
+        </p>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
+          The authenticated shell uses a quiet white top bar with brand and account access, plus four primary workspaces and Lainnya in a persistent five-item bottom navigation. A thin top border and restrained upward shadow separate the navigation from scrolling content. The account avatar sits directly in a transparent 44px target without a visible wrapper surface. Transaksi and Laporan Penjualan remain available from the compact Lainnya sheet. The app canvas is centered and capped at 1200px on larger screens.
         </p>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
           Public and authenticated headers render the same shared Logo component, preserving identical Manrope type,
-          800 weight, capitalization, size, and tracking across landing, sidebar, mobile, and overlay navigation.
+          800 weight, capitalization, size, and tracking across landing, authenticated top bar, and overlay navigation.
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="relative flex min-h-[460px] flex-col rounded-card border border-border bg-surface p-3" aria-label="Navigation example">
-          <div className="grid content-start gap-4">
-            {groups.map((group) => (
-              <div key={group.label} className="grid gap-1">
-                <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-subtle">{group.label}</p>
-                {group.items.map(([label, icon]) => (
-                  <div
-                    key={label}
-                    className={`flex h-9 items-center gap-2.5 rounded-control px-3 text-sm font-semibold ${label === "Dashboard" ? "bg-surface-muted text-text" : "text-text-muted"}`}
-                  >
-                    <Icon name={icon} className="size-4" />
-                    {label}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="absolute bottom-[76px] left-3 right-3 rounded-card border border-border bg-surface p-2 shadow-panel">
-            <div className="px-3 py-2"><p className="truncate text-sm font-semibold text-text">Dika Laksana</p><p className="truncate text-xs text-text-muted">dika@example.com</p></div>
-            <div className="border-t border-border pt-1">
-              <div className="flex h-9 items-center gap-2.5 rounded-control px-3 text-sm font-semibold text-text-muted"><Icon name="settings" className="size-4" />Pengaturan</div>
-              <div className="mt-1 flex h-9 items-center gap-2.5 border-t border-border px-3 pt-1 text-sm font-semibold text-danger"><Icon name="x" className="size-4" />Keluar</div>
-            </div>
-          </div>
-          <div className="mt-auto pt-3">
-            <div className="flex items-center gap-3 rounded-control border border-border bg-surface px-2 py-1.5"><span className="account-avatar size-9 rounded-full bg-[conic-gradient(#f59e0b,#8b5cf6,#06b6d4,#f59e0b)]" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-text">Dika Laksana</span><span className="block truncate text-xs text-text-muted">dika@example.com</span></span><Icon name="chevron" className="size-4 text-text-muted" /></div>
-          </div>
-        </aside>
-
-        <div className="grid content-start gap-3 sm:grid-cols-2">
+      <div className="grid content-start gap-3 sm:grid-cols-2">
           <div className="rounded-card border border-border bg-surface-muted p-4">
             <p className="text-sm font-semibold text-text">Scanner follows the cart</p>
             <p className="mt-1 text-sm leading-6 text-text-muted">Pindai barcode lives inside Kasir, where every detected product and cart change is immediately visible. Saat barcode diproses, workspace menampilkan spinner cepat, mengunci pembacaan ganda, dan tetap menyediakan aksi tutup.</p>
@@ -62,18 +37,34 @@ export default function NavigationPatternsShowcase() {
             <p className="mt-1 text-sm leading-6 text-text-muted">Low-stock warnings expose a nearby Kelola stok handoff instead of leaving users to reconstruct the route.</p>
           </div>
           <div className="rounded-card border border-border bg-surface-muted p-4 sm:col-span-2">
-            <p className="text-sm font-semibold text-text">Mobile preserves context</p>
-            <p className="mt-1 text-sm leading-6 text-text-muted">The same hierarchy appears in a dismissible overlay sheet with neutral selection, clear semantics, and reduced-motion support.</p>
-          </div>
-          <div className="rounded-card border border-border bg-surface-muted p-4 sm:col-span-2">
-            <p className="text-sm font-semibold text-text">Desktop rail stays available</p>
-            <p className="mt-1 text-sm leading-6 text-text-muted">A labeled sidebar control uses a compact 16px panel-left icon that rotates between the 236px navigation and a 72px icon rail without changing the active destination.</p>
+            <p className="text-sm font-semibold text-text">One mobile-first app composition</p>
+            <p className="mt-1 text-sm leading-6 text-text-muted">The top bar names the active module and uses Balanja only on Beranda. Its 16px edges align with page content; all five destinations retain at least a 44px hit target.</p>
+            <div className="mt-4 max-w-sm overflow-hidden rounded-panel border border-border bg-app-bg shadow-low">
+              <div className="flex min-h-16 items-center justify-between bg-surface px-4 py-2">
+                <span className="text-lg font-extrabold tracking-normal text-text">Produk</span>
+                <span className="account-avatar size-9 rounded-full" />
+              </div>
+              <div className="grid min-h-36 content-start gap-3 p-4">
+                <span className="h-5 w-28 rounded-md bg-border" />
+                <span className="h-14 rounded-card bg-surface" />
+                <span className="h-14 rounded-card bg-surface" />
+              </div>
+              <div className="mobile-bottom-navigation grid grid-cols-5 bg-surface px-1 pt-1">
+                {mobileItems.map(([label, icon], index) => (
+                  <div key={label} className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold ${index === 2 ? "text-accent" : "text-text-muted"}`}>
+                    <span className={`grid size-8 place-items-center rounded-full ${index === 2 ? "bg-accent-soft" : ""}`}>
+                      <Icon name={icon} className="size-5" />
+                    </span>
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="rounded-card border border-border bg-surface-muted p-4 sm:col-span-2">
             <p className="text-sm font-semibold text-text">The shell owns the viewport</p>
-            <p className="mt-1 text-sm leading-6 text-text-muted">While AppShell is mounted, document scrolling is locked and each workspace uses its bounded internal scroller so overlays cannot create blank page overflow.</p>
+            <p className="mt-1 text-sm leading-6 text-text-muted">While AppShell is mounted, document scrolling is locked and each workspace uses its bounded internal scroller. The shell stays full-bleed until it reaches its centered 1200px maximum width; no desktop sidebar or shell inset is introduced.</p>
           </div>
-        </div>
       </div>
     </Panel>
   );

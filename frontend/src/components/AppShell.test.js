@@ -2,11 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("app shell keeps a consistent inset on every outer edge", async () => {
+test("app shell keeps the smartphone chrome and caps the canvas at 1200px", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+  const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
-  assert.match(source, /className="h-svh overflow-hidden bg-app-bg p-2"/);
-  assert.doesNotMatch(source, /className="h-svh overflow-hidden bg-app-bg px-2 pt-2"/);
+  assert.match(source, /className="h-svh overflow-hidden bg-app-bg"/);
+  assert.match(source, /className="mx-auto flex h-full w-full max-w-\[1200px\] overflow-hidden bg-surface"/);
+  assert.doesNotMatch(source, /md:hidden|md:flex|md:p-2|md:gap-2/);
+  assert.match(designGuide, /capped at 1200px/);
+  assert.match(designGuide, /Do not introduce a desktop sidebar/);
 });
 
 test("app shell locks document scrolling while pages own internal scroll", async () => {
@@ -26,29 +30,32 @@ test("app shell locks document scrolling while pages own internal scroll", async
   assert.match(designGuide, /internal scroller/i);
 });
 
-test("app shell does not cast a shadow through the sidebar-content gap", async () => {
+test("outer app shell stays shadow-free and has no desktop sidebar", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /className="flex h-full gap-2 overflow-hidden"/);
-  assert.doesNotMatch(source, /className="flex h-full gap-2 overflow-hidden[^"]*shadow-panel/);
-  assert.doesNotMatch(source, /<aside[^>]+shadow-panel/);
+  assert.doesNotMatch(source, /<aside/);
+  assert.doesNotMatch(source, /max-w-\[1200px\][^"]*shadow-panel/);
   assert.doesNotMatch(source, /<section[^>]+shadow-panel/);
 });
 
-test("app shell uses dashboard as home and renders grouped localized navigation", async () => {
-  const [source, shared] = await Promise.all([
-    readFile(new URL("./AppShell.jsx", import.meta.url), "utf8"),
-    readFile(new URL("../shared.jsx", import.meta.url), "utf8"),
-  ]);
+test("app shell names the active module while keeping Balanja on home", async () => {
+  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /go\(routes\.dashboard\)/);
-  assert.match(source, /group\.label/);
+  assert.match(source, /\[routes\.dashboard\]: "Balanja"/);
+  assert.match(source, /\[routes\.pos\]: "Kasir"/);
+  assert.match(source, /\[routes\.products\]: "Produk"/);
+  assert.match(source, /\[routes\.stock\]: "Stok"/);
+  assert.match(source, /\[routes\.transactions\]: "Transaksi"/);
+  assert.match(source, /\[routes\.reportsSales\]: "Laporan Penjualan"/);
+  assert.match(source, /\[routes\.settings\]: "Pengaturan"/);
+  assert.match(source, /const pageTitle = appPageTitles\[pathname\] \|\| "Balanja"/);
+  assert.match(source, /<h1 className="min-w-0 truncate text-lg font-extrabold tracking-normal text-text">/);
+  assert.match(source, /\{pageTitle\}/);
+  assert.match(source, /mobile-app-bar[^"]*px-4/);
+  assert.match(source, /mobilePrimaryNavigation/);
   assert.doesNotMatch(source, /systemNavItems|SystemNavigation/);
   assert.match(source, /aria-current=\{pathname === path \? "page" : undefined\}/);
-  assert.match(source, /import \{ Logo, navGroups, routes \} from "\.\.\/shared\.jsx"/);
-  assert.equal(source.match(/<Logo \/>/g)?.length, 3);
-  assert.doesNotMatch(source, />\s*balanja\s*</i);
-  assert.match(shared, /text-lg font-extrabold tracking-normal text-text/);
+  assert.doesNotMatch(source, /<Logo/);
 });
 
 test("settings lives inside the shared account popover", async () => {
@@ -58,18 +65,24 @@ test("settings lives inside the shared account popover", async () => {
   assert.match(source, /function AccountMenu/);
   assert.match(source, /go\(routes\.settings\)/);
   assert.match(source, />\s*Pengaturan\s*</);
-  assert.match(source, /border-t border-border/);
+  assert.doesNotMatch(source, /\bborder-t\b/);
   assert.match(source, /text-danger/);
   assert.match(source, /aria-label="Buka menu akun"/);
 });
 
-test("desktop account control owns its separation without a footer divider", async () => {
+test("account control stays in the persistent top bar", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /className="relative mt-auto p-3"/);
-  assert.doesNotMatch(source, /className="relative mt-auto border-t/);
-  assert.match(source, /rounded-button border border-border bg-surface/);
-  assert.doesNotMatch(source, /Buka menu akun[\s\S]*shadow-low/);
+  assert.match(source, /<header className="mobile-app-bar/);
+  assert.match(source, /id="app-top-bar-actions"/);
+  assert.match(source, /aria-label="Buka menu akun"/);
+  assert.match(source, /mobile-account-menu absolute right-3/);
+  const accountButtonAt = source.indexOf('aria-label="Buka menu akun"');
+  const accountButton = source.slice(accountButtonAt, source.indexOf("</button>", accountButtonAt));
+  assert.doesNotMatch(accountButton, /border border-border/);
+  assert.doesNotMatch(accountButton, /bg-surface-muted|bg-border/);
+  assert.match(accountButton, /bg-transparent/);
+  assert.doesNotMatch(source, /relative mt-auto|footer/);
 });
 
 test("account avatars share the approved four-color glow", async () => {
@@ -78,8 +91,9 @@ test("account avatars share the approved four-color glow", async () => {
   const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
   const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
-  assert.equal(source.match(/className="account-avatar/g)?.length, 2);
+  assert.equal(source.match(/className="account-avatar/g)?.length, 1);
   assert.match(showcase, /className="account-avatar size-9/);
+  assert.doesNotMatch(showcase, /account-avatar size-9 rounded-full bg-surface-muted/);
   assert.match(css, /--shadow-avatar:\s*0px 23px 60px -15px #7359f299,\s*14px 30px 65px -15px #fa59807d,\s*0px 38px 70px -15px #ffeb4062,\s*-13px 30px 74px -15px #33d9f246;/);
   assert.match(css, /\.account-avatar\s*\{\s*box-shadow:\s*var\(--shadow-avatar\)/);
   assert.match(designGuide, /--shadow-avatar/);
@@ -93,42 +107,54 @@ test("app shell leaves cart scanning to the cashier workspace", async () => {
   assert.doesNotMatch(source, /scannerOpen/);
 });
 
-test("mobile navigation is an accessible overlay with neutral selection", async () => {
-  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+test("mobile navigation uses a full-bleed top bar and accessible five-item bottom bar", async () => {
+  const [source, css, showcase, designGuide] = await Promise.all([
+    readFile(new URL("./AppShell.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../index.css", import.meta.url), "utf8"),
+    readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../../DESIGN.md", import.meta.url), "utf8"),
+  ]);
 
-  assert.match(source, /aria-label="Buka menu navigasi"/);
-  assert.match(source, /aria-expanded=\{mobileNavOpen\}/);
-  assert.match(source, /aria-controls="mobile-navigation"/);
-  assert.match(source, /id="mobile-navigation"/);
-  assert.match(source, /aria-label="Navigasi aplikasi"/);
-  assert.match(source, /aria-label="Tutup menu navigasi"/);
+  assert.match(source, /className="mobile-app-bar shrink-0 bg-surface/);
+  assert.doesNotMatch(source, /\bborder-b\b/);
+  assert.match(source, /aria-label="Navigasi utama mobile"/);
+  assert.match(source, /grid-cols-5/);
+  for (const label of ["Beranda", "Kasir", "Produk", "Stok", "Lainnya"]) {
+    assert.match(source, new RegExp(label));
+  }
+  assert.match(source, /aria-expanded=\{moreOpen\}/);
+  assert.match(source, /aria-controls="mobile-more-navigation"/);
+  assert.match(source, /id="mobile-more-navigation"/);
+  assert.match(source, /aria-label="Tutup navigasi lainnya"/);
+  assert.match(source, /aria-current=\{active \? "page" : undefined\}/);
   assert.match(source, /event\.key === "Escape"/);
-  assert.doesNotMatch(source, /variant=\{pathname === path \? "primary"/);
+  assert.match(css, /padding-block-start: max\(0\.75rem, env\(safe-area-inset-top, 0px\)\)/);
+  assert.match(css, /padding-block-end: max\(0\.5rem, env\(safe-area-inset-bottom, 0px\)\)/);
+  assert.match(css, /--shadow-navigation:\s*0 -4px 12px rgb\(18 18 18 \/ 0\.05\)/);
+  assert.match(css, /\.mobile-bottom-navigation\s*\{[\s\S]*border-block-start:\s*1px solid var\(--color-border\);[\s\S]*box-shadow:\s*var\(--shadow-navigation\)/);
+  assert.match(css, /prefers-reduced-transparency/);
+  assert.match(showcase, /persistent five-item bottom navigation/);
+  assert.match(showcase, /thin top border and restrained upward shadow/);
+  assert.match(designGuide, /persistent five-item bottom navigation/);
+  assert.match(showcase, /quiet white top bar/i);
+  assert.match(designGuide, /white `surface` top bar/i);
 });
 
-test("desktop sidebar collapses to an accessible icon rail", async () => {
+test("desktop widths never introduce a sidebar or icon rail", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /const \[sidebarCollapsed, setSidebarCollapsed\]/);
-  assert.match(source, /sidebarCollapsed \? "w-\[72px\]" : "w-\[236px\]"/);
-  assert.match(source, /aria-label=\{sidebarCollapsed \? "Perluas sidebar" : "Ciutkan sidebar"\}/);
-  assert.match(source, /aria-expanded=\{!sidebarCollapsed\}/);
-  assert.match(source, /aria-label=\{collapsed \? label : undefined\}/);
-  assert.match(source, /title=\{collapsed \? label : undefined\}/);
+  assert.doesNotMatch(source, /sidebarCollapsed|<aside|w-\[72px\]|w-\[236px\]/);
+  assert.match(source, /mobile-bottom-navigation/);
 });
 
-test("sidebar collapse uses the supplied panel-left icon", async () => {
+test("legacy panel-left icon is not rendered by the mobile-first shell", async () => {
   const shell = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
   const icons = await readFile(new URL("./primitives.jsx", import.meta.url), "utf8");
-  const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
-  const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
   assert.match(icons, /function PanelLeftIcon\(\{ className \}\) \{[\s\S]*<rect width="18" height="18" x="3" y="3" rx="2"\s*\/>[\s\S]*<path d="M9 3v18"\s*\/>/);
   assert.match(icons, /sidebar: PanelLeftIcon/);
   assert.doesNotMatch(icons, /sidebar: RectangleStackIcon/);
-  assert.match(shell, /<Icon name="sidebar" className=\{`size-4 transition-transform/);
-  assert.match(showcase, /16px panel-left icon/i);
-  assert.match(designGuide, /16px panel-left icon/i);
+  assert.doesNotMatch(shell, /<Icon name="sidebar"/);
 });
 
 test("shared Heroicons keep product and stock distinct in navigation", async () => {
@@ -141,6 +167,8 @@ test("shared Heroicons keep product and stock distinct in navigation", async () 
   assert.match(icons, /box: TagIcon/);
   assert.match(icons, /package: ArchiveBoxIcon/);
   assert.doesNotMatch(shell, /function navIcon/);
-  assert.match(showcase, /Produk uses the tag icon while Stok uses the archive-box icon/);
+  assert.match(shell, /\["Produk", "box", routes\.products\]/);
+  assert.match(shell, /\["Stok", "package", routes\.stock\]/);
+  assert.match(showcase, /smartphone information architecture/);
   assert.match(designGuide, /Produk route uses a tag icon while Stok uses an archive-box icon/);
 });

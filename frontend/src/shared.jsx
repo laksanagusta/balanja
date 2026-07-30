@@ -36,10 +36,10 @@ export const navGroups = [
   },
 ];
 
-export function Logo() {
+export function Logo({ className = "" }) {
   return (
     <div className="flex items-center">
-      <span className="text-lg font-extrabold tracking-normal text-text">Balanja</span>
+      <span className={`text-lg font-extrabold tracking-normal text-text ${className}`}>Balanja</span>
     </div>
   );
 }

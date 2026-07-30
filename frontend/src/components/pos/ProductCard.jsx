@@ -23,13 +23,32 @@ function useAddFeedback({ onAdd, disabled }) {
   return { addFeedback, handleAdd };
 }
 
-function ProductCardFrame({ product, outOfStock = false, addFeedback = false, className = "", children }) {
+function ProductCardFrame({
+  product,
+  outOfStock = false,
+  addFeedback = false,
+  className = "",
+  mediaAction = null,
+  priceOnly = false,
+  showStockBadge = true,
+  children,
+}) {
   return (
     <article
-      className={`product-card-frame menu-card-enter flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-low transition-transform duration-base ease-standard motion-reduce:transition-none ${outOfStock ? "is-out-of-stock opacity-55" : ""} ${className}`}
+      className={`product-card-frame menu-card-enter flex flex-col transition-transform duration-base ease-standard motion-reduce:transition-none ${
+        priceOnly
+          ? "overflow-visible rounded-none border-0 bg-transparent shadow-none"
+          : "overflow-hidden rounded-card border border-border bg-surface shadow-low"
+      } ${outOfStock ? "is-out-of-stock opacity-55" : ""} ${className}`}
     >
-      <div className="product-card-media-shell p-2 pb-0">
-        <div className="product-card-media relative aspect-[4/3] w-full overflow-hidden rounded-md border border-border bg-surface-muted">
+      <div className={`product-card-media-shell ${priceOnly ? "p-0" : "p-2 pb-0"}`}>
+        <div
+          className={`product-card-media relative w-full overflow-hidden bg-surface-muted ${
+            priceOnly
+              ? "aspect-square rounded-panel border-0"
+              : "aspect-[4/3] rounded-md border border-border"
+          }`}
+        >
           <ProductImage product={product} />
           <span className="product-add-ring" data-visible={addFeedback} aria-hidden="true" />
           <span
@@ -40,24 +59,38 @@ function ProductCardFrame({ product, outOfStock = false, addFeedback = false, cl
           >
             {addFeedback ? "Ditambahkan" : ""}
           </span>
-          <div className="absolute right-3 top-3 flex items-center justify-end">
-            {product.stock !== undefined && (
-              <Badge tone={Number(product.stock) <= 10 ? "warning" : "neutral"} className="bg-surface/95">
-                {product.stock} {product.unit || "pcs"}
-              </Badge>
-            )}
-          </div>
+          {showStockBadge && (
+            <div className="product-card-stock-badge absolute left-3 top-3 flex items-center">
+              {!addFeedback && product.stock !== undefined && (
+                <Badge tone={Number(product.stock) <= 10 ? "warning" : "neutral"} className="bg-surface/95">
+                  {product.stock} {product.unit || "pcs"}
+                </Badge>
+              )}
+            </div>
+          )}
+          {mediaAction}
         </div>
       </div>
-      <div className="product-card-content grid gap-2 px-2 pb-0 pt-3">
+      <div className={`product-card-content grid ${priceOnly ? "gap-1 px-0 pb-0 pt-2.5" : "gap-2 px-2 pb-0 pt-3"}`}>
         <div className="grid content-start gap-1.5">
-          <h3 className="line-clamp-1 text-sm font-semibold leading-tight text-text">{product.name}</h3>
-          <p className="text-xs font-medium text-text-muted">
-            <span className="font-mono tabular-nums">{product.price}</span> / {product.unit || "pcs"}
+          <h3
+            className={`product-card-name line-clamp-2 text-text ${
+              priceOnly ? "text-[15px] font-medium leading-[1.35]" : "text-sm font-semibold leading-tight"
+            }`}
+          >
+            {product.name}
+          </h3>
+          <p
+            className={`product-card-price ${
+              priceOnly ? "text-[15px] font-[750] leading-tight text-text" : "text-xs font-medium text-text-muted"
+            }`}
+          >
+            <span className={priceOnly ? "tabular-nums" : "font-mono tabular-nums"}>{product.price}</span>
+            {!priceOnly && <> / {product.unit || "pcs"}</>}
           </p>
         </div>
       </div>
-      <div className="product-card-actions grid gap-2 px-2 pb-2 pt-2">{children}</div>
+      {children && <div className="product-card-actions grid gap-2 px-2 pb-2 pt-2">{children}</div>}
     </article>
   );
 }
@@ -104,11 +137,10 @@ export function ProductCard({ product, onAdd, onDecrease }) {
   );
 }
 
-export function PosProductCard({ product, onAdd, disabled = false, actionLabel = "Tambah ke keranjang" }) {
+export function PosProductCard({ product, onAdd, disabled = false }) {
   const outOfStock = Number(product.stock) <= 0;
   const blocked = disabled || outOfStock;
   const { addFeedback, handleAdd } = useAddFeedback({ onAdd, disabled: blocked });
-  const buttonLabel = outOfStock ? "Stok habis" : actionLabel;
 
   return (
     <ProductCardFrame
@@ -116,15 +148,24 @@ export function PosProductCard({ product, onAdd, disabled = false, actionLabel =
       outOfStock={blocked}
       addFeedback={addFeedback}
       className="pos-product-card"
-    >
-      <Button
-        variant="primary"
-        className="product-add-button pos-touch-target"
-        disabled={blocked}
-        onClick={handleAdd}
-      >
-        <span key={buttonLabel} className="button-label-pop">{buttonLabel}</span>
-      </Button>
-    </ProductCardFrame>
+      priceOnly
+      showStockBadge={false}
+      mediaAction={(
+        <Button
+          variant="primary"
+          className="product-add-button pos-touch-target"
+          disabled={blocked}
+          aria-label={outOfStock ? `${product.name}: stok habis` : `Tambah ${product.name}`}
+          onClick={handleAdd}
+        >
+          <span
+            className="product-add-button-surface corner-shape-round"
+            aria-hidden="true"
+          >
+            <Icon name="plus" className="size-5" />
+          </span>
+        </Button>
+      )}
+    />
   );
 }

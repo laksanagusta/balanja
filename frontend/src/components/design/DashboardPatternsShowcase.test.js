@@ -5,8 +5,9 @@ import { readFile } from "node:fs/promises";
 test("dashboard showcase documents the production chart-role mapping", async () => {
   const source = await readFile(new URL("./DashboardPatternsShowcase.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /Pendapatan memakai violet/);
-  assert.match(source, /produk terlaris memakai hijau/);
-  assert.match(source, /metode pembayaran memakai violet, mint, dan amber/);
-  assert.match(source, /tetap terbaca tanpa bergantung pada warna/);
+  assert.match(source, /Pendapatan memakai violet sebagai satu-satunya chart utama/);
+  assert.match(source, /produk terlaris memakai ranked list/);
+  assert.match(source, /analisis metode pembayaran tetap berada di Laporan Penjualan/);
+  assert.match(source, /Nilai KPI tidak dipotong/);
+  assert.match(source, /<LowStockPanel/);
 });

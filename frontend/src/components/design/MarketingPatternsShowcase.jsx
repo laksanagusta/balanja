@@ -5,7 +5,7 @@ import PosProductMockup from "../../landing/PosProductMockup.jsx";
 export default function MarketingPatternsShowcase() {
   return (
     <section className="overflow-hidden rounded-panel border border-border bg-surface shadow-low">
-      <div className="border-b border-border p-4 sm:p-6">
+      <div className="p-4 sm:p-6">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-success">Marketing page patterns</p>
         <h3 className="mt-3 text-2xl font-semibold text-text">Public display, CTA, and product frame</h3>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
@@ -66,7 +66,7 @@ export default function MarketingPatternsShowcase() {
             </div>
           </div>
           <div className="rounded-panel border border-border px-4">
-            <button type="button" className="press-feedback flex min-h-16 w-full items-center justify-between gap-4 border-b border-border py-4 text-left text-sm font-semibold text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+            <button type="button" className="press-feedback flex min-h-16 w-full items-center justify-between gap-4 py-4 text-left text-sm font-semibold text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
               Closed FAQ row
               <span aria-hidden="true" className="faq-toggle-icon text-text-muted" />
             </button>
@@ -75,7 +75,7 @@ export default function MarketingPatternsShowcase() {
                 Open FAQ row
                 <span aria-hidden="true" className="faq-toggle-icon is-open text-text-muted" />
               </div>
-              <p className="mt-3 text-sm leading-6 text-text-muted">Answers expand beneath a divider-only row without an outer accordion card.</p>
+              <p className="mt-3 text-sm leading-6 text-text-muted">Answers expand beneath a spacing-led row without an outer accordion card.</p>
             </div>
           </div>
         </div>

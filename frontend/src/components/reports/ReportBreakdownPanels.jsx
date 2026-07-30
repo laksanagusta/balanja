@@ -6,7 +6,7 @@ import { cashierLabel } from "../../reports/report-utils.js";
 function ReportTablePanel({ title, description, columns, data, emptyTitle }) {
   return (
     <Panel className="min-w-0 overflow-hidden">
-      <div className="border-b border-border p-4">
+      <div className="p-4">
         <h2 className="text-sm font-semibold text-text">{title}</h2>
         <p className="mt-1 text-xs text-text-muted">{description}</p>
       </div>

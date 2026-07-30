@@ -12,9 +12,7 @@ function TokenList({ group }) {
           return (
             <div
               key={name}
-              className={`flex items-center gap-3 px-4 py-2.5 ${
-                i < group.tokens.length - 1 ? "border-b border-border" : ""
-              }`}
+              className="flex items-center gap-3 px-4 py-2.5"
             >
               {isColor ? (
                 <span className="size-5 shrink-0 rounded border border-border" style={{ background: value }} />

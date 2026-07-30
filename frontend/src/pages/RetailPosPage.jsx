@@ -1,6 +1,7 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { animate } from "motion";
-import { useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import BarcodeScanner from "../components/BarcodeScanner.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
@@ -11,6 +12,7 @@ import QuotaStatus from "../components/entitlements/QuotaStatus.jsx";
 import { MobileCheckoutPanel } from "../components/pos/MobileCheckoutPanel.jsx";
 import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { ProductCatalog } from "../components/pos/ProductCatalog.jsx";
+import { ProductCategoryPills } from "../components/product/ProductCategoryPills.jsx";
 import {
   Badge,
   Button,
@@ -77,10 +79,7 @@ function getCartTranslateX(element) {
 export default function RetailPosPage() {
   const store = usePOSStore();
   const shouldReduceMotion = useReducedMotion();
-  const retailPosRef = React.useRef(null);
   const searchInputRef = React.useRef(null);
-  const categoryTabsRef = React.useRef(null);
-  const categoryTabRefs = React.useRef(new Map());
   const cartTriggerRef = React.useRef(null);
   const cartCloseRef = React.useRef(null);
   const cartMenuTriggerRef = React.useRef(null);
@@ -94,7 +93,6 @@ export default function RetailPosPage() {
   const cartAnimationTargetRef = React.useRef(null);
   const cartDragRef = React.useRef(null);
   const mobileCheckoutTriggerRef = React.useRef(null);
-  const [categoryIndicator, setCategoryIndicator] = React.useState({ left: 0, width: 0, ready: false });
   const [query, setQuery] = React.useState("");
   const [category, setCategory] = React.useState("");
   const [paymentMethod, setPaymentMethod] = React.useState("cash");
@@ -105,7 +103,8 @@ export default function RetailPosPage() {
   const [checkoutPending, setCheckoutPending] = React.useState(false);
   const [cashError, setCashError] = React.useState("");
   const [scannerOpen, setScannerOpen] = React.useState(false);
-  const [isCompactCart, setIsCompactCart] = React.useState(false);
+  const [topBarActionsTarget, setTopBarActionsTarget] = React.useState(null);
+  const isCompactCart = true;
   const [cartExpanded, setCartExpanded] = React.useState(false);
   const [cartPresent, setCartPresent] = React.useState(false);
   const [mobileCheckoutExpanded, setMobileCheckoutExpanded] = React.useState(false);
@@ -175,7 +174,6 @@ export default function RetailPosPage() {
   const clearFilters = React.useCallback(() => {
     setQuery("");
     setCategory("");
-    searchInputRef.current?.focus();
   }, []);
 
   const changePaymentMethod = (method) => {
@@ -391,72 +389,6 @@ export default function RetailPosPage() {
     });
   }, [settleCart]);
 
-  const updateCategoryIndicator = React.useCallback(() => {
-    const activeTab = categoryTabRefs.current.get(category);
-    if (!activeTab) return;
-    setCategoryIndicator((current) => {
-      const next = { left: activeTab.offsetLeft, width: activeTab.offsetWidth, ready: true };
-      return current.left === next.left && current.width === next.width && current.ready
-        ? current
-        : next;
-    });
-  }, [category]);
-
-  React.useLayoutEffect(() => {
-    if (isInitialLoad) return undefined;
-    const node = retailPosRef.current;
-    if (!node) return undefined;
-
-    const updateCartMode = () => {
-      setIsCompactCart(node.getBoundingClientRect().width <= 639);
-    };
-    updateCartMode();
-
-    const observer = typeof ResizeObserver === "undefined"
-      ? null
-      : new ResizeObserver(updateCartMode);
-    observer?.observe(node);
-    window.addEventListener("resize", updateCartMode);
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", updateCartMode);
-    };
-  }, [isInitialLoad]);
-
-  React.useLayoutEffect(() => {
-    if (!isCompactCart) {
-      window.clearTimeout(cartCloseTimerRef.current);
-      cartDragRef.current = null;
-      stopCartAnimation();
-      resetCartDragStyles();
-      setMobileCheckoutExpanded(false);
-      setCartExpanded(false);
-      setCartPresent(false);
-      cartReturnFocusRef.current = null;
-    }
-  }, [isCompactCart, resetCartDragStyles, stopCartAnimation]);
-
-  React.useLayoutEffect(() => {
-    if (isInitialLoad) return undefined;
-    const tabs = categoryTabsRef.current;
-    const activeTab = categoryTabRefs.current.get(category);
-    if (!tabs || !activeTab) return undefined;
-
-    activeTab.scrollIntoView({ block: "nearest", inline: "nearest" });
-    updateCategoryIndicator();
-
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateCategoryIndicator);
-    observer?.observe(tabs);
-    observer?.observe(activeTab);
-    window.addEventListener("resize", updateCategoryIndicator);
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", updateCategoryIndicator);
-    };
-  }, [category, categoryTabs.length, isInitialLoad, updateCategoryIndicator]);
-
   React.useEffect(() => {
     const focusSearch = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -571,113 +503,78 @@ export default function RetailPosPage() {
     return () => controller.abort();
   }, [scannerOpen, store.loadProducts]);
 
+  React.useEffect(() => {
+    setTopBarActionsTarget(document.getElementById("app-top-bar-actions"));
+  }, []);
+
+  const topBarActions = topBarActionsTarget
+    ? createPortal(
+      <>
+        <BackgroundUpdateStatus active={isUpdatingPOS} label="Memperbarui katalog kasir" />
+        <button
+          type="button"
+          aria-label="Pindai barcode"
+          title="Pindai barcode"
+          className="pos-toolbar-scan pos-touch-target grid size-11 shrink-0 place-items-center rounded-control bg-transparent text-text transition-[background-color,transform] duration-fast ease-standard hover:bg-surface-muted active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          onClick={() => {
+            void primeScanSuccessSound();
+            setScannerOpen(true);
+          }}
+        >
+          <Icon name="scan" className="size-6" />
+        </button>
+      </>,
+      topBarActionsTarget,
+    )
+    : null;
+
   if (isInitialLoad) {
-    return <RetailPosSkeleton />;
+    return (
+      <>
+        {topBarActions}
+        <RetailPosSkeleton />
+      </>
+    );
   }
 
   return (
-    <div ref={retailPosRef} className="retail-pos-query h-full min-h-0">
+    <>
+    {topBarActions}
+    <div className="retail-pos-query h-full min-h-0">
       <div className="retail-pos-workspace grid h-full min-h-0 bg-app-bg">
         <main inert={isCompactCart && cartPresent ? true : undefined} className="retail-pos-catalog-pane flex min-w-0 flex-col border-border bg-surface">
-        <div className="bg-surface">
-          <div className="flex flex-col gap-3 border-b border-border px-3 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center justify-between gap-3">
-              <h1 className="text-base font-semibold text-text">Kasir</h1>
-              <BackgroundUpdateStatus active={isUpdatingPOS} label="Memperbarui katalog kasir" />
+        <header className="grid flex-none gap-2 px-4 py-3">
+          <div className="mobile-search-control flex h-11 min-w-0 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+            <Icon name="search" className="size-4 shrink-0 text-text-muted" />
+            <input
+              ref={searchInputRef}
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
+              name="productSearch"
+              autoComplete="off"
+              aria-label="Cari produk atau barcode"
+              aria-keyshortcuts="Meta+K Control+K"
+              placeholder="Nama produk atau barcode…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            {query && (
               <button
-                ref={cartTriggerRef}
                 type="button"
-                aria-label={`Buka keranjang, ${totalCartItems} item`}
-                aria-expanded={cartExpanded}
-                aria-controls="retail-pos-cart"
-                onClick={openCart}
-                className="retail-pos-cart-open pos-touch-target ml-auto min-w-11 items-center gap-2 rounded-button border border-border px-3 text-sm font-semibold text-text transition-colors duration-fast hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                aria-label="Hapus pencarian"
+                onClick={() => setQuery("")}
+                className="grid size-8 shrink-0 place-items-center rounded-control text-text-muted transition-[transform,background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
-                <Icon name="cart" className="size-4" />
-                <span>{totalCartItems}</span>
+                <Icon name="x" className="size-4" />
               </button>
-            </div>
-            <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row lg:max-w-[620px]">
-              <label className="pos-touch-target flex min-w-0 flex-1 items-center">
-                <span className="pos-toolbar-control-surface flex h-9 w-full min-w-0 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
-                  <Icon name="search" className="size-4 text-text-muted" />
-                  <input
-                    ref={searchInputRef}
-                    className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
-                    name="productSearch"
-                    autoComplete="off"
-                    aria-label="Cari produk atau barcode"
-                    aria-keyshortcuts="Meta+K Control+K"
-                    placeholder="Cari produk atau barcode…"
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                  />
-                  <kbd className="hidden rounded-md border border-border bg-surface-muted px-2 py-1 text-xs font-semibold text-text-subtle sm:block">
-                    ⌘ K / Ctrl K
-                  </kbd>
-                </span>
-              </label>
-              <Button
-                type="button"
-                variant="primary"
-                size="base"
-                compactVisual
-                className="header-compact-action pos-toolbar-scan pos-touch-target shrink-0"
-                onClick={() => {
-                  void primeScanSuccessSound();
-                  setScannerOpen(true);
-                }}
-              >
-                <Icon name="scan" className="size-4" />
-                Pindai barcode
-              </Button>
-            </div>
+            )}
           </div>
-
-          <div className="px-3 pb-2 pt-4 sm:px-6">
-            <div
-              ref={categoryTabsRef}
-              className="category-tabs relative flex w-full min-w-0 gap-1 overflow-x-auto rounded-control border border-border bg-surface-muted p-1"
-              aria-label="Kategori produk"
-            >
-              <span
-                aria-hidden="true"
-                className="category-tabs-indicator"
-                style={{
-                  "--category-indicator-x": `${categoryIndicator.left}px`,
-                  "--category-indicator-width": `${categoryIndicator.width}px`,
-                  opacity: categoryIndicator.ready ? 1 : 0,
-                }}
-              />
-              {categoryTabs.map((entry) => {
-                const item = entry.value;
-                const label = entry.label;
-                return (
-                <button
-                  ref={(node) => {
-                    if (node) categoryTabRefs.current.set(item, node);
-                    else categoryTabRefs.current.delete(item);
-                  }}
-                  key={item || "all"}
-                  type="button"
-                  aria-pressed={category === item}
-                  onClick={() => setCategory(item)}
-                  className={`pos-touch-target relative z-10 h-6 min-w-max flex-1 basis-0 rounded-button px-3 text-sm font-medium transition-[transform,color,background-color] duration-base ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
-                    category === item
-                      ? categoryIndicator.ready
-                        ? "text-text"
-                        : "bg-surface text-text"
-                      : "text-text-muted hover:text-text"
-                  }`}
-                >
-                  {label}
-                </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
+          <ProductCategoryPills
+            value={category}
+            options={categoryTabs}
+            onChange={setCategory}
+            label="Filter kategori produk kasir"
+          />
+        </header>
         <ProductCatalog
           activeProducts={store.activeProducts}
           cart={store.cart}
@@ -688,6 +585,47 @@ export default function RetailPosPage() {
           onClearFilters={clearFilters}
         />
         </main>
+
+        <AnimatePresence initial={false}>
+          {totalCartItems > 0 && (
+            <motion.div
+              key="retail-pos-cart-trigger"
+              className="retail-pos-cart-open"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: shouldReduceMotion ? 0.14 : 0.2,
+                ease: [0.2, 0, 0, 1],
+              }}
+            >
+              <motion.button
+                ref={cartTriggerRef}
+                type="button"
+                aria-label={`Buka keranjang, ${totalCartItems} item`}
+                aria-expanded={cartExpanded}
+                aria-controls="retail-pos-cart"
+                onClick={openCart}
+                className="group pos-touch-target min-w-0 items-center justify-center bg-transparent px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                initial={{ scale: shouldReduceMotion ? 1 : 0.72 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: shouldReduceMotion ? 1 : 0.72 }}
+                transition={{
+                  duration: shouldReduceMotion ? 0.14 : 0.22,
+                  ease: [0.2, 0, 0, 1],
+                }}
+              >
+                <span className="inline-flex h-13 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-white transition-transform duration-fast ease-standard group-active:scale-[0.97] motion-reduce:group-active:scale-100">
+                  <Icon name="cart" className="size-4" />
+                  <span>Keranjang</span>
+                  <span className="grid min-w-5 place-items-center rounded-full bg-white/16 px-1.5 text-xs tabular-nums">
+                    {totalCartItems}
+                  </span>
+                </span>
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <button
           ref={cartScrimRef}
@@ -704,7 +642,7 @@ export default function RetailPosPage() {
           role={isCompactCart && cartPresent ? "dialog" : undefined}
           aria-modal={isCompactCart && cartPresent ? "true" : undefined}
           aria-label="Keranjang belanja"
-          className={`retail-pos-cart-pane flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
+          className={`retail-pos-cart-pane corner-smoothing-overlay flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
           onTransitionEnd={(event) => {
             if (shouldReduceMotion && !cartExpanded && event.target === event.currentTarget) {
               finishCartClose();
@@ -713,7 +651,7 @@ export default function RetailPosPage() {
         >
         <>
           <div
-            className="retail-pos-cart-drag-handle flex items-center justify-between gap-3 px-4 py-3"
+            className="retail-pos-cart-drag-handle overlay-sticky-header flex items-center justify-between gap-3 px-4 py-3"
             onPointerDown={handleCartPointerDown}
             onPointerMove={handleCartPointerMove}
             onPointerUp={(event) => releaseCartPointer(event)}
@@ -813,7 +751,7 @@ export default function RetailPosPage() {
             )}
           </div>
 
-          <div className="retail-pos-cart-footer retail-pos-standard-checkout z-10 mt-auto gap-3 border-t border-border bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
+          <div className="retail-pos-cart-footer retail-pos-standard-checkout z-10 mt-auto gap-3 bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
             <PaymentSummary
               subtotal={totals.subtotal}
               tax={totals.tax}
@@ -866,7 +804,7 @@ export default function RetailPosPage() {
               onRefresh={() => store.loadEntitlement({ force: true })}
               onContact={recordEntitlementContact}
             />
-            <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
+            <Button variant="primary" mobileSize="large" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
               {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
             </Button>
           </div>
@@ -934,7 +872,7 @@ export default function RetailPosPage() {
                   onRefresh={() => store.loadEntitlement({ force: true })}
                   onContact={recordEntitlementContact}
                 />
-                <Button variant="primary" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
+                <Button variant="primary" mobileSize="large" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
                   {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
                 </Button>
               </div>
@@ -985,5 +923,6 @@ export default function RetailPosPage() {
         }}
       />
     </div>
+    </>
   );
 }

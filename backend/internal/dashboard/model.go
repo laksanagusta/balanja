@@ -16,19 +16,22 @@ type Transaction struct {
 	Items         []Item
 }
 type Product struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Stock  int    `json:"stock"`
-	Active bool   `json:"active"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	Unit     string `json:"unit"`
+	Stock    int    `json:"stock"`
+	Active   bool   `json:"active"`
 }
 type Comparison struct {
 	Direction string   `json:"direction"`
 	Percent   *float64 `json:"percent"`
 }
 type TrendPoint struct {
-	Date    string `json:"date"`
-	Label   string `json:"label"`
-	Revenue int    `json:"revenue"`
+	Date          string `json:"date"`
+	Label         string `json:"label"`
+	CurrentBucket string `json:"currentBucket,omitempty"`
+	Revenue       int    `json:"revenue"`
 }
 type PaymentMix struct {
 	Label      string  `json:"label"`

@@ -1,10 +1,27 @@
 import React from "react";
-import { Button, Dialog, Input, SelectField } from "../primitives.jsx";
+import { SwapText } from "../motion/SwapText.jsx";
+import { Button, Dialog, Icon, Input, SelectField } from "../primitives.jsx";
 
 export default function ModalFormShowcase() {
   const [productOpen, setProductOpen] = React.useState(false);
+  const [productSaving, setProductSaving] = React.useState(false);
   const [customerOpen, setCustomerOpen] = React.useState(false);
   const [discountOpen, setDiscountOpen] = React.useState(false);
+  const productSaveTimerRef = React.useRef(0);
+
+  React.useEffect(
+    () => () => window.clearTimeout(productSaveTimerRef.current),
+    [],
+  );
+
+  const saveProductExample = () => {
+    if (productSaving) return;
+    setProductSaving(true);
+    productSaveTimerRef.current = window.setTimeout(() => {
+      setProductSaving(false);
+      setProductOpen(false);
+    }, 900);
+  };
 
   return (
     <div>
@@ -19,22 +36,36 @@ export default function ModalFormShowcase() {
 
         <Dialog
           open={productOpen}
-          onClose={() => setProductOpen(false)}
+          onClose={() => {
+            if (!productSaving) setProductOpen(false);
+          }}
           title="Add product"
           size="md"
           footer={
             <>
-              <Button onClick={() => setProductOpen(false)}>Cancel</Button>
-              <Button variant="primary" onClick={() => setProductOpen(false)}>Save product</Button>
+              <Button disabled={productSaving} onClick={() => setProductOpen(false)}>Cancel</Button>
+              <Button variant="primary" disabled={productSaving} className="min-w-32" onClick={saveProductExample}>
+                <SwapText value={productSaving ? "Saving..." : "Save product"} />
+              </Button>
             </>
           }
         >
           <div className="mt-4 grid gap-4">
             <Input label="Product name" placeholder="e.g. Beras Premium 5kg" inputProps={{ defaultValue: "" }} />
-            <Input label="Barcode" placeholder="8997001230011" inputProps={{ defaultValue: "" }} />
+            <Input
+              label="Barcode"
+              placeholder="8997001230011"
+              inputClassName="font-mono tabular-nums tracking-[0.01em]"
+              leftSlot={(
+                <button type="button" aria-label="Scan barcode" className="mobile-compact-control -ml-1 grid size-9 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
+                  <Icon name="scan" className="size-5" />
+                </button>
+              )}
+              inputProps={{ defaultValue: "" }}
+            />
             <SelectField label="Category" value="Sembako" options={["Sembako", "Minuman", "Makanan Instan", "Rumah Tangga", "Perawatan"]} />
-            <Input label="Price" placeholder="72000" inputProps={{ type: "number", defaultValue: "" }} />
-            <Input label="Stock" placeholder="18" inputProps={{ type: "number", defaultValue: "" }} />
+            <Input label="Price" placeholder="72000" inputClassName="font-mono tabular-nums" inputProps={{ type: "number", defaultValue: "" }} />
+            <Input label="Stock" placeholder="18" inputClassName="font-mono tabular-nums" inputProps={{ type: "number", defaultValue: "" }} />
           </div>
         </Dialog>
 

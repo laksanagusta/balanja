@@ -18,7 +18,9 @@ test("dashboard charts use the approved balanced vivid semantic palette", async 
   assert.match(styles, /--chart-bar-primary: var\(--color-chart-green\);/);
 
   assert.match(charts, /stroke="var\(--chart-line-primary\)"/);
-  assert.match(charts, /fill="var\(--chart-bar-primary\)"/);
+  assert.doesNotMatch(charts, /PieChart|BarChart|--chart-bar-primary/);
+  assert.match(charts, /<ol className="mt-3">/);
+  assert.doesNotMatch(charts, /\bdivide-y\b/);
   assert.doesNotMatch(charts, /#[0-9a-f]{6}/i);
 });
 

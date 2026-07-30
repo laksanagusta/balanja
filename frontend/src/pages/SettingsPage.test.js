@@ -21,8 +21,8 @@ test("settings tabs use query parameters with profile fallback", async () => {
   assert.match(source, /\[loadCategories, loadSettings, loadUnits, tab\]/);
   assert.doesNotMatch(source, /\[store, tab\]/);
   assert.match(css, /\.settings-workspace\s*\{[\s\S]*container-name:\s*settings-workspace;[\s\S]*container-type:\s*inline-size;/);
-  assert.match(css, /@container settings-workspace \(min-width:\s*760px\)/);
-  assert.match(css, /grid-template-columns:\s*14rem minmax\(0,\s*1fr\)/);
+  assert.doesNotMatch(css, /@container settings-workspace \(min-width:\s*760px\)/);
+  assert.doesNotMatch(css, /grid-template-columns:\s*14rem minmax\(0,\s*1fr\)/);
   assert.match(source, /import \{ motion, useReducedMotion \} from "motion\/react";/);
   assert.match(source, /getSettingsTabDirection/);
   assert.match(source, /const previousTabRef = React\.useRef\(tab\);/);

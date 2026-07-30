@@ -40,11 +40,11 @@ export default function PaymentShowcase() {
               <span className="text-text-muted">Amount paid</span>
               <span className="font-mono font-semibold tabular-nums text-text">Rp50.000</span>
             </div>
-            <div className="flex justify-between border-t border-border pt-3 text-base font-semibold text-success">
+            <div className="flex justify-between pt-3 text-base font-semibold text-success">
               <span>Change</span>
               <span className="font-mono tabular-nums">Rp4.500</span>
             </div>
-            <Button variant="primary" className="mt-2 h-12 w-full text-base">
+            <Button variant="primary" mobileSize="large" className="mt-2 h-12 w-full text-base">
               <Icon name="check" className="size-5" />
               Confirm payment
             </Button>

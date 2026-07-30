@@ -17,12 +17,12 @@ export function TablePagination({
   const rangeLabel = start === 0 ? "Menampilkan 0 data" : `Menampilkan ${start}-${end}`;
 
   return (
-    <div className="flex min-h-14 flex-col gap-3 border-t border-border px-3 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex min-h-14 flex-col gap-3 px-3 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-wrap items-center gap-3">
         <p className="font-medium text-text-muted">
           {rangeLabel}
         </p>
-        <label className="flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-2.5 text-xs font-semibold text-text-muted shadow-inner-soft">
+        <label className="mobile-input-control flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-2.5 text-xs font-semibold text-text-muted shadow-inner-soft">
           Baris
           <select
             value={pageSize}
@@ -42,7 +42,7 @@ export function TablePagination({
           type="button"
           disabled={loading || !canPrevious}
           onClick={onPrevious}
-          className="inline-flex h-9 items-center gap-1.5 rounded-button border border-border bg-surface px-3 text-xs font-semibold text-text-muted transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-40"
+          className="mobile-standard-control inline-flex h-9 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-semibold text-text-muted transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-40"
         >
           <Icon name="chevron" className="size-3.5 rotate-90" />
           Sebelumnya
@@ -54,7 +54,7 @@ export function TablePagination({
           type="button"
           disabled={loading || !canNext}
           onClick={onNext}
-          className="inline-flex h-9 items-center gap-1.5 rounded-button border border-border bg-surface px-3 text-xs font-semibold text-text-muted transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-40"
+          className="mobile-standard-control inline-flex h-9 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-semibold text-text-muted transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-40"
         >
           Berikutnya
           <Icon name="chevron" className="size-3.5 -rotate-90" />

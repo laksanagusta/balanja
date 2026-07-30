@@ -28,7 +28,7 @@ test("master data manager uses flat responsive rows and protects long item names
   assert.match(css, /\.master-data-item-name\s*\{[\s\S]*overflow-wrap:\s*anywhere/);
   assert.match(css, /\.settings-touch-target\s*\{[\s\S]*min-block-size:\s*2\.75rem/);
   assert.match(css, /\.master-data-field-action\s*\{[\s\S]*align-items:\s*flex-end/);
-  assert.match(css, /@container master-data \(min-width:\s*560px\)/);
+  assert.doesNotMatch(css, /@container master-data \(min-width:\s*560px\)/);
   assert.doesNotMatch(source, /rounded-card border border-border bg-surface p-3/);
   assert.equal(source.match(/density="compact"/g)?.length, 2);
   assert.match(source, /variant="primary"\s+size="base"\s+compactVisual/);

@@ -21,10 +21,11 @@ export default function ProductPhotoShowcase() {
     <section>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Product photo</h3>
       <p className="mb-3 max-w-2xl text-sm leading-6 text-text-muted">
-        Field ini menampilkan status foto langsung di baris utama, tanpa caption nama file terpisah, supaya form tetap
-        ringkas saat padat. Upload menerima JPG, PNG, atau WebP hingga 5 MB dan backend menyimpan hasil kompresi maksimal
-        200 KB. Foto tersimpan dimuat lewat endpoint first-party aplikasi dengan cache immutable, bukan langsung melalui
-        endpoint development R2. Kegagalan sementara tetap menampilkan placeholder netral selama retry bertahap.
+        Field foto memakai satu area unggah besar dengan garis putus-putus, ikon kamera, instruksi utama, dan helper
+        format agar mudah dikenali dan disentuh. Setelah dipilih, preview dan aksi ganti tetap berada di area yang sama.
+        Upload menerima satu JPG, PNG, atau WebP hingga 5 MB dan backend menyimpan hasil kompresi maksimal 200 KB. Foto
+        tersimpan dimuat lewat endpoint first-party aplikasi dengan cache immutable, bukan langsung melalui endpoint
+        development R2. Kegagalan sementara tetap menampilkan placeholder netral selama retry bertahap.
       </p>
       <div className="rounded-panel border border-border bg-surface p-4">
         <ProductPhotoField

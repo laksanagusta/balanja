@@ -42,9 +42,7 @@ export default function TypographyPanel() {
         {styles.map((s, i) => (
           <div
             key={s.label}
-            className={`flex items-baseline gap-4 px-4 py-3 ${
-              i < styles.length - 1 ? "border-b border-border" : ""
-            }`}
+            className="flex items-baseline gap-4 px-4 py-3"
           >
             <span className="w-28 shrink-0 text-xs font-semibold uppercase tracking-[0.1em] text-text-subtle">
               {s.label}

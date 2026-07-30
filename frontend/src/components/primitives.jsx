@@ -2,13 +2,17 @@ import React from "react";
 import { createPortal } from "react-dom";
 import {
   ArchiveBoxIcon,
+  ArrowDownLeftIcon,
   ArrowPathIcon,
+  ArrowUpRightIcon,
   BanknotesIcon,
   Bars3Icon,
   CheckIcon,
   ChevronDownIcon,
   ClockIcon,
+  CameraIcon,
   Cog6ToothIcon,
+  CubeIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
@@ -161,6 +165,7 @@ const heroIcons = {
   minus: MinusIcon,
   file: DocumentTextIcon,
   image: PhotoIcon,
+  camera: CameraIcon,
   cash: BanknotesIcon,
   x: XMarkIcon,
   check: CheckIcon,
@@ -170,6 +175,9 @@ const heroIcons = {
   ticket: TicketIcon,
   loader: ArrowPathIcon,
   more: EllipsisHorizontalIcon,
+  inbound: ArrowDownLeftIcon,
+  outbound: ArrowUpRightIcon,
+  adjust: CubeIcon,
 };
 
 export function Icon({ name, className = "size-5" }) {
@@ -352,7 +360,15 @@ export function Icon({ name, className = "size-5" }) {
   return <svg {...common}>{paths[name]}</svg>;
 }
 
-export function Button({ children, variant = "secondary", size = "md", compactVisual = false, className = "", ...props }) {
+export function Button({
+  children,
+  variant = "secondary",
+  size = "md",
+  mobileSize,
+  compactVisual = false,
+  className = "",
+  ...props
+}) {
   const variants = {
     primary:
       "primary-button bg-accent text-white hover:bg-accent-hover active:scale-[0.97] motion-reduce:active:scale-100",
@@ -364,50 +380,89 @@ export function Button({ children, variant = "secondary", size = "md", compactVi
   };
 
   const sizes = {
-    xs: "h-6 gap-1 rounded-button px-2 text-xs",
-    sm: "h-8 gap-1.5 rounded-button px-2.5 text-sm",
-    base: "h-9 gap-2 rounded-button px-3.5 text-sm",
-    md: "h-9 gap-2 rounded-button px-3.5 text-sm",
-    lg: "h-11 gap-2.5 rounded-button px-5 text-lg",
-    xl: "h-13 gap-3 rounded-button px-6 text-xl",
+    xs: "h-6 gap-1 px-2 text-xs",
+    sm: "h-8 gap-1.5 px-2.5 text-sm",
+    base: "h-9 gap-2 px-3.5 text-sm",
+    md: "h-9 gap-2 px-3.5 text-sm",
+    lg: "h-11 gap-2.5 px-5 text-lg",
+    xl: "h-13 gap-3 px-6 text-xl",
   };
+  const radius = compactVisual || size === "xs" || size === "sm"
+    ? "rounded-control"
+    : "rounded-card";
+  const resolvedMobileSize = mobileSize
+    || (compactVisual || size === "xs" || size === "sm"
+      ? "compact"
+      : size === "lg" || size === "xl"
+        ? "large"
+        : "standard");
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${compactVisual ? "h-11 rounded-button bg-transparent px-1.5 text-sm" : `${variants[variant]} ${sizes[size]}`} ${className}`}
+      data-mobile-size={resolvedMobileSize}
+      data-compact-visual={compactVisual ? "true" : "false"}
+      className={`ui-button inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${compactVisual ? "h-11 rounded-control bg-transparent px-1.5 text-sm" : `${variants[variant]} ${sizes[size]} ${radius}`} ${className}`}
       {...props}
     >
       {compactVisual ? (
-        <span className={`header-compact-action-surface pointer-events-none inline-flex items-center justify-center ${variants[variant]} ${sizes[size]}`}>
+        <span className={`header-compact-action-surface pointer-events-none inline-flex items-center justify-center ${variants[variant]} ${sizes[size]} ${radius}`}>
           {children}
         </span>
-      ) : children}
+      ) : (
+        <>
+          <span className="ui-button-mobile-hit-area" aria-hidden="true" />
+          {children}
+        </>
+      )}
     </button>
   );
 }
 
-export function Input({ label, placeholder, rightSlot, error, density = "default", className = "", inputProps = {} }) {
+export function Input({
+  label,
+  placeholder,
+  leftSlot,
+  rightSlot,
+  error,
+  density = "default",
+  size = "standard",
+  className = "",
+  inputClassName = "",
+  inputProps = {},
+}) {
   const generatedId = React.useId();
   const {
     id = generatedId,
     "aria-describedby": describedBy,
+    className: inputPropsClassName = "",
     ...restInputProps
   } = inputProps;
   const errorId = `${id}-error`;
   const descriptionIds = [describedBy, error ? errorId : ""].filter(Boolean).join(" ") || undefined;
 
   return (
-    <label htmlFor={id} className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
-      {label}
-      <span className={`flex ${density === "compact" ? "h-9" : "h-11 md:h-9"} w-full min-w-0 items-center`}>
+    <div className={`grid min-w-0 gap-2 text-sm font-semibold text-text ${className}`}>
+      {label && <label htmlFor={id}>{label}</label>}
+      <span
+        data-density={density}
+        data-ui-size={size}
+        className={`ui-input-hitbox flex ${
+          size === "large" ? "h-11" : density === "compact" ? "h-9" : "h-11 md:h-9"
+        } w-full min-w-0 items-center`}
+      >
         <span
-          className={`flex h-9 w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
+          data-density={density}
+          data-ui-size={size}
+          className={`ui-input-surface flex ${
+            size === "large" ? "h-11" : "h-9"
+          } w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
             error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
           }`}
         >
+          {leftSlot}
           <input
             id={id}
-            className="w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
+            className={`w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle ${inputClassName} ${inputPropsClassName}`}
             placeholder={placeholder}
             aria-invalid={Boolean(error)}
             aria-describedby={descriptionIds}
@@ -417,7 +472,7 @@ export function Input({ label, placeholder, rightSlot, error, density = "default
         </span>
       </span>
       {error && <span id={errorId} aria-live="polite" className="text-xs font-medium text-danger">{error}</span>}
-    </label>
+    </div>
   );
 }
 
@@ -514,10 +569,10 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
         disabled={disabled}
         onClick={() => (isOpen ? closeListbox() : openListbox())}
         onKeyDown={handleTriggerKeyDown}
-        className="flex h-11 w-full items-center bg-transparent p-0 text-left md:h-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+        className="ui-select-hitbox flex h-11 w-full items-center bg-transparent p-0 text-left md:h-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
       >
         <span
-          className={`flex h-9 w-full items-center justify-between rounded-card border bg-surface px-3.5 text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard ${
+          className={`ui-select-surface flex h-9 w-full items-center justify-between rounded-card border bg-surface px-3.5 text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard ${
             error ? "border-danger" : isOpen ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
           }`}
         >
@@ -640,7 +695,7 @@ export function Pill({ children, tone = "neutral", selected = false, className =
   return (
     <button
       type="button"
-      className={`inline-flex h-8 min-w-fit items-center justify-center rounded-full border px-3 text-sm font-medium transition duration-base ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${tones[tone]} ${className}`}
+      className={`mobile-compact-control inline-flex h-8 min-w-fit items-center justify-center rounded-full border px-3 text-sm font-medium transition duration-base ease-standard active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${tones[tone]} ${className}`}
       {...props}
     >
       {children}
@@ -674,7 +729,7 @@ export function DataTable({
                 <th
                   key={col.key}
                   aria-sort={col.sortable && sortKey === col.key ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
-                  className={`h-11 whitespace-nowrap border-b border-border px-3 text-xs font-semibold uppercase tracking-[0.08em] text-text-subtle ${
+                  className={`h-11 whitespace-nowrap px-3 text-xs font-semibold uppercase tracking-[0.08em] text-text-subtle ${
                     col.align === "right" ? "text-right" : "text-left"
                   }`}
                 >
@@ -722,9 +777,7 @@ export function DataTable({
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`h-11 px-3 text-text ${
-                      i === data.length - 1 ? "border-b-0" : "border-b border-border"
-                    } ${col.align === "right" ? "text-right" : "text-left"}`}
+                    className={`h-11 px-3 text-text ${col.align === "right" ? "text-right" : "text-left"}`}
                   >
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
@@ -851,7 +904,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
         aria-modal="true"
         aria-labelledby={c.title ? titleId : undefined}
         tabIndex={-1}
-        className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-panel border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
+        className={`corner-smoothing-overlay relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-panel border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
           isVisible ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
         } ${
           !c.footer && !c.icon ? "text-center" : ""
@@ -863,7 +916,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
           </div>
         )}
         {c.title && (
-          <div className="mb-2 flex items-center justify-between">
+          <div className="overlay-sticky-header mb-2 flex items-center justify-between">
             <h4 id={titleId} className="text-lg font-semibold text-text">{c.title}</h4>
             {onClose && (
               <button type="button" onClick={onClose} className="text-text-muted hover:text-text">
@@ -880,7 +933,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
 }
 
 export function Switch({ checked = false, tone = "accent", decorative = false }) {
-  const activeTone = tone === "success" ? "bg-success" : "bg-accent";
+  const activeTone = tone === "success" ? "bg-success-control" : "bg-accent";
 
   return (
     <span

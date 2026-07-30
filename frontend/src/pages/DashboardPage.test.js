@@ -27,6 +27,24 @@ test("dashboard low-stock insight provides a direct stock-management handoff", a
   assert.match(panel, /function LowStockPanel\(\{ products, onManageStock \}\)/);
   assert.match(panel, /Kelola stok/);
   assert.match(panel, /products\.length && onManageStock/);
-  assert.match(charts, /<Line dataKey="revenue"[^>]*showMarkers=\{false\}/);
+  assert.match(charts, /<Line dataKey="revenue"[^>]*showMarkers=\{data\.length < 3\}/);
   assert.match(panel, /\{product\.category\} · \{product\.unit\}/);
+});
+
+test("dashboard home prioritizes today, attention, and direct report handoff", async () => {
+  const dashboard = await readFile(new URL("./DashboardPage.jsx", import.meta.url), "utf8");
+  const charts = await readFile(new URL("../components/dashboard/DashboardCharts.jsx", import.meta.url), "utf8");
+  const metric = await readFile(new URL("../components/dashboard/DashboardKpiCard.jsx", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(dashboard, /\{ value: 1, label: "Hari ini" \}/);
+  assert.match(dashboard, /React\.useState\(1\)/);
+  assert.doesNotMatch(dashboard, /PaymentMixPanel/);
+  assert.doesNotMatch(dashboard, /label="Stok menipis"/);
+  assert.match(dashboard, /onViewReport=\{\(\) => onNavigate\(routes\.reportsSales\)\}/);
+  assert.match(charts, /<ol className="mt-3">/);
+  assert.doesNotMatch(charts, /\bdivide-y\b/);
+  assert.match(charts, /Lihat laporan penjualan/);
+  assert.doesNotMatch(metric, /truncate/);
+  assert.match(design, /acts as the authenticated home, not a duplicate sales report/);
 });

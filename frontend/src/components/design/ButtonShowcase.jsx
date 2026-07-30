@@ -6,7 +6,11 @@ const tokens = [
   ["Accent Hover", "--color-accent-hover", "#151517"],
   ["Danger", "--color-danger", "#ef4444"],
   ["Danger Soft", "--color-danger-soft", "#fff1f1"],
-  ["Button radius", "--radius-button", "8px"],
+  ["Standard radius", "--radius-card", "16px"],
+  ["Compact radius", "--radius-control", "8px"],
+  ["Mobile standard", "--control-height-mobile-button", "44px"],
+  ["Mobile primary large", "--control-height-mobile-button-large", "52px"],
+  ["Mobile compact visual", "--control-height-mobile-compact", "36px"],
   ["Focus", "--color-focus", "#4a4a4d"],
   ["Fast duration", "--duration-fast", "120ms"],
 ];
@@ -16,22 +20,32 @@ export default function ButtonShowcase() {
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Button</h3>
-        <p className="mt-1 text-sm text-text-muted">Buttons use one flat Uber-inspired system without gradients, bevels, or elevation shadows. Primary uses a solid near-black surface for the leading action; secondary uses a quiet border, ghost relies on text and hover fill, and danger uses the semantic soft-red surface. Every standard rectangular button keeps the same 8px radius, focus outline, disabled opacity, and subtle press scale at every responsive size.</p>
+        <p className="mt-1 text-sm text-text-muted">Buttons use one flat Uber-inspired system without gradients, bevels, or elevation shadows. Standard actions use a 16px radius to align with form controls, while compact and utility actions keep an 8px radius. On mobile, standard actions are 44px, large primary actions are 52px, and compact buttons keep a 36px visual surface inside a minimum 44px hit area. Desktop retains the compact operational scale. Every variant keeps the same focus outline, disabled opacity, and immediate press scale.</p>
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
-        <div className="flex flex-wrap items-start gap-3">
-          <Button variant="primary" onClick={() => alert("Tambah produk")}>
-            <Icon name="plus" className="size-4" />
-            Tambah produk
-          </Button>
-          <Button onClick={() => alert("Secondary action")}>Secondary action</Button>
-          <Button variant="ghost" onClick={() => alert("Ghost action")}>Ghost</Button>
-          <Button variant="danger" onClick={() => alert("Destructive")}>
-            <Icon name="trash" className="size-4" />
-            Destructive
-          </Button>
-          <Button disabled>Disabled</Button>
-          <Button variant="primary" disabled>Disabled</Button>
+        <div className="grid gap-5">
+          <div className="flex flex-wrap items-start gap-3">
+            <Button variant="primary" onClick={() => alert("Tambah produk")}>
+              <Icon name="plus" className="size-4" />
+              Tambah produk
+            </Button>
+            <Button onClick={() => alert("Secondary action")}>Secondary action</Button>
+            <Button variant="ghost" onClick={() => alert("Ghost action")}>Ghost</Button>
+            <Button variant="danger" onClick={() => alert("Destructive")}>
+              <Icon name="trash" className="size-4" />
+              Destructive
+            </Button>
+            <Button disabled>Disabled</Button>
+            <Button variant="primary" disabled>Disabled</Button>
+          </div>
+          <div className="grid gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Mobile sizing contract</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button>Standard · 44</Button>
+              <Button variant="primary" mobileSize="large">Primary besar · 52</Button>
+              <Button size="sm" compactVisual>Compact · 36/44</Button>
+            </div>
+          </div>
         </div>
         <div className="rounded-card border border-border bg-surface-muted p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Tokens</p>

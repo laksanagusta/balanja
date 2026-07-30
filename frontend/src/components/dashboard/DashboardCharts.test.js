@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("dashboard revenue chart omits persistent points and uses a monotone time-series curve", async () => {
+test("dashboard revenue chart marks only sparse series and uses a monotone time-series curve", async () => {
   const dashboard = await readFile(new URL("./DashboardCharts.jsx", import.meta.url), "utf8");
   const line = await readFile(new URL("../charts/line.jsx", import.meta.url), "utf8");
 
-  assert.match(dashboard, /<Line[\s\S]*showMarkers=\{false\}/);
+  assert.match(dashboard, /<Line[\s\S]*showMarkers=\{data\.length < 3\}/);
   assert.match(line, /curveMonotoneX/);
   assert.doesNotMatch(line, /curveNatural/);
 });

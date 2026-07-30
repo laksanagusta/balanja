@@ -261,6 +261,22 @@ test("sales report CSV parses JSON error envelopes", async () => {
   });
 });
 
+test("dashboard summary defaults to the current day", async () => {
+  let requestURL = "";
+  const api = createAPIClient({
+    baseURL: "",
+    getToken: async () => "token",
+    fetchImpl: async (url) => {
+      requestURL = url;
+      return new Response(JSON.stringify({ data: { revenue: 0 } }));
+    },
+  });
+
+  await api.getDashboardSummary();
+
+  assert.equal(requestURL, "/api/v1/dashboard/summary?days=1");
+});
+
 test("createStockMovement posts manual movement payload", async () => {
   let request;
   const api = createAPIClient({
