@@ -33,7 +33,8 @@
   --color-chart-qris: var(--color-chart-mint);
   --color-chart-other: var(--color-chart-amber);
 
-  --radius-control: 8px;
+  --radius-control: 10px;
+  --radius-button: 8px;
   --radius-card: 16px;
   --radius-panel: 16px;
   --radius-overlay: 32px;

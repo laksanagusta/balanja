@@ -84,7 +84,7 @@ export function StockFilterDrawer({
             </Drawer.Close>
           </div>
 
-          <div className="product-filter-drawer-scroll min-h-0 flex-1 overflow-y-auto px-6 pt-6">
+          <div className="relative z-0 min-h-0 flex-1 overflow-y-auto px-6 pt-6">
             <fieldset className="grid gap-2">
               <legend className="text-sm font-semibold text-text">Jenis pergerakan</legend>
               <div className="flex min-w-0 flex-wrap gap-1">

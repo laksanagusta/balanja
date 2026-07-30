@@ -387,9 +387,7 @@ export function Button({
     lg: "h-11 gap-2.5 px-5 text-lg",
     xl: "h-13 gap-3 px-6 text-xl",
   };
-  const radius = compactVisual || size === "xs" || size === "sm"
-    ? "rounded-control"
-    : "rounded-card";
+  const radius = "rounded-control";
   const resolvedMobileSize = mobileSize
     || (compactVisual || size === "xs" || size === "sm"
       ? "compact"
@@ -455,7 +453,7 @@ export function Input({
           data-ui-size={size}
           className={`ui-input-surface flex ${
             size === "large" ? "h-11" : "h-9"
-          } w-full min-w-0 items-center gap-3 rounded-card border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
+          } w-full min-w-0 items-center gap-3 rounded-control border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
             error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
           }`}
         >
@@ -572,7 +570,7 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
         className="ui-select-hitbox flex h-11 w-full items-center bg-transparent p-0 text-left md:h-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
       >
         <span
-          className={`ui-select-surface flex h-9 w-full items-center justify-between rounded-card border bg-surface px-3.5 text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard ${
+          className={`ui-select-surface flex h-9 w-full items-center justify-between rounded-control border bg-surface px-3.5 text-sm font-medium text-text-muted shadow-inner-soft transition duration-base ease-standard ${
             error ? "border-danger" : isOpen ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
           }`}
         >
@@ -923,7 +921,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
         aria-modal="true"
         aria-labelledby={c.title ? titleId : undefined}
         tabIndex={-1}
-        className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-overlay border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
+        className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto outline-none ${sizes[size]} rounded-overlay border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
           isVisible ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
         } ${
           !c.footer && !c.icon ? "text-center" : ""
@@ -935,7 +933,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
           </div>
         )}
         {c.title && (
-          <div className="overlay-sticky-header mb-2 flex items-center justify-between">
+          <div className="overlay-sticky-header flex items-center justify-between">
             <h4 id={titleId} className="text-lg font-semibold text-text">{c.title}</h4>
             {onClose && (
               <button type="button" onClick={onClose} className="text-text-muted hover:text-text">
@@ -944,7 +942,11 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
             )}
           </div>
         )}
-        {c.children && <div className="text-sm text-text-muted">{c.children}</div>}
+        {c.children && (
+          <div className={`relative z-0 text-sm text-text-muted ${c.title ? 'mt-2' : ''}`}>
+            {c.children}
+          </div>
+        )}
         {c.footer && <div className="mt-6 flex justify-end gap-2">{c.footer}</div>}
       </div>
     </div>

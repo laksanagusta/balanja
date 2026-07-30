@@ -115,7 +115,7 @@ export default function MasterDataSelectField({
             setOpen(true);
           }
         }}
-        className={`mobile-input-control flex h-11 items-center justify-between rounded-card border bg-surface px-3.5 text-left text-sm font-medium shadow-inner-soft transition-[border-color,box-shadow] duration-fast ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 md:h-9 ${
+        className={`mobile-input-control flex h-11 items-center justify-between rounded-control border bg-surface px-3.5 text-left text-sm font-medium shadow-inner-soft transition-[border-color,box-shadow] duration-fast ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 md:h-9 ${
           error ? "border-danger" : open ? "border-border-strong ring-4 ring-accent-soft" : "border-border"
         }`}
       >

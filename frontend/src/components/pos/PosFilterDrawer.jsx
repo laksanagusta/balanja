@@ -116,7 +116,7 @@ export function PosFilterDrawer({
             </Drawer.Close>
           </div>
 
-          <div className="pos-filter-drawer-scroll min-h-0 flex-1 overflow-y-auto px-6 pt-6">
+          <div className="relative z-0 min-h-0 flex-1 overflow-y-auto px-6 pt-6">
             <div className="grid gap-4">
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-text">Cari produk</span>

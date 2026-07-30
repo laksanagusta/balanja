@@ -214,7 +214,7 @@ export default function ProductsPage() {
         <header className="px-4 py-3">
           <div className="grid w-full">
             <div className="flex w-full min-w-0 items-center gap-2">
-              <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+              <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
                 <Icon name="search" className="size-4 text-text-muted" />
                 <input
                   aria-label="Cari produk"
