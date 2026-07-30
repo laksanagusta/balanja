@@ -221,11 +221,7 @@ export const tokenGroups = [
     tokens: [
       ["XS - Controls", "--radius-control", "8px"],
       ["S - Cards & Inputs", "--radius-card", "16px"],
-      ["M - Modals & Panels", "--radius-panel", "32px"],
-      ["Corner smoothing", "--corner-smoothing", "60%"],
-      ["Superellipse K", "--corner-superellipse", "2.0036"],
-      ["Overlay smoothing", "--corner-smoothing-overlay", "20%"],
-      ["Overlay superellipse K", "--corner-superellipse-overlay", "1.4179"],
+      ["M - Modals & Panels", "--radius-panel", "24px"],
     ],
   },
   {

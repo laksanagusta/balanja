@@ -642,7 +642,7 @@ export default function RetailPosPage() {
           role={isCompactCart && cartPresent ? "dialog" : undefined}
           aria-modal={isCompactCart && cartPresent ? "true" : undefined}
           aria-label="Keranjang belanja"
-          className={`retail-pos-cart-pane corner-smoothing-overlay flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
+          className={`retail-pos-cart-pane flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
           onTransitionEnd={(event) => {
             if (shouldReduceMotion && !cartExpanded && event.target === event.currentTarget) {
               finishCartClose();

@@ -117,7 +117,7 @@ export function ProductFilterDrawer({
         <Drawer.Overlay className="product-filter-drawer-overlay fixed inset-0 z-[70] bg-black/25" />
         <Drawer.Content
           aria-describedby={undefined}
-          className="product-filter-drawer corner-smoothing-overlay fixed inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[min(86svh,40rem)] w-full max-w-[1200px] flex-col rounded-t-panel border border-border bg-surface outline-none shadow-panel"
+          className="product-filter-drawer fixed inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[min(86svh,40rem)] w-full max-w-[1200px] flex-col rounded-t-panel border border-border bg-surface outline-none shadow-panel"
         >
           <Drawer.Handle className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-border" />
 
