@@ -159,7 +159,7 @@ export function PosProductCard({ product, onAdd, disabled = false }) {
           onClick={handleAdd}
         >
           <span
-            className="product-add-button-surface corner-shape-round"
+            className="product-add-button-surface"
             aria-hidden="true"
           >
             <Icon name="plus" className="size-5" />

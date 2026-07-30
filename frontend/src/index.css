@@ -35,11 +35,7 @@
 
   --radius-control: 8px;
   --radius-card: 16px;
-  --radius-panel: 32px;
-  --corner-smoothing: 60%;
-  --corner-superellipse: 2.0036;
-  --corner-smoothing-overlay: 20%;
-  --corner-superellipse-overlay: 1.4179;
+  --radius-panel: 24px;
 
   --control-height-mobile-button: 44px;
   --control-height-mobile-button-large: 52px;
@@ -68,25 +64,6 @@
 @layer base {
   * {
     box-sizing: border-box;
-  }
-
-  @supports (corner-shape: superellipse(2.0036)) {
-    *,
-    *::before,
-    *::after {
-      corner-shape: superellipse(var(--corner-superellipse));
-    }
-
-    .corner-smoothing-overlay {
-      corner-shape: superellipse(var(--corner-superellipse-overlay));
-    }
-
-    .rounded-full,
-    .corner-shape-round,
-    .faq-toggle-icon::before,
-    .faq-toggle-icon::after {
-      corner-shape: round;
-    }
   }
 
   body {

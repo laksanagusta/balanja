@@ -40,37 +40,24 @@ test("page chrome and shared flat collections do not use structural dividers", a
   }
 });
 
-test("rounded rectangles use 60 percent smoothing with a 20 percent modal and drawer exception", async () => {
+test("rounded rectangles use cross-browser border radius without corner smoothing", async () => {
   const [styles, tokens, design] = await Promise.all([
     readFile(new URL("../index.css", import.meta.url), "utf8"),
     readFile(new URL("../data.js", import.meta.url), "utf8"),
     readFile(new URL("../../DESIGN.md", import.meta.url), "utf8"),
   ]);
 
-  assert.match(styles, /--corner-smoothing:\s*60%;/);
-  assert.match(styles, /--corner-superellipse:\s*2\.0036;/);
-  assert.match(styles, /--corner-smoothing-overlay:\s*20%;/);
-  assert.match(styles, /--corner-superellipse-overlay:\s*1\.4179;/);
   assert.match(styles, /--radius-control:\s*8px;/);
   assert.match(styles, /--radius-card:\s*16px;/);
-  assert.match(styles, /--radius-panel:\s*32px;/);
-  assert.match(styles, /@supports \(corner-shape: superellipse\(2\.0036\)\)/);
-  assert.match(styles, /\*,\s*\*::before,\s*\*::after\s*\{\s*corner-shape:\s*superellipse\(var\(--corner-superellipse\)\);/);
-  assert.match(styles, /\.corner-smoothing-overlay\s*\{\s*corner-shape:\s*superellipse\(var\(--corner-superellipse-overlay\)\);/);
+  assert.match(styles, /--radius-panel:\s*24px;/);
+  assert.doesNotMatch(styles, /corner-shape|corner-smoothing|corner-superellipse/);
   assert.match(styles, /\.overlay-sticky-header\s*\{\s*position:\s*sticky;\s*inset-block-start:\s*0;/);
-  assert.match(styles, /\.rounded-full,\s*\.corner-shape-round,\s*\.faq-toggle-icon::before,\s*\.faq-toggle-icon::after\s*\{\s*corner-shape:\s*round;/);
   assert.match(tokens, /\["XS - Controls", "--radius-control", "8px"\]/);
   assert.match(tokens, /\["S - Cards & Inputs", "--radius-card", "16px"\]/);
-  assert.match(tokens, /\["M - Modals & Panels", "--radius-panel", "32px"\]/);
-  assert.match(tokens, /\["Corner smoothing", "--corner-smoothing", "60%"\]/);
-  assert.match(tokens, /\["Superellipse K", "--corner-superellipse", "2\.0036"\]/);
-  assert.match(tokens, /\["Overlay smoothing", "--corner-smoothing-overlay", "20%"\]/);
-  assert.match(tokens, /\["Overlay superellipse K", "--corner-superellipse-overlay", "1\.4179"\]/);
-  assert.match(design, /8px\/16px\/32px radius hierarchy/);
-  assert.match(design, /60% Apple-style smoothing/);
-  assert.match(design, /corner-shape: superellipse\(2\.0036\)/);
-  assert.match(design, /Modal and drawer surfaces are the sole smoothing exception/);
-  assert.match(design, /corner-shape: superellipse\(1\.4179\)/);
+  assert.match(tokens, /\["M - Modals & Panels", "--radius-panel", "24px"\]/);
+  assert.doesNotMatch(tokens, /corner-smoothing|corner-superellipse/);
+  assert.match(design, /8px\/16px\/24px radius hierarchy/);
+  assert.match(design, /Use standard CSS `border-radius` geometry consistently across browsers/);
+  assert.match(design, /do not apply `corner-shape`, superellipse, corner smoothing/);
   assert.match(design, /Modal and drawer headers use the shared sticky-header contract/);
-  assert.match(design, /Full-radius circles, avatars, pills, progress tracks, and handles retain `corner-shape: round`/);
 });

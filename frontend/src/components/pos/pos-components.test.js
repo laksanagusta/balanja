@@ -35,7 +35,7 @@ test("POS product card is an explicit variant", async () => {
   assert.match(source, /product-card-actions/);
   assert.match(source, /mediaAction=\{\(/);
   assert.match(source, /aria-label=\{outOfStock \? `\$\{product\.name\}: stok habis` : `Tambah \$\{product\.name\}`\}/);
-  assert.match(source, /<span[\s\S]*className="product-add-button-surface corner-shape-round"[\s\S]*aria-hidden="true"[\s\S]*>[\s\S]*<Icon name="plus" className="size-5" \/>/);
+  assert.match(source, /<span[\s\S]*className="product-add-button-surface"[\s\S]*aria-hidden="true"[\s\S]*>[\s\S]*<Icon name="plus" className="size-5" \/>/);
   assert.match(source, /showStockBadge=\{false\}/);
   assert.match(source, /priceOnly/);
   assert.doesNotMatch(source, /min-h-\[304px\]|product-card-actions mt-auto|border-t border-border/);

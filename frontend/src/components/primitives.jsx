@@ -904,7 +904,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
         aria-modal="true"
         aria-labelledby={c.title ? titleId : undefined}
         tabIndex={-1}
-        className={`corner-smoothing-overlay relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-panel border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
+        className={`relative max-h-[calc(100svh-2rem)] w-full overflow-y-auto ${sizes[size]} rounded-panel border border-border bg-surface p-6 shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
           isVisible ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
         } ${
           !c.footer && !c.icon ? "text-center" : ""

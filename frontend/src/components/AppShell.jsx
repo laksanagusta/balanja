@@ -205,7 +205,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Navigasi lainnya"
-                className="mobile-more-navigation corner-smoothing-overlay absolute left-3 right-3 z-10 grid gap-1 rounded-panel border border-border bg-surface p-2 shadow-panel"
+                className="mobile-more-navigation absolute left-3 right-3 z-10 grid gap-1 rounded-panel border border-border bg-surface p-2 shadow-panel"
               >
                 <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-subtle">
                   Lainnya

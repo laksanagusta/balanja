@@ -156,7 +156,7 @@ export function RetailPosSkeleton() {
         </div>
       </main>
 
-      <aside className="retail-pos-cart-pane corner-smoothing-overlay flex min-w-0 flex-col border-border bg-surface">
+      <aside className="retail-pos-cart-pane flex min-w-0 flex-col border-border bg-surface">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="grid gap-2">
             <Skeleton className="h-5 w-20 bg-surface-muted/80" />
