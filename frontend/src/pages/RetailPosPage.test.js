@@ -212,7 +212,8 @@ test("cart is an accessible full-screen bottom drawer at every width", async () 
   assert.match(css, /\.retail-pos-cart-scrim\s*\{[\s\S]*opacity:\s*0[\s\S]*transition:[\s\S]*opacity/);
   assert.match(css, /\.retail-pos-cart-scrim\.is-present[\s\S]*pointer-events:\s*auto/);
   assert.match(css, /prefers-reduced-motion[\s\S]*\.retail-pos-cart-pane[\s\S]*transform:\s*none[\s\S]*opacity/);
-  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*display:\s*flex[\s\S]*inset-block-end:\s*calc\(var\(--app-bottom-navigation-clearance\) \+ 0\.75rem\)/);
+  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*display:\s*flex[\s\S]*inset-block-end:\s*calc\(env\(safe-area-inset-bottom, 0px\) \+ 0\.75rem\)[\s\S]*translate:[\s\S]*--app-bottom-navigation-progress/);
+  assert.match(css, /\.retail-pos-cart-open\[data-settling="true"\]\[data-scroll-direction="down"\]/);
   assert.doesNotMatch(css, /@container retail-pos \(min-width:\s*640px\)/);
   assert.match(css, /\.retail-pos-cart-drag-handle\s*\{[\s\S]*touch-action:\s*pan-x/);
   assert.doesNotMatch(source, /rounded-l-overlay/);
@@ -370,7 +371,7 @@ test("POS filters stay visible above the catalog while mobile cart floats above 
   assert.match(source, /exit=\{\{ scale: shouldReduceMotion \? 1 : 0\.72 \}\}/);
   assert.match(source, /duration: shouldReduceMotion \? 0\.14 : 0\.22/);
   assert.match(source, />\s*Keranjang\s*</);
-  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*inset-block-end:\s*calc\(var\(--app-bottom-navigation-clearance\) \+ 0\.75rem\)[\s\S]*inset-inline-start:\s*50%/);
+  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*inset-block-end:\s*calc\(env\(safe-area-inset-bottom, 0px\) \+ 0\.75rem\)[\s\S]*inset-inline-start:\s*50%[\s\S]*translate:[\s\S]*--app-bottom-navigation-progress/);
   assert.match(css, /\.product-catalog-grid\s*\{[\s\S]*padding:\s*0\.5rem 0\.5rem 5\.5rem/);
   assert.match(design, /no longer uses a product-filter drawer/i);
   assert.match(showcase, /tidak memakai drawer filter/i);

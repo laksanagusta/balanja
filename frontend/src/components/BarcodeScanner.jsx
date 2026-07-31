@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { Icon, useDialogPresence } from "./primitives.jsx";
 import { playScanSuccessSound, primeScanSuccessSound } from "../preferences/scan-feedback.js";
@@ -228,9 +229,9 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     void processDetection(code);
   };
 
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 z-50 bg-black transition-opacity duration-200 ease-standard motion-reduce:transition-opacity ${
+      className={`fixed inset-0 z-[60] bg-black transition-opacity duration-200 ease-standard motion-reduce:transition-opacity ${
         isVisible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
       aria-hidden={!isVisible}
@@ -316,6 +317,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
           </form>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

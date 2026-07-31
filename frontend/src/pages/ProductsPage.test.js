@@ -60,7 +60,8 @@ test("product barcode scan action shares the labeled row with manual entry", asy
   assert.ok(barcodeInputIndex > barcodeLabelIndex);
   assert.ok(scanActionIndex > barcodeInputIndex);
   assert.ok(scanIconIndex > scanActionIndex);
-  assert.match(source, /className="flex items-center gap-2"/);
+  assert.match(source, /className="flex items-start gap-2"/);
+  assert.match(source, /aria-label="Pindai barcode"[\s\S]{0,400}mt-1\.5 grid size-9/);
   assert.doesNotMatch(source, /leftSlot=\{\(/);
   assert.doesNotMatch(source, /<Icon name="barcode"/);
 });

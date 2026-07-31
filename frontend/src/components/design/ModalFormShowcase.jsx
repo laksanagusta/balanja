@@ -54,7 +54,7 @@ export default function ModalFormShowcase() {
             <Input label="Product name" placeholder="e.g. Beras Premium 5kg" inputProps={{ defaultValue: "" }} />
             <div className="grid gap-2">
               <span className="text-sm font-semibold text-text">Barcode</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <Input
                     placeholder="8997001230011"
@@ -62,7 +62,7 @@ export default function ModalFormShowcase() {
                     inputProps={{ defaultValue: "" }}
                   />
                 </div>
-                <button type="button" aria-label="Scan barcode" className="grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
+                <button type="button" aria-label="Scan barcode" className="mt-1.5 grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
                   <Icon name="scan" className="size-5" />
                 </button>
               </div>

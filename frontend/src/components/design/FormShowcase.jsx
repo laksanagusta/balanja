@@ -27,14 +27,14 @@ export default function FormShowcase() {
           <Input label="Input field" placeholder="Placeholder text" error="This field needs attention" rightSlot={<Icon name="search" className="size-4" />} />
           <div className="grid gap-2">
             <span className="text-sm font-semibold text-text">Barcode with scan action</span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">
                 <Input
                   placeholder="8997001230011"
                   inputClassName="font-mono tabular-nums tracking-[0.01em]"
                 />
               </div>
-              <button type="button" aria-label="Scan barcode" className="grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
+              <button type="button" aria-label="Scan barcode" className="mt-1.5 grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
                 <Icon name="scan" className="size-5" />
               </button>
             </div>

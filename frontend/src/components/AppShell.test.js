@@ -164,13 +164,14 @@ test("bottom navigation tracks internal scrolling and settles in the scroll dire
   assert.match(source, /navigation\.addEventListener\("focusin", showNavigation\)/);
   assert.match(source, /navigation\.dataset\.scrolled = isScrolledAway \? "true" : "false"/);
   assert.match(source, /--bottom-navigation-frost-opacity/);
-  assert.match(source, /content\.querySelectorAll\("\.app-shell-floating-action"\)/);
+  assert.match(source, /content\.querySelectorAll\("\.app-shell-floating-action, \.retail-pos-cart-open"\)/);
   assert.match(source, /--app-bottom-navigation-progress/);
   assert.match(source, /floatingAction\.dataset\.settling/);
   assert.match(source, /mobile-bottom-nav-item[^"]*rounded-full[^"]*transition-\[background-color,color,transform\]/);
   assert.match(css, /--bottom-navigation-translate/);
   assert.match(css, /\.app-shell-floating-action\s*\{[\s\S]*translate:[\s\S]*--app-bottom-navigation-progress/);
   assert.match(css, /\.app-shell-floating-action\[data-settling="true"\]\[data-scroll-direction="down"\]/);
+  assert.match(css, /\.app-shell-floating-action\[data-settling="true"\]\[data-scroll-direction="up"\]/);
   assert.match(css, /data-scroll-direction="down"/);
   assert.match(css, /data-scroll-direction="up"/);
   assert.doesNotMatch(css, /\.mobile-bottom-nav-item:hover/);

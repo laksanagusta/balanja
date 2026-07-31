@@ -282,7 +282,7 @@ export default function ProductsPage() {
           title="Tambah produk"
           disabled={isProductsMutating}
           onClick={() => openEditor(emptyProduct(defaultCategoryId, defaultUnitId))}
-          className="app-shell-floating-action absolute right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel transition-[background-color,transform,box-shadow] duration-fast ease-standard hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+          className="app-shell-floating-action absolute right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
         >
           <Icon name="plus" className="size-5" />
         </button>
@@ -330,7 +330,7 @@ export default function ProductsPage() {
 
             <div className="grid gap-2">
               <span className="text-sm font-semibold text-text">Barcode</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <div className="flex-1">
                   <Input
                     placeholder="8991001000011"
@@ -353,7 +353,7 @@ export default function ProductsPage() {
                     void primeScanSuccessSound();
                     setScannerOpen(true);
                   }}
-                  className="grid size-9 shrink-0 place-items-center rounded-control text-text-muted transition-[background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                  className="mt-1.5 grid size-9 shrink-0 place-items-center rounded-control text-text-muted transition-[background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                 >
                   <Icon name="scan" className="size-5" />
                 </button>

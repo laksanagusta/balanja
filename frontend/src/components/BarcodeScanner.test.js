@@ -45,7 +45,8 @@ test("scanner uses a forced full-screen surface with Indonesian copy", async () 
   const source = await readFile(new URL("./BarcodeScanner.jsx", import.meta.url), "utf8");
 
   assert.match(source, /title = "Pindai barcode"/);
-  assert.match(source, /className=\{`fixed inset-0 z-50 bg-black/);
+  assert.match(source, /className=\{`fixed inset-0 z-\[60\] bg-black/);
+  assert.match(source, /createPortal\([\s\S]*document\.body,\s*\n\s*\);/);
   assert.match(source, /className="relative h-full w-full overflow-hidden bg-black"/);
   assert.doesNotMatch(source, /place-items-center bg-black\/60 p-4/);
   assert.doesNotMatch(source, /className=\{`relative h-full w-full overflow-hidden rounded-\[28px\]/);
