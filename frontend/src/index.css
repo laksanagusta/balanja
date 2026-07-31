@@ -183,7 +183,21 @@
   }
 
   .app-shell-floating-action {
-    inset-block-end: calc(var(--app-bottom-navigation-clearance) + 1rem);
+    inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    translate: 0 calc(-1 * var(--app-bottom-navigation-clearance) * (1 - var(--app-bottom-navigation-progress, 0)));
+    transition:
+      translate 300ms var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard);
+  }
+
+  .app-shell-floating-action[data-settling="true"][data-scroll-direction="down"] {
+    transition:
+      translate 180ms cubic-bezier(0.3, 0, 1, 1),
+      background-color var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard);
   }
 
   .mobile-more-navigation {
@@ -1050,6 +1064,10 @@
   }
 
   .mobile-bottom-navigation::before {
+    transition: none;
+  }
+
+  .app-shell-floating-action {
     transition: none;
   }
 

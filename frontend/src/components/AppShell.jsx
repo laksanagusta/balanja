@@ -39,6 +39,7 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
     if (!content || !navigation) return undefined;
 
     const scrollPositions = new WeakMap();
+    const floatingActions = [...content.querySelectorAll(".app-shell-floating-action")];
     let progress = 0;
     let lastDirection = "up";
     let isScrolledAway = seedBottomNavigationScrollPositions(
@@ -64,6 +65,11 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
       navigation.style.setProperty("--bottom-navigation-scale", String(1 - progress * 0.04));
       navigation.style.setProperty("--bottom-navigation-opacity", String(1 - progress));
       navigation.style.setProperty("--bottom-navigation-frost-opacity", String(isScrolledAway ? 1 - progress : 0));
+      for (const floatingAction of floatingActions) {
+        floatingAction.dataset.settling = settling ? "true" : "false";
+        floatingAction.dataset.scrollDirection = lastDirection;
+        floatingAction.style.setProperty("--app-bottom-navigation-progress", String(progress));
+      }
     };
 
     const scheduleProgress = (nextProgress) => {
