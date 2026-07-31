@@ -48,7 +48,7 @@
   --control-inset-mobile-compact-hit: -4px;
 
   --shadow-low: 0 1px 2px rgb(0 0 0 / 0.05);
-  --shadow-navigation: 0 -4px 12px rgb(18 18 18 / 0.05);
+  --shadow-navigation: 0 12px 32px rgb(18 18 18 / 0.12), 0 2px 8px rgb(18 18 18 / 0.06);
   --shadow-panel: 0 18px 45px rgb(18 18 18 / 0.06);
   --shadow-avatar:
     0px 23px 60px -15px #7359f299,
@@ -100,9 +100,10 @@
     transform: scale(0.985);
   }
 
-  .dialog-scrim {
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+  .overlay-scrim {
+    background: rgb(255 255 255 / 0.42);
+    backdrop-filter: blur(4px) saturate(115%);
+    -webkit-backdrop-filter: blur(4px) saturate(115%);
   }
 
   .overlay-sticky-header {
@@ -126,14 +127,72 @@
     inset-block-start: calc(env(safe-area-inset-top, 0px) + 4.75rem);
   }
 
+  .app-shell-content {
+    --app-bottom-navigation-clearance: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .mobile-bottom-navigation {
-    border-block-start: 1px solid var(--color-border);
-    padding-block-end: max(0.5rem, env(safe-area-inset-bottom, 0px));
-    box-shadow: var(--shadow-navigation);
+    inset-inline: 0.75rem;
+    inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    inline-size: calc(100% - 1.5rem);
+    max-inline-size: 44rem;
+    min-block-size: 4rem;
+    margin-inline: auto;
+    isolation: isolate;
+    border: 1px solid rgb(255 255 255 / 0.68);
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.82);
+    box-shadow: var(--shadow-navigation), inset 0 1px 0 rgb(255 255 255 / 0.74);
+    opacity: var(--bottom-navigation-opacity, 1);
+    transform: translate3d(0, var(--bottom-navigation-translate, 0px), 0) scale(var(--bottom-navigation-scale, 1));
+    transform-origin: center bottom;
+    will-change: transform, opacity;
+  }
+
+  .mobile-bottom-navigation::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -3rem -1.25rem -1.25rem;
+    border-radius: 9999px;
+    pointer-events: none;
+    background: rgb(255 255 255 / 0.06);
+    backdrop-filter: blur(18px) saturate(118%);
+    -webkit-backdrop-filter: blur(18px) saturate(118%);
+    mask-image: radial-gradient(ellipse 88% 100% at 50% 100%, #000 0%, rgb(0 0 0 / 0.96) 45%, rgb(0 0 0 / 0.52) 72%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 88% 100% at 50% 100%, #000 0%, rgb(0 0 0 / 0.96) 45%, rgb(0 0 0 / 0.52) 72%, transparent 100%);
+    opacity: var(--bottom-navigation-frost-opacity, 0);
+    transition: opacity 240ms var(--ease-standard);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .mobile-bottom-nav-item:hover {
+      background: rgb(246 246 246 / 0.9);
+    }
+  }
+
+  .mobile-bottom-navigation[data-settling="true"][data-scroll-direction="down"] {
+    transition:
+      transform 180ms cubic-bezier(0.3, 0, 1, 1),
+      opacity 120ms cubic-bezier(0.3, 0, 1, 1);
+  }
+
+  .mobile-bottom-navigation[data-settling="true"][data-scroll-direction="up"] {
+    transition:
+      transform 300ms var(--ease-standard),
+      opacity 220ms var(--ease-standard);
+  }
+
+  .mobile-bottom-navigation[data-hidden="true"] {
+    pointer-events: none;
+  }
+
+  .app-shell-floating-action {
+    inset-block-end: calc(var(--app-bottom-navigation-clearance) + 1rem);
   }
 
   .mobile-more-navigation {
-    inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 4.75rem);
+    inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 5.75rem);
   }
 
   .data-table-frame,
@@ -365,17 +424,16 @@
   .retail-pos-cart-pane {
     container-name: retail-pos-cart;
     container-type: inline-size;
-    position: absolute;
+    position: fixed;
     z-index: 40;
-    inset-block: 0;
-    inset-inline-end: 0;
-    width: min(420px, calc(100% - 24px));
+    inset: 0;
+    width: 100%;
+    height: 100svh;
     overflow: hidden;
     overscroll-behavior: contain;
-    border-left: 1px solid var(--color-border);
     box-shadow: var(--shadow-panel);
     visibility: hidden;
-    transform: translate3d(100%, 0, 0);
+    transform: translate3d(0, 100%, 0);
     transition:
       transform var(--duration-base) var(--ease-standard),
       visibility 0s linear var(--duration-base);
@@ -416,7 +474,7 @@
     display: flex;
     position: absolute;
     z-index: 20;
-    inset-block-end: 0.75rem;
+    inset-block-end: calc(var(--app-bottom-navigation-clearance) + 0.75rem);
     inset-inline-start: 50%;
     transform: translateX(-50%);
   }
@@ -426,11 +484,10 @@
   }
 
   .retail-pos-cart-scrim {
-    position: absolute;
+    position: fixed;
     z-index: 30;
     inset: 0;
     border: 0;
-    background: rgb(0 0 0 / 0.2);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -451,7 +508,8 @@
   }
 
   .retail-pos-cart-drag-handle {
-    touch-action: pan-y;
+    padding-block-start: max(0.75rem, env(safe-area-inset-top, 0px));
+    touch-action: pan-x;
     user-select: none;
   }
 
@@ -537,6 +595,8 @@
   .retail-pos-mobile-checkout {
     display: block;
     flex: none;
+    padding-block-end: env(safe-area-inset-bottom, 0px);
+    background: var(--color-surface);
   }
 
   .mobile-checkout-panel {
@@ -580,11 +640,6 @@
 
     .pos-product-card .product-card-content {
       padding-block-start: 0.5rem;
-    }
-
-    .retail-pos-cart-pane {
-      width: 100%;
-      border-left: 0;
     }
 
   }
@@ -793,7 +848,8 @@
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .dialog-scrim {
+  .overlay-scrim {
+    background: rgb(255 255 255 / 0.9);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
@@ -801,6 +857,11 @@
   .mobile-bottom-navigation {
     background: var(--color-surface);
     backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .mobile-bottom-navigation::before {
+    display: none;
   }
 }
 
@@ -987,6 +1048,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mobile-bottom-navigation {
+    transform: none;
+    transition: opacity 120ms linear !important;
+    will-change: opacity;
+  }
+
+  .mobile-bottom-navigation::before {
+    transition: none;
+  }
+
   .app-depth-surface,
   .retail-pos-catalog-pane {
     transition: none !important;

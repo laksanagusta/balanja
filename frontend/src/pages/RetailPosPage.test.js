@@ -119,7 +119,7 @@ test("the design system documents and demonstrates the production POS contract",
   assert.match(showcase, /cooldown pasti 1 detik/i);
   assert.match(showcase, /bunyi halus/i);
   assert.match(showcase, /MobileCheckoutPanel/);
-  assert.match(design, /639px or less/i);
+  assert.match(design, /full viewport/i);
   assert.match(design, /continuity transition/i);
   assert.match(design, /live presentation transform/i);
   assert.match(design, /mounted `inert` descendants/i);
@@ -172,7 +172,7 @@ test("category tabs keep a measured sliding indicator while horizontally overflo
   assert.match(css, /prefers-reduced-motion[\s\S]*\.category-tabs-indicator/);
 });
 
-test("cart is an accessible horizontal overlay drawer at every width", async () => {
+test("cart is an accessible full-screen bottom drawer at every width", async () => {
   const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
 
@@ -190,20 +190,23 @@ test("cart is an accessible horizontal overlay drawer at every width", async () 
   assert.match(source, /retail-pos-cart-scrim/);
   assert.doesNotMatch(source, /cartExpanded && \(/);
   assert.match(source, /<Icon name="cart"/);
-  assert.doesNotMatch(source, /retail-pos-cart-toggle[\s\S]{0,500}name="chevron"/);
-  assert.match(source, />\s*Tutup\s*</);
+  assert.match(source, /aria-label="Kembali ke Kasir"/);
+  assert.match(source, /name="chevron-left"/);
+  assert.match(source, />Kasir<\/span>/);
+  assert.doesNotMatch(source, />\s*Tutup\s*</);
   assert.match(source, /onPointerDown=\{handleCartPointerDown\}/);
   assert.match(source, /setPointerCapture/);
-  assert.match(css, /\.retail-pos-cart-pane\s*\{[\s\S]*transform:\s*translate3d\(100%,\s*0,\s*0\)/);
+  assert.match(css, /\.retail-pos-cart-pane\s*\{[\s\S]*position:\s*fixed[\s\S]*inset:\s*0[\s\S]*width:\s*100%[\s\S]*height:\s*100svh[\s\S]*transform:\s*translate3d\(0,\s*100%,\s*0\)/);
   assert.match(css, /\.retail-pos-cart-pane\.is-open\s*\{[\s\S]*transform:\s*translate3d\(0,\s*0,\s*0\)/);
   assert.match(css, /\.retail-pos-cart-pane\s*\{[\s\S]*visibility:\s*hidden/);
   assert.match(css, /\.retail-pos-cart-list\s*\{[\s\S]*min-height:\s*0[\s\S]*flex:\s*1 1 0%[\s\S]*overflow-y:\s*auto/);
   assert.match(css, /\.retail-pos-cart-scrim\s*\{[\s\S]*opacity:\s*0[\s\S]*transition:[\s\S]*opacity/);
   assert.match(css, /\.retail-pos-cart-scrim\.is-present[\s\S]*pointer-events:\s*auto/);
   assert.match(css, /prefers-reduced-motion[\s\S]*\.retail-pos-cart-pane[\s\S]*transform:\s*none[\s\S]*opacity/);
-  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*display:\s*flex[\s\S]*inset-block-end:\s*0\.75rem/);
+  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*display:\s*flex[\s\S]*inset-block-end:\s*calc\(var\(--app-bottom-navigation-clearance\) \+ 0\.75rem\)/);
   assert.doesNotMatch(css, /@container retail-pos \(min-width:\s*640px\)/);
-  assert.doesNotMatch(css, /\.retail-pos-cart-pane\s*\{[^}]*position:\s*static/);
+  assert.match(css, /\.retail-pos-cart-drag-handle\s*\{[\s\S]*touch-action:\s*pan-x/);
+  assert.doesNotMatch(source, /rounded-l-overlay/);
 });
 
 test("cart modal semantics remain enabled across the app canvas", async () => {
@@ -232,8 +235,8 @@ test("cart swipe settles with an interruptible velocity-aware spring", async () 
   assert.match(source, /import \{ animate \} from "motion"/);
   assert.match(source, /useReducedMotion/);
   assert.match(source, /cartAnimationRef\.current\?\.stop\(\)/);
-  assert.match(source, /getCartTranslateX/);
-  assert.match(source, /animate\(currentX, targetX,/);
+  assert.match(source, /getCartTranslateY/);
+  assert.match(source, /animate\(currentY, targetY,/);
   assert.match(source, /type:\s*"spring"/);
   assert.match(source, /velocity,/);
   assert.match(source, /cartSwipeVelocity/);
@@ -288,7 +291,7 @@ test("clear cart is a destructive header overflow action instead of a checkout p
   assert.match(showcase, /overflow menu header/i);
 });
 
-test("cart is full width on smartphones and progressively discloses checkout at every width", async () => {
+test("cart fills the viewport and progressively discloses checkout at every width", async () => {
   const source = await readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8");
   const component = await readFile(new URL("../components/pos/MobileCheckoutPanel.jsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
@@ -315,7 +318,7 @@ test("cart is full width on smartphones and progressively discloses checkout at 
   assert.match(component, /aria-controls=\{detailId\}/);
   assert.match(component, /headingRef\.current\?\.focus/);
   assert.doesNotMatch(css, /\.mobile-checkout-trigger\.primary-button\s*\{[\s\S]*box-shadow:/);
-  assert.match(css, /@container retail-pos \(max-width:\s*639px\)[\s\S]*\.retail-pos-cart-pane[\s\S]*width:\s*100%[\s\S]*border-left:\s*0/);
+  assert.match(css, /\.retail-pos-cart-pane\s*\{[\s\S]*width:\s*100%[\s\S]*height:\s*100svh/);
   assert.match(css, /\.retail-pos-standard-checkout\s*\{[\s\S]*display:\s*none/);
   assert.match(css, /\.retail-pos-mobile-checkout\s*\{[\s\S]*display:\s*block/);
   assert.doesNotMatch(css, /@container retail-pos \(min-width:\s*640px\)/);
@@ -358,7 +361,7 @@ test("POS filters stay visible above the catalog while mobile cart floats above 
   assert.match(source, /exit=\{\{ scale: shouldReduceMotion \? 1 : 0\.72 \}\}/);
   assert.match(source, /duration: shouldReduceMotion \? 0\.14 : 0\.22/);
   assert.match(source, />\s*Keranjang\s*</);
-  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*inset-block-end:\s*0\.75rem[\s\S]*inset-inline-start:\s*50%/);
+  assert.match(css, /\.retail-pos-cart-open\s*\{[\s\S]*inset-block-end:\s*calc\(var\(--app-bottom-navigation-clearance\) \+ 0\.75rem\)[\s\S]*inset-inline-start:\s*50%/);
   assert.match(css, /\.product-catalog-grid\s*\{[\s\S]*padding:\s*0\.5rem 0\.5rem 5\.5rem/);
   assert.match(design, /no longer uses a product-filter drawer/i);
   assert.match(showcase, /tidak memakai drawer filter/i);

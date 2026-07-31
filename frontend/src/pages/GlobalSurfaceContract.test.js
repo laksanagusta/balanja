@@ -73,22 +73,28 @@ test("rounded rectangles use cross-browser border radius without corner smoothin
   assert.match(design, /modal titles keep 16px of space/);
 });
 
-test("dialogs use a restrained blur and respect reduced transparency", async () => {
-  const [styles, primitives, showcase, design] = await Promise.all([
+test("dialogs and drawers share a frosted scrim and respect reduced transparency", async () => {
+  const [styles, primitives, productDrawer, stockDrawer, transactionDrawer, posDrawer, retailPos, showcase, design] = await Promise.all([
     readFile(new URL("../index.css", import.meta.url), "utf8"),
     readFile(new URL("../components/primitives.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/product/ProductFilterDrawer.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/stock/StockFilterDrawer.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/transactions/TransactionFilterDrawer.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/pos/PosFilterDrawer.jsx", import.meta.url), "utf8"),
+    readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8"),
     readFile(new URL("../components/design/ModalShowcase.jsx", import.meta.url), "utf8"),
     readFile(new URL("../../DESIGN.md", import.meta.url), "utf8"),
   ]);
 
-  assert.match(styles, /\.dialog-scrim\s*\{[\s\S]*backdrop-filter:\s*blur\(4px\)/);
-  assert.match(styles, /@media \(prefers-reduced-transparency: reduce\)[\s\S]*\.dialog-scrim\s*\{[\s\S]*backdrop-filter:\s*none/);
-  assert.match(primitives, /className="dialog-scrim fixed inset-0 bg-white\/30"/);
+  assert.match(styles, /\.overlay-scrim\s*\{[\s\S]*background:\s*rgb\(255 255 255 \/ 0\.42\)[\s\S]*backdrop-filter:\s*blur\(4px\) saturate\(115%\)/);
+  assert.match(styles, /@media \(prefers-reduced-transparency: reduce\)[\s\S]*\.overlay-scrim\s*\{[\s\S]*background:\s*rgb\(255 255 255 \/ 0\.9\)[\s\S]*backdrop-filter:\s*none/);
+  for (const overlay of [primitives, productDrawer, stockDrawer, transactionDrawer, posDrawer, retailPos]) {
+    assert.match(overlay, /overlay-scrim/);
+  }
   assert.match(showcase, /Button, Dialog, Icon/);
   assert.match(showcase, /<Dialog/);
-  assert.doesNotMatch(primitives, /backdrop-blur-sm/);
-  assert.doesNotMatch(showcase, /backdrop-blur-sm/);
-  assert.match(design, /Dialog scrims use a restrained 4px backdrop blur/);
+  assert.match(showcase, /4px frosted scrim/);
+  assert.match(design, /share one frosted-glass scrim/);
 });
 
 test("modal and stacked surfaces scale only their underlay", async () => {

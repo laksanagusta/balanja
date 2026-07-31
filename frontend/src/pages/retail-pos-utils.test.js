@@ -39,12 +39,12 @@ test("change is visible only for a non-empty cart with sufficient cash", () => {
   });
 });
 
-test("cart swipe dismissal uses distance or forward velocity", () => {
+test("cart downward swipe dismissal uses distance or forward velocity", () => {
   assert.equal(typeof retailPosUtils.shouldDismissCartSwipe, "function");
-  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 110, velocity: 0.1, width: 360 }), true);
-  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: 0.6, width: 360 }), true);
-  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: -0.6, width: 360 }), false);
-  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: 0.1, width: 360 }), false);
+  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 130, velocity: 0.1, dimension: 800 }), true);
+  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: 0.6, dimension: 800 }), true);
+  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: -0.6, dimension: 800 }), false);
+  assert.equal(retailPosUtils.shouldDismissCartSwipe({ distance: 24, velocity: 0.1, dimension: 800 }), false);
 });
 
 test("cart swipe resistance softens movement past the open boundary", () => {
@@ -58,16 +58,16 @@ test("cart swipe resistance softens movement past the open boundary", () => {
 test("cart swipe velocity uses recent pointer history and decays after a hold", () => {
   assert.equal(
     retailPosUtils.cartSwipeVelocity([
-      { x: 0, time: 0 },
-      { x: 30, time: 50 },
+      { y: 0, time: 0 },
+      { y: 30, time: 50 },
     ]),
     600,
   );
   assert.equal(
     retailPosUtils.cartSwipeVelocity([
-      { x: 0, time: 0 },
-      { x: 30, time: 50 },
-      { x: 30, time: 200 },
+      { y: 0, time: 0 },
+      { y: 30, time: 50 },
+      { y: 30, time: 200 },
     ]),
     0,
   );

@@ -9,6 +9,7 @@ import {
   Bars3Icon,
   CheckIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
   ClockIcon,
   CameraIcon,
   Cog6ToothIcon,
@@ -161,6 +162,7 @@ const heroIcons = {
   moon: MoonIcon,
   help: QuestionMarkCircleIcon,
   chevron: ChevronDownIcon,
+  "chevron-left": ChevronLeftIcon,
   plus: PlusIcon,
   minus: MinusIcon,
   file: DocumentTextIcon,
@@ -914,7 +916,7 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
       }`}
       aria-hidden={!isVisible}
     >
-      <div className="dialog-scrim fixed inset-0 bg-white/30" onClick={onClose} />
+      <div className="overlay-scrim fixed inset-0" onClick={onClose} />
       <div
         ref={dialogRef}
         role="dialog"

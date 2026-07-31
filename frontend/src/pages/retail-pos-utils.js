@@ -21,8 +21,8 @@ export function cashPaymentState(rawValue, total, cartItemCount) {
   };
 }
 
-export function shouldDismissCartSwipe({ distance, velocity, width }) {
-  const distanceThreshold = Math.min(96, Math.max(Number(width) * 0.25, 64));
+export function shouldDismissCartSwipe({ distance, velocity, dimension }) {
+  const distanceThreshold = Math.min(120, Math.max(Number(dimension) * 0.18, 72));
   const deceleration = 0.998;
   const projectedDistance =
     (Number(distance) || 0) +
@@ -67,7 +67,7 @@ export function cartSwipeVelocity(samples, windowMs = 100) {
   const elapsed = Number(last.time) - Number(first.time);
   if (elapsed <= 0) return 0;
 
-  return ((Number(last.x) - Number(first.x)) / elapsed) * 1000;
+  return ((Number(last.y) - Number(first.y)) / elapsed) * 1000;
 }
 
 export function isCartFocusCandidate(element) {

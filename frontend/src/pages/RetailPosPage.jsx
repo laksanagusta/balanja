@@ -14,7 +14,6 @@ import { PaymentSummary } from "../components/pos/PaymentSummary.jsx";
 import { ProductCatalog } from "../components/pos/ProductCatalog.jsx";
 import { ProductCategoryPills } from "../components/product/ProductCategoryPills.jsx";
 import {
-  Badge,
   Button,
   Dialog,
   FloatingPopover,
@@ -57,23 +56,23 @@ function focusableElements(container) {
     : [];
 }
 
-function getCartTranslateX(element) {
+function getCartTranslateY(element) {
   if (!element || typeof window === "undefined") return 0;
   const transform = window.getComputedStyle(element).transform;
   if (!transform || transform === "none") return 0;
 
   if (typeof DOMMatrixReadOnly === "function") {
     try {
-      return new DOMMatrixReadOnly(transform).m41;
+      return new DOMMatrixReadOnly(transform).m42;
     } catch {
       // Fall through to the matrix parser for older WebViews.
     }
   }
 
   const matrix3d = transform.match(/^matrix3d\((.+)\)$/);
-  if (matrix3d) return Number(matrix3d[1].split(",")[12]) || 0;
+  if (matrix3d) return Number(matrix3d[1].split(",")[13]) || 0;
   const matrix2d = transform.match(/^matrix\((.+)\)$/);
-  return matrix2d ? Number(matrix2d[1].split(",")[4]) || 0 : 0;
+  return matrix2d ? Number(matrix2d[1].split(",")[5]) || 0 : 0;
 }
 
 export default function RetailPosPage() {
@@ -208,12 +207,12 @@ export default function RetailPosPage() {
     cartAnimationTargetRef.current = null;
   }, []);
 
-  const applyCartTranslation = React.useCallback((translation, width) => {
+  const applyCartTranslation = React.useCallback((translation, height) => {
     const pane = cartPaneRef.current;
     if (!pane) return;
-    const dimension = Math.max(Number(width) || pane.getBoundingClientRect().width || 1, 1);
+    const dimension = Math.max(Number(height) || pane.getBoundingClientRect().height || 1, 1);
     pane.style.transition = "none";
-    pane.style.transform = `translate3d(${translation}px, 0, 0)`;
+    pane.style.transform = `translate3d(0, ${translation}px, 0)`;
     if (cartScrimRef.current) {
       cartScrimRef.current.style.opacity = String(
         Math.max(0, Math.min(1, 1 - translation / dimension)),
@@ -237,20 +236,20 @@ export default function RetailPosPage() {
   }) => {
     const pane = cartPaneRef.current;
     if (!pane) return;
-    const width = Math.max(pane.getBoundingClientRect().width, 1);
-    const currentX = Number.isFinite(from) ? from : getCartTranslateX(pane);
-    const targetX = open ? 0 : width;
+    const height = Math.max(pane.getBoundingClientRect().height, 1);
+    const currentY = Number.isFinite(from) ? from : getCartTranslateY(pane);
+    const targetY = open ? 0 : height;
 
     stopCartAnimation();
     cartAnimationTargetRef.current = open;
     if (open) setCartExpanded(true);
-    cartAnimationRef.current = animate(currentX, targetX, {
+    cartAnimationRef.current = animate(currentY, targetY, {
       type: "spring",
       stiffness: 340,
       damping: 34,
       mass: 0.86,
       velocity,
-      onUpdate: (latest) => applyCartTranslation(latest, width),
+      onUpdate: (latest) => applyCartTranslation(latest, height),
       onComplete: () => {
         cartAnimationRef.current = null;
         cartAnimationTargetRef.current = null;
@@ -288,9 +287,9 @@ export default function RetailPosPage() {
     window.requestAnimationFrame(() => {
       const pane = cartPaneRef.current;
       if (!shouldReduceMotion && pane) {
-        const width = Math.max(pane.getBoundingClientRect().width, 1);
-        applyCartTranslation(width, width);
-        settleCart({ open: true, from: width });
+        const height = Math.max(pane.getBoundingClientRect().height, 1);
+        applyCartTranslation(height, height);
+        settleCart({ open: true, from: height });
       }
       cartCloseRef.current?.focus({ preventScroll: true });
     });
@@ -306,24 +305,23 @@ export default function RetailPosPage() {
     if (shouldReduceMotion) return;
     const pane = cartPaneRef.current;
     if (!isCompactCart || !cartPresent || !pane || cartDragRef.current || event.target.closest("button")) return;
-    if (window.getComputedStyle(pane).position !== "absolute") return;
     const bounds = pane.getBoundingClientRect();
     const targetOpen = cartAnimationTargetRef.current ?? cartExpanded;
-    const currentX = getCartTranslateX(pane);
+    const currentY = getCartTranslateY(pane);
     stopCartAnimation();
     event.currentTarget.setPointerCapture(event.pointerId);
-    applyCartTranslation(currentX, bounds.width);
+    applyCartTranslation(currentY, bounds.height);
     cartDragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      startTranslation: currentX,
-      translation: currentX,
+      startTranslation: currentY,
+      translation: currentY,
       targetOpen,
       committed: false,
       moved: false,
-      samples: [{ x: event.clientX, time: event.timeStamp }],
-      width: bounds.width,
+      samples: [{ y: event.clientY, time: event.timeStamp }],
+      height: bounds.height,
     };
   }, [
     applyCartTranslation,
@@ -343,7 +341,7 @@ export default function RetailPosPage() {
 
     if (!drag.committed) {
       if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 8) return;
-      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
           event.currentTarget.releasePointerCapture(event.pointerId);
         }
@@ -355,13 +353,13 @@ export default function RetailPosPage() {
     }
 
     drag.moved = true;
-    drag.samples.push({ x: event.clientX, time: event.timeStamp });
+    drag.samples.push({ y: event.clientY, time: event.timeStamp });
     if (drag.samples.length > 8) drag.samples.shift();
     drag.translation = resistedCartTranslation(
-      drag.startTranslation + deltaX,
-      drag.width,
+      drag.startTranslation + deltaY,
+      drag.height,
     );
-    applyCartTranslation(drag.translation, drag.width);
+    applyCartTranslation(drag.translation, drag.height);
   }, [applyCartTranslation, settleCart]);
 
   const releaseCartPointer = React.useCallback((event, cancelled = false) => {
@@ -373,13 +371,13 @@ export default function RetailPosPage() {
     cartDragRef.current = null;
     const samples = [
       ...drag.samples,
-      { x: event.clientX, time: event.timeStamp },
+      { y: event.clientY, time: event.timeStamp },
     ];
     const velocity = cartSwipeVelocity(samples);
     const dismiss = shouldDismissCartSwipe({
       distance: drag.translation,
       velocity: velocity / 1000,
-      width: drag.width,
+      dimension: drag.height,
     });
     const open = cancelled || !drag.moved ? drag.targetOpen : !dismiss;
     settleCart({
@@ -632,7 +630,7 @@ export default function RetailPosPage() {
           type="button"
           tabIndex={-1}
           aria-hidden="true"
-          className={`retail-pos-cart-scrim ${cartPresent ? "is-present" : ""} ${cartExpanded ? "is-open" : ""}`}
+          className={`overlay-scrim retail-pos-cart-scrim ${cartPresent ? "is-present" : ""} ${cartExpanded ? "is-open" : ""}`}
           onClick={closeCart}
         />
 
@@ -642,7 +640,7 @@ export default function RetailPosPage() {
           role={isCompactCart && cartPresent ? "dialog" : undefined}
           aria-modal={isCompactCart && cartPresent ? "true" : undefined}
           aria-label="Keranjang belanja"
-          className={`retail-pos-cart-pane rounded-l-overlay flex min-w-0 flex-col border-border bg-surface ${cartExpanded ? "is-open" : ""}`}
+          className={`retail-pos-cart-pane flex min-w-0 flex-col bg-surface ${cartExpanded ? "is-open" : ""}`}
           onTransitionEnd={(event) => {
             if (shouldReduceMotion && !cartExpanded && event.target === event.currentTarget) {
               finishCartClose();
@@ -651,18 +649,27 @@ export default function RetailPosPage() {
         >
         <>
           <div
-            className="retail-pos-cart-drag-handle overlay-sticky-header flex items-center justify-between gap-3 px-4 py-3"
+            className="retail-pos-cart-drag-handle overlay-sticky-header grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4 pb-3"
             onPointerDown={handleCartPointerDown}
             onPointerMove={handleCartPointerMove}
             onPointerUp={(event) => releaseCartPointer(event)}
             onPointerCancel={(event) => releaseCartPointer(event, true)}
           >
-            <div>
-              <h2 className="text-base font-semibold text-text">Keranjang</h2>
-              <p className="text-sm text-text-muted">{store.cart.length} jenis item</p>
+            <button
+              ref={cartCloseRef}
+              type="button"
+              aria-label="Kembali ke Kasir"
+              onClick={closeCart}
+              className="pos-touch-target -ml-2 inline-flex min-w-0 items-center justify-self-start rounded-button px-2 text-sm font-semibold text-accent transition-[transform,background-color] duration-fast ease-standard hover:bg-accent-soft active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
+              <Icon name="chevron-left" className="size-5" />
+              <span>Kasir</span>
+            </button>
+            <div className="min-w-0 text-center">
+              <h2 className="truncate text-base font-semibold text-text">Keranjang</h2>
+              <p className="truncate text-xs text-text-muted">{totalCartItems} item · {store.cart.length} jenis</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge tone="accent">{totalCartItems} item</Badge>
+            <div className="flex min-w-0 items-center justify-self-end gap-1">
               <button
                 ref={cartMenuTriggerRef}
                 type="button"
@@ -704,14 +711,6 @@ export default function RetailPosPage() {
                   </button>
                 </div>
               </FloatingPopover>
-              <button
-                ref={cartCloseRef}
-                type="button"
-                onClick={closeCart}
-                className="retail-pos-cart-toggle pos-touch-target rounded-button px-3 text-sm font-semibold text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-              >
-                Tutup
-              </button>
             </div>
           </div>
 
