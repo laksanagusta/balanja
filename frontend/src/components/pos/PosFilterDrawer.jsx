@@ -94,7 +94,7 @@ export function PosFilterDrawer({
       </Drawer.Trigger>
 
       <Drawer.Portal>
-        <Drawer.Overlay className="pos-filter-drawer-overlay fixed inset-0 z-[70] bg-white/30 backdrop-blur-sm" />
+        <Drawer.Overlay className="overlay-scrim pos-filter-drawer-overlay fixed inset-0 z-[70]" />
         <Drawer.Content
           aria-describedby={undefined}
           className="pos-filter-drawer fixed inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[min(86svh,42rem)] w-full max-w-[1200px] flex-col overflow-hidden rounded-t-overlay border border-border bg-surface outline-none shadow-panel"

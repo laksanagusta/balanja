@@ -9,7 +9,7 @@ export default function ModalShowcase() {
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Modal & Dialog</h3>
       <div className="rounded-panel border border-border bg-surface p-4">
-        <p className="mb-3 text-sm text-text-muted">Overlay dialogs keep their opaque header and actions visually isolated, with 16px below the title before only the body content scrolls.</p>
+        <p className="mb-3 text-sm text-text-muted">Modal dialogs and drawers share a translucent, softly saturated 4px frosted scrim. It keeps the underlying workspace recognizable without competing with the opaque overlay surface, and becomes an opaque veil when reduced transparency is requested.</p>
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setOpen(true)}>Open modal</Button>
           <Button variant="primary" onClick={() => setConfirmOpen(true)}>Confirm dialog</Button>

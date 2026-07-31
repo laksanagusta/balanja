@@ -5,6 +5,11 @@ import { toast } from "sonner";
 import { routes } from "../shared.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { Icon } from "./primitives.jsx";
+import {
+  nextBottomNavigationProgress,
+  releaseBottomNavigationPointerFocus,
+  seedBottomNavigationScrollPositions,
+} from "./bottom-navigation.js";
 
 const appShellScrollLockClass = "app-shell-scroll-lock";
 const mobilePrimaryNavigation = [
@@ -27,13 +32,120 @@ const appPageTitles = {
   [routes.settings]: "Pengaturan",
 };
 
-function MobileBottomNavigation({ pathname, onNavigate, moreOpen, onToggleMore }) {
+function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, expanded }) {
+  React.useEffect(() => {
+    const content = contentRef.current;
+    const navigation = navigationRef.current;
+    if (!content || !navigation) return undefined;
+
+    const scrollPositions = new WeakMap();
+    let progress = 0;
+    let lastDirection = "up";
+    let isScrolledAway = seedBottomNavigationScrollPositions(
+      content.querySelectorAll("*"),
+      scrollPositions,
+    );
+    let travelDistance = 96;
+    let frame = 0;
+    let settleTimer = 0;
+
+    const measureTravelDistance = () => {
+      const bounds = navigation.getBoundingClientRect();
+      travelDistance = navigation.offsetHeight + Math.max(12, window.innerHeight - bounds.bottom) + 8;
+    };
+
+    const renderProgress = (nextProgress, settling = false) => {
+      progress = Math.min(1, Math.max(0, nextProgress));
+      navigation.dataset.settling = settling ? "true" : "false";
+      navigation.dataset.scrollDirection = lastDirection;
+      navigation.dataset.scrolled = isScrolledAway ? "true" : "false";
+      navigation.dataset.hidden = progress >= 0.98 ? "true" : "false";
+      navigation.style.setProperty("--bottom-navigation-translate", `${progress * travelDistance}px`);
+      navigation.style.setProperty("--bottom-navigation-scale", String(1 - progress * 0.04));
+      navigation.style.setProperty("--bottom-navigation-opacity", String(1 - progress));
+      navigation.style.setProperty("--bottom-navigation-frost-opacity", String(isScrolledAway ? 1 - progress : 0));
+    };
+
+    const scheduleProgress = (nextProgress) => {
+      progress = nextProgress;
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        renderProgress(progress);
+      });
+    };
+
+    const showNavigation = () => {
+      window.clearTimeout(settleTimer);
+      lastDirection = "up";
+      renderProgress(0, true);
+    };
+
+    const settleNavigation = () => {
+      const target = lastDirection === "down"
+        ? (progress >= 0.35 ? 1 : 0)
+        : (progress <= 0.85 ? 0 : 1);
+      renderProgress(target, true);
+    };
+
+    const handleScroll = (event) => {
+      const scrollRegion = event.target;
+      if (
+        expanded
+        || !(scrollRegion instanceof HTMLElement)
+        || !content.contains(scrollRegion)
+        || scrollRegion.closest('[role="dialog"], [role="listbox"], [aria-modal="true"]')
+        || scrollRegion.scrollHeight <= scrollRegion.clientHeight + 1
+      ) return;
+
+      const scrollTop = Math.max(0, scrollRegion.scrollTop);
+      const previousScrollTop = scrollPositions.get(scrollRegion) ?? 0;
+      scrollPositions.set(scrollRegion, scrollTop);
+      isScrolledAway = scrollTop > 4;
+      if (navigation.contains(document.activeElement)) {
+        renderProgress(scrollTop <= 4 ? 0 : progress);
+        return;
+      }
+
+      const delta = scrollTop - previousScrollTop;
+      if (Math.abs(delta) >= 0.5) lastDirection = delta > 0 ? "down" : "up";
+      const nextProgress = nextBottomNavigationProgress({ progress, delta, scrollTop });
+      if (nextProgress === progress) return;
+
+      window.clearTimeout(settleTimer);
+      scheduleProgress(nextProgress);
+      settleTimer = window.setTimeout(settleNavigation, 110);
+    };
+
+    const handleResize = () => {
+      measureTravelDistance();
+      renderProgress(progress);
+    };
+
+    measureTravelDistance();
+    renderProgress(0);
+    content.addEventListener("scroll", handleScroll, true);
+    navigation.addEventListener("focusin", showNavigation);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      content.removeEventListener("scroll", handleScroll, true);
+      navigation.removeEventListener("focusin", showNavigation);
+      window.removeEventListener("resize", handleResize);
+      window.clearTimeout(settleTimer);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [contentRef, expanded, navigationRef, pathname]);
+}
+
+function MobileBottomNavigation({ navigationRef, pathname, onNavigate, moreOpen, onToggleMore }) {
   const moreActive = mobileMoreNavigation.some(([, , path]) => pathname === path);
 
   return (
     <nav
+      ref={navigationRef}
       aria-label="Navigasi utama mobile"
-      className="mobile-bottom-navigation relative z-30 grid shrink-0 grid-cols-5 bg-surface/95 px-1 pt-1 backdrop-blur-xl"
+      className="mobile-bottom-navigation absolute z-30 grid grid-cols-5 bg-surface/88 p-1 backdrop-blur-xl"
     >
       {mobilePrimaryNavigation.map(([label, icon, path]) => {
         const active = pathname === path;
@@ -42,8 +154,11 @@ function MobileBottomNavigation({ pathname, onNavigate, moreOpen, onToggleMore }
             key={path}
             type="button"
             aria-current={active ? "page" : undefined}
-            onClick={() => onNavigate(path)}
-            className={`mobile-bottom-nav-item flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-control px-1 text-[10px] font-semibold transition-[color,transform] duration-fast ease-standard active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus ${
+            onClick={(event) => {
+              releaseBottomNavigationPointerFocus(event);
+              onNavigate(path);
+            }}
+            className={`mobile-bottom-nav-item flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[10px] font-semibold transition-[background-color,color,transform] duration-fast ease-standard active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus ${
               active ? "text-accent" : "text-text-muted"
             }`}
           >
@@ -59,7 +174,7 @@ function MobileBottomNavigation({ pathname, onNavigate, moreOpen, onToggleMore }
         aria-expanded={moreOpen}
         aria-controls="mobile-more-navigation"
         onClick={onToggleMore}
-        className={`mobile-bottom-nav-item flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-control px-1 text-[10px] font-semibold transition-[color,transform] duration-fast ease-standard active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus ${
+        className={`mobile-bottom-nav-item flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[10px] font-semibold transition-[background-color,color,transform] duration-fast ease-standard active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus ${
           moreActive || moreOpen ? "text-accent" : "text-text-muted"
         }`}
       >
@@ -107,8 +222,17 @@ export default function AppShell({ children, pathname, onNavigate }) {
   const { notice, clearNotice } = usePOSStore();
   const [mobileMoreOpen, setMobileMoreOpen] = React.useState(false);
   const [accountOpen, setAccountOpen] = React.useState(false);
+  const contentRef = React.useRef(null);
+  const bottomNavigationRef = React.useRef(null);
   const avatarSeed = user?.primaryEmailAddress?.emailAddress || user?.fullName || user?.id || "cashier";
   const pageTitle = appPageTitles[pathname] || "Balanja";
+
+  useCollapsibleBottomNavigation({
+    contentRef,
+    navigationRef: bottomNavigationRef,
+    pathname,
+    expanded: mobileMoreOpen,
+  });
 
   React.useEffect(() => {
     document.documentElement.classList.add(appShellScrollLockClass);
@@ -224,9 +348,10 @@ export default function AppShell({ children, pathname, onNavigate }) {
             </div>
           )}
 
-          <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+          <div ref={contentRef} className="app-shell-content min-h-0 flex-1 overflow-hidden">{children}</div>
 
           <MobileBottomNavigation
+            navigationRef={bottomNavigationRef}
             pathname={pathname}
             onNavigate={go}
             moreOpen={mobileMoreOpen}

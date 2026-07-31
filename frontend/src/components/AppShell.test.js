@@ -107,7 +107,7 @@ test("app shell leaves cart scanning to the cashier workspace", async () => {
   assert.doesNotMatch(source, /scannerOpen/);
 });
 
-test("mobile navigation uses a full-bleed top bar and accessible five-item bottom bar", async () => {
+test("mobile navigation uses a full-bleed top bar and accessible floating five-item bottom bar", async () => {
   const [source, css, showcase, designGuide] = await Promise.all([
     readFile(new URL("./AppShell.jsx", import.meta.url), "utf8"),
     readFile(new URL("../index.css", import.meta.url), "utf8"),
@@ -129,15 +129,53 @@ test("mobile navigation uses a full-bleed top bar and accessible five-item botto
   assert.match(source, /aria-current=\{active \? "page" : undefined\}/);
   assert.match(source, /event\.key === "Escape"/);
   assert.match(css, /padding-block-start: max\(0\.75rem, env\(safe-area-inset-top, 0px\)\)/);
-  assert.match(css, /padding-block-end: max\(0\.5rem, env\(safe-area-inset-bottom, 0px\)\)/);
-  assert.match(css, /--shadow-navigation:\s*0 -4px 12px rgb\(18 18 18 \/ 0\.05\)/);
-  assert.match(css, /\.mobile-bottom-navigation\s*\{[\s\S]*border-block-start:\s*1px solid var\(--color-border\);[\s\S]*box-shadow:\s*var\(--shadow-navigation\)/);
+  assert.match(css, /inset-block-end: calc\(env\(safe-area-inset-bottom, 0px\) \+ 1rem\)/);
+  assert.match(css, /--shadow-navigation:\s*0 12px 32px rgb\(18 18 18 \/ 0\.12\)/);
+  assert.match(css, /\.mobile-bottom-navigation\s*\{[\s\S]*max-inline-size:\s*44rem;[\s\S]*border:\s*1px solid[\s\S]*border-radius:\s*9999px;[\s\S]*box-shadow:\s*var\(--shadow-navigation\)/);
   assert.match(css, /prefers-reduced-transparency/);
-  assert.match(showcase, /persistent five-item bottom navigation/);
-  assert.match(showcase, /thin top border and restrained upward shadow/);
-  assert.match(designGuide, /persistent five-item bottom navigation/);
+  assert.match(showcase, /floating five-item bottom navigation/);
+  assert.match(showcase, /App Store-like hover fill/);
+  assert.match(showcase, /progressively collapses while scrolling down/);
+  assert.match(showcase, /continues across route transitions/);
+  assert.match(showcase, /Pointer route selection releases focus/);
+  assert.match(designGuide, /mounted five-item floating bottom navigation/);
+  assert.match(designGuide, /seed its scroll baseline during every route transition/i);
+  assert.match(designGuide, /Pointer route selection releases the clicked navigation target's focus/);
   assert.match(showcase, /quiet white top bar/i);
   assert.match(designGuide, /white `surface` top bar/i);
+});
+
+test("bottom navigation tracks internal scrolling and settles in the scroll direction", async () => {
+  const [source, css, designGuide] = await Promise.all([
+    readFile(new URL("./AppShell.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../index.css", import.meta.url), "utf8"),
+    readFile(new URL("../../DESIGN.md", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(source, /useCollapsibleBottomNavigation/);
+  assert.match(source, /content\.addEventListener\("scroll", handleScroll, true\)/);
+  assert.match(source, /seedBottomNavigationScrollPositions\([\s\S]*content\.querySelectorAll\("\*"\)[\s\S]*scrollPositions/);
+  assert.match(source, /scrollPositions\.get\(scrollRegion\) \?\? 0/);
+  assert.match(source, /onClick=\{\(event\) => \{[\s\S]*releaseBottomNavigationPointerFocus\(event\)[\s\S]*onNavigate\(path\)/);
+  assert.match(source, /nextBottomNavigationProgress/);
+  assert.match(source, /window\.requestAnimationFrame/);
+  assert.match(source, /progress >= 0\.35 \? 1 : 0/);
+  assert.match(source, /progress <= 0\.85 \? 0 : 1/);
+  assert.match(source, /navigation\.addEventListener\("focusin", showNavigation\)/);
+  assert.match(source, /navigation\.dataset\.scrolled = isScrolledAway \? "true" : "false"/);
+  assert.match(source, /--bottom-navigation-frost-opacity/);
+  assert.match(source, /mobile-bottom-nav-item[^"]*rounded-full[^"]*transition-\[background-color,color,transform\]/);
+  assert.match(css, /--bottom-navigation-translate/);
+  assert.match(css, /data-scroll-direction="down"/);
+  assert.match(css, /data-scroll-direction="up"/);
+  assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)[\s\S]*\.mobile-bottom-nav-item:hover[\s\S]*background:/);
+  assert.match(css, /\.mobile-bottom-navigation::before\s*\{[\s\S]*backdrop-filter:\s*blur\(18px\) saturate\(118%\)[\s\S]*mask-image:\s*radial-gradient[\s\S]*opacity:\s*var\(--bottom-navigation-frost-opacity, 0\)/);
+  assert.match(css, /prefers-reduced-transparency:[\s\S]*\.mobile-bottom-navigation::before\s*\{[\s\S]*display:\s*none/);
+  assert.match(css, /prefers-reduced-motion:[\s\S]*\.mobile-bottom-navigation[\s\S]*transform:\s*none/);
+  assert.match(designGuide, /progressively translates, scales, and fades the pill over 72px/);
+  assert.match(designGuide, /masked frosted halo/);
+  assert.match(designGuide, /fade through a soft radial mask/);
+  assert.match(designGuide, /Reduced-motion contexts remove translation and scale/);
 });
 
 test("desktop widths never introduce a sidebar or icon rail", async () => {
