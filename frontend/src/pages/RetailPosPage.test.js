@@ -49,6 +49,15 @@ test("cashier loading skeleton mirrors visible search and category pills", async
   assert.match(section, /grid flex-none gap-2 px-4 py-3/);
   assert.match(section, /h-11 w-full rounded-card/);
   assert.match(section, /h-8 shrink-0 rounded-full/);
+  assert.match(section, /product-catalog-grid menu-grid-transition/);
+  assert.match(section, /aspect-square w-full bg-surface-muted\/80/);
+  assert.match(section, /rounded-panel bg-surface-muted/);
+  assert.match(section, /absolute bottom-2 right-2 grid size-9 place-items-center rounded-full border border-border bg-surface shadow-low/);
+  assert.match(section, /retail-pos-cart-drag-handle overlay-sticky-header/);
+  assert.match(section, /mobile-checkout-panel z-10 mt-auto/);
+  assert.doesNotMatch(section, /rounded-card border border-border bg-surface shadow-low/);
+  assert.doesNotMatch(section, /min-h-\[118px\]/);
+  assert.doesNotMatch(section, /retail-pos-cart-footer/);
 });
 
 test("trial quota blocks only final checkout and keeps upgrade recovery visible", async () => {

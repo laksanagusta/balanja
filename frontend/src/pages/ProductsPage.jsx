@@ -231,7 +231,7 @@ export default function ProductsPage() {
 
         <div className="min-h-0 flex-1 overflow-auto p-4">
           <div className="grid w-full gap-3">
-            <div className="overflow-hidden rounded-panel border border-border bg-surface">
+            <div className="overflow-hidden rounded-panel bg-surface smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30">
               {table.rows.length ? (
                 <ProductList
                   products={table.rows}
@@ -298,11 +298,8 @@ export default function ProductsPage() {
         size="lg"
         footer={
           <>
-            <Button type="button" disabled={savingProduct} onClick={closeEditor}>
-              Batal
-            </Button>
-            <Button type="submit" variant="primary" form="product-form" disabled={savingProduct} className="min-w-32">
-              <SwapText value={savingProduct ? "Menyimpan..." : "Simpan produk"} />
+            <Button type="submit" variant="primary" form="product-form" disabled={savingProduct} className="w-full">
+              <SwapText value={savingProduct ? "Menyimpan..." : "Simpan"} />
             </Button>
           </>
         }

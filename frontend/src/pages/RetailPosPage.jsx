@@ -667,7 +667,6 @@ export default function RetailPosPage() {
             </button>
             <div className="min-w-0 text-center">
               <h2 className="truncate text-base font-semibold text-text">Keranjang</h2>
-              <p className="truncate text-xs text-text-muted">{totalCartItems} item · {store.cart.length} jenis</p>
             </div>
             <div className="flex min-w-0 items-center justify-self-end gap-1">
               <button
@@ -803,7 +802,7 @@ export default function RetailPosPage() {
               onRefresh={() => store.loadEntitlement({ force: true })}
               onContact={recordEntitlementContact}
             />
-            <Button variant="primary" mobileSize="large" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
+            <Button variant="primary" className="pos-touch-target w-full" onClick={checkout} disabled={checkoutDisabled}>
               {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
             </Button>
           </div>
@@ -871,7 +870,7 @@ export default function RetailPosPage() {
                   onRefresh={() => store.loadEntitlement({ force: true })}
                   onContact={recordEntitlementContact}
                 />
-                <Button variant="primary" mobileSize="large" className="pos-touch-target" onClick={checkout} disabled={checkoutDisabled}>
+                <Button variant="primary" className="pos-touch-target w-full" onClick={checkout} disabled={checkoutDisabled}>
                   {planBlocksCheckout ? "Upgrade untuk melanjutkan" : checkoutPending ? "Menyelesaikan…" : "Selesaikan transaksi"}
                 </Button>
               </div>

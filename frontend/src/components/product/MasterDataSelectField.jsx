@@ -1,5 +1,5 @@
 import React from "react";
-import { FloatingPopover, Icon } from "../primitives.jsx";
+import { FieldError, FloatingPopover, Icon } from "../primitives.jsx";
 import { activeMasterOptions } from "../../pos/master-data.js";
 
 export default function MasterDataSelectField({
@@ -208,7 +208,7 @@ export default function MasterDataSelectField({
         </FloatingPopover>
       ) : null}
 
-      {error ? <span id={errorId} className="text-xs font-medium text-danger">{error}</span> : null}
+      <FieldError id={errorId}>{error}</FieldError>
     </div>
   );
 }

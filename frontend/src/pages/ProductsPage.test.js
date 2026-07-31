@@ -136,8 +136,8 @@ test("product save feedback swaps text without resizing its button", async () =>
   const swap = await readFile(new URL("../components/motion/SwapText.jsx", import.meta.url), "utf8");
   const hook = await readFile(new URL("../hooks/useSwapTransition.js", import.meta.url), "utf8");
 
-  assert.match(source, /className="min-w-32"/);
-  assert.match(source, /<SwapText value=\{savingProduct \? "Menyimpan\.\.\." : "Simpan produk"\}/);
+  assert.match(source, /className="w-full"/);
+  assert.match(source, /<SwapText value=\{savingProduct \? "Menyimpan\.\.\." : "Simpan"\}/);
   assert.match(swap, /-translate-y-1 opacity-0 duration-fast/);
   assert.match(swap, /translate-y-1 opacity-0 duration-0/);
   assert.match(swap, /motion-reduce:translate-y-0 motion-reduce:duration-fast/);

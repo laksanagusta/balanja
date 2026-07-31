@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon } from "../primitives.jsx";
+import { FieldError, Icon } from "../primitives.jsx";
 import { useSwapTransition } from "../../hooks/useSwapTransition.js";
 import { ProductThumbnail } from "./ProductImage.jsx";
 
@@ -99,11 +99,7 @@ export function ProductPhotoField({ product, previewURL, filename, error, disabl
           onChange={(event) => onSelect(event.target.files?.[0] || null)}
         />
       </div>
-      {error && (
-        <p role="alert" className="text-xs font-medium text-danger">
-          {error}
-        </p>
-      )}
+      <FieldError>{error}</FieldError>
     </div>
   );
 }

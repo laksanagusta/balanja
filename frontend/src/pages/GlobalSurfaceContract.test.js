@@ -47,7 +47,7 @@ test("rounded rectangles use cross-browser border radius without corner smoothin
     readFile(new URL("../../DESIGN.md", import.meta.url), "utf8"),
   ]);
 
-  assert.match(styles, /--radius-button:\s*8px;/);
+  assert.match(styles, /--radius-button:\s*12px;/);
   assert.match(styles, /--radius-control:\s*10px;/);
   assert.match(styles, /--radius-card:\s*16px;/);
   assert.match(styles, /--radius-panel:\s*16px;/);
@@ -59,13 +59,13 @@ test("rounded rectangles use cross-browser border radius without corner smoothin
     await readFile(new URL("../components/primitives.jsx", import.meta.url), "utf8"),
     /flex max-h-\[calc\(100svh-2rem\)\][\s\S]*overflow-hidden[\s\S]*overlay-sticky-header shrink-0 px-6 pb-4 pt-6[\s\S]*min-h-0 overflow-y-auto overscroll-contain/,
   );
-  assert.match(tokens, /\["XS - Utility Buttons", "--radius-button", "8px"\]/);
+  assert.match(tokens, /\["XS - Utility Buttons", "--radius-button", "12px"\]/);
   assert.match(tokens, /\["S - Controls & Inputs", "--radius-control", "10px"\]/);
   assert.match(tokens, /\["S - Cards & Inputs", "--radius-card", "16px"\]/);
   assert.match(tokens, /\["M - Panels", "--radius-panel", "16px"\]/);
   assert.match(tokens, /\["L - Modals & Drawers", "--radius-overlay", "32px"\]/);
   assert.doesNotMatch(tokens, /corner-smoothing|corner-superellipse/);
-  assert.match(design, /8px\/10px\/16px\/32px hierarchy/);
+  assert.match(design, /12px\/10px\/16px\/32px hierarchy/);
   assert.match(design, /Use standard CSS `border-radius` geometry consistently across browsers/);
   assert.match(design, /do not apply `corner-shape`, superellipse, corner smoothing/);
   assert.match(design, /Modal and drawer headers use the shared sticky-header contract/);

@@ -140,18 +140,57 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
 
 function MobileBottomNavigation({ navigationRef, pathname, onNavigate, moreOpen, onToggleMore }) {
   const moreActive = mobileMoreNavigation.some(([, , path]) => pathname === path);
+  const localNavRef = React.useRef(null);
+  const itemRefs = React.useRef(new Map());
+  const pillRef = React.useRef(null);
+  const setNavigationRef = React.useCallback((node) => {
+    localNavRef.current = node;
+    navigationRef.current = node;
+  }, [navigationRef]);
+
+  const updatePill = React.useCallback(() => {
+    const nav = localNavRef.current;
+    const pill = pillRef.current;
+    if (!nav || !pill) return;
+    const activeKey = mobilePrimaryNavigation.find(([, , path]) => pathname === path)?.[2]
+      ?? (moreActive || moreOpen ? "more" : null);
+    const target = activeKey ? itemRefs.current.get(activeKey) : null;
+    if (!target) return;
+    pill.style.transform = `translateX(${target.offsetLeft}px)`;
+    pill.style.width = `${target.offsetWidth}px`;
+  }, [moreActive, moreOpen, pathname]);
+
+  React.useLayoutEffect(() => {
+    updatePill();
+  }, [updatePill]);
+
+  React.useEffect(() => {
+    window.addEventListener("resize", updatePill);
+    return () => window.removeEventListener("resize", updatePill);
+  }, [updatePill]);
+
+  const registerItem = React.useCallback((key) => (node) => {
+    if (node) itemRefs.current.set(key, node);
+    else itemRefs.current.delete(key);
+  }, []);
 
   return (
     <nav
-      ref={navigationRef}
+      ref={setNavigationRef}
       aria-label="Navigasi utama mobile"
       className="mobile-bottom-navigation absolute z-30 grid grid-cols-5 bg-surface/88 p-1 backdrop-blur-xl"
     >
+      <span
+        ref={pillRef}
+        aria-hidden="true"
+        className="mobile-bottom-nav-pill pointer-events-none absolute inset-y-1 left-0 -z-10 rounded-full bg-surface-muted transition-[transform,width] duration-base ease-standard motion-reduce:transition-none"
+      />
       {mobilePrimaryNavigation.map(([label, icon, path]) => {
         const active = pathname === path;
         return (
           <button
             key={path}
+            ref={registerItem(path)}
             type="button"
             aria-current={active ? "page" : undefined}
             onClick={(event) => {
@@ -170,6 +209,7 @@ function MobileBottomNavigation({ navigationRef, pathname, onNavigate, moreOpen,
         );
       })}
       <button
+        ref={registerItem("more")}
         type="button"
         aria-expanded={moreOpen}
         aria-controls="mobile-more-navigation"

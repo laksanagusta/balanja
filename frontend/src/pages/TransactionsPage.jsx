@@ -101,7 +101,7 @@ export default function TransactionsPage() {
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-auto px-4 pb-4">
+        <div className="min-h-0 flex-1 overflow-auto p-4">
           {table.rows.length ? (
             <TransactionCardList transactions={table.rows} formatDate={formatDate} onSelect={setSelected} />
           ) : (

@@ -123,33 +123,25 @@ export function RetailPosSkeleton() {
           {Array.from({ length: 8 }, (_, index) => (
             <article
               key={index}
-              className="relative overflow-hidden rounded-card border border-border bg-surface shadow-low motion-safe:animate-[pos-skeleton-rise_560ms_var(--ease-standard)_both]"
+              className="relative flex flex-col motion-safe:animate-[pos-skeleton-rise_560ms_var(--ease-standard)_both]"
               style={{ animationDelay: `${index * 70}ms` }}
             >
-              <div className="grid gap-3 p-2 pb-0">
-                <div className="relative overflow-hidden rounded-md">
-                  <Skeleton className="aspect-[4/3] w-full bg-surface-muted/80" />
-                  <LoadingSheen delay={index * 70} />
-                </div>
+              <div className="relative overflow-hidden rounded-panel bg-surface-muted">
+                <Skeleton className="aspect-square w-full bg-surface-muted/80" />
+                <LoadingSheen delay={index * 70} />
+                <span className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full border border-border bg-surface shadow-low">
+                  <Skeleton className="size-4 rounded-full bg-surface-muted/80" />
+                </span>
               </div>
-              <div className="grid min-h-[118px] gap-3 p-4 pt-3">
-                <div className="relative overflow-hidden rounded-control">
-                  <Skeleton className="h-5 w-[4.5rem] bg-surface-muted/80" />
+              <div className="grid gap-1.5 pt-2.5">
+                <div className="relative overflow-hidden rounded-md">
+                  <Skeleton className="h-4 w-4/5 bg-surface-muted/80" />
                   <LoadingSheen delay={index * 70 + 80} />
                 </div>
-                <div className="grid gap-2">
-                  <div className="relative overflow-hidden rounded-md">
-                    <Skeleton className="h-4 w-full bg-surface-muted/80" />
-                    <LoadingSheen delay={index * 70 + 140} />
-                  </div>
-                  <div className="relative overflow-hidden rounded-md">
-                    <Skeleton className="h-4 w-3/4 bg-surface-muted/80" />
-                    <LoadingSheen delay={index * 70 + 200} />
-                  </div>
+                <div className="relative overflow-hidden rounded-md">
+                  <Skeleton className="h-4 w-16 bg-surface-muted/80" />
+                  <LoadingSheen delay={index * 70 + 140} />
                 </div>
-              </div>
-              <div className="mt-auto grid gap-2 p-2">
-                <Skeleton className="h-11 w-full bg-surface-muted/80" />
               </div>
             </article>
           ))}
@@ -157,19 +149,19 @@ export function RetailPosSkeleton() {
       </main>
 
       <aside className="retail-pos-cart-pane flex min-w-0 flex-col bg-surface">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="grid gap-2">
-            <Skeleton className="h-5 w-20 bg-surface-muted/80" />
-            <Skeleton className="h-4 w-16 bg-surface-muted/80" />
+        <div className="retail-pos-cart-drag-handle overlay-sticky-header grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4 pb-3">
+          <Skeleton className="h-8 w-16 rounded-button bg-surface-muted/80" />
+          <Skeleton className="h-5 w-24 bg-surface-muted/80" />
+          <div className="flex justify-self-end gap-1">
+            <Skeleton className="size-11 rounded-button bg-surface-muted/80" />
           </div>
-          <Skeleton className="h-6 w-[4.5rem] bg-surface-muted/80" />
         </div>
 
         <div className="retail-pos-cart-list px-4 py-3">
           <div className="cart-item-list -mx-4">
             {Array.from({ length: 3 }, (_, index) => (
               <div key={index} className="cart-item-row relative grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-x-3 overflow-hidden px-4 py-3">
-                <Skeleton className="size-12 shrink-0 rounded-lg bg-surface-muted/80" />
+                <Skeleton className="size-12 shrink-0 rounded-lg border border-border bg-surface-muted/80" />
                 <div className="min-w-0">
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                     <div className="grid gap-1.5">
@@ -189,17 +181,12 @@ export function RetailPosSkeleton() {
           </div>
         </div>
 
-        <div className="retail-pos-cart-footer z-10 mt-auto grid gap-3 bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
-          <div className="grid gap-3 rounded-card border border-border bg-surface-muted p-4">
-            {[0, 1, 2].map((index) => (
-              <div key={index} className="flex items-center justify-between gap-4">
-                <Skeleton className="h-3 w-20 bg-surface" />
-                <Skeleton className="h-4 w-[4.5rem] bg-surface" />
-              </div>
-            ))}
+        <div className="mobile-checkout-panel z-10 mt-auto grid gap-3 bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]">
+          <div className="grid gap-1">
+            <Skeleton className="h-3 w-16 bg-surface-muted/80" />
+            <Skeleton className="h-5 w-28 bg-surface-muted/80" />
           </div>
           <Skeleton className="h-11 w-full rounded-card bg-accent/20" />
-          <Skeleton className="h-11 w-full rounded-card bg-surface-muted/80" />
         </div>
       </aside>
       </div>

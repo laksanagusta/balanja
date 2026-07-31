@@ -418,6 +418,29 @@ export function Button({
   );
 }
 
+export function FieldError({ id, children, className = "" }) {
+  const hasError = Boolean(children);
+  return (
+    <div
+      className={`grid transition-[grid-template-rows] duration-base ease-standard motion-reduce:transition-none ${
+        hasError ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+      }`}
+    >
+      <div className="min-h-0 overflow-hidden">
+        <p
+          id={id}
+          aria-live="polite"
+          className={`text-xs font-medium text-danger transition-[opacity,transform] duration-fast ease-standard motion-reduce:transform-none ${
+            hasError ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+          } ${className}`}
+        >
+          {children}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function Input({
   label,
   placeholder,
@@ -455,7 +478,7 @@ export function Input({
           data-ui-size={size}
           className={`ui-input-surface flex ${
             size === "large" ? "h-11" : "h-9"
-          } w-full min-w-0 items-center gap-3 rounded-control border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
+          } w-full min-w-0 items-center gap-3 rounded-control border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 transition-colors duration-base ease-standard motion-reduce:transition-none ${
             error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
           }`}
         >
@@ -471,7 +494,7 @@ export function Input({
           {rightSlot}
         </span>
       </span>
-      {error && <span id={errorId} aria-live="polite" className="text-xs font-medium text-danger">{error}</span>}
+      <FieldError id={errorId}>{error}</FieldError>
     </div>
   );
 }
@@ -656,7 +679,7 @@ export function SelectField({ label, value, options = [], onChange, error, inlin
           </div>
         </FloatingPopover>
       ))}
-      {error && <span className="text-xs font-medium text-danger">{error}</span>}
+      <FieldError>{error}</FieldError>
     </div>
   );
 }

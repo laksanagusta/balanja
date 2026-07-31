@@ -134,7 +134,7 @@ test("mobile navigation uses a full-bleed top bar and accessible floating five-i
   assert.match(css, /\.mobile-bottom-navigation\s*\{[\s\S]*max-inline-size:\s*44rem;[\s\S]*border:\s*1px solid[\s\S]*border-radius:\s*9999px;[\s\S]*box-shadow:\s*var\(--shadow-navigation\)/);
   assert.match(css, /prefers-reduced-transparency/);
   assert.match(showcase, /floating five-item bottom navigation/);
-  assert.match(showcase, /App Store-like hover fill/);
+  assert.match(showcase, /active item receives a pill-shaped fill that slides between cells/);
   assert.match(showcase, /progressively collapses while scrolling down/);
   assert.match(showcase, /continues across route transitions/);
   assert.match(showcase, /Pointer route selection releases focus/);
@@ -168,7 +168,7 @@ test("bottom navigation tracks internal scrolling and settles in the scroll dire
   assert.match(css, /--bottom-navigation-translate/);
   assert.match(css, /data-scroll-direction="down"/);
   assert.match(css, /data-scroll-direction="up"/);
-  assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)[\s\S]*\.mobile-bottom-nav-item:hover[\s\S]*background:/);
+  assert.doesNotMatch(css, /\.mobile-bottom-nav-item:hover/);
   assert.match(css, /\.mobile-bottom-navigation::before\s*\{[\s\S]*backdrop-filter:\s*blur\(18px\) saturate\(118%\)[\s\S]*mask-image:\s*radial-gradient[\s\S]*opacity:\s*var\(--bottom-navigation-frost-opacity, 0\)/);
   assert.match(css, /prefers-reduced-transparency:[\s\S]*\.mobile-bottom-navigation::before\s*\{[\s\S]*display:\s*none/);
   assert.match(css, /prefers-reduced-motion:[\s\S]*\.mobile-bottom-navigation[\s\S]*transform:\s*none/);
@@ -176,6 +176,18 @@ test("bottom navigation tracks internal scrolling and settles in the scroll dire
   assert.match(designGuide, /masked frosted halo/);
   assert.match(designGuide, /fade through a soft radial mask/);
   assert.match(designGuide, /Reduced-motion contexts remove translation and scale/);
+});
+
+test("bottom navigation active background slides as a pill between items", async () => {
+  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /mobile-bottom-nav-pill/);
+  assert.match(source, /pill\.style\.transform = `translateX\(\$\{target\.offsetLeft\}px\)`/);
+  assert.match(source, /pill\.style\.width = `\$\{target\.offsetWidth\}px`/);
+  assert.match(source, /transition-\[transform,width\] duration-base ease-standard motion-reduce:transition-none/);
+  assert.match(source, /itemRefs\.current\.set\(key, node\)/);
+  assert.match(source, /window\.addEventListener\("resize", updatePill\)/);
+  assert.doesNotMatch(source, /mobile-bottom-nav-item[^"]*bg-surface-muted text-accent/);
 });
 
 test("desktop widths never introduce a sidebar or icon rail", async () => {
