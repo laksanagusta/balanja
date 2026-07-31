@@ -58,6 +58,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
   const [processing, setProcessing] = React.useState(false);
   const [feedback, setFeedback] = React.useState(null);
   const [feedbackVisible, setFeedbackVisible] = React.useState(false);
+  const [hasDetected, setHasDetected] = React.useState(false);
 
   React.useEffect(() => {
     onDetectedRef.current = onDetected;
@@ -79,6 +80,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     window.clearTimeout(feedbackRemoveTimerRef.current);
     window.clearTimeout(closeTimerRef.current);
     setError("");
+    setHasDetected(true);
     const startedAt = Date.now();
     let outcome = {
       ok: true,
@@ -154,6 +156,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     setProcessing(false);
     setFeedbackVisible(false);
     setFeedback(null);
+    setHasDetected(false);
   }, [open]);
 
   React.useEffect(() => {
@@ -214,6 +217,8 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
 
   if (!isPresent) return null;
 
+  const showScanHint = scanning && !processing && !hasDetected;
+
   const submitManual = (event) => {
     event.preventDefault();
     const code = manualCode.trim();
@@ -241,17 +246,28 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
           role="status"
           aria-live="polite"
           aria-atomic="true"
-          aria-hidden={!processing}
+          aria-hidden={!processing && !showScanHint}
         >
-          <div
-            className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold shadow-panel backdrop-blur-xl transition-[opacity,transform] duration-fast ease-standard motion-reduce:transform-none ${
-              processing
-                ? "translate-y-0 opacity-100"
-                : "translate-y-1 opacity-0"
-            } bg-black/65 text-white`}
-          >
-            {processing ? <Icon name="loader" className="size-4 [animation-duration:700ms]" /> : null}
-            <span>{processing ? "Memproses barcode…" : ""}</span>
+          <div className="relative">
+            <p
+              className={`absolute top-0 left-1/2 -translate-x-1/2 text-center text-sm font-semibold whitespace-nowrap text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] transition-[opacity,transform] duration-fast ease-standard motion-reduce:transform-none ${
+                showScanHint
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-1 opacity-0"
+              }`}
+            >
+              Arahkan kamera ke barcode.
+            </p>
+            <p
+              className={`absolute top-0 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 text-sm font-semibold whitespace-nowrap text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] transition-[opacity,transform] duration-fast ease-standard motion-reduce:transform-none ${
+                processing
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-1 opacity-0"
+              }`}
+            >
+              {processing ? <Icon name="loader" className="size-4 [animation-duration:700ms]" /> : null}
+              <span>{processing ? "Memproses barcode…" : ""}</span>
+            </p>
           </div>
         </div>
 
@@ -259,7 +275,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>
             <p className="mt-0.5 min-h-5 text-sm text-white/70">
-              {processing ? "Barcode terdeteksi." : scanning ? "Arahkan kamera ke barcode." : "Mode input manual siap digunakan."}
+              {processing ? "Barcode terdeteksi." : "Mode input manual siap digunakan."}
             </p>
           </div>
           <button

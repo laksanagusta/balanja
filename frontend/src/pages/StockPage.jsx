@@ -1,7 +1,7 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
-import { Button, Dialog, FloatingPopover, Icon, Input, SelectField } from "../components/primitives.jsx";
+import { Button, Dialog, FieldError, FloatingPopover, Icon, Input, SelectField } from "../components/primitives.jsx";
 import { StockPageSkeleton } from "../components/page-loading.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import StockOverview from "../components/stock/StockOverview.jsx";
@@ -202,9 +202,8 @@ function MovementDialog({ products, searchProducts, initialProductId = "", onClo
       title="Pergerakan stok baru"
       footer={(
         <>
-          <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving}>Batal</Button>
-          <Button type="submit" form="stock-movement-form" variant="primary" disabled={isSaving}>
-            {isSaving ? "Menyimpan..." : "Simpan pergerakan"}
+          <Button type="submit" form="stock-movement-form" variant="primary" disabled={isSaving} className="w-full">
+            {isSaving ? "Menyimpan..." : "Simpan"}
           </Button>
         </>
       )}
@@ -296,7 +295,7 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
     <div ref={containerRef} className="relative grid gap-2 text-sm font-semibold text-text">
       <span>{label}</span>
       <div
-        className={`mobile-search-control flex h-10 items-center gap-3 rounded-card border bg-surface px-3.5 shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 ${
+        className={`mobile-search-control flex h-10 items-center gap-3 rounded-card border bg-surface px-3.5 shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 transition-colors duration-base ease-standard motion-reduce:transition-none ${
           error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
         }`}
       >
@@ -346,7 +345,7 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
           )}
         </FloatingPopover>
       )}
-      {error && <span className="text-xs font-medium text-danger">{error}</span>}
+      <FieldError>{error}</FieldError>
     </div>
   );
 }

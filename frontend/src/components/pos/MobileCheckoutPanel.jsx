@@ -1,6 +1,6 @@
 import React from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Button } from "../primitives.jsx";
+import { Button, Icon } from "../primitives.jsx";
 
 const disclosureSpring = {
   type: "spring",
@@ -94,35 +94,37 @@ export function MobileCheckoutPanel({
           </AnimatePresence>
         </div>
 
+        {expanded && (
+          <button
+            ref={triggerRef}
+            type="button"
+            aria-label="Tutup ringkasan pembayaran"
+            aria-expanded={expanded}
+            aria-controls={detailId}
+            onClick={onCollapse}
+            className="pos-touch-target grid size-11 place-items-center rounded-button text-text-muted transition-colors duration-fast ease-standard hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          >
+            <Icon name="x" className="size-5" />
+          </button>
+        )}
+      </div>
+
+      {!expanded && (
         <Button
           ref={triggerRef}
           type="button"
-          variant={expanded ? "secondary" : "primary"}
+          variant="primary"
           size="md"
-          className="mobile-checkout-trigger pos-touch-target min-w-24"
+          className="mobile-checkout-trigger pos-touch-target mt-3 w-full"
           style={{ transitionProperty: "transform, background-color, border-color, color, box-shadow" }}
           aria-expanded={expanded}
           aria-controls={detailId}
-          onClick={expanded ? onCollapse : onExpand}
-          disabled={!expanded && disabled}
+          onClick={onExpand}
+          disabled={disabled}
         >
-          <span className="grid min-w-12 place-items-center">
-            <AnimatePresence initial={false} mode="sync">
-              <motion.span
-                key={expanded ? "collapse-label" : "expand-label"}
-                initial={shouldReduceMotion ? hiddenBlendState : { ...hiddenBlendState, scale: 0.97 }}
-                animate={{ opacity: 1, filter: "blur(0px)", scale: 1, transition: blendInTransition }}
-                exit={shouldReduceMotion
-                  ? { ...hiddenBlendState, transition: blendOutTransition }
-                  : { ...hiddenBlendState, scale: 0.97, transition: blendOutTransition }}
-                className="col-start-1 row-start-1"
-              >
-                {expanded ? "Kembali" : "Bayar"}
-              </motion.span>
-            </AnimatePresence>
-          </span>
+          Bayar
         </Button>
-      </div>
+      )}
 
       <motion.div
         id={detailId}

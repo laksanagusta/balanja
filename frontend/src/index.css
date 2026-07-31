@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "shadow-plugin";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -34,7 +35,7 @@
   --color-chart-other: var(--color-chart-amber);
 
   --radius-control: 10px;
-  --radius-button: 8px;
+  --radius-button: 12px;
   --radius-card: 16px;
   --radius-panel: 16px;
   --radius-overlay: 32px;
@@ -163,12 +164,6 @@
     -webkit-mask-image: radial-gradient(ellipse 88% 100% at 50% 100%, #000 0%, rgb(0 0 0 / 0.96) 45%, rgb(0 0 0 / 0.52) 72%, transparent 100%);
     opacity: var(--bottom-navigation-frost-opacity, 0);
     transition: opacity 240ms var(--ease-standard);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .mobile-bottom-nav-item:hover {
-      background: rgb(246 246 246 / 0.9);
-    }
   }
 
   .mobile-bottom-navigation[data-settling="true"][data-scroll-direction="down"] {

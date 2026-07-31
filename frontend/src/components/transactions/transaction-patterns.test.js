@@ -20,7 +20,7 @@ test("transaction history uses full-width cards with amount-first hierarchy", as
   const source = await readFile(new URL("./TransactionCardList.jsx", import.meta.url), "utf8");
 
   assert.match(source, /className="grid gap-3"/);
-  assert.match(source, /rounded-card border border-border bg-surface p-4/);
+  assert.match(source, /rounded-card bg-surface p-4 text-left smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300\/30/);
   assert.doesNotMatch(source, /rounded-panel/);
   assert.doesNotMatch(source, /grid-cols-/);
   assert.match(source, /Lihat detail transaksi/);
