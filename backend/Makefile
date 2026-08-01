@@ -3,7 +3,7 @@ include .env
 export
 endif
 
-.PHONY: run test migrate-up migrate-down migrate-fix-0002 migrate-fix-0003 migrate-fix-0004 migrate-fix-0005 migrate-fix-0006 migrate-fix-0007
+.PHONY: run test migrate-up migrate-down migrate-fix-0002 migrate-fix-0003 migrate-fix-0004 migrate-fix-0005 migrate-fix-0006 migrate-fix-0007 migrate-fix-0013
 
 run:
 	go run ./cmd/api
@@ -40,3 +40,6 @@ migrate-fix-0006:
 
 migrate-fix-0007:
 	psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -f migrations/000007_stock_movements.up.sql
+
+migrate-fix-0013:
+	psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -f migrations/000013_stock_movement_reason_optional.up.sql

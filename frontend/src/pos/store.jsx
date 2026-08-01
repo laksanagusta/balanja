@@ -334,10 +334,8 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
       const result = await api.createStockMovement({ ...input, createdByUserName: cashierName });
       setProducts((current) => applyProductStock(current, result.product));
       productsRef.current = applyProductStock(productsRef.current, result.product);
-      setNotice("Stock movement saved");
       return result;
-    } catch (error) {
-      setNotice(error.message || "Failed to save stock movement");
+    } catch {
       return null;
     }
   }, [api, cashierName]);

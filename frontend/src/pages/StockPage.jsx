@@ -157,6 +157,8 @@ export default function StockPage() {
                 await table.reset();
                 toast.success("Pergerakan stok disimpan");
                 setDialogOpen(false);
+              } else {
+                toast.error("Gagal menyimpan pergerakan stok");
               }
             }}
           />
