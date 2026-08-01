@@ -14,6 +14,7 @@ import (
 	"unicode"
 
 	"github.com/google/uuid"
+	"github.com/rwcarlsen/goexif/exif"
 	xdraw "golang.org/x/image/draw"
 	_ "golang.org/x/image/webp"
 )
@@ -79,11 +80,73 @@ func validateProductImage(upload ImageUpload) (validatedImage, error) {
 	if err != nil {
 		return validatedImage{}, ErrInvalidImage
 	}
-	compressed, err := compressProductImage(decoded)
+	oriented := applyProductImageOrientation(contentType, upload.Data, decoded)
+	compressed, err := compressProductImage(oriented)
 	if err != nil {
 		return validatedImage{}, ErrInvalidImage
 	}
 	return validatedImage{Data: compressed, ContentType: "image/jpeg", Extension: "jpg"}, nil
+}
+
+func applyProductImageOrientation(contentType string, data []byte, source image.Image) image.Image {
+	if contentType != "image/jpeg" {
+		return source
+	}
+	metadata, err := exif.Decode(bytes.NewReader(data))
+	if err != nil {
+		return source
+	}
+	tag, err := metadata.Get(exif.Orientation)
+	if err != nil {
+		return source
+	}
+	orientation, err := tag.Int(0)
+	if err != nil {
+		return source
+	}
+	if orientation < 2 || orientation > 8 {
+		return source
+	}
+	return orientedProductImage(source, orientation)
+}
+
+func orientedProductImage(source image.Image, orientation int) *image.NRGBA {
+	bounds := source.Bounds()
+	width, height := bounds.Dx(), bounds.Dy()
+	swapped := orientation == 5 || orientation == 6 || orientation == 7 || orientation == 8
+	outWidth, outHeight := width, height
+	if swapped {
+		outWidth, outHeight = height, width
+	}
+	target := image.NewNRGBA(image.Rect(0, 0, outWidth, outHeight))
+	for y := 0; y < outHeight; y++ {
+		for x := 0; x < outWidth; x++ {
+			sx, sy := orientedSourceCoordinate(orientation, x, y, width, height)
+			target.SetNRGBA(x, y, color.NRGBAModel.Convert(source.At(bounds.Min.X+sx, bounds.Min.Y+sy)).(color.NRGBA))
+		}
+	}
+	return target
+}
+
+func orientedSourceCoordinate(orientation, x, y, width, height int) (int, int) {
+	switch orientation {
+	case 2:
+		return width - 1 - x, y
+	case 3:
+		return width - 1 - x, height - 1 - y
+	case 4:
+		return x, height - 1 - y
+	case 5:
+		return y, x
+	case 6:
+		return y, height - 1 - x
+	case 7:
+		return width - 1 - y, height - 1 - x
+	case 8:
+		return width - 1 - y, x
+	default:
+		return x, y
+	}
 }
 
 func compressProductImage(source image.Image) ([]byte, error) {
