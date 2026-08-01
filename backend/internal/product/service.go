@@ -17,11 +17,16 @@ import (
 )
 
 var (
-	ErrInvalidProduct   = errors.New("invalid product")
-	ErrInvalidCursor    = errors.New("invalid product cursor")
-	ErrBarcodeConflict  = errors.New("barcode conflict")
-	ErrInvalidReference = errors.New("invalid product reference")
-	ErrNotFound         = errors.New("product not found")
+	ErrInvalidProduct         = errors.New("invalid product")
+	ErrInvalidCursor          = errors.New("invalid product cursor")
+	ErrBarcodeConflict        = errors.New("barcode conflict")
+	ErrInvalidReference       = errors.New("invalid product reference")
+	ErrNotFound               = errors.New("product not found")
+	ErrVariantNotFound        = errors.New("variant not found")
+	ErrVariantBarcodeConflict = errors.New("variant barcode conflict")
+	ErrMissingVariantId       = errors.New("variant id required")
+	ErrInvalidAttributes      = errors.New("invalid variant attributes")
+	ErrMinVariants            = errors.New("at least one active variant is required")
 )
 
 var productSorts = map[string]struct{}{
