@@ -55,7 +55,7 @@ test("mobile controls follow the shared height and hit-area contract", async () 
   assert.match(primitives, /data-mobile-size=\{resolvedMobileSize\}/);
   assert.match(primitives, /data-ui-size=\{size\}/);
   assert.match(primitives, /className="ui-button-mobile-hit-area"/);
-  assert.match(primitives, /const radius = "rounded-control"/);
+  assert.match(primitives, /radius = "rounded-control"/);
   assert.match(buttonShowcase, /Standard radius/);
   assert.match(buttonShowcase, /Utility radius/);
   assert.match(buttonShowcase, /Primary besar · 52/);

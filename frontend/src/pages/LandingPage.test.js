@@ -33,18 +33,17 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.match(source, /Siap membuat operasional toko lebih rapi/);
   assert.doesNotMatch(source, /closing-cta-gradient\.png/);
   assert.match(source, /lg:aspect-\[720\/406\]/);
-  assert.match(source, /rounded-panel bg-accent/);
+  assert.match(source, /rounded-panel bg-white/);
   assert.doesNotMatch(source, /bg-black\/55/);
-  assert.match(source, /text-white\/75/);
+  assert.match(source, /text-text-muted/);
   assert.match(source, /routes\.login/);
   assert.match(source, /id="fitur"/);
   assert.match(source, /id="cara-kerja"/);
-  assert.match(source, /© balanja · v0\.1\.4/);
+  assert.match(source, /© BALANJA · V0\.1\.4/);
   assert.match(source, /marketing-reveal w-full px-4 sm:px-6/);
   assert.match(source, /relative mx-auto max-w-6xl overflow-hidden rounded-panel/);
   assert.doesNotMatch(source, />Akses</);
-  assert.match(source, /mt-12 flex flex-col gap-2 pt-5 font-mono text-xs/);
-  assert.doesNotMatch(source, /\bborder-t\b/);
+  assert.match(source, /mt-12 flex flex-col gap-2 border-t border-border pt-5 font-mono text-xs tracking-\[0\.08em\]/);
   assert.match(faq, /id="faq"/);
 });
 
@@ -54,9 +53,9 @@ test("design system owns the solid closing CTA treatment", async () => {
 
   assert.doesNotMatch(showcase, /closing-cta-gradient\.png/);
   assert.match(showcase, /aspect-\[720\/406\]/);
-  assert.match(showcase, /rounded-panel bg-accent/);
+  assert.match(showcase, /rounded-panel bg-white/);
   assert.match(showcase, /Closing CTA on a quiet solid surface/);
-  assert.match(designGuide, /closing landing CTA uses a quiet solid near-black `accent` surface/);
+  assert.match(designGuide, /closing landing CTA uses a quiet solid white surface/);
 });
 
 test("hero uses the faithful POS mockup over the generated retail image", async () => {
@@ -89,7 +88,7 @@ test("marketing motion has an explicit reduced-motion fallback", async () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /@media \(prefers-reduced-transparency: reduce\)/);
   assert.match(css, /@media \(prefers-contrast: more\)/);
-  assert.match(page, /scrollIntoViewRespectingMotion/);
+  assert.match(page, /scrollToSectionRespectingMotion/);
   assert.match(page, /scrollToTopRespectingMotion/);
 });
 
@@ -148,6 +147,26 @@ test("marketing reveal stays concise and does not retain a permanent compositor 
   assert.doesNotMatch(revealRule, /will-change/);
   assert.match(page, /"--reveal-delay": "180ms"/);
   assert.doesNotMatch(page, /"--reveal-delay": "260ms"/);
+});
+
+test("below-the-fold sections reveal on scroll with a short stagger and a reduced-motion fallback", async () => {
+  const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+  const reveal = await readFile(new URL("../landing/ScrollReveal.jsx", import.meta.url), "utf8");
+
+  assert.match(reveal, /IntersectionObserver/);
+  assert.match(reveal, /prefers-reduced-motion: reduce/);
+  assert.match(reveal, /setVisible\(true\)/);
+  assert.match(reveal, /is-visible/);
+  assert.match(reveal, /"--reveal-delay"/);
+  assert.match(page, /<ScrollReveal/);
+  assert.match(page, /as="article"/);
+  assert.match(page, /delay=\{index \* 60\}/);
+  assert.match(page, /delay=\{240\}/);
+  assert.match(css, /\.scroll-reveal \{/);
+  assert.match(css, /\.scroll-reveal\.is-visible/);
+  assert.match(css, /opacity 420ms var\(--ease-standard\)[\s\S]*transform 420ms var\(--ease-standard\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.scroll-reveal \{[\s\S]*opacity: 1/);
 });
 
 test("primary button uses the global flat surface and press feedback", async () => {

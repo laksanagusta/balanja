@@ -873,6 +873,10 @@
   }
 }
 
+.public-header .header-compact-action-surface {
+  padding-inline: 1.25rem;
+}
+
 @media (prefers-reduced-transparency: reduce) {
   .overlay-scrim {
     background: rgb(255 255 255 / 0.9);
@@ -985,6 +989,20 @@
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 420ms var(--ease-standard),
+    transform 420ms var(--ease-standard);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @keyframes category-pop {
@@ -1148,8 +1166,15 @@
   .product-add-ring,
   .product-add-feedback,
   .pos-skeleton-sheen,
-  .marketing-reveal {
+  .marketing-reveal,
+  .scroll-reveal {
     animation: none;
+  }
+
+  .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: opacity 140ms var(--ease-standard);
   }
 
   .product-add-ring,

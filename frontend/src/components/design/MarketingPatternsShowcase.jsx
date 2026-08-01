@@ -24,7 +24,7 @@ export default function MarketingPatternsShowcase() {
           <div className="flex flex-wrap gap-3">
             <Button variant="primary" size="lg">Primary CTA</Button>
             <Button size="lg">Secondary CTA</Button>
-            <Button variant="primary" size="sm" compactVisual className="header-compact-action">Masuk</Button>
+            <Button variant="primary" size="sm" compactVisual radius="rounded-full" className="header-compact-action">Masuk</Button>
           </div>
         </div>
 
@@ -40,16 +40,16 @@ export default function MarketingPatternsShowcase() {
           </div>
         </div>
 
-        <div className="mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel bg-accent px-5 py-16 text-center">
-          <p className="mx-auto max-w-2xl text-[36px] font-semibold leading-none tracking-[-0.04em] text-white">
+        <div className="mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel bg-white px-5 py-16 text-center">
+          <p className="mx-auto max-w-2xl text-[36px] font-semibold leading-none tracking-[-0.04em] text-text">
             Closing CTA on a quiet solid surface
           </p>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/75">
-            Keep the closing action focused with a solid near-black background, readable white copy, and no decorative image.
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-text-muted">
+            Keep the closing action focused with a white surface, readable text copy, and no decorative image.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button variant="primary" size="lg" className="!bg-white !text-text hover:!bg-white/90">Primary CTA</Button>
-            <Button size="lg" className="!border-white/25 !bg-white/10 !text-white !shadow-none backdrop-blur-md hover:!bg-white/15">Secondary CTA</Button>
+            <Button variant="primary" size="lg">Primary CTA</Button>
+            <Button size="lg">Secondary CTA</Button>
           </div>
         </div>
 
@@ -84,8 +84,9 @@ export default function MarketingPatternsShowcase() {
           Landing copy follows StoryBrand: the merchant is the protagonist, scattered operations are the problem, and
           Balanja is the practical guide. Lead with operational outcomes, use specific workflow language, and never invent
           testimonials, customer counts, pricing, guarantees, urgency, or unsupported claims. Public controls use a
-          minimum 44px touch target, visible keyboard focus, and immediate press feedback. The hero visual uses the same
-          outer page gutter and inner 1152px container as the header.
+          minimum 44px touch target, visible keyboard focus, and immediate press feedback. The floating public header
+          is a full-radius translucent pill inset 12px from the viewport edges and capped at the same 1152px container
+          as the hero visual.
         </p>
       </div>
     </section>
