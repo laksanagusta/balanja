@@ -158,38 +158,51 @@ export function findProductByBarcode(products, barcode) {
   return products.find((item) => item.active && normalizeBarcode(item.barcode) === normalized) || null;
 }
 
-export function addProductToCart(cart, products, barcodeOrProductId) {
+export function variantKey(productId, variantId) {
+  return `${productId}|${variantId || ""}`;
+}
+
+export function formatVariantAttributes(attributes) {
+  if (!attributes || Object.keys(attributes).length === 0) return "";
+  return Object.entries(attributes).map(([k, v]) => `${k}: ${v}`).join(", ");
+}
+
+export function addProductToCart(cart, products, barcodeOrProductId, variant) {
   const product =
     products.find((item) => item.active && item.id === barcodeOrProductId) ||
     findProductByBarcode(products, barcodeOrProductId);
-
   if (!product) return { ok: false, error: "Product not found", cart };
-  if (product.stock <= 0) return { ok: false, error: "Product is out of stock", cart };
 
-  const existing = cart.find((item) => item.productId === product.id);
+  const targetVariant = variant || (product.variants && product.variants.length === 1 ? product.variants[0] : null);
+  if (product.variants && product.variants.length > 1 && !targetVariant) {
+    return { ok: false, error: "Select a variant", cart };
+  }
+  const variantId = targetVariant ? targetVariant.id : "";
+  const variantStock = targetVariant ? targetVariant.stock : product.stock;
+  const variantPrice = targetVariant ? targetVariant.price : product.price;
+  if (variantStock <= 0) return { ok: false, error: "Product is out of stock", cart };
+
+  const lineKey = variantKey(product.id, variantId);
+  const existing = cart.find((item) => variantKey(item.productId, item.variantId) === lineKey);
   const nextQty = existing ? existing.qty + 1 : 1;
-  if (nextQty > product.stock) return { ok: false, error: "Cart quantity exceeds stock", cart };
+  if (nextQty > variantStock) return { ok: false, error: "Cart quantity exceeds stock", cart };
 
   const nextCart = existing
-    ? cart.map((item) => (item.productId === product.id ? { ...item, qty: nextQty } : item))
+    ? cart.map((item) => (variantKey(item.productId, item.variantId) === lineKey ? { ...item, qty: nextQty } : item))
     : [
         ...cart,
         {
           productId: product.id,
+          variantId,
+          variantAttributes: targetVariant ? targetVariant.attributes : null,
           name: product.name,
-          barcode: product.barcode,
-          price: product.price,
+          barcode: targetVariant ? targetVariant.barcode : product.barcode,
+          price: variantPrice,
           qty: 1,
-          stockAtAdd: product.stock,
+          stockAtAdd: variantStock,
         },
       ];
-
-  return {
-    ok: true,
-    cart: nextCart,
-    product,
-    quantity: nextQty,
-  };
+  return { ok: true, cart: nextCart, product, variant: targetVariant, quantity: nextQty };
 }
 
 export function addSavedProductToCart(cart, products, product) {
