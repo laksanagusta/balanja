@@ -55,7 +55,11 @@ export function applyCheckoutResult(products, result) {
   const updates = new Map(result.products.map((product) => [product.id, product]));
   return products.map((product) => {
     const update = updates.get(product.id);
-    return update ? { ...product, stock: update.stock, updatedAt: update.updatedAt } : product;
+    if (!update) return product;
+    const variants = Array.isArray(product.variants)
+      ? product.variants.map((v) => (v.id === update.id ? { ...v, stock: update.stock, updatedAt: update.updatedAt } : v))
+      : product.variants;
+    return { ...product, stock: update.stock, updatedAt: update.updatedAt, variants };
   });
 }
 
@@ -75,6 +79,7 @@ export function toProductPayload(product, includeStock) {
     unitId: String(product.unitId || "").trim(),
     image: product.image || "",
     ...(!includeStock ? { active: product.active !== false } : {}),
+    attributesConfig: Array.isArray(product.attributesConfig) ? product.attributesConfig : [],
   };
 }
 
