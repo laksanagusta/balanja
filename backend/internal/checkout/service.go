@@ -9,6 +9,8 @@ import (
 	"errors"
 	"sort"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -47,9 +49,10 @@ func (s *Service) Checkout(ctx context.Context, id database.Identity, key string
 		if item.ProductID == [16]byte{} || item.Quantity < 1 {
 			return Result{}, ErrInvalidCheckout
 		}
-		k := item.ProductID.String()
+		k := variantKey(item.ProductID, item.VariantID)
 		existing := quantities[k]
 		existing.ProductID = item.ProductID
+		existing.VariantID = item.VariantID
 		existing.Quantity += item.Quantity
 		quantities[k] = existing
 	}
@@ -86,4 +89,11 @@ func validKey(key string) bool {
 		}
 	}
 	return true
+}
+
+func variantKey(productID uuid.UUID, variantID *uuid.UUID) string {
+	if variantID == nil {
+		return productID.String() + "|"
+	}
+	return productID.String() + "|" + variantID.String()
 }
