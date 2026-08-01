@@ -20,7 +20,34 @@ import { validateProductPhoto } from "../components/product/product-photo.js";
 import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
 
 function emptyProduct(categoryId = "", unitId = "") {
-  return { id: "", name: "", barcode: "", categoryId, unitId, price: "", stock: 0, image: "", imageFile: null, removeImage: false, active: true };
+  return { id: "", name: "", barcode: "", categoryId, unitId, price: "", stock: 0, image: "", imageFile: null, removeImage: false, active: true, attributesConfig: [], variants: [] };
+}
+
+function attributesKey(attributes) {
+  return JSON.stringify(attributes || {});
+}
+
+function cartesianCombinations(config) {
+  if (config.length === 0) return [[]];
+  const [head, ...rest] = config;
+  const combos = cartesianCombinations(rest);
+  return head.options.flatMap((option) => combos.map((combo) => [{ name: head.name, value: option }, ...combo]));
+}
+
+function buildVariantMatrix(config, existingVariants, defaults) {
+  const existing = new Map((existingVariants || []).map((variant) => [attributesKey(variant.attributes), variant]));
+  return cartesianCombinations(config).map((combo) => {
+    const attributes = Object.fromEntries(combo.map((entry) => [entry.name, entry.value]));
+    const previous = existing.get(attributesKey(attributes));
+    return {
+      id: previous?.id || "",
+      attributes,
+      price: previous ? previous.price : defaults.price,
+      stock: previous ? previous.stock : defaults.stock,
+      barcode: previous ? previous.barcode : "",
+      active: previous ? previous.active : true,
+    };
+  });
 }
 
 function formatNumberInput(value) {
@@ -48,6 +75,7 @@ export default function ProductsPage() {
   const [photoPreviewURL, setPhotoPreviewURL] = React.useState("");
   const [enteringProductIds, setEnteringProductIds] = React.useState([]);
   const [topBarActionsTarget, setTopBarActionsTarget] = React.useState(null);
+  const originalVariantsRef = React.useRef([]);
   const debouncedQuery = useDebouncedValue(query, 220);
   const productFilters = React.useMemo(() => ({
     q: debouncedQuery.trim(),
@@ -111,7 +139,12 @@ export default function ProductsPage() {
 
   const openEditor = (product) => {
     setPhotoPreviewURL("");
-    setEditing({ ...product, imageFile: null, removeImage: false });
+    const attributesConfig = product.attributesConfig || [];
+    const variants = attributesConfig.length > 0
+      ? buildVariantMatrix(attributesConfig, product.variants || [], { price: product.price, stock: product.stock })
+      : [];
+    setEditing({ ...product, attributesConfig, variants, imageFile: null, removeImage: false });
+    originalVariantsRef.current = (product.variants || []).map((variant) => ({ ...variant }));
     setProductErrors({});
   };
 
@@ -132,17 +165,62 @@ export default function ProductsPage() {
   const save = async (event) => {
     event.preventDefault();
     if (savingProduct) return;
-    const validation = validateProduct(editing, store.products);
-    setProductErrors(validation.errors);
-    if (!validation.ok) return;
+    const config = editing.attributesConfig || [];
+    const variantMode = config.length > 0;
+    const rows = variantMode ? editing.variants || [] : [];
+    const formProduct = variantMode ? { ...editing, price: rows[0]?.price || editing.price, stock: 0 } : editing;
+
+    let validation = validateProduct(formProduct, store.products);
+    const rowErrors = rows
+      .map((row) => {
+        const label = Object.entries(row.attributes).map(([key, value]) => `${key}: ${value}`).join(" · ");
+        if (parseNumberInput(row.price) < 1) return `Harga ${label} minimal 1`;
+        if (parseNumberInput(row.stock) < 0) return `Stok ${label} tidak boleh negatif`;
+        return "";
+      })
+      .filter(Boolean);
+    const configErrors = config
+      .filter((attr) => attr.options.length === 0)
+      .map((attr) => `Atribut "${attr.name}" membutuhkan minimal satu pilihan.`);
+    if (variantMode) {
+      delete validation.errors.price;
+      delete validation.errors.stock;
+      validation.ok = Object.keys(validation.errors).length === 0;
+    }
+    setProductErrors({ ...validation.errors, variants: rowErrors[0] || configErrors[0] || "" });
+    if (!validation.ok || rowErrors.length > 0 || configErrors.length > 0) return;
 
     setSavingProduct(true);
     try {
-      const saved = await store.saveProduct(editing, { throwOnError: true });
+      const saved = await store.saveProduct(formProduct, { throwOnError: true });
       if (!saved) {
         toast.error("Gagal menyimpan produk");
         return;
       }
+
+      if (variantMode) {
+        const currentKeys = new Set(rows.map((row) => attributesKey(row.attributes)));
+        for (const original of originalVariantsRef.current) {
+          if (original.id && !currentKeys.has(attributesKey(original.attributes))) {
+            await store.api.deleteVariant(saved.id, original.id);
+          }
+        }
+        for (const row of rows) {
+          const payload = {
+            attributes: row.attributes,
+            price: parseNumberInput(row.price),
+            stock: parseNumberInput(row.stock),
+            barcode: String(row.barcode || "").trim(),
+            active: row.active !== false,
+          };
+          if (row.id) {
+            await store.api.updateVariant(saved.id, row.id, payload);
+          } else {
+            await store.api.createVariant(saved.id, payload);
+          }
+        }
+      }
+
       toast.success(editing.id ? "Produk diperbarui" : "Produk ditambahkan", {
         description: saved.name,
       });
@@ -162,6 +240,59 @@ export default function ProductsPage() {
     } finally {
       setSavingProduct(false);
     }
+  };
+
+  const addAttribute = () => {
+    setEditing((current) => {
+      const index = current.attributesConfig.length;
+      const config = [...current.attributesConfig, { name: index === 0 ? "Ukuran" : `Atribut ${index + 1}`, options: [] }];
+      return { ...current, attributesConfig: config };
+    });
+  };
+
+  const renameAttribute = (index, name) => {
+    setEditing((current) => {
+      const config = current.attributesConfig.map((attr, i) => (i === index ? { ...attr, name } : attr));
+      const oldName = current.attributesConfig[index]?.name;
+      const variants = (current.variants || []).map((variant) => {
+        if (!oldName || oldName === name || variant.attributes[oldName] === undefined) return variant;
+        const attributes = { ...variant.attributes };
+        delete attributes[oldName];
+        attributes[name] = variant.attributes[oldName];
+        return { ...variant, attributes };
+      });
+      return { ...current, attributesConfig: config, variants };
+    });
+  };
+
+  const setAttributeOptions = (index, options) => {
+    setEditing((current) => {
+      const config = current.attributesConfig.map((attr, i) => (i === index ? { ...attr, options } : attr));
+      const variants = buildVariantMatrix(config, current.variants || [], { price: current.price, stock: current.stock });
+      return { ...current, attributesConfig: config, variants };
+    });
+  };
+
+  const removeAttribute = (index) => {
+    const attrName = editing.attributesConfig[index]?.name;
+    const inUse = (editing.variants || []).some((variant) => variant.active && variant.attributes[attrName] !== undefined);
+    if (inUse) {
+      setProductErrors((current) => ({ ...current, variants: "Atribut ini masih dipakai oleh variasi aktif. Nonaktifkan atau hapus variasinya dulu." }));
+      return;
+    }
+    setProductErrors((current) => ({ ...current, variants: "" }));
+    setEditing((current) => ({
+      ...current,
+      attributesConfig: current.attributesConfig.filter((_, i) => i !== index),
+      variants: (current.variants || []).filter((variant) => variant.attributes[attrName] === undefined),
+    }));
+  };
+
+  const updateVariantRow = (key, field, value) => {
+    setEditing((current) => ({
+      ...current,
+      variants: (current.variants || []).map((variant) => (attributesKey(variant.attributes) === key ? { ...variant, [field]: value } : variant)),
+    }));
   };
 
   const updateEditing = (field, value) => {
@@ -371,46 +502,164 @@ export default function ProductsPage() {
               error={productErrors.categoryId}
             />
 
-            <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-              <Input
-                label="Harga"
-                placeholder="72000"
-                error={productErrors.price}
-                inputClassName="font-mono tabular-nums"
-                inputProps={{
-                  value: formatNumberInput(editing.price),
-                  onChange: (event) => updateEditing("price", normalizeNumberField(event.target.value)),
-                  inputMode: "numeric",
-                  required: true,
-                  disabled: savingProduct,
-                }}
-              />
-              <Input
-                label="Stok"
-                placeholder={editing.id ? "Dikelola oleh transaksi penjualan dan penyesuaian stok" : "18"}
-                error={productErrors.stock}
-                inputClassName="font-mono tabular-nums"
-                inputProps={{
-                  value: formatNumberInput(editing.stock),
-                  onChange: editing.id ? undefined : (event) => updateEditing("stock", normalizeNumberField(event.target.value)),
-                  inputMode: "numeric",
-                  required: true,
-                  disabled: Boolean(editing.id) || savingProduct,
-                }}
-              />
+            <div className="grid gap-2 rounded-panel border border-border bg-surface-muted/40 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-text">Variasi</p>
+                  <p className="text-xs text-text-muted">Atribut seperti ukuran atau warna dengan harga dan stok sendiri.</p>
+                </div>
+                <Button variant="secondary" size="sm" disabled={savingProduct} onClick={addAttribute}>
+                  Tambah atribut
+                </Button>
+              </div>
 
-              <div className="sm:col-span-2">
-                <MasterDataSelectField
-                  entityLabel="Satuan"
-                  value={editing.unitId}
-                  items={store.units}
-                  onChange={(nextUnitId) => updateEditing("unitId", nextUnitId)}
-                  onCreate={store.createUnit}
-                  onRestore={store.restoreUnit}
-                  disabled={savingProduct}
-                  error={productErrors.unitId}
+              {editing.attributesConfig.map((attr, index) => (
+                <div key={index} className="grid gap-2 rounded-md border border-border bg-surface p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Input
+                        label={`Nama atribut ${index + 1}`}
+                        placeholder="Ukuran"
+                        inputProps={{
+                          value: attr.name,
+                          onChange: (event) => renameAttribute(index, event.target.value),
+                          disabled: savingProduct,
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Hapus atribut ${attr.name}`}
+                      disabled={savingProduct}
+                      onClick={() => removeAttribute(index)}
+                      className="mt-6 grid size-9 shrink-0 place-items-center rounded-control text-text-muted transition hover:bg-danger-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+                    >
+                      <Icon name="trash" className="size-4" />
+                    </button>
+                  </div>
+                  <Input
+                    label="Pilihan"
+                    placeholder="M, L, XL (pisahkan dengan koma)"
+                    inputProps={{
+                      value: attr.options.join(", "),
+                      onChange: (event) => setAttributeOptions(index, event.target.value.split(",").map((option) => option.trim()).filter(Boolean)),
+                      disabled: savingProduct,
+                    }}
+                  />
+                </div>
+              ))}
+
+              {editing.attributesConfig.length > 0 && (
+                <>
+                  {editing.variants.length > 0 ? (
+                    <div className="grid max-h-72 gap-2 overflow-y-auto pr-1">
+                      {editing.variants.map((variant) => {
+                        const key = attributesKey(variant.attributes);
+                        return (
+                          <div key={key} className="grid gap-2 rounded-md border border-border bg-surface p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs font-semibold text-text">
+                                {Object.entries(variant.attributes).map(([name, value]) => `${name}: ${value}`).join(" · ")}
+                              </p>
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={variant.active}
+                                disabled={savingProduct}
+                                onClick={() => updateVariantRow(key, "active", !variant.active)}
+                                className="flex items-center gap-1.5 text-xs font-semibold text-text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                              >
+                                <Switch checked={variant.active} tone="success" decorative />
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <Input
+                                label="Harga"
+                                inputClassName="font-mono tabular-nums"
+                                inputProps={{
+                                  value: formatNumberInput(variant.price),
+                                  onChange: (event) => updateVariantRow(key, "price", normalizeNumberField(event.target.value)),
+                                  inputMode: "numeric",
+                                  disabled: savingProduct,
+                                }}
+                              />
+                              <Input
+                                label="Stok"
+                                inputClassName="font-mono tabular-nums"
+                                inputProps={{
+                                  value: formatNumberInput(variant.stock),
+                                  onChange: (event) => updateVariantRow(key, "stock", normalizeNumberField(event.target.value)),
+                                  inputMode: "numeric",
+                                  disabled: savingProduct,
+                                }}
+                              />
+                              <div className="col-span-2">
+                                <Input
+                                  label="Barcode (opsional)"
+                                  placeholder="8991001000011"
+                                  inputClassName="font-mono tabular-nums tracking-[0.01em]"
+                                  inputProps={{
+                                    value: variant.barcode,
+                                    onChange: (event) => updateVariantRow(key, "barcode", event.target.value),
+                                    disabled: savingProduct,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-text-muted">Tambahkan minimal satu pilihan pada setiap atribut untuk membuat variasi.</p>
+                  )}
+                  {productErrors.variants && <p className="text-xs font-medium text-danger">{productErrors.variants}</p>}
+                </>
+              )}
+            </div>
+
+            {editing.attributesConfig.length === 0 && (
+              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                <Input
+                  label="Harga"
+                  placeholder="72000"
+                  error={productErrors.price}
+                  inputClassName="font-mono tabular-nums"
+                  inputProps={{
+                    value: formatNumberInput(editing.price),
+                    onChange: (event) => updateEditing("price", normalizeNumberField(event.target.value)),
+                    inputMode: "numeric",
+                    required: true,
+                    disabled: savingProduct,
+                  }}
+                />
+                <Input
+                  label="Stok"
+                  placeholder={editing.id ? "Dikelola oleh transaksi penjualan dan penyesuaian stok" : "18"}
+                  error={productErrors.stock}
+                  inputClassName="font-mono tabular-nums"
+                  inputProps={{
+                    value: formatNumberInput(editing.stock),
+                    onChange: editing.id ? undefined : (event) => updateEditing("stock", normalizeNumberField(event.target.value)),
+                    inputMode: "numeric",
+                    required: true,
+                    disabled: Boolean(editing.id) || savingProduct,
+                  }}
                 />
               </div>
+            )}
+
+            <div>
+              <MasterDataSelectField
+                entityLabel="Satuan"
+                value={editing.unitId}
+                items={store.units}
+                onChange={(nextUnitId) => updateEditing("unitId", nextUnitId)}
+                onCreate={store.createUnit}
+                onRestore={store.restoreUnit}
+                disabled={savingProduct}
+                error={productErrors.unitId}
+              />
             </div>
 
             <button

@@ -145,3 +145,22 @@ test("product save feedback swaps text without resizing its button", async () =>
   assert.match(hook, /window\.requestAnimationFrame/);
   assert.match(hook, /window\.cancelAnimationFrame/);
 });
+
+test("product editor manages attributes and syncs variant matrix on save", async () => {
+  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /Tambah atribut/);
+  assert.match(source, /attributesConfig/);
+  assert.match(source, /buildVariantMatrix/);
+  assert.match(source, /attributesKey\(variant\.attributes\)/);
+  assert.match(source, /renameAttribute\(index, event\.target\.value\)/);
+  assert.match(source, /setAttributeOptions\(index, event\.target\.value\.split\(","\)/);
+  assert.match(source, /updateVariantRow\(key, "price"/);
+  assert.match(source, /updateVariantRow\(key, "stock"/);
+  assert.match(source, /updateVariantRow\(key, "barcode"/);
+  assert.match(source, /store\.api\.createVariant\(saved\.id, payload\)/);
+  assert.match(source, /store\.api\.updateVariant\(saved\.id, row\.id, payload\)/);
+  assert.match(source, /store\.api\.deleteVariant\(saved\.id, original\.id\)/);
+  assert.match(source, /Atribut ini masih dipakai oleh variasi aktif/);
+  assert.match(source, /Barcode \(opsional\)/);
+});
