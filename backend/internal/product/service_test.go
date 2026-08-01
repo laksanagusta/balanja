@@ -405,3 +405,55 @@ func (f *fakeImageStore) Delete(_ context.Context, key string) error {
 func (f *fakeRepository) Deactivate(context.Context, database.Tx, string, uuid.UUID) (Product, error) {
 	return Product{}, nil
 }
+
+func (f *fakeRepository) ListVariants(_ context.Context, _ database.Tx, _ string, _ uuid.UUID) ([]Variant, error) {
+	return nil, nil
+}
+
+func (f *fakeRepository) GetVariant(context.Context, database.Tx, string, uuid.UUID, uuid.UUID) (Variant, error) {
+	return Variant{}, nil
+}
+
+func (f *fakeRepository) CreateVariant(context.Context, database.Tx, string, uuid.UUID, VariantInput) (Variant, error) {
+	return Variant{}, nil
+}
+
+func (f *fakeRepository) UpdateVariant(context.Context, database.Tx, string, uuid.UUID, uuid.UUID, VariantInput) (Variant, error) {
+	return Variant{}, nil
+}
+
+func (f *fakeRepository) DeleteVariant(context.Context, database.Tx, string, uuid.UUID, uuid.UUID) error {
+	return nil
+}
+
+func (f *fakeRepository) CountActiveVariants(context.Context, database.Tx, string, uuid.UUID) (int, error) {
+	return 1, nil
+}
+
+func (f *fakeRepository) VariantSoldHistory(context.Context, database.Tx, string, uuid.UUID) (bool, error) {
+	return false, nil
+}
+
+func TestValidateVariantAttributes(t *testing.T) {
+	t.Parallel()
+
+	config := []AttributeConfig{{Name: "Ukuran", Options: []string{"S", "M", "L"}}}
+	cases := []struct {
+		name    string
+		attrs   map[string]string
+		wantErr bool
+	}{
+		{"valid", map[string]string{"Ukuran": "M"}, false},
+		{"missing key", map[string]string{}, true},
+		{"unknown option", map[string]string{"Ukuran": "XL"}, true},
+		{"extra key", map[string]string{"Ukuran": "M", "Sugar": "Normal"}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateVariantAttributes(tc.attrs, config)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("got err=%v, wantErr=%v", err, tc.wantErr)
+			}
+		})
+	}
+}
