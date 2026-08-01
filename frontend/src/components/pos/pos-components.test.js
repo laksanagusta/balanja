@@ -183,7 +183,10 @@ test("product catalog defers filtering and contains off-screen cards", async () 
   assert.match(catalog, /React\.useDeferredValue/);
   assert.match(catalog, /React\.useMemo/);
   assert.match(catalog, /const remainingStock = Math\.max\(Number\(product\.stock\) - qtyInCart, 0\)/);
-  assert.match(catalog, /disabled=\{remainingStock <= 0 \|\| checkoutPending\}/);
+  assert.match(catalog, /disabled=\{checkoutPending \|\| \(!hasMultipleVariants && remainingStock <= 0\)\}/);
   assert.match(catalog, /<PosProductCard/);
+  assert.match(catalog, /<VariantSelector/);
+  assert.match(catalog, /variantKey\(product\.id, ""\)/);
+  assert.match(catalog, /variantKey\(item\.productId, item\.variantId\)/);
   assert.match(css, /\.pos-product-card[\s\S]*content-visibility:\s*auto/);
 });
