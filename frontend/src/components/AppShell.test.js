@@ -49,7 +49,7 @@ test("app shell names the active module while keeping Balanja on home", async ()
   assert.match(source, /\[routes\.reportsSales\]: "Laporan Penjualan"/);
   assert.match(source, /\[routes\.settings\]: "Pengaturan"/);
   assert.match(source, /const pageTitle = appPageTitles\[pathname\] \|\| "Balanja"/);
-  assert.match(source, /<h1 className="min-w-0 truncate text-lg font-extrabold tracking-normal text-text">/);
+  assert.match(source, /pageTitle === "Balanja" \? "font-sora font-bold" : "font-extrabold"/);
   assert.match(source, /\{pageTitle\}/);
   assert.match(source, /mobile-app-bar[^"]*px-4/);
   assert.match(source, /mobilePrimaryNavigation/);
@@ -158,6 +158,7 @@ test("bottom navigation tracks internal scrolling and settles in the scroll dire
   assert.match(source, /scrollPositions\.get\(scrollRegion\) \?\? 0/);
   assert.match(source, /onClick=\{\(event\) => \{[\s\S]*releaseBottomNavigationPointerFocus\(event\)[\s\S]*onNavigate\(path\)/);
   assert.match(source, /nextBottomNavigationProgress/);
+  assert.match(source, /upwardScrollDistance < 48/);
   assert.match(source, /window\.requestAnimationFrame/);
   assert.match(source, /progress >= 0\.35 \? 1 : 0/);
   assert.match(source, /progress <= 0\.85 \? 0 : 1/);

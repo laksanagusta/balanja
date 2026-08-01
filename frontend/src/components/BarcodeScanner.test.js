@@ -79,3 +79,12 @@ test("scanner exposes actionable camera startup errors", async () => {
   assert.match(source, /NotReadableError/);
   assert.match(source, /window\.isSecureContext/);
 });
+
+test("scanner defers stream teardown so React StrictMode does not reset camera permission", async () => {
+  const source = await readFile(new URL("./BarcodeScanner.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /streamStopTimerRef/);
+  assert.match(source, /clearTimeout\(streamStopTimerRef/);
+  assert.match(source, /setTimeout\([\s\S]*controlsRef\.current\?\.stop\(\)/);
+  assert.match(source, /if \(controlsRef\.current\)\s*\{\s*setScanning\(true\);\s*return;\s*\}/);
+});
