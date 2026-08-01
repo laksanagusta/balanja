@@ -27,6 +27,8 @@ var (
 type Movement struct {
 	ID                uuid.UUID    `json:"id"`
 	ProductID         uuid.UUID    `json:"productId"`
+	VariantID         *uuid.UUID   `json:"variantId,omitempty"`
+	VariantAttributes string       `json:"variantAttributes,omitempty"`
 	ProductName       string       `json:"productName"`
 	ProductBarcode    string       `json:"productBarcode"`
 	ProductCategory   string       `json:"productCategory"`
@@ -45,6 +47,7 @@ type Movement struct {
 
 type CreateInput struct {
 	ProductID         uuid.UUID    `json:"productId"`
+	VariantID         *uuid.UUID   `json:"variantId,omitempty"`
 	Type              MovementType `json:"type"`
 	Quantity          int          `json:"quantity"`
 	Reason            string       `json:"reason"`
