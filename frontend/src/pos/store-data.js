@@ -56,10 +56,11 @@ export function applyCheckoutResult(products, result) {
   return products.map((product) => {
     const update = updates.get(product.id);
     if (!update) return product;
-    const variants = Array.isArray(product.variants)
-      ? product.variants.map((v) => (v.id === update.id ? { ...v, stock: update.stock, updatedAt: update.updatedAt } : v))
-      : product.variants;
-    return { ...product, stock: update.stock, updatedAt: update.updatedAt, variants };
+    const updated = { ...product, stock: update.stock, updatedAt: update.updatedAt };
+    if (Array.isArray(product.variants)) {
+      updated.variants = product.variants.map((v) => (v.id === update.id ? { ...v, stock: update.stock, updatedAt: update.updatedAt } : v));
+    }
+    return updated;
   });
 }
 
