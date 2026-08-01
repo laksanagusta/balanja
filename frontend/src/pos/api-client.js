@@ -113,6 +113,15 @@ export function createAPIClient({
     async deactivateProduct(id, options = {}) {
       return (await request(`/api/v1/products/${encodeURIComponent(id)}`, { ...options, method: "DELETE" })).data;
     },
+    async createVariant(productId, input, options = {}) {
+      return (await request(`/api/v1/products/${encodeURIComponent(productId)}/variants`, { ...options, method: "POST", body: input })).data;
+    },
+    async updateVariant(productId, variantId, input, options = {}) {
+      return (await request(`/api/v1/products/${encodeURIComponent(productId)}/variants/${encodeURIComponent(variantId)}`, { ...options, method: "PATCH", body: input })).data;
+    },
+    async deleteVariant(productId, variantId, options = {}) {
+      return request(`/api/v1/products/${encodeURIComponent(productId)}/variants/${encodeURIComponent(variantId)}`, { ...options, method: "DELETE" });
+    },
     async listCategories({ includeArchived = false, signal } = {}) {
       const query = listQuery({ includeArchived }, ["includeArchived"]);
       return (await request(`/api/v1/categories${query}`, { signal })).data;
@@ -192,7 +201,7 @@ export function createAPIClient({
         signal,
         headers: { "Idempotency-Key": idempotencyKey },
         body: {
-          items: cart.map((item) => ({ productId: item.productId, quantity: item.qty })),
+          items: cart.map((item) => ({ productId: item.productId, variantId: item.variantId || undefined, quantity: item.qty })),
           payment,
           ...(cashierName ? { cashierName } : {}),
         },
