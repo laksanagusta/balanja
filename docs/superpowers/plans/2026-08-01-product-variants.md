@@ -50,7 +50,7 @@
 **Files:**
 - Create: `backend/migrations/000013_variants.up.sql`
 
-- [ ] **Step 1: Write the migration up SQL**
+- [x] **Step 1: Write the migration up SQL**
 
 Write to `backend/migrations/000013_variants.up.sql`:
 
@@ -126,11 +126,11 @@ grant update (product_variant_id) on stock_movements to balanja_api;
 commit;
 ```
 
-- [ ] **Step 2: Verify SQL parses (manual)**
+- [x] **Step 2: Verify SQL parses (manual)**
 
 Run: `psql "postgresql://..." -f backend/migrations/000013_variants.up.sql` against dev DB (if available) OR review for syntax. Expected: no error.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/migrations/000013_variants.up.sql
@@ -142,7 +142,7 @@ git commit -m "Add variants migration up"
 **Files:**
 - Create: `backend/migrations/000013_variants.down.sql`
 
-- [ ] **Step 1: Write the down SQL**
+- [x] **Step 1: Write the down SQL**
 
 Write to `backend/migrations/000013_variants.down.sql`:
 
@@ -164,7 +164,7 @@ alter table products
 commit;
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add backend/migrations/000013_variants.down.sql
@@ -176,7 +176,7 @@ git commit -m "Add variants migration down"
 **Files:**
 - Create: `backend/migrations/000013_variants_test.go`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```go
 package migrations
@@ -212,12 +212,12 @@ func TestVariantsMigrationContract(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd backend && go test ./migrations/ -run TestVariantsMigrationContract -v`
 Expected: PASS (test reads file already written in Task 1). If FAIL, fix migration.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/migrations/000013_variants_test.go
@@ -229,7 +229,7 @@ git commit -m "Add variants migration contract test"
 **Files:**
 - Modify: `backend/internal/product/model.go`
 
-- [ ] **Step 1: Extend the model file**
+- [x] **Step 1: Extend the model file**
 
 Replace the file content from the `import` block through `UpdateResult` with:
 
@@ -341,12 +341,12 @@ type UpdateResult struct {
 }
 ```
 
-- [ ] **Step 2: Verify the package compiles**
+- [x] **Step 2: Verify the package compiles**
 
 Run: `cd backend && go build ./internal/product/...`
 Expected: build succeeds (repository/service will still compile because they reference exported names still present).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/internal/product/model.go
@@ -361,7 +361,7 @@ git commit -m "Add variant and attribute models"
 
 This task adds variant repository methods and integrates `attributes_config` into existing `Get`/`Create`/`Update`.
 
-- [ ] **Step 1: Update product column constants and scan functions**
+- [x] **Step 1: Update product column constants and scan functions**
 
 In `backend/internal/product/repository.go`, replace the `scanProduct` function and the three column constants:
 
@@ -396,7 +396,7 @@ func scanUpdateResult(row pgx.Row) (UpdateResult, error) {
 }
 ```
 
-- [ ] **Step 2: Add JSONB encode/decode helpers and variant scan helper**
+- [x] **Step 2: Add JSONB encode/decode helpers and variant scan helper**
 
 Append to `backend/internal/product/repository.go`:
 
@@ -450,7 +450,7 @@ func encodeVariantAttributes(attrs map[string]string) []byte {
 
 Add `"encoding/json"` to the import block of repository.go.
 
-- [ ] **Step 3: Add attributes_config to Create and Update queries**
+- [x] **Step 3: Add attributes_config to Create and Update queries**
 
 In `Create`, change the insert statement to include `attributes_config`:
 
@@ -519,7 +519,7 @@ func (PostgresRepository) Update(ctx context.Context, tx database.Tx, orgID stri
 }
 ```
 
-- [ ] **Step 4: Add ListVariants, CreateVariant, UpdateVariant, DeleteVariant byID repository methods**
+- [x] **Step 4: Add ListVariants, CreateVariant, UpdateVariant, DeleteVariant byID repository methods**
 
 Append to `backend/internal/product/repository.go`:
 
@@ -623,20 +623,20 @@ func (PostgresRepository) VariantSoldHistory(ctx context.Context, tx database.Tx
 }
 ```
 
-- [ ] **Step 5: Eager-load variants in service Get/List (service.go integration)**
+- [x] **Step 5: Eager-load variants in service Get/List (service.go integration)**
 
 This is done in Task 6 (service). Skip here.
 
-- [ ] **Step 6: Build the package**
+- [x] **Step 6: Build the package**
 
 Run: `cd backend && go build ./internal/product/...`
 Expected: build succeeds. If `DecodeAttributeConfigs` exported unused, ignore (used internally).
 
-- [ ] **Step 7: Add variant repository test stub**
+- [x] **Step 7: Add variant repository test stub**
 
 Add to `backend/internal/product/repository_test.go` a new test asserting `ListVariants` query compiles via interface conformance (unit tests hitting a real DB are out of scope unless a test harness exists). Run: `cd backend && go vet ./internal/product/...`. Expected: no vet errors.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add backend/internal/product/repository.go backend/internal/product/repository_test.go
@@ -649,7 +649,7 @@ git commit -m "Add variant repository CRUD and attributes_config integration"
 - Modify: `backend/internal/product/service.go`
 - Test: `backend/internal/product/service_test.go`
 
-- [ ] **Step 1: Add new sentinel errors and extend Repository interface**
+- [x] **Step 1: Add new sentinel errors and extend Repository interface**
 
 In `service.go`, add to the `var` block:
 
@@ -682,7 +682,7 @@ type Repository interface {
 }
 ```
 
-- [ ] **Step 2: Add attributes validation helper**
+- [x] **Step 2: Add attributes validation helper**
 
 Append to `service.go`:
 
@@ -741,7 +741,7 @@ func validateVariantBarcodeUnique(ctx context.Context, tx database.Tx, repo Repo
 }
 ```
 
-- [ ] **Step 3: Eager-load variants in List and Get**
+- [x] **Step 3: Eager-load variants in List and Get**
 
 In `Service.List`, inside the `runner.Run` closure after `s.repository.List`, add variant loading:
 
@@ -766,7 +766,7 @@ In `Service.List`, inside the `runner.Run` closure after `s.repository.List`, ad
 
 In `Service.Update`, after `s.repository.Get` and before update, load current variants if needed. (No mutation of variants in product Update path — variants go through their own endpoints. Product Update only persists `attributes_config`.)
 
-- [ ] **Step 4: Add CreateVariant / UpdateVariant / DeleteVariant service methods**
+- [x] **Step 4: Add CreateVariant / UpdateVariant / DeleteVariant service methods**
 
 Append to `service.go`:
 
@@ -840,7 +840,7 @@ func (s *Service) DeleteVariant(ctx context.Context, identity database.Identity,
 }
 ```
 
-- [ ] **Step 5: Add service tests**
+- [x] **Step 5: Add service tests**
 
 Add to `backend/internal/product/service_test.go` test table entries for `validateVariantAttributes` (valid config match, missing key, unknown option, mismatched length). Use a new test func `TestValidateVariantAttributes` calling the package-private helper directly. Example:
 
@@ -868,12 +868,12 @@ func TestValidateVariantAttributes(t *testing.T) {
 }
 ```
 
-- [ ] **Step 6: Build and run tests**
+- [x] **Step 6: Build and run tests**
 
 Run: `cd backend && go build ./internal/product/... && go test ./internal/product/... -run TestValidateVariantAttributes -v`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/internal/product/service.go backend/internal/product/service_test.go
@@ -885,7 +885,7 @@ git commit -m "Add variant service methods and validation"
 **Files:**
 - Modify: `backend/internal/product/handler.go`
 
-- [ ] **Step 1: Register variant routes**
+- [x] **Step 1: Register variant routes**
 
 In `handler.go`, replace `Register`:
 
@@ -901,7 +901,7 @@ func (h *Handler) Register(group fiber.Router) {
 }
 ```
 
-- [ ] **Step 2: Extend productError with variant errors**
+- [x] **Step 2: Extend productError with variant errors**
 
 Add before the final `return respond.Error(c, err)` in `productError`:
 
@@ -923,7 +923,7 @@ Add before the final `return respond.Error(c, err)` in `productError`:
 	}
 ```
 
-- [ ] **Step 3: Add variant handler methods**
+- [x] **Step 3: Add variant handler methods**
 
 Append to `handler.go`:
 
@@ -992,12 +992,12 @@ func (h *Handler) deleteVariant(c fiber.Ctx) error {
 }
 ```
 
-- [ ] **Step 4: Build**
+- [x] **Step 4: Build**
 
 Run: `cd backend && go build ./internal/product/...`
 Expected: build succeeds.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/internal/product/handler.go
@@ -1006,12 +1006,12 @@ git commit -m "Add variant HTTP endpoints and error mapping"
 
 ## Task 8: Backend integration verification
 
-- [ ] **Step 1: Wire routes in cmd/api (verify registration is unchanged)**
+- [x] **Step 1: Wire routes in cmd/api (verify registration is unchanged)**
 
 Run: `cd backend && go vet ./... && go test ./... -race`
 Expected: all existing tests pass. If any test asserts the route count or registered paths, extend it.
 
-- [ ] **Step 2: Commit if any test fixtures updated**
+- [x] **Step 2: Commit if any test fixtures updated**
 
 ```bash
 git add -A backend && git commit -m "Verify backend integration for variants"
@@ -1022,7 +1022,7 @@ git add -A backend && git commit -m "Verify backend integration for variants"
 **Files:**
 - Modify: `backend/internal/checkout/model.go`
 
-- [ ] **Step 1: Extend ItemInput and Item**
+- [x] **Step 1: Extend ItemInput and Item**
 
 ```go
 type ItemInput struct {
@@ -1043,7 +1043,7 @@ type Item struct {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add backend/internal/checkout/model.go
@@ -1055,7 +1055,7 @@ git commit -m "Add VariantID to checkout item model"
 **Files:**
 - Modify: `backend/internal/checkout/service.go`
 
-- [ ] **Step 1: Update quantities aggregation to use product+variant key**
+- [x] **Step 1: Update quantities aggregation to use product+variant key**
 
 Replace the `for _, item := range input.Items` aggregation block:
 
@@ -1087,12 +1087,12 @@ func variantKey(productID uuid.UUID, variantID *uuid.UUID) string {
 
 The `canonical, _ := json.Marshal(input)` already includes `VariantID` omitempty so the fingerprint differentiates variants. Good.
 
-- [ ] **Step 2: Run existing checkout tests**
+- [x] **Step 2: Run existing checkout tests**
 
 Run: `cd backend && go test ./internal/checkout/... -race`
 Expected: existing tests pass (they don't send VariantID → key works the same).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/internal/checkout/service.go
@@ -1104,7 +1104,7 @@ git commit -m "Include VariantID in checkout fingerprint and quantities key"
 **Files:**
 - Modify: `backend/internal/checkout/repository.go`
 
-- [ ] **Step 1: Extend lockedProduct to carry variant info**
+- [x] **Step 1: Extend lockedProduct to carry variant info**
 
 ```go
 type lockedVariant struct {
@@ -1119,7 +1119,7 @@ type lockedVariant struct {
 }
 ```
 
-- [ ] **Step 2: Lock variants alongside products**
+- [x] **Step 2: Lock variants alongside products**
 
 Replace the products-lock block (after entitlement check) with a version that also locks variants for items with `VariantID != nil`:
 
@@ -1178,7 +1178,7 @@ Replace the products-lock block (after entitlement check) with a version that al
 	}
 ```
 
-- [ ] **Step 3: Resolve item pricing/stock from variant when present**
+- [x] **Step 3: Resolve item pricing/stock from variant when present**
 
 Replace the per-item loop body `for _, requested := range input.Items` that builds `items`:
 
@@ -1225,7 +1225,7 @@ Replace the per-item loop body `for _, requested := range input.Items` that buil
 	}
 ```
 
-- [ ] **Step 4: Decrement variant stock and movement reference variant**
+- [x] **Step 4: Decrement variant stock and movement reference variant**
 
 In the per-item stock update loop near line 137, branch on variant:
 
@@ -1263,12 +1263,12 @@ In the per-item stock update loop near line 137, branch on variant:
 	}
 ```
 
-- [ ] **Step 5: Build & run tests**
+- [x] **Step 5: Build & run tests**
 
 Run: `cd backend && go build ./internal/checkout/... && go test ./internal/checkout/... -race`
 Expected: existing tests pass (they don't use VariantID → fallback path).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/internal/checkout/repository.go
@@ -1281,7 +1281,7 @@ git commit -m "Checkout resolves pricing/stock from variant and records variant 
 - Modify: `backend/internal/stock/model.go`
 - Modify: `backend/internal/stock/repository.go`
 
-- [ ] **Step 1: Extend Movement and CreateInput**
+- [x] **Step 1: Extend Movement and CreateInput**
 
 In `model.go` add fields:
 
@@ -1317,7 +1317,7 @@ type CreateInput struct {
 }
 ```
 
-- [ ] **Step 2: Lock variant and update variant stock in Create**
+- [x] **Step 2: Lock variant and update variant stock in Create**
 
 Replace the `Create` function in `repository.go`:
 
@@ -1382,16 +1382,16 @@ func updateStock(ctx context.Context, tx database.Tx, orgID string, productID uu
 }
 ```
 
-- [ ] **Step 3: Extend insertMovement and Movement scan with variant columns**
+- [x] **Step 3: Extend insertMovement and Movement scan with variant columns**
 
 Update `insertMovementInput` to include `VariantID *uuid.UUID`, the `insert into stock_movements` columns to include `product_variant_id`, and `List` query/scan to include `sm.product_variant_id`. For List scan, add `&movement.VariantID`.
 
-- [ ] **Step 4: Build & run stock tests**
+- [x] **Step 4: Build & run stock tests**
 
 Run: `cd backend && go build ./internal/stock/... && go test ./internal/stock/... -race`
 Expected: existing tests pass (no VariantID → fallback).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/internal/stock/model.go backend/internal/stock/repository.go
@@ -1404,7 +1404,7 @@ git commit -m "Stock movements reference variant"
 - Modify: `frontend/src/pos/domain.js`
 - Test: `frontend/src/pos/domain.test.js`
 
-- [ ] **Step 1: Add variant helpers and rewrite addProductToCart**
+- [x] **Step 1: Add variant helpers and rewrite addProductToCart**
 
 Add at top of `domain.js` after the existing helpers:
 
@@ -1461,7 +1461,7 @@ export function addProductToCart(cart, products, barcodeOrProductId, variant) {
 }
 ```
 
-- [ ] **Step 2: Add domain tests**
+- [x] **Step 2: Add domain tests**
 
 Add to `domain.test.js`:
 
@@ -1503,12 +1503,12 @@ test("formatVariantAttributes renders pairs", () => {
 });
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `cd frontend && bun run test`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/pos/domain.js frontend/src/pos/domain.test.js
@@ -1521,7 +1521,7 @@ git commit -m "Cart keyed by product+variant; add variant helpers"
 - Modify: `frontend/src/pos/api-client.js`
 - Test: `frontend/src/pos/api-client.test.js`
 
-- [ ] **Step 1: Update checkout items payload**
+- [x] **Step 1: Update checkout items payload**
 
 Replace the `checkout` method body's `items` mapping:
 
@@ -1533,7 +1533,7 @@ Replace the `checkout` method body's `items` mapping:
       },
 ```
 
-- [ ] **Step 2: Add variant endpoints**
+- [x] **Step 2: Add variant endpoints**
 
 Add inside the returned object before the closing brace:
 
@@ -1549,12 +1549,12 @@ Add inside the returned object before the closing brace:
     },
 ```
 
-- [ ] **Step 3: Add api-client test assertions**
+- [x] **Step 3: Add api-client test assertions**
 
 Verify `checkout` calls include `variantId` in payload and variant endpoints exist. Run: `cd frontend && bun run test`.
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/pos/api-client.js frontend/src/pos/api-client.test.js
@@ -1566,7 +1566,7 @@ git commit -m "API client sends variantId and exposes variant endpoints"
 **Files:**
 - Modify: `frontend/src/pos/store-data.js`
 
-- [ ] **Step 1: Extend toProductPayload**
+- [x] **Step 1: Extend toProductPayload**
 
 ```js
 export function toProductPayload(product, includeStock) {
@@ -1584,7 +1584,7 @@ export function toProductPayload(product, includeStock) {
 }
 ```
 
-- [ ] **Step 2: Extend applyCheckoutResult to update variant stock**
+- [x] **Step 2: Extend applyCheckoutResult to update variant stock**
 
 ```js
 export function applyCheckoutResult(products, result) {
@@ -1598,12 +1598,12 @@ export function applyCheckoutResult(products, result) {
 }
 ```
 
-- [ ] **Step 3: Run frontend tests**
+- [x] **Step 3: Run frontend tests**
 
 Run: `cd frontend && bun run test`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/pos/store-data.js
@@ -1615,16 +1615,16 @@ git commit -m "Store data passes attributesConfig and syncs variant stock"
 **Files:**
 - Modify: `frontend/src/pos/cart-storage.js`
 
-- [ ] **Step 1: Include variantId in persisted/loaded cart lines**
+- [x] **Step 1: Include variantId in persisted/loaded cart lines**
 
 Ensure the storage serialization keys each line by `productId+variantId` and retains `variantId` + `variantAttributes`. If the existing storage relies on `productId`, change the dedupe to use `variantKey`.
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `cd frontend && bun run test`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add frontend/src/pos/cart-storage.js frontend/src/pos/cart-storage.test.js 2>/dev/null
@@ -1636,7 +1636,7 @@ git commit -m "Cart storage persists variantId per line"
 **Files:**
 - Modify: `frontend/src/pos/store.jsx`
 
-- [ ] **Step 1: Extend addToCart to accept a variant argument**
+- [x] **Step 1: Extend addToCart to accept a variant argument**
 
 Replace `addToCart`:
 
@@ -1671,7 +1671,7 @@ Update `updateCartQty` to accept variantId and match lines by `variantKey`:
 
 Import `variantKey` from `./domain.js`.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add frontend/src/pos/store.jsx
@@ -1683,7 +1683,7 @@ git commit -m "Store addToCart accepts variant; updateCartQty keyed by variant"
 **Files:**
 - Create: `frontend/src/components/pos/VariantSelector.jsx`
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 ```jsx
 import React from "react";
@@ -1745,7 +1745,7 @@ export function VariantSelector({ product, onChoose, onClose }) {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add frontend/src/components/pos/VariantSelector.jsx
@@ -1757,7 +1757,7 @@ git commit -m "Add VariantSelector component"
 **Files:**
 - Modify: `frontend/src/components/pos/ProductCard.jsx`
 
-- [ ] **Step 1: Show variant count and open selector on add**
+- [x] **Step 1: Show variant count and open selector on add**
 
 Wrap the `onAdd` handler in `PosProductCard` to inspect product variants:
 
@@ -1801,7 +1801,7 @@ export function PosProductCard({ product, onAdd, onOpenVariants, disabled = fals
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add frontend/src/components/pos/ProductCard.jsx
@@ -1813,7 +1813,7 @@ git commit -m "ProductCard opens variant selector for multi-variant products"
 **Files:**
 - Modify: `frontend/src/components/pos/ProductCatalog.jsx`
 
-- [ ] **Step 1: Render selector dialog and pass onOpenVariants**
+- [x] **Step 1: Render selector dialog and pass onOpenVariants**
 
 Add state and a dialog/Sheet rendering `VariantSelector`. On choose, call `addToCart(product.id, variant)` and close.
 
@@ -1838,7 +1838,7 @@ export function ProductCatalog({ products, onAdd, disabled }) {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add frontend/src/components/pos/ProductCatalog.jsx
@@ -1850,7 +1850,7 @@ git commit -m "ProductCatalog opens VariantSelector and adds chosen variant to c
 **Files:**
 - Modify: `frontend/src/components/pos/CartRow.jsx`
 
-- [ ] **Step 1: Render sub-label**
+- [x] **Step 1: Render sub-label**
 
 Under `<p className="line-clamp-2 text-sm font-semibold leading-5 text-text">{item.name}</p>` add:
 
@@ -1860,7 +1860,7 @@ Under `<p className="line-clamp-2 text-sm font-semibold leading-5 text-text">{it
             )}
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add frontend/src/components/pos/CartRow.jsx
@@ -1872,23 +1872,23 @@ git commit -m "CartRow shows variant attributes sub-label"
 **Files:**
 - Modify: `frontend/src/pages/ProductsPage.jsx`
 
-- [ ] **Step 1: Add editor state for attributes and variants**
+- [x] **Step 1: Add editor state for attributes and variants**
 
 Track `editing.attributesConfig` (array) and `editing.variants` (array). When the simple toggle is on (empty `attributesConfig`), keep the single price/stock/barcode fields mapping to the single default variant. When attributes are added, render the variant matrix.
 
-- [ ] **Step 2: Render attribute editor**
+- [x] **Step 2: Render attribute editor**
 
 Add chips input for attribute options and a text input for attribute name. Each attribute row has "Remove" that calls a helper rejecting removal when an active variant uses the attribute (≥2 active variants) — show inline error.
 
-- [ ] **Step 3: Render variant matrix**
+- [x] **Step 3: Render variant matrix**
 
 For each cartesian combination of option arrays, render a row labelled with the attributes (read-only) and inputs for price, stock, barcode, image, active. Bind values to `editing.variants[i].*`.
 
-- [ ] **Step 4: Include attributesConfig & variants in the save payload**
+- [x] **Step 4: Include attributesConfig & variants in the save payload**
 
 Extend `toProductFormData` paths in `store-data.js` already done in Task 15 to carry `attributesConfig`. Variants are saved via the variant endpoints after product create; for product create, if no `attributesConfig` the existing single-variant default payload still flows. For product update with variants, after save loop variant endpoints to create/update/delete variants (or rely on dedicated UI controls).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/ProductsPage.jsx
@@ -1897,17 +1897,17 @@ git commit -m "Product form: variant attribute editor and variant matrix"
 
 ## Task 23: Frontend full test + lint
 
-- [ ] **Step 1: Run frontend tests**
+- [x] **Step 1: Run frontend tests**
 
 Run: `cd frontend && bun run test`
 Expected: PASS.
 
-- [ ] **Step 2: Run frontend build**
+- [x] **Step 2: Run frontend build**
 
 Run: `cd frontend && bun run build`
 Expected: build succeeds.
 
-- [ ] **Step 3: Commit any fixture updates**
+- [x] **Step 3: Commit any fixture updates**
 
 ```bash
 git add -A frontend && git commit -m "Verify frontend variant integration"
@@ -1915,17 +1915,17 @@ git add -A frontend && git commit -m "Verify frontend variant integration"
 
 ## Task 24: Backend full test + race
 
-- [ ] **Step 1: Format & vet**
+- [x] **Step 1: Format & vet**
 
 Run: `cd backend && gofmt -w ./cmd ./internal && go vet ./...`
 Expected: no errors.
 
-- [ ] **Step 2: Race tests**
+- [x] **Step 2: Race tests**
 
 Run: `cd backend && go test ./... -race`
 Expected: PASS.
 
-- [ ] **Step 3: Commit formatting if changed**
+- [x] **Step 3: Commit formatting if changed**
 
 ```bash
 git add -A backend && git commit -m "Format and verify backend variants"
