@@ -33,6 +33,9 @@ func (h *Handler) Register(group fiber.Router) {
 	group.Post("/products", h.create)
 	group.Put("/products/:id", h.update)
 	group.Delete("/products/:id", h.deactivate)
+	group.Post("/products/:id/variants", h.createVariant)
+	group.Patch("/products/:id/variants/:variantId", h.updateVariant)
+	group.Delete("/products/:id/variants/:variantId", h.deleteVariant)
 }
 
 func (h *Handler) image(c fiber.Ctx) error {
@@ -98,6 +101,21 @@ func productError(c fiber.Ctx, err error) error {
 	}
 	if errors.Is(err, ErrNotFound) {
 		return respond.Error(c, apperror.New(404, "PRODUCT_NOT_FOUND", "product was not found"))
+	}
+	if errors.Is(err, ErrVariantNotFound) {
+		return respond.Error(c, apperror.New(404, "VARIANT_NOT_FOUND", "variant was not found"))
+	}
+	if errors.Is(err, ErrVariantBarcodeConflict) {
+		return respond.Error(c, apperror.New(409, "BARCODE_CONFLICT", "barcode already exists"))
+	}
+	if errors.Is(err, ErrMissingVariantId) {
+		return respond.Error(c, apperror.New(422, "MISSING_VARIANT_ID", "variant id is required for this product"))
+	}
+	if errors.Is(err, ErrInvalidAttributes) {
+		return respond.Error(c, apperror.New(422, "INVALID_VARIANT_ATTRIBUTES", "variant attributes do not match the product configuration"))
+	}
+	if errors.Is(err, ErrMinVariants) {
+		return respond.Error(c, apperror.New(409, "MIN_VARIANTS", "product must have at least one active variant"))
 	}
 	return respond.Error(c, err)
 }
@@ -333,4 +351,67 @@ func (h *Handler) deactivate(c fiber.Ctx) error {
 		return productError(c, err)
 	}
 	return c.JSON(fiber.Map{"data": item})
+}
+
+func (h *Handler) createVariant(c fiber.Ctx) error {
+	id, err := identity(c)
+	if err != nil {
+		return respond.Error(c, err)
+	}
+	productID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return respond.Error(c, apperror.New(400, "INVALID_PRODUCT_ID", "product ID is invalid"))
+	}
+	input, decodeErr := decode[VariantInput](c)
+	if decodeErr != nil {
+		return respond.Error(c, decodeErr)
+	}
+	item, err := h.service.CreateVariant(c.Context(), id, productID, input)
+	if err != nil {
+		return productError(c, err)
+	}
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"data": item})
+}
+
+func (h *Handler) updateVariant(c fiber.Ctx) error {
+	id, err := identity(c)
+	if err != nil {
+		return respond.Error(c, err)
+	}
+	productID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return respond.Error(c, apperror.New(400, "INVALID_PRODUCT_ID", "product ID is invalid"))
+	}
+	variantID, err := uuid.Parse(c.Params("variantId"))
+	if err != nil {
+		return respond.Error(c, apperror.New(400, "INVALID_VARIANT_ID", "variant ID is invalid"))
+	}
+	input, decodeErr := decode[VariantInput](c)
+	if decodeErr != nil {
+		return respond.Error(c, decodeErr)
+	}
+	item, err := h.service.UpdateVariant(c.Context(), id, productID, variantID, input)
+	if err != nil {
+		return productError(c, err)
+	}
+	return c.JSON(fiber.Map{"data": item})
+}
+
+func (h *Handler) deleteVariant(c fiber.Ctx) error {
+	id, err := identity(c)
+	if err != nil {
+		return respond.Error(c, err)
+	}
+	productID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return respond.Error(c, apperror.New(400, "INVALID_PRODUCT_ID", "product ID is invalid"))
+	}
+	variantID, err := uuid.Parse(c.Params("variantId"))
+	if err != nil {
+		return respond.Error(c, apperror.New(400, "INVALID_VARIANT_ID", "variant ID is invalid"))
+	}
+	if err := h.service.DeleteVariant(c.Context(), id, productID, variantID); err != nil {
+		return productError(c, err)
+	}
+	return c.Status(http.StatusNoContent).Send(nil)
 }
