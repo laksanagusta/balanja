@@ -22,9 +22,11 @@ create table if not exists product_variants (
   image_key text not null default '',
   active boolean not null default true,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (org_id, barcode) where barcode <> ''
+  updated_at timestamptz not null default now()
 );
+
+create unique index product_variants_org_barcode_idx
+  on product_variants (org_id, barcode) where barcode <> '';
 
 create index if not exists product_variants_org_product_idx
   on product_variants (org_id, product_id);
@@ -45,8 +47,8 @@ alter table stock_movements
 
 alter table stock_movements
   add constraint stock_movements_variant_fkey
-  foreign key (org_id, product_variant_id)
-  references product_variants (org_id, id) on delete set null;
+  foreign key (product_variant_id)
+  references product_variants (id) on delete set null;
 
 alter table product_variants enable row level security;
 alter table product_variants force row level security;

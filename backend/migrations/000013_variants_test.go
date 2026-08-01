@@ -15,7 +15,8 @@ func TestVariantsMigrationContract(t *testing.T) {
 	for _, required := range []string{
 		"create table if not exists product_variants",
 		"attributes_config jsonb not null default '[]'::jsonb",
-		"unique (org_id, barcode) where barcode <> ''",
+		"create unique index product_variants_org_barcode_idx",
+		"on product_variants (org_id, barcode) where barcode <> ''",
 		"insert into product_variants",
 		"product_variants_set_updated_at",
 		"force row level security",
