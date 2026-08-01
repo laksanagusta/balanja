@@ -53,6 +53,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
   const feedbackHideTimerRef = React.useRef(null);
   const feedbackRemoveTimerRef = React.useRef(null);
   const closeTimerRef = React.useRef(null);
+  const streamStopTimerRef = React.useRef(null);
   const [manualCode, setManualCode] = React.useState("");
   const [error, setError] = React.useState("");
   const [scanning, setScanning] = React.useState(false);
@@ -175,6 +176,11 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
       setError("");
 
       try {
+        if (controlsRef.current) {
+          setScanning(true);
+          return;
+        }
+
         const controls = await reader.decodeFromConstraints(SCANNER_CAMERA_CONSTRAINTS, videoRef.current, (result, err) => {
           if (result) {
             if (processingRef.current) return;
@@ -210,9 +216,12 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
-      controlsRef.current?.stop();
-      controlsRef.current = null;
       setScanning(false);
+      window.clearTimeout(streamStopTimerRef.current);
+      streamStopTimerRef.current = window.setTimeout(() => {
+        controlsRef.current?.stop();
+        controlsRef.current = null;
+      }, 0);
     };
   }, [open, processDetection]);
 

@@ -45,6 +45,7 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
       content.querySelectorAll("*"),
       scrollPositions,
     );
+    let upwardScrollDistance = 0;
     let travelDistance = 96;
     let frame = 0;
     let settleTimer = 0;
@@ -113,8 +114,13 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
       }
 
       const delta = scrollTop - previousScrollTop;
-      if (Math.abs(delta) >= 0.5) lastDirection = delta > 0 ? "down" : "up";
-      const nextProgress = nextBottomNavigationProgress({ progress, delta, scrollTop });
+      if (Math.abs(delta) >= 0.5) {
+        lastDirection = delta > 0 ? "down" : "up";
+        upwardScrollDistance = delta > 0 ? 0 : upwardScrollDistance - delta;
+      }
+      const nextProgress = lastDirection === "up" && upwardScrollDistance < 48 && progress > 0
+        ? progress
+        : nextBottomNavigationProgress({ progress, delta, scrollTop });
       if (nextProgress === progress) return;
 
       window.clearTimeout(settleTimer);
@@ -321,7 +327,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
         <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-surface">
           <header className="mobile-app-bar shrink-0 bg-surface px-4 pb-3">
             <div className="flex min-h-14 items-center justify-between">
-              <h1 className="min-w-0 truncate text-lg font-extrabold tracking-normal text-text">
+              <h1 className={`min-w-0 truncate text-lg tracking-normal text-text ${pageTitle === "Balanja" ? "font-sora font-bold" : "font-extrabold"}`}>
                 {pageTitle}
               </h1>
               <p className="sr-only">Navigasi aplikasi Balanja</p>
