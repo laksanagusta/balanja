@@ -87,6 +87,9 @@ export function CartRow({
         <div className="cart-item-identity-row grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <p className="line-clamp-2 text-sm font-semibold leading-5 text-text">{item.name}</p>
+            {item.variantAttributes && Object.keys(item.variantAttributes).length > 0 && (
+              <p className="mt-0.5 text-xs text-text-muted">{Object.entries(item.variantAttributes).map(([k, v]) => `${k}: ${v}`).join(", ")}</p>
+            )}
             {unitPrice && (
               <p className="mt-0.5 truncate text-xs tabular-nums text-text-muted">{unitPrice}</p>
             )}
