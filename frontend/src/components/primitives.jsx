@@ -368,6 +368,7 @@ export function Button({
   size = "md",
   mobileSize,
   compactVisual = false,
+  radius = "rounded-control",
   className = "",
   ...props
 }) {
@@ -389,7 +390,6 @@ export function Button({
     lg: "h-11 gap-2.5 px-5 text-lg",
     xl: "h-13 gap-3 px-6 text-xl",
   };
-  const radius = "rounded-control";
   const resolvedMobileSize = mobileSize
     || (compactVisual || size === "xs" || size === "sm"
       ? "compact"

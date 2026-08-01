@@ -2,20 +2,24 @@ import React from "react";
 import { Icon } from "../components/primitives.jsx";
 
 const products = [
-  { name: "Shampoo Botol 170ml", price: "Rp23.500", stock: "14 pcs" },
-  { name: "Susu UHT 1L", price: "Rp19.500", stock: "11 karton" },
-  { name: "Air Mineral 600ml", price: "Rp4.000", stock: "48 botol" },
-  { name: "Snack Kentang", price: "Rp12.000", stock: "27 pcs" },
-  { name: "Deterjen Bubuk 800g", price: "Rp18.000", stock: "20 pack" },
-  { name: "Tisu Gulung 10pcs", price: "Rp24.000", stock: "16 pack" },
-  { name: "Mie Instan Goreng", price: "Rp3.500", stock: "96 pcs" },
-  { name: "Sabun Cuci Piring 750ml", price: "Rp13.500", stock: "22 botol" },
+  { name: "Shampoo Botol 170ml", price: "23.500", stock: "14 pcs" },
+  { name: "Susu UHT 1L", price: "19.500", stock: "11 karton" },
+  { name: "Air Mineral 600ml", price: "4.000", stock: "48 botol" },
+  { name: "Snack Kentang", price: "12.000", stock: "27 pcs" },
+  { name: "Deterjen Bubuk 800g", price: "18.000", stock: "20 pack" },
+  { name: "Tisu Gulung 10pcs", price: "24.000", stock: "16 pack" },
+  { name: "Mie Instan Goreng", price: "3.500", stock: "96 pcs" },
+  { name: "Sabun Cuci Piring 750ml", price: "13.500", stock: "22 botol" },
 ];
 
-const sidebarGroups = [
-  { label: "Ringkasan", items: [["Dashboard", "grid"]] },
-  { label: "Operasional", items: [["Kasir", "receipt"], ["Produk", "box"], ["Stok", "package"]] },
-  { label: "Catatan", items: [["Transaksi", "file"]] },
+const categories = ["Semua", "Minuman", "Snack", "Perawatan", "Rumah Tangga"];
+
+const bottomNavItems = [
+  ["Beranda", "home"],
+  ["Kasir", "receipt"],
+  ["Produk", "box"],
+  ["Stok", "package"],
+  ["Lainnya", "more"],
 ];
 
 function ProductImagePlaceholder({ className = "" }) {
@@ -38,75 +42,81 @@ export default function PosProductMockup({ compact = false }) {
         <span className="size-2.5 rounded-full bg-text/[0.08]" />
       </div>
 
-      <div className={`flex ${compact ? "h-[280px]" : "h-[360px] sm:h-[470px] lg:h-[520px]"}`}>
-        <aside className="hidden w-[150px] shrink-0 flex-col border-r border-border bg-surface sm:flex lg:w-[185px]">
-          <div className="flex items-center gap-2 px-4 py-4">
-            <span className="grid size-6 place-items-center rounded-control bg-accent text-white">
-              <Icon name="receipt" className="size-3.5" />
-            </span>
-            <span className="text-xs font-bold text-text">balanja</span>
-          </div>
-          <nav className="grid gap-2 px-2">
-            {sidebarGroups.map((group) => (
-              <div key={group.label} className="grid gap-0.5">
-                <span className="px-2.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-text-subtle">{group.label}</span>
-                {group.items.map(([label, icon]) => (
-                  <div
-                    key={label}
-                    className={`flex h-7 items-center gap-2 rounded-control px-2.5 font-medium ${label === "Kasir" ? "bg-surface-muted text-text" : "text-text-muted"}`}
-                  >
-                    <Icon name={icon} className="size-3.5" />
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </nav>
-          <div className="mt-auto flex items-center gap-2 px-3 py-3 text-text-muted">
-            <span className="size-6 rounded-full bg-[conic-gradient(#f59e0b,#8b5cf6,#06b6d4,#f59e0b)]" />
-            <span className="min-w-0 flex-1 truncate">Toko Balanja</span>
-            <Icon name="chevron" className="size-3" />
-          </div>
-        </aside>
-
-        <div className="min-w-0 flex-1 bg-app-bg p-3 sm:p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] text-text-muted">Ruang kerja</p>
-              <h3 className="text-sm font-semibold text-text sm:text-base">Kasir</h3>
-            </div>
-            <div className="flex h-8 w-36 items-center gap-2 rounded-card border border-border bg-surface px-2.5 text-text-subtle sm:w-52">
-              <Icon name="search" className="size-3.5" />
-              <span className="truncate">Cari produk atau barcode...</span>
+      <div className={`relative flex ${compact ? "h-[280px]" : "h-[360px] sm:h-[470px] lg:h-[520px]"}`}>
+        <div className="min-w-0 flex-1 bg-app-bg">
+          <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+            <span className="text-base font-extrabold tracking-normal text-text">Kasir</span>
+            <div className="flex items-center gap-1">
+              <span className="grid size-11 place-items-center rounded-control text-text">
+                <Icon name="scan" className="size-5" />
+              </span>
+              <span className="size-8 rounded-full bg-surface-muted" />
             </div>
           </div>
 
-          <div className="mt-3 flex gap-1 rounded-card bg-surface-muted p-1 text-text-muted">
-            {["Semua", "Minuman", "Snack", "Perawatan", "Rumah Tangga"].map((category, index) => (
-              <span key={category} className={`rounded-control px-2.5 py-1.5 ${index === 0 ? "bg-surface font-semibold text-text" : ""}`}>
+          <div className="px-4">
+            <div className="flex h-11 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft">
+              <Icon name="search" className="size-4 shrink-0 text-text-muted" />
+              <span className="truncate text-text-subtle">Cari produk atau barcode...</span>
+            </div>
+          </div>
+
+          <div className="mt-2 flex gap-1 overflow-hidden px-4">
+            {categories.map((category, index) => (
+              <span
+                key={category}
+                className={`inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-xs font-semibold ${
+                  index === 0 ? "border-accent bg-accent text-white" : "border-border bg-surface text-text"
+                }`}
+              >
                 {category}
               </span>
             ))}
           </div>
 
-          <div className={`mt-3 grid gap-2 ${compact ? "grid-cols-2" : "grid-cols-2 xl:grid-cols-4"}`}>
+          <div className={`product-catalog-grid mt-3 grid gap-4 p-3 sm:p-4 ${compact ? "grid-cols-2" : "grid-cols-2 xl:grid-cols-4"}`}>
             {products.map((product) => (
-              <article key={product.name} className="overflow-hidden rounded-card border border-border bg-surface shadow-low">
-                <div className="relative h-16 overflow-hidden bg-surface-muted sm:h-24 lg:h-28">
+              <article key={product.name} className="pos-product-card grid content-start gap-2">
+                <div className="relative aspect-square w-full overflow-hidden rounded-panel bg-surface-muted">
                   <ProductImagePlaceholder className="h-full w-full" />
-                  <span className="absolute right-1.5 top-1.5 rounded-full bg-surface/90 px-1.5 py-0.5 text-[8px] font-semibold text-text">{product.stock}</span>
+                  <span className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full border border-border bg-surface text-text shadow-low">
+                    <Icon name="plus" className="size-4" />
+                  </span>
                 </div>
-                <div className="p-2">
-                  <p className="truncate font-semibold text-text">{product.name}</p>
-                  <p className="mt-0.5 text-text-muted">{product.price}</p>
+                <div className="grid gap-1 px-0 pb-0 pt-1">
+                  <p className="line-clamp-2 text-[15px] font-medium leading-[1.35] text-text">{product.name}</p>
+                  <p className="text-[15px] font-[750] leading-tight tabular-nums text-text">{product.price}</p>
                 </div>
-                <div className="px-2 py-1.5 text-center font-semibold text-text">Tambah ke keranjang</div>
               </article>
             ))}
           </div>
+
+          <div className="absolute inset-x-0 bottom-16 flex justify-center lg:hidden">
+            <span className="inline-flex h-13 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-white">
+              <Icon name="cart" className="size-4" />
+              <span>Keranjang</span>
+              <span className="grid min-w-5 place-items-center rounded-full bg-white/16 px-1.5 text-xs tabular-nums">4</span>
+            </span>
+          </div>
+
+          <nav className="absolute inset-x-0 bottom-0 grid grid-cols-5 bg-surface/88 p-1 backdrop-blur-xl lg:hidden">
+            {bottomNavItems.map(([label, icon], index) => (
+              <div
+                key={label}
+                className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[10px] font-semibold ${
+                  index === 1 ? "text-accent" : "text-text-muted"
+                }`}
+              >
+                <span className={`grid size-8 place-items-center rounded-full ${index === 1 ? "bg-accent-soft" : ""}`}>
+                  <Icon name={icon} className="size-5" />
+                </span>
+                <span className="max-w-full truncate">{label}</span>
+              </div>
+            ))}
+          </nav>
         </div>
 
-        <aside className="hidden w-[235px] shrink-0 flex-col border-l border-border bg-surface p-4 lg:flex xl:w-[280px]">
+        <aside className="hidden w-[240px] shrink-0 flex-col border-l border-border bg-surface p-4 lg:flex xl:w-[280px]">
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-sm font-semibold text-text">Keranjang</h3>
@@ -129,7 +139,7 @@ export default function PosProductMockup({ compact = false }) {
           <div className="mt-auto pt-4">
             <div className="flex justify-between text-text-muted"><span>Subtotal</span><span>Rp35.000</span></div>
             <div className="mt-2 flex justify-between text-sm font-semibold text-text"><span>Total pembayaran</span><span>Rp35.000</span></div>
-            <div className="mt-4 flex h-9 items-center justify-center rounded-card bg-accent font-semibold text-white">Selesaikan transaksi</div>
+            <div className="mt-4 flex h-11 items-center justify-center rounded-control bg-accent font-semibold text-white">Selesaikan transaksi</div>
           </div>
         </aside>
       </div>

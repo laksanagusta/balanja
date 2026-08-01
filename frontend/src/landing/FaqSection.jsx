@@ -5,7 +5,7 @@ export default function FaqSection() {
   const [openIndex, setOpenIndex] = React.useState(0);
 
   return (
-    <section id="faq" className="scroll-mt-24 px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
+    <section id="faq" className="scroll-mt-24 px-4 pt-20 pb-8 sm:px-6 sm:pt-28 sm:pb-10 lg:pt-36 lg:pb-12">
       <div className="mx-auto max-w-3xl">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">FAQ</p>
         <h2 className="mt-4 max-w-2xl text-[36px] font-semibold leading-[1.04] tracking-[-0.035em] text-text sm:text-[48px]">
