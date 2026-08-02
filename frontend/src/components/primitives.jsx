@@ -386,10 +386,10 @@ export function Button({
 
   const sizes = {
     xs: "h-6 gap-1 px-2 text-xs",
-    sm: "h-8 gap-1.5 px-2.5 text-sm",
-    base: "h-9 gap-2 px-3.5 text-sm",
-    md: "h-9 gap-2 px-3.5 text-sm",
-    lg: "h-11 gap-2.5 px-5 text-lg",
+    sm: "h-9 gap-1.5 px-2.5 text-sm",
+    base: "h-11 gap-2 px-3.5 text-sm",
+    md: "h-11 gap-2 px-3.5 text-sm",
+    lg: "h-12 gap-2.5 px-5 text-lg",
     xl: "h-13 gap-3 px-6 text-xl",
   };
   const resolvedMobileSize = mobileSize
@@ -472,14 +472,14 @@ export function Input({
         data-density={density}
         data-ui-size={size}
         className={`ui-input-hitbox flex ${
-          size === "large" ? "h-11" : density === "compact" ? "h-9" : "h-11 md:h-9"
+          size === "large" ? "h-12" : density === "compact" ? "h-9" : "h-11"
         } w-full min-w-0 items-center`}
       >
         <span
           data-density={density}
           data-ui-size={size}
           className={`ui-input-surface flex ${
-            size === "large" ? "h-11" : "h-9"
+            size === "large" ? "h-12" : density === "compact" ? "h-9" : "h-11"
           } w-full min-w-0 items-center gap-3 rounded-control border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 transition-colors duration-base ease-standard motion-reduce:transition-none ${
             error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
           }`}

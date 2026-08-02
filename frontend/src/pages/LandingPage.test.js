@@ -68,6 +68,29 @@ test("hero uses the faithful POS mockup over the generated retail image", async 
   assert.match(mockup, /Cari produk atau barcode/);
   assert.match(mockup, /Total pembayaran/);
   assert.match(mockup, /Selesaikan transaksi/);
+  assert.match(page, /rounded-panel pt-12 sm:pt-16/);
+  assert.match(page, /rounded-t-panel bg-white\/25 px-2 pt-2/);
+  assert.match(mockup, /visibleProducts = products\.slice\(0, 4\)/);
+  assert.match(mockup, /compact \? "" : "flex-wrap"/);
+  assert.match(mockup, /h-\[360px\] sm:h-\[470px\] lg:h-\[520px\]/);
+  assert.match(mockup, /!compact && index > 1 \? "hidden sm:grid" : "grid"/);
+});
+
+test("compact POS feature mockup is a complete centered frame", async () => {
+  const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
+  const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../components/design/MarketingPatternsShowcase.jsx", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(page, /grid h-full place-items-center p-4/);
+  assert.match(mockup, /mx-auto w-full max-w-\[34rem\] rounded-card/);
+  assert.match(mockup, /visibleProducts = products\.slice\(0, 4\)/);
+  assert.match(mockup, /compact \? categories\.slice\(0, 3\) : categories/);
+  assert.doesNotMatch(mockup, /compact \? "h-\[280px\]"/);
+  assert.match(mockup, /compact \? "relative" : "absolute inset-x-0 bottom-0 lg:hidden"/);
+  assert.match(mockup, /compact \? "hidden" : "hidden lg:flex"/);
+  assert.match(showcase, /grid min-h-48 place-items-center rounded-panel bg-surface-muted p-4/);
+  assert.match(design, /hero retains its established responsive preview heights of 360px, 470px, and 520px/);
 });
 
 test("POS mockup uses neutral placeholders instead of product photos", async () => {

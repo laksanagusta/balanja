@@ -31,10 +31,17 @@ function ProductImagePlaceholder({ className = "" }) {
 }
 
 export default function PosProductMockup({ compact = false }) {
+  const visibleCategories = compact ? categories.slice(0, 3) : categories;
+  const visibleProducts = products.slice(0, 4);
+
   return (
     <div
       aria-hidden="true"
-      className={`overflow-hidden rounded-t-xl border border-b-0 border-border-strong bg-app-bg shadow-[0_40px_90px_-50px_rgba(0,0,0,0.5)] ${compact ? "text-[9px]" : "text-[10px] lg:text-[11px]"}`}
+      className={`overflow-hidden border border-border-strong bg-app-bg shadow-[0_40px_90px_-50px_rgba(0,0,0,0.5)] ${
+        compact
+          ? "mx-auto w-full max-w-[34rem] rounded-card text-[9px]"
+          : "rounded-panel text-[10px] lg:text-[11px]"
+      }`}
     >
       <div className="flex items-center gap-1.5 bg-surface-muted px-3 py-2.5">
         <span className="size-2.5 rounded-full bg-text/20" />
@@ -42,7 +49,7 @@ export default function PosProductMockup({ compact = false }) {
         <span className="size-2.5 rounded-full bg-text/[0.08]" />
       </div>
 
-      <div className={`relative flex ${compact ? "h-[280px]" : "h-[360px] sm:h-[470px] lg:h-[520px]"}`}>
+      <div className={`relative flex ${compact ? "" : "h-[360px] sm:h-[470px] lg:h-[520px]"}`}>
         <div className="min-w-0 flex-1 bg-app-bg">
           <div className="flex items-center justify-between gap-3 px-4 py-2.5">
             <span className="text-base font-extrabold tracking-normal text-text">Kasir</span>
@@ -61,8 +68,8 @@ export default function PosProductMockup({ compact = false }) {
             </div>
           </div>
 
-          <div className="mt-2 flex gap-1 overflow-hidden px-4">
-            {categories.map((category, index) => (
+          <div className={`mt-2 flex gap-1 px-4 ${compact ? "" : "flex-wrap"}`}>
+            {visibleCategories.map((category, index) => (
               <span
                 key={category}
                 className={`inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-xs font-semibold ${
@@ -74,9 +81,9 @@ export default function PosProductMockup({ compact = false }) {
             ))}
           </div>
 
-          <div className={`product-catalog-grid mt-3 grid gap-4 p-3 sm:p-4 ${compact ? "grid-cols-2" : "grid-cols-2 xl:grid-cols-4"}`}>
-            {products.map((product) => (
-              <article key={product.name} className="pos-product-card grid content-start gap-2">
+          <div className={`product-catalog-grid mt-3 grid p-3 sm:p-4 ${compact ? "grid-cols-2 gap-3 sm:grid-cols-4" : "grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-4"}`}>
+            {visibleProducts.map((product, index) => (
+              <article key={product.name} className={`pos-product-card content-start gap-2 ${!compact && index > 1 ? "hidden sm:grid" : "grid"}`}>
                 <div className="relative aspect-square w-full overflow-hidden rounded-panel bg-surface-muted">
                   <ProductImagePlaceholder className="h-full w-full" />
                   <span className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full border border-border bg-surface text-text shadow-low">
@@ -91,7 +98,7 @@ export default function PosProductMockup({ compact = false }) {
             ))}
           </div>
 
-          <div className="absolute inset-x-0 bottom-16 flex justify-center lg:hidden">
+          <div className={`${compact ? "my-3" : "absolute inset-x-0 bottom-16 lg:hidden"} flex justify-center`}>
             <span className="inline-flex h-13 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-white">
               <Icon name="cart" className="size-4" />
               <span>Keranjang</span>
@@ -99,7 +106,7 @@ export default function PosProductMockup({ compact = false }) {
             </span>
           </div>
 
-          <nav className="absolute inset-x-0 bottom-0 grid grid-cols-5 bg-surface/88 p-1 backdrop-blur-xl lg:hidden">
+          <nav className={`${compact ? "relative" : "absolute inset-x-0 bottom-0 lg:hidden"} grid grid-cols-5 bg-surface/88 p-1 backdrop-blur-xl`}>
             {bottomNavItems.map(([label, icon], index) => (
               <div
                 key={label}
@@ -116,7 +123,7 @@ export default function PosProductMockup({ compact = false }) {
           </nav>
         </div>
 
-        <aside className="hidden w-[240px] shrink-0 flex-col border-l border-border bg-surface p-4 lg:flex xl:w-[280px]">
+        <aside className={`${compact ? "hidden" : "hidden lg:flex"} w-[240px] shrink-0 flex-col border-l border-border bg-surface p-4 xl:w-[280px]`}>
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-sm font-semibold text-text">Keranjang</h3>

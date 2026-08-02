@@ -134,7 +134,7 @@ test("mobile navigation uses a full-bleed top bar and accessible floating five-i
   assert.match(css, /\.mobile-bottom-navigation\s*\{[\s\S]*max-inline-size:\s*44rem;[\s\S]*border:\s*1px solid[\s\S]*border-radius:\s*9999px;[\s\S]*box-shadow:\s*var\(--shadow-navigation\)/);
   assert.match(css, /prefers-reduced-transparency/);
   assert.match(showcase, /floating five-item bottom navigation/);
-  assert.match(showcase, /active item receives a pill-shaped fill that slides between cells/);
+  assert.match(showcase, /active item receives one pill-shaped fill that slides between cells/);
   assert.match(showcase, /progressively collapses while scrolling down/);
   assert.match(showcase, /continues across route transitions/);
   assert.match(showcase, /Pointer route selection releases focus/);
@@ -188,6 +188,8 @@ test("bottom navigation tracks internal scrolling and settles in the scroll dire
 
 test("bottom navigation active background slides as a pill between items", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
   assert.match(source, /mobile-bottom-nav-pill/);
   assert.match(source, /pill\.style\.transform = `translateX\(\$\{target\.offsetLeft\}px\)`/);
@@ -196,6 +198,10 @@ test("bottom navigation active background slides as a pill between items", async
   assert.match(source, /itemRefs\.current\.set\(key, node\)/);
   assert.match(source, /window\.addEventListener\("resize", updatePill\)/);
   assert.doesNotMatch(source, /mobile-bottom-nav-item[^"]*bg-surface-muted text-accent/);
+  assert.doesNotMatch(source, /size-8 place-items-center rounded-full transition-colors/);
+  assert.doesNotMatch(showcase, /size-8 place-items-center rounded-full/);
+  assert.match(showcase, /icons remain unwrapped so no second circular background competes with it/);
+  assert.match(design, /Icons remain unwrapped without a circular fill/);
 });
 
 test("desktop widths never introduce a sidebar or icon rail", async () => {

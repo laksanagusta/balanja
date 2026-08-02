@@ -127,7 +127,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
                     delay={index * 60}
                     className={`grid overflow-hidden rounded-panel border border-border bg-surface shadow-low ${index === 0 ? "lg:col-span-7" : "lg:col-span-5"}`}
                   >
-                    <div className="min-h-48 bg-surface-muted">{feature.visual === "pos" ? <div className="p-4"><PosProductMockup compact /></div> : <FeatureVisual type={feature.visual} />}</div>
+                    <div className="min-h-48 bg-surface-muted">{feature.visual === "pos" ? <div className="grid h-full place-items-center p-4"><PosProductMockup compact /></div> : <FeatureVisual type={feature.visual} />}</div>
                     <div className="p-4">
                       <h3 className="text-base font-semibold text-text">{feature.title}</h3>
                       <p className="mt-2 text-sm leading-6 text-text-muted">{feature.description}</p>
@@ -144,7 +144,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
                     delay={(index + 2) * 60}
                     className="grid overflow-hidden rounded-panel border border-border bg-surface shadow-low"
                   >
-                    <div className="min-h-48 bg-surface-muted">{feature.visual === "pos" ? <div className="p-4"><PosProductMockup compact /></div> : <FeatureVisual type={feature.visual} />}</div>
+                    <div className="min-h-48 bg-surface-muted">{feature.visual === "pos" ? <div className="grid h-full place-items-center p-4"><PosProductMockup compact /></div> : <FeatureVisual type={feature.visual} />}</div>
                     <div className="p-4">
                       <h3 className="text-base font-semibold text-text">{feature.title}</h3>
                       <p className="mt-2 text-sm leading-6 text-text-muted">{feature.description}</p>
