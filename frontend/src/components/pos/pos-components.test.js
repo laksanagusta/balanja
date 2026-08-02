@@ -78,6 +78,21 @@ test("POS catalog groups compact price and add action without repeating Rp", asy
   assert.match(design, /white circular plus control over the product photo/);
 });
 
+test("POS variant selection uses a bottom drawer with a tight action edge", async () => {
+  const catalog = await readFile(new URL("./ProductCatalog.jsx", import.meta.url), "utf8");
+  const selector = await readFile(new URL("./VariantSelector.jsx", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(catalog, /from "vaul"/);
+  assert.match(catalog, /<Drawer\.Content/);
+  assert.match(catalog, /pos-variant-drawer fixed inset-x-0 bottom-0/);
+  assert.match(catalog, /<Drawer\.Handle/);
+  assert.match(catalog, /<Drawer\.Title[^>]*>\s*Pilih variasi/);
+  assert.match(catalog, /pb-\[max\(0\.75rem,env\(safe-area-inset-bottom,0px\)\)\]/);
+  assert.match(selector, /variant-selector grid gap-5 pb-1/);
+  assert.match(design, /POS variant selection uses a bottom drawer rather than a centered dialog/);
+});
+
 test("cart controls and payment choices stay visually compact with coarse-pointer targets", async () => {
   const cart = await readFile(new URL("./CartRow.jsx", import.meta.url), "utf8");
   const product = await readFile(new URL("./ProductCard.jsx", import.meta.url), "utf8");
@@ -205,4 +220,13 @@ test("variant selector exposes available choices, price, stock, and pressed stat
   assert.match(selector, /formatPrice\(matchedVariant\.price\)/);
   assert.match(selector, /role="status" aria-live="polite"/);
   assert.doesNotMatch(selector, /onClose/);
+});
+
+test("variant selector gives labels room and styles status like a stock card", async () => {
+  const selector = await readFile(new URL("./VariantSelector.jsx", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(selector, /fieldset key=\{attr\.name\} className="grid gap-3"/);
+  assert.match(selector, /min-h-12 rounded-card border border-border bg-surface-muted p-4 shadow-low/);
+  assert.match(design, /each attribute label has 12px separation from its option group/);
 });

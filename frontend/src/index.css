@@ -41,15 +41,15 @@
   --radius-panel: 16px;
   --radius-overlay: 32px;
 
-  --control-height-mobile-button-hit: 36px;
-  --control-height-mobile-button: 36px;
-  --control-height-mobile-button-large: 52px;
+  --control-height-mobile-button-hit: 44px;
+  --control-height-mobile-button: 44px;
+  --control-height-mobile-button-large: 48px;
   --control-height-mobile-compact: 36px;
-  --control-height-mobile-field-hit: 36px;
-  --control-height-mobile-input: 36px;
-  --control-height-mobile-input-large: 56px;
+  --control-height-mobile-field-hit: 44px;
+  --control-height-mobile-input: 44px;
+  --control-height-mobile-input-large: 48px;
   --control-height-mobile-search: 44px;
-  --control-inset-mobile-compact-hit: 0px;
+  --control-inset-mobile-compact-hit: -4px;
 
   --shadow-low: 0 1px 2px rgb(0 0 0 / 0.05);
   --shadow-navigation: 0 12px 32px rgb(18 18 18 / 0.12), 0 2px 8px rgb(18 18 18 / 0.06);
@@ -108,6 +108,51 @@
     background: rgb(255 255 255 / 0.42);
     backdrop-filter: blur(4px) saturate(115%);
     -webkit-backdrop-filter: blur(4px) saturate(115%);
+  }
+
+  .transaction-detail-drawer {
+    transform-origin: center;
+  }
+
+  .transaction-detail-drawer[data-state="open"] {
+    animation: transaction-receipt-open 520ms cubic-bezier(0.2, 0.84, 0.24, 1) both;
+  }
+
+  .transaction-detail-drawer[data-state="closed"] {
+    animation: transaction-receipt-close 180ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  .transaction-detail-drawer-overlay[data-state="open"] {
+    animation: transaction-receipt-scrim-in 260ms var(--ease-standard) both;
+  }
+
+  .transaction-detail-drawer-overlay[data-state="closed"] {
+    animation: transaction-receipt-scrim-out 160ms var(--ease-standard) both;
+  }
+
+  .transaction-receipt-paper::before,
+  .transaction-receipt-paper::after {
+    position: absolute;
+    z-index: 2;
+    inset-inline: 0;
+    block-size: 6px;
+    background: var(--color-surface-muted);
+    clip-path: polygon(0 0, 1.5% 100%, 3% 0, 4.5% 100%, 6% 0, 7.5% 100%, 9% 0, 10.5% 100%, 12% 0, 13.5% 100%, 15% 0, 16.5% 100%, 18% 0, 19.5% 100%, 21% 0, 22.5% 100%, 24% 0, 25.5% 100%, 27% 0, 28.5% 100%, 30% 0, 31.5% 100%, 33% 0, 34.5% 100%, 36% 0, 37.5% 100%, 39% 0, 40.5% 100%, 42% 0, 43.5% 100%, 45% 0, 46.5% 100%, 48% 0, 49.5% 100%, 51% 0, 52.5% 100%, 54% 0, 55.5% 100%, 57% 0, 58.5% 100%, 60% 0, 61.5% 100%, 63% 0, 64.5% 100%, 66% 0, 67.5% 100%, 69% 0, 70.5% 100%, 72% 0, 73.5% 100%, 75% 0, 76.5% 100%, 78% 0, 79.5% 100%, 81% 0, 82.5% 100%, 84% 0, 85.5% 100%, 87% 0, 88.5% 100%, 90% 0, 91.5% 100%, 93% 0, 94.5% 100%, 96% 0, 97.5% 100%, 99% 0, 100% 0);
+    content: "";
+    pointer-events: none;
+  }
+
+  .transaction-receipt-paper::before {
+    inset-block-start: 0;
+  }
+
+  .transaction-receipt-paper::after {
+    inset-block-end: 0;
+    transform: rotate(180deg);
+  }
+
+  .transaction-receipt-divider {
+    border-block-start: 1px dashed var(--color-border);
   }
 
   .overlay-sticky-header {
@@ -1010,6 +1055,45 @@
     inset-inline: 0;
 }
 
+@keyframes transaction-receipt-open {
+  from {
+    opacity: 0;
+    transform: scaleY(0.08) scaleX(0.94);
+  }
+  52% {
+    opacity: 1;
+    transform: scaleY(1.025) scaleX(1);
+  }
+  76% {
+    transform: scaleY(0.985) scaleX(1);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1) scaleX(1);
+  }
+}
+
+@keyframes transaction-receipt-close {
+  from {
+    opacity: 1;
+    transform: scaleY(1) scaleX(1);
+  }
+  to {
+    opacity: 0;
+    transform: scaleY(0.08) scaleX(0.94);
+  }
+}
+
+@keyframes transaction-receipt-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes transaction-receipt-scrim-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @keyframes marketing-reveal {
   0% {
     transform: translateY(14px);
@@ -1287,6 +1371,25 @@
     transition-duration: 140ms !important;
   }
 
+  .transaction-detail-drawer,
+  .transaction-detail-drawer-overlay {
+    animation: none !important;
+  }
+
+  .transaction-detail-drawer[data-state="open"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .transaction-detail-drawer[data-state="closed"] {
+    opacity: 0;
+    transform: none;
+  }
+
+  .transaction-detail-drawer-overlay[data-state="closed"] {
+    opacity: 0;
+  }
+
   .retail-pos-cart-pane {
     opacity: 0;
     transform: none;
@@ -1514,5 +1617,51 @@
   textarea,
   select {
     font-size: 16px;
+  }
+}
+
+@media print {
+  body.printing-receipt > * {
+    visibility: hidden !important;
+  }
+
+  body.printing-receipt .transaction-detail-drawer,
+  body.printing-receipt .transaction-detail-drawer * {
+    visibility: visible !important;
+  }
+
+  body.printing-receipt .transaction-detail-drawer {
+    position: static !important;
+    inset: auto !important;
+    width: 80mm !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    animation: none !important;
+  }
+
+  body.printing-receipt .transaction-detail-drawer-overlay,
+  body.printing-receipt .transaction-receipt-controls,
+  body.printing-receipt .transaction-receipt-handle {
+    display: none !important;
+  }
+
+  body.printing-receipt .transaction-receipt-paper {
+    min-height: auto !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+  }
+
+  body.printing-receipt .transaction-receipt-paper::before,
+  body.printing-receipt .transaction-receipt-paper::after {
+    display: none !important;
+  }
+
+  body.printing-receipt .transaction-receipt-scroll {
+    overflow: visible !important;
+    max-height: none !important;
   }
 }

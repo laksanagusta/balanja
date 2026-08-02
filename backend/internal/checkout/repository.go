@@ -119,7 +119,7 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 			return Result{}, fmt.Errorf("iterate checkout variants: %w", err)
 		}
 	}
-	if len(products) != len(input.Items) {
+	if !productsCoverItems(products, input.Items) {
 		return Result{}, ErrProductNotFound
 	}
 	var taxEnabled bool
@@ -262,6 +262,18 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 		}
 	}
 	return result, nil
+}
+
+// productsCoverItems checks product existence per requested item rather than
+// comparing counts. Multiple cart lines may reference one product when they
+// represent different variants.
+func productsCoverItems(products map[uuid.UUID]lockedProduct, items []ItemInput) bool {
+	for _, item := range items {
+		if _, ok := products[item.ProductID]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func loadEntitlement(ctx context.Context, tx database.Tx, orgID string, lock bool) (entitlement.Record, error) {

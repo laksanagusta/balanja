@@ -212,7 +212,7 @@ function MobileBottomNavigation({ navigationRef, pathname, onNavigate, moreOpen,
               active ? "text-accent" : "text-text-muted"
             }`}
           >
-            <span className={`grid size-8 place-items-center rounded-full transition-colors duration-fast ${active ? "bg-accent-soft" : ""}`}>
+            <span className="grid size-8 place-items-center">
               <Icon name={icon} className="size-6" />
             </span>
             <span className="max-w-full truncate">{label}</span>
@@ -229,7 +229,7 @@ function MobileBottomNavigation({ navigationRef, pathname, onNavigate, moreOpen,
           moreActive || moreOpen ? "text-accent" : "text-text-muted"
         }`}
       >
-        <span className={`grid size-8 place-items-center rounded-full transition-colors duration-fast ${moreActive || moreOpen ? "bg-accent-soft" : ""}`}>
+        <span className="grid size-8 place-items-center">
           <Icon name="more" className="size-6" />
         </span>
         <span>Lainnya</span>

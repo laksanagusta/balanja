@@ -40,6 +40,10 @@ export default function MarketingPatternsShowcase() {
           </div>
         </div>
 
+        <div className="grid min-h-48 place-items-center rounded-panel bg-surface-muted p-4">
+          <PosProductMockup compact />
+        </div>
+
         <div className="mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel bg-white px-5 py-16 text-center">
           <p className="mx-auto max-w-2xl text-[36px] font-semibold leading-none tracking-[-0.04em] text-text">
             Closing CTA on a quiet solid surface

@@ -30,10 +30,10 @@ export function VariantSelector({ product, onChoose }) {
   };
 
   return (
-    <div className="variant-selector grid gap-5 pb-6">
+    <div className="variant-selector grid gap-5 pb-1">
       <p className="text-sm font-semibold text-text">{product.name}</p>
       {config.map((attr) => (
-        <fieldset key={attr.name} className="grid gap-2">
+        <fieldset key={attr.name} className="grid gap-3">
           <legend className="text-xs font-semibold text-text-muted">{attr.name}</legend>
           <div className="flex flex-wrap gap-2">
             {attr.options.map((option) => {
@@ -55,7 +55,7 @@ export function VariantSelector({ product, onChoose }) {
           </div>
         </fieldset>
       ))}
-      <div className="min-h-12 rounded-card bg-surface-muted p-3" role="status" aria-live="polite">
+      <div className="min-h-12 rounded-card border border-border bg-surface-muted p-4 shadow-low" role="status" aria-live="polite">
         {isComplete && matchedVariant ? (
           <div className="flex items-start justify-between gap-4">
             <p className="text-xs leading-5 text-text-muted">

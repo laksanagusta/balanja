@@ -1,16 +1,16 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { Button, Dialog, Icon } from "../components/primitives.jsx";
+import { Button, Icon } from "../components/primitives.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { TransactionsPageSkeleton } from "../components/page-loading.jsx";
 import { TransactionCardList } from "../components/transactions/TransactionCardList.jsx";
 import { TransactionFilterDrawer } from "../components/transactions/TransactionFilterDrawer.jsx";
+import { TransactionReceiptDrawer } from "../components/transactions/TransactionReceiptDrawer.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { loadTransactionPage } from "../pos/store-data.js";
-import { formatPrice } from "../shared.jsx";
 import { dateBoundaryWIB, readTransactionFilters } from "../transactions/transaction-filters.js";
 
 function formatDate(value) {
@@ -128,62 +128,7 @@ export default function TransactionsPage() {
           )}
         </div>
 
-        <Dialog
-          open={Boolean(selected)}
-          onClose={() => setSelected(null)}
-          title={selected?.number || "Detail transaksi"}
-          size="lg"
-          footer={<Button onClick={() => setSelected(null)}>Tutup</Button>}
-        >
-          {selected && (
-            <div className="mt-4 grid gap-4">
-            <div className="grid gap-2 rounded-card border border-border bg-surface-muted p-4 text-sm">
-              <div className="flex justify-between gap-4">
-                <span className="text-text-muted">Kasir</span>
-                <span className="font-semibold text-text">{selected.cashierName || "Tidak diketahui"}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-text-muted">Pembayaran</span>
-                <span className="font-semibold text-text">{selected.paymentMethod === "cash" ? "Tunai" : selected.paymentMethod.toUpperCase()}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-text-muted">Waktu</span>
-                <span className="font-semibold text-text">{formatDate(selected.createdAt)}</span>
-              </div>
-            </div>
-
-            <div className="rounded-card border border-border">
-              {selected.items.map((item) => (
-                <div key={item.productId} className="flex items-start justify-between gap-4 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-text">{item.name}</p>
-                    <p className="truncate font-mono text-[11px] text-text-subtle">{item.barcode}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-semibold text-text">x{item.qty}</p>
-                    <p className="font-mono text-sm text-text-muted">{formatPrice(item.qty * item.price)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <dl className="grid gap-3 text-sm">
-              <div className="flex justify-between text-text-muted">
-                <dt>Subtotal</dt>
-                <dd className="font-mono font-semibold">{formatPrice(selected.subtotal)}</dd>
-              </div>
-              <div className="flex justify-between text-text-muted">
-                <dt>Pajak</dt>
-                <dd className="font-mono font-semibold">{formatPrice(selected.tax)}</dd>
-              </div>
-              <div className="flex justify-between pt-3 text-lg font-semibold text-text">
-                <dt>Total</dt>
-                <dd className="font-mono">{formatPrice(selected.total)}</dd>
-              </div>
-            </dl>
-            </div>
-          )}
-        </Dialog>
+        <TransactionReceiptDrawer transaction={selected} onClose={() => setSelected(null)} />
       </div>
     </>
   );

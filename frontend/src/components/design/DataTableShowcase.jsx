@@ -7,6 +7,7 @@ import { ProductFilterDrawer } from "../product/ProductFilterDrawer.jsx";
 import { ProductList } from "../product/ProductList.jsx";
 import { TransactionCardList } from "../transactions/TransactionCardList.jsx";
 import { TransactionFilterDrawer } from "../transactions/TransactionFilterDrawer.jsx";
+import { TransactionReceiptDrawer } from "../transactions/TransactionReceiptDrawer.jsx";
 
 const serverRows = Array.from({ length: 48 }, (_, index) => {
   const row = transactionData[index % transactionData.length];
@@ -35,6 +36,7 @@ export default function DataTableShowcase() {
   const [sortDir, setSortDir] = React.useState("desc");
   const [visibleTransactionCount, setVisibleTransactionCount] = React.useState(6);
   const [updating, setUpdating] = React.useState(false);
+  const [selectedTransaction, setSelectedTransaction] = React.useState(null);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [payment, setPayment] = React.useState("");
   const [dateFrom, setDateFrom] = React.useState("");
@@ -110,6 +112,7 @@ export default function DataTableShowcase() {
         <TransactionCardList
           transactions={rows}
           formatDate={(value) => new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value))}
+          onSelect={setSelectedTransaction}
         />
         {visibleTransactionCount < sorted.length && (
           <div className="mt-3 flex justify-center">
@@ -124,6 +127,7 @@ export default function DataTableShowcase() {
           </div>
         )}
       </div>
+      <TransactionReceiptDrawer transaction={selectedTransaction} onClose={() => setSelectedTransaction(null)} />
       <div className="mt-6 grid gap-3">
         <div className="flex items-center justify-between gap-3">
           <div>
