@@ -694,7 +694,10 @@ export default function ProductVariantEditor({
 
         {pendingDelete && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel border border-danger/20 bg-danger-soft/50 px-4 py-3" role="group" aria-labelledby="remove-attribute-title">
-            <p id="remove-attribute-title" className="text-sm font-semibold text-text">Hapus atribut ‘{pendingDelete.name}’?</p>
+            <div className="min-w-0">
+              <p id="remove-attribute-title" className="text-sm font-semibold text-text">Hapus atribut ‘{pendingDelete.name}’?</p>
+              <p className="mt-0.5 text-xs font-normal leading-5 text-text-muted">Data harga, stok, dan barcode dari variasi yang terkait juga akan dihapus.</p>
+            </div>
             <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" onClick={cancelPendingDelete}>Batal</Button>
               <Button
