@@ -1,5 +1,5 @@
 import React from "react";
-import { addProductToCart, addSavedProductToCart, validateProduct } from "./domain.js";
+import { addProductToCart, addSavedProductToCart, validateProduct, variantKey } from "./domain.js";
 import { loadCart, saveCart, clearCartStorage } from "./cart-storage.js";
 import { sortMasterData } from "./master-data.js";
 import { applyCheckoutResult, applyProductStock, loadCategories as fetchCategories, loadProducts as fetchProducts, loadSettings as fetchSettings, loadUnits as fetchUnits, searchProducts as fetchProductSearch, toProductFormData } from "./store-data.js";
@@ -242,22 +242,24 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     return () => document.removeEventListener("visibilitychange", refetchStaleData);
   }, [refreshLoadedResources]);
 
-  const addToCart = React.useCallback((barcodeOrProductId) => {
+  const addToCart = React.useCallback((barcodeOrProductId, variant) => {
     let response;
     setCart((current) => {
-      response = addProductToCart(current, products, barcodeOrProductId);
+      response = addProductToCart(current, products, barcodeOrProductId, variant);
       return response.ok ? response.cart : current;
     });
     if (response && !response.ok) setNotice(response.error);
     return response;
   }, [products]);
 
-  const updateCartQty = React.useCallback((productId, qty) => {
+  const updateCartQty = React.useCallback((productId, variantId, qty) => {
     const product = products.find((item) => item.id === productId);
+    const key = variantKey(productId, variantId);
     const nextQty = Math.max(0, Number(qty));
     if (!product) { setNotice("Product not found"); return { ok: false, error: "Product not found" }; }
-    if (nextQty > product.stock) { setNotice("Cart quantity exceeds stock"); return { ok: false, error: "Cart quantity exceeds stock" }; }
-    setCart((current) => nextQty === 0 ? current.filter((item) => item.productId !== productId) : current.map((item) => item.productId === productId ? { ...item, qty: nextQty } : item));
+    const stock = variantId ? (product.variants || []).find((v) => v.id === variantId)?.stock : product.stock;
+    if (stock !== undefined && nextQty > stock) { setNotice("Cart quantity exceeds stock"); return { ok: false, error: "Cart quantity exceeds stock" }; }
+    setCart((current) => nextQty === 0 ? current.filter((item) => variantKey(item.productId, item.variantId) !== key) : current.map((item) => variantKey(item.productId, item.variantId) === key ? { ...item, qty: nextQty } : item));
     setNotice("");
     return { ok: true };
   }, [products]);
@@ -334,10 +336,8 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
       const result = await api.createStockMovement({ ...input, createdByUserName: cashierName });
       setProducts((current) => applyProductStock(current, result.product));
       productsRef.current = applyProductStock(productsRef.current, result.product);
-      setNotice("Stock movement saved");
       return result;
-    } catch (error) {
-      setNotice(error.message || "Failed to save stock movement");
+    } catch {
       return null;
     }
   }, [api, cashierName]);

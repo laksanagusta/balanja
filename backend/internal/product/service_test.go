@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"image"
 	"image/color"
 	"image/jpeg"
@@ -114,6 +115,94 @@ func TestServiceCreateValidatesAndNormalizes(t *testing.T) {
 	}
 	if repository.create.Name != "Teh Botol" || repository.create.Barcode != "8991" || created.Name != "Teh Botol" {
 		t.Fatalf("normalized product = %#v, repository input = %#v", created, repository.create)
+	}
+}
+
+func TestServiceCreatePersistsVariantsInsideTheProductTransaction(t *testing.T) {
+	repository := &fakeRepository{}
+	service := NewService(fakeRunner{}, repository)
+	created, err := service.Create(context.Background(), database.Identity{OrgID: "org_1", UserID: "user_1"}, CreateInput{
+		Name: "Tea", Barcode: "parent", CategoryID: uuid.New(), Price: 5000, Stock: 3, UnitID: uuid.New(),
+		AttributesConfig: []AttributeConfig{{Name: "Ukuran", Options: []string{"M"}}},
+		Variants:         []VariantInput{{Attributes: map[string]string{"Ukuran": "M"}, Price: 5000, Stock: 3, Barcode: "M", Active: true}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(repository.createdVariants) != 1 || len(created.Variants) != 1 {
+		t.Fatalf("created variants=%#v product=%#v", repository.createdVariants, created)
+	}
+}
+
+func TestServiceCreateAllowsAllConfiguredVariantsInactive(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeRepository{}
+	_, err := NewService(fakeRunner{}, repository).Create(context.Background(), database.Identity{OrgID: "org_1", UserID: "user_1"}, CreateInput{
+		Name: "Seasonal Tea", Barcode: "parent-inactive", CategoryID: uuid.New(), Price: 5000, Stock: 3, UnitID: uuid.New(),
+		AttributesConfig: []AttributeConfig{{Name: "Ukuran", Options: []string{"M"}}},
+		Variants:         []VariantInput{{Attributes: map[string]string{"Ukuran": "M"}, Price: 5000, Stock: 3, Barcode: "M-INACTIVE", Active: false}},
+	})
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if len(repository.createdVariants) != 1 || repository.createdVariants[0].Active {
+		t.Fatalf("created variants = %#v", repository.createdVariants)
+	}
+}
+
+func TestServiceCreateAllowsEmptyPriceForInactiveConfiguredVariant(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeRepository{}
+	_, err := NewService(fakeRunner{}, repository).Create(context.Background(), database.Identity{OrgID: "org_1", UserID: "user_1"}, CreateInput{
+		Name: "Seasonal Tea", Barcode: "parent-inactive-zero", CategoryID: uuid.New(), Price: 5000, Stock: 0, UnitID: uuid.New(),
+		AttributesConfig: []AttributeConfig{{Name: "Ukuran", Options: []string{"M"}}},
+		Variants:         []VariantInput{{Attributes: map[string]string{"Ukuran": "M"}, Price: 0, Stock: 0, Active: false}},
+	})
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+}
+
+func TestServiceUpdateKeepsDefaultVariantActiveWhenParentIsInactive(t *testing.T) {
+	t.Parallel()
+
+	productID, defaultID := uuid.New(), uuid.New()
+	input := validUpdateInput()
+	input.Active = false
+	repository := &fakeRepository{
+		current:  Product{ID: productID, CategoryID: input.CategoryID, UnitID: input.UnitID, Stock: 7},
+		variants: []Variant{{ID: defaultID, ProductID: productID, Attributes: map[string]string{}, Price: 10, Stock: 7, Active: true}},
+	}
+
+	updated, err := NewService(fakeRunner{}, repository).Update(
+		context.Background(), database.Identity{OrgID: "org_1"}, productID, input, ImageMutation{Mode: ImagePreserve},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Active || len(repository.updatedVariants) != 1 || !repository.updatedVariants[0].Active {
+		t.Fatalf("updated=%#v variants=%#v", updated, repository.updatedVariants)
+	}
+}
+
+func TestSyncVariantsReleasesBarcodeFromRemovedHistoricalVariant(t *testing.T) {
+	t.Parallel()
+
+	productID := uuid.New()
+	repository := &fakeRepository{variantSold: true}
+	service := NewService(fakeRunner{}, repository)
+	_, err := service.syncVariants(context.Background(), nil, "org_1", productID, []Variant{
+		{ID: uuid.New(), ProductID: productID, Attributes: map[string]string{"Ukuran": "S"}, Price: 10, Stock: 2, Barcode: "OLD", Active: true},
+	}, []VariantInput{
+		{Attributes: map[string]string{"Ukuran": "M"}, Price: 10, Stock: 2, Barcode: "NEW", Active: true},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(repository.updatedVariants) != 1 || repository.updatedVariants[0].Barcode != "" || repository.updatedVariants[0].Active {
+		t.Fatalf("updated variants = %#v", repository.updatedVariants)
 	}
 }
 
@@ -339,6 +428,10 @@ type fakeRepository struct {
 	activeUnit               bool
 	categoryActiveConfigured bool
 	unitActiveConfigured     bool
+	createdVariants          []VariantInput
+	updatedVariants          []VariantInput
+	variants                 []Variant
+	variantSold              bool
 }
 
 func (f *fakeRepository) List(_ context.Context, _ database.Tx, _ string, filter ListFilter) ([]Product, error) {
@@ -404,4 +497,88 @@ func (f *fakeImageStore) Delete(_ context.Context, key string) error {
 }
 func (f *fakeRepository) Deactivate(context.Context, database.Tx, string, uuid.UUID) (Product, error) {
 	return Product{}, nil
+}
+
+func (f *fakeRepository) ListVariants(_ context.Context, _ database.Tx, _ string, _ uuid.UUID) ([]Variant, error) {
+	return f.variants, nil
+}
+
+func (f *fakeRepository) GetVariant(context.Context, database.Tx, string, uuid.UUID, uuid.UUID) (Variant, error) {
+	return Variant{}, nil
+}
+
+func (f *fakeRepository) CreateVariant(_ context.Context, _ database.Tx, _ string, productID uuid.UUID, input VariantInput) (Variant, error) {
+	f.createdVariants = append(f.createdVariants, input)
+	return Variant{ID: uuid.New(), ProductID: productID, Attributes: input.Attributes, Price: input.Price, Stock: input.Stock, Barcode: input.Barcode, Active: input.Active}, nil
+}
+
+func (f *fakeRepository) UpdateVariant(_ context.Context, _ database.Tx, _ string, productID uuid.UUID, variantID uuid.UUID, input VariantInput) (Variant, error) {
+	f.updatedVariants = append(f.updatedVariants, input)
+	return Variant{ID: variantID, ProductID: productID, Attributes: input.Attributes, Price: input.Price, Stock: input.Stock, Barcode: input.Barcode, Active: input.Active}, nil
+}
+
+func (f *fakeRepository) DeleteVariant(context.Context, database.Tx, string, uuid.UUID, uuid.UUID) error {
+	return nil
+}
+
+func (f *fakeRepository) CountActiveVariants(context.Context, database.Tx, string, uuid.UUID) (int, error) {
+	return 1, nil
+}
+
+func (f *fakeRepository) VariantSoldHistory(context.Context, database.Tx, string, uuid.UUID) (bool, error) {
+	return f.variantSold, nil
+}
+
+func (f *fakeRepository) ValidateVariantBarcodeUnique(context.Context, database.Tx, string, string, uuid.UUID, uuid.UUID) error {
+	return nil
+}
+
+func TestValidateVariantAttributes(t *testing.T) {
+	t.Parallel()
+
+	config := []AttributeConfig{{Name: "Ukuran", Options: []string{"S", "M", "L"}}}
+	cases := []struct {
+		name    string
+		attrs   map[string]string
+		wantErr bool
+	}{
+		{"valid", map[string]string{"Ukuran": "M"}, false},
+		{"missing key", map[string]string{}, true},
+		{"unknown option", map[string]string{"Ukuran": "XL"}, true},
+		{"extra key", map[string]string{"Ukuran": "M", "Sugar": "Normal"}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateVariantAttributes(tc.attrs, config)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("got err=%v, wantErr=%v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestPrepareVariantSaveRejectsMoreThanMaximumCombinations(t *testing.T) {
+	t.Parallel()
+
+	options := make([]string, 101)
+	variants := make([]VariantInput, 101)
+	for index := range options {
+		options[index] = fmt.Sprintf("Pilihan %d", index+1)
+		variants[index] = VariantInput{
+			Attributes: map[string]string{"Ukuran": options[index]},
+			Price:      1000,
+			Stock:      0,
+			Active:     true,
+		}
+	}
+
+	_, err := prepareVariantSave(
+		[]AttributeConfig{{Name: "Ukuran", Options: options}},
+		variants,
+		1000,
+		0,
+	)
+	if !errors.Is(err, ErrInvalidAttributes) {
+		t.Fatalf("prepareVariantSave() error = %v, want ErrInvalidAttributes", err)
+	}
 }

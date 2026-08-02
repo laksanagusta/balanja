@@ -26,6 +26,12 @@ function ProductListRow({
 
   const isActive = product.active !== false;
   const stock = Number(product.stock) || 0;
+  const configuredVariants = product.attributesConfig?.length > 0
+    ? (product.variants || []).filter((variant) => Object.keys(variant.attributes || {}).length > 0)
+    : [];
+  const activeVariants = configuredVariants.filter((variant) => variant.active !== false);
+  const hasVariants = activeVariants.length > 0;
+  const variantStock = activeVariants.reduce((total, variant) => total + (Number(variant.stock) || 0), 0);
 
   return (
     <li
@@ -55,15 +61,25 @@ function ProductListRow({
               </>
             ) : null}
           </span>
-          <span className="mt-auto flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pt-3 text-sm text-text">
-            <span className="font-mono font-semibold tabular-nums">{formatListPrice(product[priceField] ?? 0)}</span>
-            <span aria-hidden="true" className="text-text-subtle">·</span>
-            <span className={stock <= 5 ? "font-semibold text-warning" : "text-text-muted"}>
-              <span className="font-mono tabular-nums">{formatQuantity(stock)}</span>
-              {" "}
-              <span>{getUnit(product)}</span>
-            </span>
-            <span
+            <span className="mt-auto flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pt-3 text-sm text-text">
+              <span className="font-mono font-semibold tabular-nums">{formatListPrice(product[priceField] ?? 0)}</span>
+              <span aria-hidden="true" className="text-text-subtle">·</span>
+              {hasVariants ? (
+                <span className={variantStock <= 5 ? "font-semibold text-warning" : "text-text-muted"}>
+                  <span>{activeVariants.length} variasi</span>
+                  <span aria-hidden="true"> · </span>
+                  <span className="font-mono tabular-nums">{formatQuantity(variantStock)}</span>
+                  {" "}
+                  <span>{getUnit(product)}</span>
+                </span>
+              ) : (
+                <span className={stock <= 5 ? "font-semibold text-warning" : "text-text-muted"}>
+                  <span className="font-mono tabular-nums">{formatQuantity(stock)}</span>
+                  {" "}
+                  <span>{getUnit(product)}</span>
+                </span>
+              )}
+              <span
               className={`inline-flex h-5 items-center rounded-full px-2 text-[10px] font-semibold ${
                 isActive ? "bg-success-soft text-success" : "bg-danger-soft text-danger"
               }`}

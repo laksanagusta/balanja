@@ -21,7 +21,7 @@ import {
   Input,
 } from "../components/primitives.jsx";
 import { RetailPosSkeleton } from "../components/page-loading.jsx";
-import { calculateCartTotals } from "../pos/domain.js";
+import { calculateCartTotals, variantKey } from "../pos/domain.js";
 import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
@@ -729,18 +729,19 @@ export default function RetailPosPage() {
               <div className="cart-item-list -mx-4">
                 {store.cart.map((item) => {
                   const product = cartProducts.get(item.productId);
+                  const variant = item.variantId ? product?.variants?.find((v) => v.id === item.variantId) : null;
                   return (
                     <CartRow
-                      key={item.productId}
+                      key={variantKey(item.productId, item.variantId)}
                       item={{
                         ...item,
-                        image: product?.image,
+                        image: variant?.image || product?.image,
                       }}
                       subtotal={formatCartRowPrice(item.price * item.qty)}
                       unitPrice={`${formatCartRowPrice(item.price)} / ${resolveMasterName(store.units, product?.unitId, product?.unit || item.unit || "pcs")}`}
-                      maxQty={product?.stock ?? item.stockAtAdd}
-                      onUpdateQty={(qty) => store.updateCartQty(item.productId, qty)}
-                      onRemove={() => store.updateCartQty(item.productId, 0)}
+                      maxQty={variant?.stock ?? product?.stock ?? item.stockAtAdd}
+                      onUpdateQty={(qty) => store.updateCartQty(item.productId, item.variantId, qty)}
+                      onRemove={() => store.updateCartQty(item.productId, item.variantId, 0)}
                       disabled={checkoutPending}
                     />
                   );

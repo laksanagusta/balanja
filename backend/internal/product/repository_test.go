@@ -110,7 +110,8 @@ func (row createProductRow) Scan(dest ...any) error {
 	*dest[9].(*string) = ""
 	*dest[10].(*string) = ""
 	*dest[11].(*bool) = true
-	*dest[12].(*time.Time) = now
+	*dest[12].(*[]byte) = []byte("[]")
 	*dest[13].(*time.Time) = now
+	*dest[14].(*time.Time) = now
 	return nil
 }

@@ -41,13 +41,15 @@
   --radius-panel: 16px;
   --radius-overlay: 32px;
 
-  --control-height-mobile-button: 44px;
+  --control-height-mobile-button-hit: 36px;
+  --control-height-mobile-button: 36px;
   --control-height-mobile-button-large: 52px;
   --control-height-mobile-compact: 36px;
-  --control-height-mobile-input: 48px;
+  --control-height-mobile-field-hit: 36px;
+  --control-height-mobile-input: 36px;
   --control-height-mobile-input-large: 56px;
   --control-height-mobile-search: 44px;
-  --control-inset-mobile-compact-hit: -4px;
+  --control-inset-mobile-compact-hit: 0px;
 
   --shadow-low: 0 1px 2px rgb(0 0 0 / 0.05);
   --shadow-navigation: 0 12px 32px rgb(18 18 18 / 0.12), 0 2px 8px rgb(18 18 18 / 0.06);
@@ -725,7 +727,7 @@
     color: var(--color-text);
   }
 
-  .pos-product-card .product-add-button {
+  .pos-product-card .ui-button.product-add-button {
     position: absolute;
     z-index: 1;
     inset-inline-end: 0.5rem;
@@ -907,8 +909,21 @@
 }
 
 .ui-button[data-mobile-size="standard"] {
+    position: relative;
     block-size: var(--control-height-mobile-button);
     min-block-size: var(--control-height-mobile-button);
+}
+
+/* Unlayered so the POS overlay can override the unlayered shared positioning rule. */
+.pos-product-card .ui-button.product-add-button {
+    position: absolute;
+}
+
+.ui-button[data-mobile-size="standard"] .ui-button-mobile-hit-area {
+    position: absolute;
+    inset-block: var(--control-inset-mobile-compact-hit);
+    inset-inline: 0;
+    display: block;
 }
 
 .ui-button[data-mobile-size="large"] {
@@ -930,8 +945,8 @@
 }
 
 .ui-button[data-compact-visual="true"] {
-    block-size: var(--control-height-mobile-button);
-    min-block-size: var(--control-height-mobile-button);
+    block-size: var(--control-height-mobile-button-hit);
+    min-block-size: var(--control-height-mobile-button-hit);
 }
 
 .ui-button[data-compact-visual="true"] .header-compact-action-surface {
@@ -939,11 +954,26 @@
 }
 
 .ui-input-hitbox[data-density="default"][data-ui-size="standard"],
+.ui-select-hitbox {
+    block-size: var(--control-height-mobile-field-hit);
+}
+
 .ui-input-surface[data-density="default"][data-ui-size="standard"],
-.ui-select-hitbox,
 .ui-select-surface,
-.mobile-input-control {
+.mobile-input-control,
+.mobile-input-control > input {
     block-size: var(--control-height-mobile-input);
+}
+
+.mobile-input-control {
+    position: relative;
+}
+
+.mobile-input-control::before {
+    content: "";
+    position: absolute;
+    inset-block: var(--control-inset-mobile-compact-hit);
+    inset-inline: 0;
 }
 
 .ui-input-hitbox[data-ui-size="large"],
@@ -1091,6 +1121,100 @@
   }
 }
 
+.variant-popover-enter {
+  transform-origin: top right;
+  animation: variant-popover-in var(--duration-fast) var(--ease-standard);
+}
+
+@keyframes variant-popover-in {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.variant-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--duration-base) var(--ease-standard),
+    opacity var(--duration-base) var(--ease-standard),
+    visibility 0s linear var(--duration-base);
+}
+
+.variant-panel.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.variant-token-in {
+  animation: variant-token-in var(--duration-fast) var(--ease-standard);
+}
+
+@keyframes variant-token-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.variant-token-out {
+  animation: variant-token-out var(--duration-fast) var(--ease-standard) forwards;
+}
+
+@keyframes variant-token-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+}
+
+.attribute-row-enter {
+  animation: attribute-row-in var(--duration-slow) var(--ease-standard);
+}
+
+@keyframes attribute-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attribute-row-exit {
+  animation: attribute-row-out var(--duration-slow) var(--ease-standard) forwards;
+}
+
+@keyframes attribute-row-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mobile-bottom-navigation {
     transform: none;
@@ -1119,6 +1243,32 @@
 
   .cart-qty-input {
     animation: none !important;
+  }
+
+  .variant-popover-enter {
+    animation: none !important;
+  }
+
+  .variant-panel {
+    transition: none;
+  }
+
+  .variant-token-in,
+  .variant-token-out {
+    animation: none !important;
+  }
+
+  .variant-token-out {
+    opacity: 0;
+  }
+
+  .attribute-row-enter,
+  .attribute-row-exit {
+    animation: none !important;
+  }
+
+  .attribute-row-exit {
+    opacity: 0;
   }
 
   .pos-filter-drawer,

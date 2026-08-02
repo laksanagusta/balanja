@@ -108,7 +108,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
             >
               {tab === "profile" ? (
                 <Panel className="p-4">
-                  <form onSubmit={save} className="grid gap-4">
+                  <form onSubmit={save} className="grid gap-2">
                     <div className="pb-3">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
@@ -147,7 +147,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                       }}
                     />
 
-                    <div className="grid gap-3 rounded-card border border-border bg-surface-muted p-4">
+                    <div className="grid gap-2 rounded-card border border-border bg-surface-muted p-4">
                       <label className="flex min-h-11 min-w-0 items-center justify-between gap-4 text-sm font-semibold text-text">
                         Aktifkan pajak
                         <input

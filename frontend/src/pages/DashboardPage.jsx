@@ -33,6 +33,30 @@ export default function DashboardPage({ onNavigate }) {
   const [days, setDays] = React.useState(1);
   const [analytics, setAnalytics] = React.useState(null);
   const [isSummaryLoading, setIsSummaryLoading] = React.useState(true);
+  const periodPillRef = React.useRef(null);
+  const periodItemRefs = React.useRef(new Map());
+
+  const updatePeriodPill = React.useCallback(() => {
+    const pill = periodPillRef.current;
+    const target = periodItemRefs.current.get(days);
+    if (!pill || !target) return;
+    pill.style.transform = `translateX(${target.offsetLeft}px)`;
+    pill.style.width = `${target.offsetWidth}px`;
+  }, [days]);
+
+  const visibleAnalytics = analytics ?? emptyAnalytics;
+  const shouldShowSkeleton = isSummaryLoading && !analytics;
+  const isUpdatingSummary = isSummaryLoading && Boolean(analytics);
+  const comparisonContext = days === 1 ? "vs kemarin pada jam yang sama" : "vs periode sebelumnya";
+
+  React.useLayoutEffect(() => {
+    updatePeriodPill();
+  }, [updatePeriodPill, shouldShowSkeleton]);
+
+  React.useEffect(() => {
+    window.addEventListener("resize", updatePeriodPill);
+    return () => window.removeEventListener("resize", updatePeriodPill);
+  }, [updatePeriodPill]);
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -55,11 +79,6 @@ export default function DashboardPage({ onNavigate }) {
     return () => controller.abort();
   }, [days, getDashboardSummary, setNotice]);
 
-  const visibleAnalytics = analytics ?? emptyAnalytics;
-  const shouldShowSkeleton = isSummaryLoading && !analytics;
-  const isUpdatingSummary = isSummaryLoading && Boolean(analytics);
-  const comparisonContext = days === 1 ? "vs kemarin pada jam yang sama" : "vs periode sebelumnya";
-
   if (shouldShowSkeleton) {
     return <DashboardPageSkeleton />;
   }
@@ -73,15 +92,24 @@ export default function DashboardPage({ onNavigate }) {
           </p>
           <div className="flex items-center gap-2">
             <BackgroundUpdateStatus active={isUpdatingSummary} label="Memperbarui ringkasan dashboard" />
-            <div className="inline-flex w-fit rounded-control border border-border bg-surface-muted p-1" aria-label="Periode dashboard">
+            <div className="relative z-0 inline-flex w-fit rounded-full border border-border bg-surface-muted p-1" aria-label="Periode dashboard">
+              <span
+                ref={periodPillRef}
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-1 left-0 -z-10 rounded-full bg-surface transition-[transform,width] duration-base ease-standard motion-reduce:transition-none"
+              />
               {periods.map(({ value, label }) => (
                 <button
                   key={value}
+                  ref={(node) => {
+                    if (node) periodItemRefs.current.set(value, node);
+                    else periodItemRefs.current.delete(value);
+                  }}
                   type="button"
                   aria-pressed={days === value}
                   onClick={() => setDays(value)}
-                  className={`h-8 rounded-md px-3 text-xs font-semibold transition active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
-                    days === value ? "bg-surface text-text" : "text-text-muted hover:text-text"
+                  className={`h-8 rounded-full px-3 text-xs font-semibold transition active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                    days === value ? "text-text" : "text-text-muted hover:text-text"
                   }`}
                 >
                   {label}

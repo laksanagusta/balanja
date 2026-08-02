@@ -155,6 +155,50 @@ test("checkout sends only product identifiers and quantities with an idempotency
   assert.equal(JSON.parse(request.body).cashierUserId, undefined);
 });
 
+test("checkout sends variantId when a cart line has one", async () => {
+  let request;
+  const api = createAPIClient({
+    baseURL: "",
+    getToken: async () => "token",
+    randomUUID: () => "checkout-request-id",
+    fetchImpl: async (_url, options) => {
+      request = options;
+      return new Response(JSON.stringify({ data: { transaction: { id: "transaction-1" }, products: [] } }), { status: 201 });
+    },
+  });
+
+  await api.checkout({
+    cart: [{ productId: "product-1", variantId: "variant-9", qty: 2 }],
+    payment: { method: "cash", cashReceived: 10000 },
+  });
+
+  assert.deepEqual(JSON.parse(request.body).items, [
+    { productId: "product-1", variantId: "variant-9", quantity: 2 },
+  ]);
+});
+
+test("variant endpoints route to product variant paths", async () => {
+  const calls = [];
+  const api = createAPIClient({
+    baseURL: "",
+    getToken: async () => "token",
+    fetchImpl: async (url, options) => {
+      calls.push({ url, method: options.method });
+      return new Response(JSON.stringify({ data: { id: "v1" } }), { status: 200 });
+    },
+  });
+
+  await api.createVariant("p1", { price: 1000, stock: 2 });
+  await api.updateVariant("p1", "v1", { price: 1200, stock: 1 });
+  await api.deleteVariant("p1", "v1");
+
+  assert.deepEqual(calls, [
+    { url: "/api/v1/products/p1/variants", method: "POST" },
+    { url: "/api/v1/products/p1/variants/v1", method: "PATCH" },
+    { url: "/api/v1/products/p1/variants/v1", method: "DELETE" },
+  ]);
+});
+
 test("loads the active organization entitlement", async () => {
   let requestURL;
   const api = createAPIClient({

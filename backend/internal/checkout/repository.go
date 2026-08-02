@@ -21,6 +21,17 @@ type lockedProduct struct {
 	Price, Stock  int
 	Active        bool
 }
+type lockedVariant struct {
+	ID         uuid.UUID
+	ProductID  uuid.UUID
+	Attributes map[string]string
+	Price      int
+	Stock      int
+	Barcode    string
+	Image      string
+	ImageKey   string
+	Active     bool
+}
 
 func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id database.Identity, key, fingerprint string, input Input) (Result, error) {
 	tag, err := tx.Exec(ctx, `insert into checkout_idempotency (org_id,idempotency_key,request_fingerprint) values ($1,$2,$3) on conflict do nothing`, id.OrgID, key, fingerprint)
@@ -56,9 +67,13 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 	if !entitlement.Summarize(entitlementRecord).CanCheckout {
 		return Result{}, ErrTransactionLimitReached
 	}
-	ids := make([]uuid.UUID, len(input.Items))
-	for i, item := range input.Items {
-		ids[i] = item.ProductID
+	ids := make([]uuid.UUID, 0, len(input.Items))
+	variantIDs := make([]uuid.UUID, 0, len(input.Items))
+	for _, item := range input.Items {
+		ids = append(ids, item.ProductID)
+		if item.VariantID != nil {
+			variantIDs = append(variantIDs, *item.VariantID)
+		}
 	}
 	rows, err := tx.Query(ctx, `select id,name,barcode,image,image_key,price,stock,active from products where org_id=$1 and id=any($2::uuid[]) order by id for update`, id.OrgID, ids)
 	if err != nil {
@@ -77,6 +92,33 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 	if err := rows.Err(); err != nil {
 		return Result{}, fmt.Errorf("iterate checkout products: %w", err)
 	}
+	variants := map[uuid.UUID]lockedVariant{}
+	if len(variantIDs) > 0 {
+		vrows, err := tx.Query(ctx, `select id,product_id,attributes,price,stock,barcode,image,image_key,active from product_variants where org_id=$1 and id=any($2::uuid[]) order by id for update`, id.OrgID, variantIDs)
+		if err != nil {
+			return Result{}, fmt.Errorf("lock checkout variants: %w", err)
+		}
+		for vrows.Next() {
+			var v lockedVariant
+			var attrs []byte
+			if err := vrows.Scan(&v.ID, &v.ProductID, &attrs, &v.Price, &v.Stock, &v.Barcode, &v.Image, &v.ImageKey, &v.Active); err != nil {
+				vrows.Close()
+				return Result{}, fmt.Errorf("scan checkout variant: %w", err)
+			}
+			if len(attrs) > 0 && string(attrs) != "{}" {
+				v.Attributes = map[string]string{}
+				if err := json.Unmarshal(attrs, &v.Attributes); err != nil {
+					vrows.Close()
+					return Result{}, fmt.Errorf("decode checkout variant attributes: %w", err)
+				}
+			}
+			variants[v.ID] = v
+		}
+		vrows.Close()
+		if err := vrows.Err(); err != nil {
+			return Result{}, fmt.Errorf("iterate checkout variants: %w", err)
+		}
+	}
 	if len(products) != len(input.Items) {
 		return Result{}, ErrProductNotFound
 	}
@@ -92,15 +134,38 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 		if !p.Active {
 			return Result{}, ErrProductInactive
 		}
-		if requested.Quantity > p.Stock {
+		var sellablePrice, sellableStock int
+		var sellableBarcode, sellableImage, sellableImageKey string
+		var variantAttributes map[string]string
+		var variantID *uuid.UUID
+		if requested.VariantID != nil {
+			v, ok := variants[*requested.VariantID]
+			if !ok || !v.Active {
+				return Result{}, ErrProductInactive
+			}
+			if v.ProductID != p.ID {
+				return Result{}, ErrProductNotFound
+			}
+			sellablePrice, sellableStock = v.Price, v.Stock
+			sellableBarcode, sellableImage, sellableImageKey = v.Barcode, v.Image, v.ImageKey
+			variantAttributes = v.Attributes
+			variantID = requested.VariantID
+		} else {
+			sellablePrice, sellableStock = p.Price, p.Stock
+			sellableBarcode, sellableImage, sellableImageKey = p.Barcode, p.Image, p.ImageKey
+		}
+		if requested.Quantity > sellableStock {
 			return Result{}, ErrInsufficientStock
 		}
-		subtotal += p.Price * requested.Quantity
-		image := p.Image
-		if p.ImageKey != "" {
-			image = "/api/v1/product-images/" + p.ImageKey
+		subtotal += sellablePrice * requested.Quantity
+		image := sellableImage
+		if sellableImageKey != "" {
+			image = "/api/v1/product-images/" + sellableImageKey
 		}
-		items = append(items, Item{ProductID: p.ID, Name: p.Name, Barcode: p.Barcode, Image: image, Price: p.Price, Quantity: requested.Quantity})
+		items = append(items, Item{
+			ProductID: p.ID, VariantID: variantID, VariantAttributes: variantAttributes,
+			Name: p.Name, Barcode: sellableBarcode, Image: image, Price: sellablePrice, Quantity: requested.Quantity,
+		})
 	}
 	tax := 0
 	if taxEnabled {
@@ -135,17 +200,34 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 	}
 	referenceType := "checkout"
 	for _, requested := range input.Items {
-		product := products[requested.ProductID]
-		before := product.Stock
-		after := before - requested.Quantity
-		if after < 0 {
-			return Result{}, ErrInsufficientStock
-		}
+		var before, after int
 		var stock ProductStock
-		if err := tx.QueryRow(ctx, `update products set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,stock,updated_at`, id.OrgID, requested.ProductID, after).Scan(&stock.ID, &stock.Stock, &stock.UpdatedAt); err != nil {
-			return Result{}, fmt.Errorf("update product stock: %w", err)
+		if requested.VariantID != nil {
+			v := variants[*requested.VariantID]
+			before = v.Stock
+			after = before - requested.Quantity
+			if after < 0 {
+				return Result{}, ErrInsufficientStock
+			}
+			if err := tx.QueryRow(ctx, `update product_variants set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,updated_at`, id.OrgID, requested.VariantID, after).Scan(&stock.ID, &stock.UpdatedAt); err != nil {
+				return Result{}, fmt.Errorf("update variant stock: %w", err)
+			}
+			stock.Stock = after
+			stock.ProductID = requested.ProductID
+			stock.VariantID = requested.VariantID
+		} else {
+			product := products[requested.ProductID]
+			before = product.Stock
+			after = before - requested.Quantity
+			if after < 0 {
+				return Result{}, ErrInsufficientStock
+			}
+			if err := tx.QueryRow(ctx, `update products set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,stock,updated_at`, id.OrgID, requested.ProductID, after).Scan(&stock.ID, &stock.Stock, &stock.UpdatedAt); err != nil {
+				return Result{}, fmt.Errorf("update product stock: %w", err)
+			}
+			stock.ProductID = requested.ProductID
 		}
-		if _, err := tx.Exec(ctx, `insert into stock_movements (org_id,product_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,created_by_user_name) values ($1,$2,'sale',$3,$4,$5,$6,$7,$8,$9,$10)`, id.OrgID, requested.ProductID, -requested.Quantity, before, after, "Completed sale "+number, referenceType, result.Transaction.ID, id.UserID, cashierName); err != nil {
+		if _, err := tx.Exec(ctx, `insert into stock_movements (org_id,product_id,product_variant_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,created_by_user_name) values ($1,$2,$3,'sale',$4,$5,$6,$7,$8,$9,$10,$11)`, id.OrgID, requested.ProductID, requested.VariantID, -requested.Quantity, before, after, "Completed sale "+number, referenceType, result.Transaction.ID, id.UserID, cashierName); err != nil {
 			return Result{}, fmt.Errorf("insert sale stock movement: %w", err)
 		}
 		result.Products = append(result.Products, stock)

@@ -7,8 +7,9 @@ import (
 )
 
 type ItemInput struct {
-	ProductID uuid.UUID `json:"productId"`
-	Quantity  int       `json:"quantity"`
+	ProductID uuid.UUID  `json:"productId"`
+	VariantID *uuid.UUID `json:"variantId,omitempty"`
+	Quantity  int        `json:"quantity"`
 }
 type PaymentInput struct {
 	Method       string `json:"method"`
@@ -20,12 +21,14 @@ type Input struct {
 	CashierName string       `json:"cashierName,omitempty"`
 }
 type Item struct {
-	ProductID uuid.UUID `json:"productId"`
-	Name      string    `json:"name"`
-	Barcode   string    `json:"barcode"`
-	Image     string    `json:"image,omitempty"`
-	Price     int       `json:"price"`
-	Quantity  int       `json:"qty"`
+	ProductID         uuid.UUID         `json:"productId"`
+	VariantID         *uuid.UUID        `json:"variantId,omitempty"`
+	VariantAttributes map[string]string `json:"variantAttributes,omitempty"`
+	Name              string            `json:"name"`
+	Barcode           string            `json:"barcode"`
+	Image             string            `json:"image,omitempty"`
+	Price             int               `json:"price"`
+	Quantity          int               `json:"qty"`
 }
 type Transaction struct {
 	ID            uuid.UUID `json:"id"`
@@ -49,7 +52,9 @@ type Result struct {
 	Replay      bool                `json:"-"`
 }
 type ProductStock struct {
-	ID        uuid.UUID `json:"id"`
-	Stock     int       `json:"stock"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        uuid.UUID  `json:"id"`
+	ProductID uuid.UUID  `json:"productId"`
+	VariantID *uuid.UUID `json:"variantId,omitempty"`
+	Stock     int        `json:"stock"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 }

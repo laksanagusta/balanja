@@ -307,7 +307,7 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
               {error}
             </p>
           )}
-          <form onSubmit={submitManual} className="flex gap-2.5">
+          <form onSubmit={submitManual} className="flex gap-2">
             <input
               value={manualCode}
               onChange={(event) => setManualCode(event.target.value)}

@@ -52,17 +52,51 @@ export async function loadStockMovementPage(api, filters = {}, options = {}) {
 }
 
 export function applyCheckoutResult(products, result) {
-  const updates = new Map(result.products.map((product) => [product.id, product]));
+  const updates = Array.isArray(result?.products) ? result.products : [];
   return products.map((product) => {
-    const update = updates.get(product.id);
-    return update ? { ...product, stock: update.stock, updatedAt: update.updatedAt } : product;
+    const productUpdates = updates.filter((update) => (
+      update.productId === product.id
+      || (!update.productId && !update.variantId && update.id === product.id)
+      || (!update.productId && Array.isArray(product.variants) && product.variants.some((variant) => variant.id === (update.variantId || update.id)))
+    ));
+    if (productUpdates.length === 0) return product;
+    const directUpdate = productUpdates.find((update) => !update.variantId && update.id === product.id);
+    const updated = directUpdate
+      ? { ...product, stock: directUpdate.stock, updatedAt: directUpdate.updatedAt }
+      : { ...product };
+    if (Array.isArray(product.variants)) {
+      updated.variants = product.variants.map((variant) => {
+        const update = productUpdates.find((item) => (item.variantId || item.id) === variant.id);
+        if (!update) return variant;
+        if (Object.keys(variant.attributes || {}).length === 0) {
+          updated.stock = update.stock;
+          updated.updatedAt = update.updatedAt;
+        }
+        return { ...variant, stock: update.stock, updatedAt: update.updatedAt };
+      });
+    }
+    return updated;
   });
 }
 
 export function applyProductStock(products, productStock) {
-  return products.map((product) => (
-    product.id === productStock.id ? { ...product, stock: productStock.stock, updatedAt: productStock.updatedAt } : product
-  ));
+  return products.map((product) => {
+    if (product.id !== (productStock.productId || productStock.id)) return product;
+    if (!productStock.variantId) return { ...product, stock: productStock.stock, updatedAt: productStock.updatedAt };
+
+    const matchedVariant = (product.variants || []).find((variant) => variant.id === productStock.variantId);
+    return {
+      ...product,
+      ...(matchedVariant && Object.keys(matchedVariant.attributes || {}).length === 0
+        ? { stock: productStock.stock, updatedAt: productStock.updatedAt }
+        : {}),
+      variants: (product.variants || []).map((variant) => (
+        variant.id === productStock.variantId
+          ? { ...variant, stock: productStock.stock, updatedAt: productStock.updatedAt }
+          : variant
+      )),
+    };
+  });
 }
 
 export function toProductPayload(product, includeStock) {
@@ -75,6 +109,15 @@ export function toProductPayload(product, includeStock) {
     unitId: String(product.unitId || "").trim(),
     image: product.image || "",
     ...(!includeStock ? { active: product.active !== false } : {}),
+    attributesConfig: Array.isArray(product.attributesConfig) ? product.attributesConfig : [],
+    variants: Array.isArray(product.variants) ? product.variants.map((variant) => ({
+      ...(variant.id ? { id: variant.id } : {}),
+      attributes: variant.attributes || {},
+      price: parseNumberInput(variant.price),
+      stock: parseNumberInput(variant.stock),
+      barcode: String(variant.barcode || "").trim(),
+      active: variant.active !== false,
+    })) : [],
   };
 }
 
@@ -82,7 +125,9 @@ export function toProductFormData(product, includeStock) {
   const payload = toProductPayload(product, includeStock);
   delete payload.image;
   const form = new FormData();
-  Object.entries(payload).forEach(([key, value]) => form.set(key, String(value)));
+  Object.entries(payload).forEach(([key, value]) => {
+    form.set(key, Array.isArray(value) ? JSON.stringify(value) : String(value));
+  });
   if (product.imageFile) form.set("image_file", product.imageFile, product.imageFile.name);
   if (product.removeImage) form.set("remove_image", "true");
   return form;
@@ -102,6 +147,8 @@ function normalizeStockMovement(movement) {
   return {
     id: movement.id,
     productId: movement.productId,
+    variantId: movement.variantId || "",
+    variantAttributes: movement.variantAttributes || "",
     productName: movement.productName || "Unknown product",
     productBarcode: movement.productBarcode || "",
     productCategory: movement.productCategory || "",

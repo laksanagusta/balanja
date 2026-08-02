@@ -44,29 +44,30 @@ func resolveStockOrder(sort, direction string) (listOrder, error) {
 }
 
 func (PostgresRepository) Create(ctx context.Context, tx database.Tx, identity database.Identity, input CreateInput) (CreateResult, error) {
-	product, err := lockProduct(ctx, tx, identity.OrgID, input.ProductID)
+	before, isActive, err := lockVariantStock(ctx, tx, identity.OrgID, input.ProductID, input.VariantID)
 	if err != nil {
 		return CreateResult{}, err
 	}
-	if !product.IsActive {
+	if !isActive {
 		return CreateResult{}, ErrProductInactive
 	}
 
-	delta, after, err := ResolveManualMovement(input.Type, product.Stock, input.Quantity)
+	delta, after, err := ResolveManualMovement(input.Type, before, input.Quantity)
 	if err != nil {
 		return CreateResult{}, err
 	}
 
-	updated, err := updateProductStock(ctx, tx, identity.OrgID, input.ProductID, after)
+	updated, err := updateStock(ctx, tx, identity.OrgID, input.ProductID, input.VariantID, after)
 	if err != nil {
 		return CreateResult{}, err
 	}
 	movement, err := insertMovement(ctx, tx, insertMovementInput{
 		OrgID:             identity.OrgID,
 		ProductID:         input.ProductID,
+		VariantID:         input.VariantID,
 		Type:              input.Type,
 		QuantityDelta:     delta,
-		StockBefore:       product.Stock,
+		StockBefore:       before,
 		StockAfter:        after,
 		Reason:            input.Reason,
 		CreatedByUserID:   identity.UserID,
@@ -78,24 +79,59 @@ func (PostgresRepository) Create(ctx context.Context, tx database.Tx, identity d
 	return CreateResult{Movement: movement, Product: updated}, nil
 }
 
+func lockVariantStock(ctx context.Context, tx database.Tx, orgID string, productID uuid.UUID, variantID *uuid.UUID) (int, bool, error) {
+	if variantID != nil {
+		var stock int
+		var active bool
+		err := tx.QueryRow(ctx, `select stock,active from product_variants where org_id=$1 and id=$2 for update`, orgID, *variantID).Scan(&stock, &active)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, false, ErrProductNotFound
+		}
+		if err != nil {
+			return 0, false, fmt.Errorf("lock variant: %w", err)
+		}
+		return stock, active, nil
+	}
+	product, err := lockProduct(ctx, tx, orgID, productID)
+	if err != nil {
+		return 0, false, err
+	}
+	return product.Stock, product.IsActive, nil
+}
+
+func updateStock(ctx context.Context, tx database.Tx, orgID string, productID uuid.UUID, variantID *uuid.UUID, stock int) (ProductStock, error) {
+	if variantID != nil {
+		updated := ProductStock{ProductID: productID, VariantID: variantID}
+		err := tx.QueryRow(ctx, `update product_variants set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,stock,updated_at`, orgID, *variantID, stock).Scan(&updated.ID, &updated.Stock, &updated.UpdatedAt)
+		if err != nil {
+			return ProductStock{}, fmt.Errorf("update variant stock: %w", err)
+		}
+		return updated, nil
+	}
+	return updateProductStock(ctx, tx, orgID, productID, stock)
+}
+
 func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity database.Identity, filter ListFilter) ([]Movement, error) {
 	order, err := resolveStockOrder(filter.Sort, filter.Direction)
 	if err != nil {
 		return nil, err
 	}
 	query := fmt.Sprintf(`
-		select sm.id, sm.product_id, coalesce(p.name, ''), coalesce(p.barcode, ''),
-			coalesce(c.name, ''), coalesce(u.name, ''), sm.type, sm.quantity_delta,
+			select sm.id, sm.product_id, sm.product_variant_id,
+				coalesce((select string_agg(entry.key || ': ' || entry.value, ', ' order by entry.key) from jsonb_each_text(pv.attributes) entry), ''),
+				coalesce(p.name, ''), coalesce(nullif(pv.barcode, ''), p.barcode, ''),
+				coalesce(c.name, ''), coalesce(u.name, ''), sm.type, sm.quantity_delta,
 			sm.stock_before, sm.stock_after, sm.reason, sm.reference_type, sm.reference_id,
 			sm.created_by_user_id, coalesce(sm.created_by_user_name, ''), sm.created_at
 		from stock_movements sm
-		join products p on p.org_id = sm.org_id and p.id = sm.product_id
+			join products p on p.org_id = sm.org_id and p.id = sm.product_id
+			left join product_variants pv on pv.org_id = sm.org_id and pv.id = sm.product_variant_id
 		join categories c on c.org_id = p.org_id and c.id = p.category_id
 		join units u on u.org_id = p.org_id and u.id = p.unit_id
 		where sm.org_id = $1
 			and ($2::uuid is null or sm.product_id = $2)
 			and ($3::text = '' or sm.type = $3)
-			and ($4::text = '' or p.name ilike '%%' || $4 || '%%' or p.barcode ilike '%%' || $4 || '%%' or c.name ilike '%%' || $4 || '%%')
+				and ($4::text = '' or p.name ilike '%%' || $4 || '%%' or p.barcode ilike '%%' || $4 || '%%' or pv.barcode ilike '%%' || $4 || '%%' or c.name ilike '%%' || $4 || '%%')
 			and ($5::timestamptz is null or sm.created_at >= $5)
 			and ($6::timestamptz is null or sm.created_at <= $6)
 			and (not $7::boolean or (%s,sm.id) %s ($8,$9::uuid))
@@ -112,7 +148,7 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 	movements := make([]Movement, 0, filter.Limit)
 	for rows.Next() {
 		var movement Movement
-		if err := rows.Scan(&movement.ID, &movement.ProductID, &movement.ProductName, &movement.ProductBarcode, &movement.ProductCategory, &movement.ProductUnit, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt); err != nil {
+		if err := rows.Scan(&movement.ID, &movement.ProductID, &movement.VariantID, &movement.VariantAttributes, &movement.ProductName, &movement.ProductBarcode, &movement.ProductCategory, &movement.ProductUnit, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan stock movement: %w", err)
 		}
 		movements = append(movements, movement)
@@ -136,7 +172,7 @@ func lockProduct(ctx context.Context, tx database.Tx, orgID string, productID uu
 }
 
 func updateProductStock(ctx context.Context, tx database.Tx, orgID string, productID uuid.UUID, stock int) (ProductStock, error) {
-	var updated ProductStock
+	updated := ProductStock{ProductID: productID}
 	err := tx.QueryRow(ctx, `update products set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,stock,updated_at`, orgID, productID, stock).Scan(&updated.ID, &updated.Stock, &updated.UpdatedAt)
 	if err != nil {
 		return ProductStock{}, fmt.Errorf("update product stock: %w", err)
@@ -147,6 +183,7 @@ func updateProductStock(ctx context.Context, tx database.Tx, orgID string, produ
 type insertMovementInput struct {
 	OrgID             string
 	ProductID         uuid.UUID
+	VariantID         *uuid.UUID
 	Type              MovementType
 	QuantityDelta     int
 	StockBefore       int
@@ -161,10 +198,10 @@ type insertMovementInput struct {
 func insertMovement(ctx context.Context, tx database.Tx, input insertMovementInput) (Movement, error) {
 	var movement Movement
 	err := tx.QueryRow(ctx, `
-		insert into stock_movements (org_id,product_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,created_by_user_name)
-		values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		insert into stock_movements (org_id,product_id,product_variant_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,created_by_user_name)
+		values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
 		returning id,product_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,coalesce(created_by_user_name, ''),created_at
-	`, input.OrgID, input.ProductID, input.Type, input.QuantityDelta, input.StockBefore, input.StockAfter, input.Reason, input.ReferenceType, input.ReferenceID, input.CreatedByUserID, input.CreatedByUserName).Scan(&movement.ID, &movement.ProductID, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt)
+	`, input.OrgID, input.ProductID, input.VariantID, input.Type, input.QuantityDelta, input.StockBefore, input.StockAfter, input.Reason, input.ReferenceType, input.ReferenceID, input.CreatedByUserID, input.CreatedByUserName).Scan(&movement.ID, &movement.ProductID, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt)
 	if err != nil {
 		return Movement{}, fmt.Errorf("insert stock movement: %w", err)
 	}

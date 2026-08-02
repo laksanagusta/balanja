@@ -267,7 +267,7 @@ function AccountMenu({ user, onSettings, onSignOut, className = "" }) {
   );
 }
 
-export default function AppShell({ children, pathname, onNavigate }) {
+export default function AppShell({ children, pathname, onNavigate, immersive = false }) {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { notice, clearNotice } = usePOSStore();
@@ -321,11 +321,17 @@ export default function AppShell({ children, pathname, onNavigate }) {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [accountOpen, mobileMoreOpen]);
 
+  React.useEffect(() => {
+    if (!immersive) return;
+    setMobileMoreOpen(false);
+    setAccountOpen(false);
+  }, [immersive]);
+
   return (
     <div className="h-svh overflow-hidden bg-app-bg">
       <div className="mx-auto flex h-full w-full max-w-[1200px] overflow-hidden bg-surface">
         <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-surface">
-          <header className="mobile-app-bar shrink-0 bg-surface px-4 pb-3">
+          {!immersive && <header className="mobile-app-bar shrink-0 bg-surface px-4 pb-3">
             <div className="flex min-h-14 items-center justify-between">
               <h1 className={`min-w-0 truncate text-lg tracking-normal text-text ${pageTitle === "Balanja" ? "font-sora font-bold" : "font-extrabold"}`}>
                 {pageTitle}
@@ -349,9 +355,9 @@ export default function AppShell({ children, pathname, onNavigate }) {
                 </button>
               </div>
             </div>
-          </header>
+          </header>}
 
-          {accountOpen && (
+          {!immersive && accountOpen && (
             <AccountMenu
               user={user}
               onSettings={() => {
@@ -363,7 +369,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
             />
           )}
 
-          {mobileMoreOpen && (
+          {!immersive && mobileMoreOpen && (
             <div className="absolute inset-0 z-40">
               <button
                 type="button"
@@ -401,7 +407,7 @@ export default function AppShell({ children, pathname, onNavigate }) {
 
           <div ref={contentRef} className="app-shell-content min-h-0 flex-1 overflow-hidden">{children}</div>
 
-          <MobileBottomNavigation
+          {!immersive && <MobileBottomNavigation
             navigationRef={bottomNavigationRef}
             pathname={pathname}
             onNavigate={go}
@@ -410,10 +416,10 @@ export default function AppShell({ children, pathname, onNavigate }) {
               setAccountOpen(false);
               setMobileMoreOpen((open) => !open);
             }}
-          />
+          />}
         </section>
       </div>
-      {accountOpen && (
+      {!immersive && accountOpen && (
         <button
           type="button"
           aria-label="Tutup menu akun"

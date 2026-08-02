@@ -50,7 +50,7 @@ export default function StockOverview({
           <div className="mt-4 grid gap-3">
             {visibleLowStock.map((product) => (
               <LowStockCard
-                key={product.id}
+                key={`${product.id}|${product.variantId || ""}`}
                 product={product}
                 threshold={threshold}
                 onRestock={onRestock}
@@ -123,6 +123,7 @@ function LowStockCard({ product, threshold, onRestock }) {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 text-left">
           <p className="truncate text-base font-semibold text-text">{product.name}</p>
+          {product.variantAttributes && <p className="mt-1 truncate text-sm font-medium text-text">{product.variantAttributes}</p>}
           <p className="mt-1 truncate text-sm text-text-muted">
             {product.category || "Tanpa kategori"} · {product.unit || "pcs"}
           </p>
@@ -161,7 +162,7 @@ function LowStockCard({ product, threshold, onRestock }) {
       type="button"
       onClick={() => onRestock(product)}
       className="min-h-24 w-full rounded-card bg-surface p-4 text-left smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30 transition-[background-color,transform] duration-fast ease-standard hover:bg-surface-muted/60 active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-      aria-label={`Tambah stok untuk ${product.name}`}
+      aria-label={`Tambah stok untuk ${product.name}${product.variantAttributes ? `, ${product.variantAttributes}` : ""}`}
     >
       {content}
     </button>
@@ -182,7 +183,7 @@ function MovementCard({ movement }) {
       <div className="min-w-0">
         <p className="truncate text-base font-semibold text-text">{presentation.label}</p>
         <p className="mt-1 truncate text-sm text-text-muted">
-          {movement.productName || "Produk tidak diketahui"} · {movement.reason || "Tanpa catatan"} · {actor}
+          {movement.productName || "Produk tidak diketahui"}{movement.variantAttributes ? ` — ${movement.variantAttributes}` : ""} · {movement.reason || "Tanpa catatan"} · {actor}
         </p>
       </div>
       <div className="min-w-20 shrink-0 text-right">

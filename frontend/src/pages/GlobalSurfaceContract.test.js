@@ -60,7 +60,7 @@ test("rounded rectangles use cross-browser border radius without corner smoothin
   assert.match(styles, /\.overlay-sticky-header\s*\{[\s\S]*isolation:\s*isolate;/);
   assert.match(
     await readFile(new URL("../components/primitives.jsx", import.meta.url), "utf8"),
-    /flex max-h-\[calc\(100svh-2rem\)\][\s\S]*overflow-hidden[\s\S]*overlay-sticky-header shrink-0 px-6 pb-4 pt-6[\s\S]*min-h-0 overflow-y-auto overscroll-contain/,
+    /flex max-h-\[calc\(100svh-2rem\)\][\s\S]*overflow-hidden[\s\S]*overlay-sticky-header shrink-0 px-4 pb-4 pt-4 sm:px-6 sm:pt-6[\s\S]*min-h-0 overflow-y-auto overscroll-contain/,
   );
   assert.match(tokens, /\["XS - Utility Buttons", "--radius-button", "12px"\]/);
   assert.match(tokens, /\["S - Controls & Inputs", "--radius-control", "10px"\]/);

@@ -6,12 +6,17 @@ export const routes = {
   dashboard: "/dashboard",
   pos: "/pos",
   products: "/products",
+  productNew: "/products/new",
   stock: "/stock",
   transactions: "/transactions",
   reportsSales: "/reports/sales",
   settings: "/settings",
   designSystem: "/design-system",
 };
+
+export function productEditPath(productId) {
+  return `/products/${encodeURIComponent(productId)}/edit`;
+}
 
 export const navGroups = [
   {

@@ -42,6 +42,14 @@ test("stock movement type uses the product-style top-bar filter drawer", async (
   assert.doesNotMatch(source, /movementFilterOptions/);
 });
 
+test("stock movement selects and submits a product variant", async () => {
+  const source = await readFile(new URL("./StockPage.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /variantId/);
+  assert.match(source, /selectedVariant/);
+  assert.match(source, /onSubmit\(\{ productId, variantId/);
+});
+
 test("transaction filters use the product-style draft-and-apply drawer", async () => {
   const source = await readFile(new URL("./TransactionsPage.jsx", import.meta.url), "utf8");
 
@@ -82,4 +90,22 @@ test("touch-device fields prevent focus zoom without disabling user zoom", async
   assert.match(css, /@media \(hover: none\) and \(pointer: coarse\)/);
   assert.match(css, /input:not\(\[type="checkbox"\]\)[\s\S]*textarea,[\s\S]*select\s*\{[\s\S]*font-size:\s*16px/);
   assert.doesNotMatch(html, /user-scalable\s*=\s*no|maximum-scale\s*=\s*1/i);
+});
+
+test("all operational forms use eight-pixel field spacing", async () => {
+  const [products, settings, stock, report, scanner] = await Promise.all([
+    readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8"),
+    readFile(new URL("./SettingsPage.jsx", import.meta.url), "utf8"),
+    readFile(new URL("./StockPage.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/reports/SalesReportToolbar.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/BarcodeScanner.jsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(products, /<form id="product-form"[^>]*className="grid text-text"/);
+  assert.match(products, /max-w-xl gap-2 py-5/);
+  assert.match(settings, /<form onSubmit=\{save\} className="grid gap-2"/);
+  assert.match(stock, /<form id="stock-movement-form"[^>]*className="grid gap-2 text-text">\s*<div className="grid gap-2">/);
+  assert.match(report, /<form className="grid shrink-0 gap-2/);
+  assert.match(report, /<div className="grid gap-2">/);
+  assert.match(scanner, /<form onSubmit=\{submitManual\} className="flex gap-2"/);
 });

@@ -48,7 +48,11 @@ test("POS product card is an explicit variant", async () => {
   assert.match(css, /\.pos-product-card \.product-card-media\s*\{[\s\S]*aspect-ratio:\s*1;[\s\S]*border-radius:\s*var\(--radius-panel\);/);
   assert.match(css, /\.pos-product-card \.product-card-name\s*\{[\s\S]*font-weight:\s*500;/);
   assert.match(css, /\.pos-product-card \.product-card-price\s*\{[\s\S]*font-weight:\s*750;[\s\S]*color:\s*var\(--color-text\);/);
-  assert.match(css, /\.pos-product-card \.product-add-button\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset-inline-end:\s*0\.5rem;[\s\S]*inset-block-end:\s*0\.5rem;[\s\S]*inline-size:\s*2\.75rem;[\s\S]*min-block-size:\s*2\.75rem;/);
+  assert.match(css, /\.pos-product-card \.ui-button\.product-add-button\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset-inline-end:\s*0\.5rem;[\s\S]*inset-block-end:\s*0\.5rem;[\s\S]*inline-size:\s*2\.75rem;[\s\S]*min-block-size:\s*2\.75rem;/);
+  assert.ok(
+    css.lastIndexOf(".pos-product-card .ui-button.product-add-button") > css.indexOf('.ui-button[data-mobile-size="standard"]'),
+    "the unlayered POS overlay override must follow the unlayered standard-button positioning rule",
+  );
   assert.match(css, /\.pos-product-card \.product-add-button \.product-add-button-surface\s*\{[\s\S]*inline-size:\s*2\.25rem;[\s\S]*block-size:\s*2\.25rem;[\s\S]*border:\s*1px solid var\(--color-border\);[\s\S]*border-radius:\s*999px;[\s\S]*background:\s*var\(--color-surface\);[\s\S]*box-shadow:\s*var\(--shadow-low\);[\s\S]*color:\s*var\(--color-text\);/);
   assert.match(css, /\.primary-button\s*\{[\s\S]*box-shadow:\s*none;[\s\S]*text-shadow:\s*none;/);
   assert.match(css, /\.primary-button::before,[\s\S]*\.primary-button::after\s*\{[\s\S]*display:\s*none;/);
@@ -182,8 +186,23 @@ test("product catalog defers filtering and contains off-screen cards", async () 
   assert.match(catalog, /React\.memo/);
   assert.match(catalog, /React\.useDeferredValue/);
   assert.match(catalog, /React\.useMemo/);
-  assert.match(catalog, /const remainingStock = Math\.max\(Number\(product\.stock\) - qtyInCart, 0\)/);
-  assert.match(catalog, /disabled=\{remainingStock <= 0 \|\| checkoutPending\}/);
+  assert.match(catalog, /availableStock: Math\.max\(Number\(variant\.stock\)/);
+  assert.match(catalog, /disabled=\{checkoutPending \|\| availableStock <= 0\}/);
   assert.match(catalog, /<PosProductCard/);
+  assert.match(catalog, /<VariantSelector/);
+  assert.match(catalog, /variantKey\(item\.productId, item\.variantId\)/);
+  assert.match(catalog, /Object\.values\(variant\.attributes/);
+  assert.match(catalog, /if \(result\?\.ok\) setSelectorProduct\(null\)/);
   assert.match(css, /\.pos-product-card[\s\S]*content-visibility:\s*auto/);
+});
+
+test("variant selector exposes available choices, price, stock, and pressed state", async () => {
+  const selector = await readFile(new URL("./VariantSelector.jsx", import.meta.url), "utf8");
+
+  assert.match(selector, /aria-pressed=\{selected\}/);
+  assert.match(selector, /disabled=\{!available\}/);
+  assert.match(selector, /min-h-11 rounded-control/);
+  assert.match(selector, /formatPrice\(matchedVariant\.price\)/);
+  assert.match(selector, /role="status" aria-live="polite"/);
+  assert.doesNotMatch(selector, /onClose/);
 });

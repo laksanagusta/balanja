@@ -3,11 +3,21 @@ export const LOW_STOCK_VISIBLE_LIMIT = 5;
 
 export function getLowStockProducts(products, threshold = LOW_STOCK_THRESHOLD) {
   return (Array.isArray(products) ? products : [])
-    .filter((product) => (
-      product?.active
-      && Number.isFinite(Number(product.stock))
-      && Number(product.stock) <= threshold
-    ))
+    .filter((product) => product?.active)
+    .flatMap((product) => {
+      if (product.attributesConfig?.length > 0 && Array.isArray(product.variants)) {
+        return product.variants
+          .filter((variant) => variant.active !== false && Object.keys(variant.attributes || {}).length > 0)
+          .map((variant) => ({
+            ...product,
+            stock: variant.stock,
+            variantId: variant.id,
+            variantAttributes: Object.entries(variant.attributes || {}).map(([name, value]) => `${name}: ${value}`).join(", "),
+          }));
+      }
+      return [product];
+    })
+    .filter((product) => Number.isFinite(Number(product.stock)) && Number(product.stock) <= threshold)
     .sort((left, right) => (
       Number(left.stock) - Number(right.stock)
       || String(left.name || "").localeCompare(String(right.name || ""), "id-ID")

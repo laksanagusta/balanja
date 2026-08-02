@@ -66,3 +66,19 @@ test("POS showcase documents the compact responsive contract", async () => {
   assert.match(showcase, /0 ke auto/);
   assert.match(showcase, /tetap mounted tetapi inert/);
 });
+
+test("design system publishes the production product variant patterns", async () => {
+  const source = await readFile(new URL("./DesignSystemPage.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../components/design/ProductVariantShowcase.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /ProductVariantShowcase/);
+  assert.match(showcase, /VariantSelector/);
+  assert.match(showcase, /ProductList/);
+  assert.match(showcase, /ProductVariantEditor/);
+  assert.match(showcase, /Simpan parent dan matrix secara atomik/);
+  assert.match(showcase, /halaman editor khusus dengan dua tahap/);
+  assert.match(showcase, /tanpa step indicator/);
+  assert.match(showcase, /heading operasional 14px/);
+  assert.match(showcase, /affordance Enter/);
+  assert.match(showcase, /disclosure inline/);
+});

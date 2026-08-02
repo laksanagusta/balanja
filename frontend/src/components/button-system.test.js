@@ -39,10 +39,12 @@ test("mobile controls follow the shared height and hit-area contract", async () 
   ]);
 
   for (const token of [
-    "--control-height-mobile-button: 44px",
+    "--control-height-mobile-button-hit: 36px",
+    "--control-height-mobile-button: 36px",
     "--control-height-mobile-button-large: 52px",
     "--control-height-mobile-compact: 36px",
-    "--control-height-mobile-input: 48px",
+    "--control-height-mobile-field-hit: 36px",
+    "--control-height-mobile-input: 36px",
     "--control-height-mobile-input-large: 56px",
     "--control-height-mobile-search: 44px",
   ]) {
@@ -51,6 +53,7 @@ test("mobile controls follow the shared height and hit-area contract", async () 
 
   assert.doesNotMatch(css, /@media \(max-width: 767px\)/);
   assert.match(css, /\.ui-button\[data-mobile-size="compact"\][\s\S]*\.ui-button-mobile-hit-area/);
+  assert.match(css, /\.ui-button\[data-mobile-size="standard"\][\s\S]*\.ui-button-mobile-hit-area/);
   assert.match(css, /inset-block: var\(--control-inset-mobile-compact-hit\)/);
   assert.match(primitives, /data-mobile-size=\{resolvedMobileSize\}/);
   assert.match(primitives, /data-ui-size=\{size\}/);
@@ -59,8 +62,9 @@ test("mobile controls follow the shared height and hit-area contract", async () 
   assert.match(buttonShowcase, /Standard radius/);
   assert.match(buttonShowcase, /Utility radius/);
   assert.match(buttonShowcase, /Primary besar · 52/);
+  assert.match(buttonShowcase, /Standard · 36/);
   assert.match(formShowcase, /<Input size="large"/);
-  assert.match(design, /standard buttons are 44px, large primary buttons are 52px/);
-  assert.match(design, /standard inputs and selects are 48px, large inputs are 56px/);
+  assert.match(design, /standard button, input, and dropdown surfaces and hit areas are 36px/);
+  assert.match(design, /large primary buttons are 52px; and large inputs are 56px/);
   assert.match(design, /`control` is 10px for shared buttons/);
 });

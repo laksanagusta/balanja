@@ -17,12 +17,19 @@ import (
 )
 
 var (
-	ErrInvalidProduct   = errors.New("invalid product")
-	ErrInvalidCursor    = errors.New("invalid product cursor")
-	ErrBarcodeConflict  = errors.New("barcode conflict")
-	ErrInvalidReference = errors.New("invalid product reference")
-	ErrNotFound         = errors.New("product not found")
+	ErrInvalidProduct         = errors.New("invalid product")
+	ErrInvalidCursor          = errors.New("invalid product cursor")
+	ErrBarcodeConflict        = errors.New("barcode conflict")
+	ErrInvalidReference       = errors.New("invalid product reference")
+	ErrNotFound               = errors.New("product not found")
+	ErrVariantNotFound        = errors.New("variant not found")
+	ErrVariantBarcodeConflict = errors.New("variant barcode conflict")
+	ErrMissingVariantId       = errors.New("variant id required")
+	ErrInvalidAttributes      = errors.New("invalid variant attributes")
+	ErrMinVariants            = errors.New("at least one active variant is required")
 )
+
+const MaxVariantCombinations = 100
 
 var productSorts = map[string]struct{}{
 	"createdAt": {},
@@ -43,6 +50,14 @@ type Repository interface {
 	UnitIsActive(context.Context, database.Tx, string, uuid.UUID) (bool, error)
 	Update(context.Context, database.Tx, string, uuid.UUID, UpdateInput) (UpdateResult, error)
 	Deactivate(context.Context, database.Tx, string, uuid.UUID) (Product, error)
+	ListVariants(context.Context, database.Tx, string, uuid.UUID) ([]Variant, error)
+	GetVariant(context.Context, database.Tx, string, uuid.UUID, uuid.UUID) (Variant, error)
+	CreateVariant(context.Context, database.Tx, string, uuid.UUID, VariantInput) (Variant, error)
+	UpdateVariant(context.Context, database.Tx, string, uuid.UUID, uuid.UUID, VariantInput) (Variant, error)
+	DeleteVariant(context.Context, database.Tx, string, uuid.UUID, uuid.UUID) error
+	CountActiveVariants(context.Context, database.Tx, string, uuid.UUID) (int, error)
+	VariantSoldHistory(context.Context, database.Tx, string, uuid.UUID) (bool, error)
+	ValidateVariantBarcodeUnique(context.Context, database.Tx, string, string, uuid.UUID, uuid.UUID) error
 }
 type Service struct {
 	runner     TenantRunner
@@ -177,7 +192,17 @@ func (s *Service) List(ctx context.Context, identity database.Identity, filter L
 	err = s.runner.Run(ctx, identity, func(tx database.Tx) error {
 		var queryErr error
 		products, queryErr = s.repository.List(ctx, tx, identity.OrgID, filter)
-		return queryErr
+		if queryErr != nil {
+			return queryErr
+		}
+		for i := range products {
+			variants, vErr := s.repository.ListVariants(ctx, tx, identity.OrgID, products[i].ID)
+			if vErr != nil {
+				return vErr
+			}
+			products[i].Variants = variants
+		}
+		return nil
 	})
 	if err != nil {
 		return Page{}, err
@@ -212,6 +237,17 @@ func (s *Service) List(ctx context.Context, identity database.Identity, filter L
 }
 func (s *Service) Create(ctx context.Context, identity database.Identity, input CreateInput, uploads ...*ImageUpload) (created Product, err error) {
 	input.Name, input.Barcode, input.Image = strings.TrimSpace(input.Name), strings.TrimSpace(input.Barcode), strings.TrimSpace(input.Image)
+	input.AttributesConfig, err = normalizeAttributeConfig(input.AttributesConfig)
+	if err != nil {
+		return Product{}, err
+	}
+	input.Variants, err = prepareVariantSave(input.AttributesConfig, input.Variants, input.Price, input.Stock)
+	if err != nil {
+		return Product{}, err
+	}
+	if err = validateParentVariantBarcodes(input.Barcode, input.Variants); err != nil {
+		return Product{}, err
+	}
 	if input.Name == "" || input.Barcode == "" || input.CategoryID == uuid.Nil || input.UnitID == uuid.Nil || input.Price < 1 || input.Stock < 0 {
 		return Product{}, ErrInvalidProduct
 	}
@@ -242,9 +278,26 @@ func (s *Service) Create(ctx context.Context, identity database.Identity, input 
 		if !activeCategory || !activeUnit {
 			return ErrInvalidReference
 		}
+		if barcodeErr := s.repository.ValidateVariantBarcodeUnique(ctx, tx, identity.OrgID, input.Barcode, uuid.Nil, uuid.Nil); barcodeErr != nil {
+			return barcodeErr
+		}
 		var createErr error
 		created, createErr = s.repository.Create(ctx, tx, identity.OrgID, input)
-		return createErr
+		if createErr != nil {
+			return createErr
+		}
+		created.AttributesConfig = input.AttributesConfig
+		for _, variant := range input.Variants {
+			if barcodeErr := s.repository.ValidateVariantBarcodeUnique(ctx, tx, identity.OrgID, variant.Barcode, created.ID, uuid.Nil); barcodeErr != nil {
+				return barcodeErr
+			}
+			createdVariant, variantErr := s.repository.CreateVariant(ctx, tx, identity.OrgID, created.ID, variant)
+			if variantErr != nil {
+				return variantErr
+			}
+			created.Variants = append(created.Variants, createdVariant)
+		}
+		return nil
 	})
 	if err != nil && newImageKey != "" {
 		s.deleteImage(ctx, newImageKey, "compensate failed product create")
@@ -254,6 +307,10 @@ func (s *Service) Create(ctx context.Context, identity database.Identity, input 
 }
 func (s *Service) Update(ctx context.Context, identity database.Identity, id uuid.UUID, input UpdateInput, mutations ...ImageMutation) (updated Product, err error) {
 	input.Name, input.Barcode, input.Image = strings.TrimSpace(input.Name), strings.TrimSpace(input.Barcode), strings.TrimSpace(input.Image)
+	input.AttributesConfig, err = normalizeAttributeConfig(input.AttributesConfig)
+	if err != nil {
+		return Product{}, err
+	}
 	if input.Name == "" || input.Barcode == "" || input.CategoryID == uuid.Nil || input.UnitID == uuid.Nil || input.Price < 1 {
 		return Product{}, ErrInvalidProduct
 	}
@@ -310,9 +367,42 @@ func (s *Service) Update(ctx context.Context, identity database.Identity, id uui
 		if !activeUnit && input.UnitID != current.UnitID {
 			return ErrInvalidReference
 		}
+		if barcodeErr := s.repository.ValidateVariantBarcodeUnique(ctx, tx, identity.OrgID, input.Barcode, id, uuid.Nil); barcodeErr != nil {
+			return barcodeErr
+		}
+		existingVariants, variantsErr := s.repository.ListVariants(ctx, tx, identity.OrgID, id)
+		if variantsErr != nil {
+			return variantsErr
+		}
+		desiredVariants := input.Variants
+		if len(input.AttributesConfig) == 0 && len(desiredVariants) == 0 {
+			stock := current.Stock
+			var defaultID uuid.UUID
+			for _, variant := range existingVariants {
+				if len(variant.Attributes) == 0 {
+					defaultID = variant.ID
+					stock = variant.Stock
+					break
+				}
+			}
+			desiredVariants = []VariantInput{{ID: defaultID, Attributes: map[string]string{}, Price: input.Price, Stock: stock, Active: true}}
+		}
+		desiredVariants, variantsErr = prepareVariantSave(input.AttributesConfig, desiredVariants, input.Price, current.Stock)
+		if variantsErr != nil {
+			return variantsErr
+		}
+		if variantsErr = validateParentVariantBarcodes(input.Barcode, desiredVariants); variantsErr != nil {
+			return variantsErr
+		}
+		input.Variants = desiredVariants
 		var updateErr error
 		result, updateErr = s.repository.Update(ctx, tx, identity.OrgID, id, input)
+		if updateErr != nil {
+			return updateErr
+		}
 		updated = result.Product
+		updated.AttributesConfig = input.AttributesConfig
+		updated.Variants, updateErr = s.syncVariants(ctx, tx, identity.OrgID, id, existingVariants, desiredVariants)
 		return updateErr
 	})
 	if err != nil {
@@ -326,6 +416,173 @@ func (s *Service) Update(ctx context.Context, identity database.Identity, id uui
 	}
 	updated = s.withDeliveredImage(updated)
 	return
+}
+
+func normalizeAttributeConfig(config []AttributeConfig) ([]AttributeConfig, error) {
+	normalized := make([]AttributeConfig, 0, len(config))
+	names := make(map[string]struct{}, len(config))
+	for _, attribute := range config {
+		attribute.Name = strings.TrimSpace(attribute.Name)
+		nameKey := strings.ToLower(attribute.Name)
+		if attribute.Name == "" {
+			return nil, ErrInvalidAttributes
+		}
+		if _, exists := names[nameKey]; exists {
+			return nil, ErrInvalidAttributes
+		}
+		names[nameKey] = struct{}{}
+		options := make([]string, 0, len(attribute.Options))
+		seenOptions := make(map[string]struct{}, len(attribute.Options))
+		for _, option := range attribute.Options {
+			option = strings.TrimSpace(option)
+			optionKey := strings.ToLower(option)
+			if option == "" {
+				continue
+			}
+			if _, exists := seenOptions[optionKey]; exists {
+				return nil, ErrInvalidAttributes
+			}
+			seenOptions[optionKey] = struct{}{}
+			options = append(options, option)
+		}
+		if len(options) == 0 {
+			return nil, ErrInvalidAttributes
+		}
+		attribute.Options = options
+		normalized = append(normalized, attribute)
+	}
+	return normalized, nil
+}
+
+func prepareVariantSave(config []AttributeConfig, variants []VariantInput, fallbackPrice, fallbackStock int) ([]VariantInput, error) {
+	if len(config) == 0 {
+		if len(variants) == 0 {
+			return []VariantInput{{Attributes: map[string]string{}, Price: fallbackPrice, Stock: fallbackStock, Active: true}}, nil
+		}
+		if len(variants) != 1 || len(variants[0].Attributes) != 0 {
+			return nil, ErrInvalidAttributes
+		}
+	}
+	if len(variants) == 0 {
+		return nil, ErrMinVariants
+	}
+	if len(config) > 0 {
+		expected := 1
+		for _, attribute := range config {
+			expected *= len(attribute.Options)
+			if expected > MaxVariantCombinations {
+				return nil, ErrInvalidAttributes
+			}
+		}
+		if len(variants) != expected {
+			return nil, ErrInvalidAttributes
+		}
+	}
+	attributeKeys := make(map[string]struct{}, len(variants))
+	barcodes := make(map[string]struct{}, len(variants))
+	for index := range variants {
+		variant := &variants[index]
+		variant.Barcode = strings.TrimSpace(variant.Barcode)
+		if variant.Price < 0 || (variant.Active && variant.Price < 1) || variant.Stock < 0 {
+			return nil, ErrInvalidProduct
+		}
+		if err := validateVariantAttributes(variant.Attributes, config); err != nil {
+			return nil, err
+		}
+		rawAttributes, _ := json.Marshal(variant.Attributes)
+		key := string(rawAttributes)
+		if _, exists := attributeKeys[key]; exists {
+			return nil, ErrInvalidAttributes
+		}
+		attributeKeys[key] = struct{}{}
+		if variant.Barcode != "" {
+			barcodeKey := strings.ToLower(variant.Barcode)
+			if _, exists := barcodes[barcodeKey]; exists {
+				return nil, ErrVariantBarcodeConflict
+			}
+			barcodes[barcodeKey] = struct{}{}
+		}
+	}
+	return variants, nil
+}
+
+func validateParentVariantBarcodes(parentBarcode string, variants []VariantInput) error {
+	parentBarcode = strings.TrimSpace(parentBarcode)
+	for _, variant := range variants {
+		if variant.Barcode != "" && strings.EqualFold(parentBarcode, variant.Barcode) {
+			return ErrVariantBarcodeConflict
+		}
+	}
+	return nil
+}
+
+func (s *Service) syncVariants(ctx context.Context, tx database.Tx, orgID string, productID uuid.UUID, existing []Variant, desired []VariantInput) ([]Variant, error) {
+	desiredIDs := make(map[uuid.UUID]struct{}, len(desired))
+	existingByID := make(map[uuid.UUID]Variant, len(existing))
+	for _, variant := range existing {
+		existingByID[variant.ID] = variant
+	}
+	for _, variant := range desired {
+		if variant.ID != uuid.Nil {
+			if _, exists := existingByID[variant.ID]; !exists {
+				return nil, ErrVariantNotFound
+			}
+			desiredIDs[variant.ID] = struct{}{}
+		}
+	}
+	for _, variant := range existing {
+		if _, keep := desiredIDs[variant.ID]; keep {
+			continue
+		}
+		sold, err := s.repository.VariantSoldHistory(ctx, tx, orgID, variant.ID)
+		if err != nil {
+			return nil, err
+		}
+		if sold {
+			_, err = s.repository.UpdateVariant(ctx, tx, orgID, productID, variant.ID, VariantInput{
+				Attributes: variant.Attributes, Price: variant.Price, Stock: variant.Stock, Barcode: "",
+				Image: variant.Image, ImageKey: variant.ImageKey, Active: false,
+			})
+		} else {
+			err = s.repository.DeleteVariant(ctx, tx, orgID, productID, variant.ID)
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	for _, variant := range desired {
+		if variant.ID == uuid.Nil {
+			continue
+		}
+		current := existingByID[variant.ID]
+		if current.Barcode != "" && current.Barcode != variant.Barcode {
+			current.Barcode = ""
+			if _, err := s.repository.UpdateVariant(ctx, tx, orgID, productID, current.ID, VariantInput{
+				Attributes: current.Attributes, Price: current.Price, Stock: current.Stock, Barcode: "",
+				Image: current.Image, ImageKey: current.ImageKey, Active: current.Active,
+			}); err != nil {
+				return nil, err
+			}
+		}
+	}
+	result := make([]Variant, 0, len(desired))
+	for _, variant := range desired {
+		var saved Variant
+		var err error
+		if err = s.repository.ValidateVariantBarcodeUnique(ctx, tx, orgID, variant.Barcode, productID, variant.ID); err != nil {
+			return nil, err
+		}
+		if variant.ID == uuid.Nil {
+			saved, err = s.repository.CreateVariant(ctx, tx, orgID, productID, variant)
+		} else {
+			saved, err = s.repository.UpdateVariant(ctx, tx, orgID, productID, variant.ID, variant)
+		}
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, saved)
+	}
+	return result, nil
 }
 
 func (s *Service) GetImage(ctx context.Context, key string) (objectstore.Object, error) {
@@ -351,4 +608,102 @@ func (s *Service) Deactivate(ctx context.Context, identity database.Identity, id
 	})
 	updated = s.withDeliveredImage(updated)
 	return
+}
+
+func validateVariantAttributes(attrs map[string]string, config []AttributeConfig) error {
+	if len(config) == 0 {
+		if len(attrs) == 0 {
+			return nil
+		}
+		return ErrInvalidAttributes
+	}
+	if len(attrs) != len(config) {
+		return ErrInvalidAttributes
+	}
+	for _, attr := range config {
+		value, ok := attrs[attr.Name]
+		if !ok || strings.TrimSpace(value) == "" {
+			return ErrInvalidAttributes
+		}
+		matched := false
+		for _, option := range attr.Options {
+			if option == value {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return ErrInvalidAttributes
+		}
+	}
+	return nil
+}
+
+func (s *Service) CreateVariant(ctx context.Context, identity database.Identity, productID uuid.UUID, input VariantInput) (Variant, error) {
+	input.Barcode = strings.TrimSpace(input.Barcode)
+	if input.Price < 1 || input.Stock < 0 {
+		return Variant{}, ErrInvalidProduct
+	}
+	var created Variant
+	err := s.runner.Run(ctx, identity, func(tx database.Tx) error {
+		product, getErr := s.repository.Get(ctx, tx, identity.OrgID, productID)
+		if getErr != nil {
+			return getErr
+		}
+		if err := validateVariantAttributes(input.Attributes, product.AttributesConfig); err != nil {
+			return err
+		}
+		if err := s.repository.ValidateVariantBarcodeUnique(ctx, tx, identity.OrgID, input.Barcode, productID, uuid.Nil); err != nil {
+			return err
+		}
+		var createErr error
+		created, createErr = s.repository.CreateVariant(ctx, tx, identity.OrgID, productID, input)
+		return createErr
+	})
+	return created, err
+}
+
+func (s *Service) UpdateVariant(ctx context.Context, identity database.Identity, productID, variantID uuid.UUID, input VariantInput) (Variant, error) {
+	input.Barcode = strings.TrimSpace(input.Barcode)
+	if input.Price < 1 || input.Stock < 0 {
+		return Variant{}, ErrInvalidProduct
+	}
+	var updated Variant
+	err := s.runner.Run(ctx, identity, func(tx database.Tx) error {
+		product, getErr := s.repository.Get(ctx, tx, identity.OrgID, productID)
+		if getErr != nil {
+			return getErr
+		}
+		if err := validateVariantAttributes(input.Attributes, product.AttributesConfig); err != nil {
+			return err
+		}
+		if err := s.repository.ValidateVariantBarcodeUnique(ctx, tx, identity.OrgID, input.Barcode, productID, variantID); err != nil {
+			return err
+		}
+		var updateErr error
+		updated, updateErr = s.repository.UpdateVariant(ctx, tx, identity.OrgID, productID, variantID, input)
+		return updateErr
+	})
+	return updated, err
+}
+
+func (s *Service) DeleteVariant(ctx context.Context, identity database.Identity, productID, variantID uuid.UUID) error {
+	return s.runner.Run(ctx, identity, func(tx database.Tx) error {
+		count, countErr := s.repository.CountActiveVariants(ctx, tx, identity.OrgID, productID)
+		if countErr != nil {
+			return countErr
+		}
+		if count <= 1 {
+			return ErrMinVariants
+		}
+		sold, soldErr := s.repository.VariantSoldHistory(ctx, tx, identity.OrgID, variantID)
+		if soldErr != nil {
+			return soldErr
+		}
+		if sold {
+			_, softErr := s.repository.UpdateVariant(ctx, tx, identity.OrgID, productID, variantID, VariantInput{Active: false})
+			return softErr
+		}
+		return s.repository.DeleteVariant(ctx, tx, identity.OrgID, productID, variantID)
+	})
 }

@@ -28,6 +28,7 @@ import MasterDataPatternsShowcase from "../components/design/MasterDataPatternsS
 import OrganizationOnboardingShowcase from "../components/design/OrganizationOnboardingShowcase.jsx";
 import EntitlementPatternsShowcase from "../components/design/EntitlementPatternsShowcase.jsx";
 import StockPatternsShowcase from "../components/design/StockPatternsShowcase.jsx";
+import ProductVariantShowcase from "../components/design/ProductVariantShowcase.jsx";
 
 export default function DesignSystemPage({ onNavigate }) {
   return (
@@ -136,6 +137,7 @@ export default function DesignSystemPage({ onNavigate }) {
         <CartItemShowcase />
         <DialogShowcase />
         <ProductPhotoShowcase />
+        <ProductVariantShowcase />
         <MasterDataPatternsShowcase />
         <ModalFormShowcase />
         <DataTableShowcase />
