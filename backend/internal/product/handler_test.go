@@ -13,6 +13,7 @@ import (
 	"balanja/backend/internal/auth"
 	"balanja/backend/internal/platform/objectstore"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 type productHandlerVerifier struct{}
@@ -52,6 +53,62 @@ func TestMultipartUpdateReportsStorageFailure(t *testing.T) {
 		t.Fatal(err)
 	}
 	if response.StatusCode != http.StatusServiceUnavailable {
+		t.Fatalf("status=%d", response.StatusCode)
+	}
+}
+
+func TestMultipartUpdateCarriesAttributesConfig(t *testing.T) {
+	repository := &fakeRepository{updateResult: UpdateResult{Product: Product{}}}
+	app := productHandlerApp(NewService(fakeRunner{}, repository))
+	response, err := app.Test(productMultipartRequest(t, http.MethodPut, "/products/"+uuidString(t), nil, false,
+		map[string]string{
+			"attributesConfig": `[{"name":"Berat","options":["M","L"]}]`,
+			"variants":         `[{"attributes":{"Berat":"M"},"price":10,"stock":1,"active":true},{"attributes":{"Berat":"L"},"price":12,"stock":1,"active":true}]`,
+		}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status=%d", response.StatusCode)
+	}
+	config := repository.update.AttributesConfig
+	if len(config) != 1 || config[0].Name != "Berat" || len(config[0].Options) != 2 || config[0].Options[1] != "L" {
+		t.Fatalf("attributesConfig=%#v", config)
+	}
+}
+
+func TestMultipartUpdateCarriesVariantsForAtomicSave(t *testing.T) {
+	variantID := uuid.MustParse("33333333-3333-3333-3333-333333333333")
+	repository := &fakeRepository{
+		updateResult: UpdateResult{Product: Product{}},
+		variants:     []Variant{{ID: variantID, Attributes: map[string]string{"Berat": "M"}, Price: 10, Stock: 2, Barcode: "M", Active: true}},
+	}
+	app := productHandlerApp(NewService(fakeRunner{}, repository))
+	response, err := app.Test(productMultipartRequest(t, http.MethodPut, "/products/"+uuidString(t), nil, false,
+		map[string]string{
+			"attributesConfig": `[{"name":"Berat","options":["M"]}]`,
+			"variants":         `[{"id":"33333333-3333-3333-3333-333333333333","attributes":{"Berat":"M"},"price":10,"stock":2,"barcode":"M","active":true}]`,
+		}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status=%d", response.StatusCode)
+	}
+	variants := repository.update.Variants
+	if len(variants) != 1 || variants[0].ID.String() != "33333333-3333-3333-3333-333333333333" || variants[0].Attributes["Berat"] != "M" {
+		t.Fatalf("variants=%#v", variants)
+	}
+}
+
+func TestMultipartUpdateRejectsMalformedAttributesConfig(t *testing.T) {
+	app := productHandlerApp(NewService(fakeRunner{}, &fakeRepository{}))
+	response, err := app.Test(productMultipartRequest(t, http.MethodPut, "/products/"+uuidString(t), nil, false,
+		map[string]string{"attributesConfig": "not-json"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != http.StatusUnprocessableEntity {
 		t.Fatalf("status=%d", response.StatusCode)
 	}
 }
@@ -109,13 +166,18 @@ func productHandlerApp(service *Service) *fiber.App {
 	return app
 }
 
-func productMultipartRequest(t *testing.T, method, path string, image []byte, remove bool) *http.Request {
+func productMultipartRequest(t *testing.T, method, path string, image []byte, remove bool, extraFields ...map[string]string) *http.Request {
 	t.Helper()
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
 	fields := map[string]string{"name": "Tea", "barcode": "1", "categoryId": "11111111-1111-1111-1111-111111111111", "price": "10", "stock": "1", "unitId": "22222222-2222-2222-2222-222222222222", "active": "true"}
 	if remove {
 		fields["remove_image"] = "true"
+	}
+	for _, extra := range extraFields {
+		for key, value := range extra {
+			fields[key] = value
+		}
 	}
 	for key, value := range fields {
 		if err := writer.WriteField(key, value); err != nil {

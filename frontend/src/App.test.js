@@ -19,6 +19,15 @@ test("development annotation tooling is excluded from production rendering", asy
   assert.doesNotMatch(source, /^\s*<Agentation endpoint=/m);
 });
 
+test("product creation and editing use dedicated product routes", async () => {
+  const source = await readFile(new URL("./App.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /isProductEditorPath\(pathname\)/);
+  assert.match(source, /<ProductsPage pathname=\{pathname\} onNavigate=\{onNavigate\}/);
+  assert.match(source, /shellPathname/);
+  assert.match(source, /immersive=\{isProductEditorPath\(pathname\)\}/);
+});
+
 test("signed-in POS mounting is gated by organization bootstrap", async () => {
   const source = await readFile(new URL("./main.jsx", import.meta.url), "utf8");
 

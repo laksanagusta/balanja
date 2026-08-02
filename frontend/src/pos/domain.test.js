@@ -224,6 +224,17 @@ test("addProductToCart adds chosen variant as separate line", () => {
   assert.deepEqual(result.cart[0].variantAttributes, { Ukuran: "M" });
 });
 
+test("addProductToCart resolves a variant barcode directly", () => {
+  const product = variantProduct();
+  product.variants[0].barcode = "VARIANT-M";
+
+  const result = addProductToCart([], [product], "VARIANT-M");
+
+  assert.equal(result.ok, true);
+  assert.equal(result.cart[0].productId, "p1");
+  assert.equal(result.cart[0].variantId, "v1");
+});
+
 test("addProductToCart treats different variants as separate cart lines", () => {
   const product = variantProduct();
   const stocked = { ...product.variants[1], stock: 7 };

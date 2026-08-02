@@ -4,10 +4,10 @@ import { readFile } from "node:fs/promises";
 
 test("product page owns one photo preview and list thumbnail", async () => {
   const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const workspace = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
   const list = await readFile(new URL("../components/product/ProductList.jsx", import.meta.url), "utf8");
-  for (const pattern of [/ProductPhotoField/, /ProductList/, /URL\.createObjectURL/, /URL\.revokeObjectURL/, /imageFile/, /removeImage/]) {
-    assert.match(source, pattern);
-  }
+  for (const pattern of [/ProductList/, /URL\.createObjectURL/, /URL\.revokeObjectURL/, /imageFile/, /removeImage/]) assert.match(source, pattern);
+  assert.match(workspace, /ProductPhotoField/);
   assert.match(list, /ProductThumbnail/);
   assert.match(list, /size="xl"/);
   assert.match(list, /flex min-h-20 min-w-0 self-center flex-col/);
@@ -24,7 +24,7 @@ test("product page owns one photo preview and list thumbnail", async () => {
 });
 
 test("product machine data uses mono without changing human-facing labels", async () => {
-  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const source = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
   const primitives = await readFile(new URL("../components/primitives.jsx", import.meta.url), "utf8");
 
   assert.match(source, />Barcode<\/span>/);
@@ -44,13 +44,14 @@ test("product page maps storage failures to inline photo feedback", async () => 
 
 test("product editor uses category and unit IDs with inline creation", async () => {
   const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const workspace = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
   assert.match(source, /categoryId/);
   assert.match(source, /unitId/);
-  assert.match(source, /MasterDataSelectField/);
+  assert.match(workspace, /MasterDataSelectField/);
 });
 
 test("product barcode scan action shares the labeled row with manual entry", async () => {
-  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const source = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
   const barcodeLabelIndex = source.indexOf(">Barcode</span>");
   const barcodeInputIndex = source.indexOf('placeholder="8991001000011"', barcodeLabelIndex);
   const scanActionIndex = source.indexOf('aria-label="Pindai barcode"', barcodeInputIndex);
@@ -61,7 +62,7 @@ test("product barcode scan action shares the labeled row with manual entry", asy
   assert.ok(scanActionIndex > barcodeInputIndex);
   assert.ok(scanIconIndex > scanActionIndex);
   assert.match(source, /className="flex items-start gap-2"/);
-  assert.match(source, /aria-label="Pindai barcode"[\s\S]{0,400}mt-1\.5 grid size-9/);
+  assert.match(source, /aria-label="Pindai barcode"[\s\S]{0,400}className="grid size-11/);
   assert.doesNotMatch(source, /leftSlot=\{\(/);
   assert.doesNotMatch(source, /<Icon name="barcode"/);
 });
@@ -133,11 +134,11 @@ test("product list loads at most six more items without a pagination footer", as
 });
 
 test("product save feedback swaps text without resizing its button", async () => {
-  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const source = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
   const swap = await readFile(new URL("../components/motion/SwapText.jsx", import.meta.url), "utf8");
   const hook = await readFile(new URL("../hooks/useSwapTransition.js", import.meta.url), "utf8");
 
-  assert.match(source, /className="w-full"/);
+  assert.match(source, /className="min-w-28"/);
   assert.match(source, /<SwapText value=\{savingProduct \? "Menyimpan\.\.\." : "Simpan"\}/);
   assert.match(swap, /-translate-y-1 opacity-0 duration-fast/);
   assert.match(swap, /translate-y-1 opacity-0 duration-0/);
@@ -148,19 +149,61 @@ test("product save feedback swaps text without resizing its button", async () =>
 
 test("product editor manages attributes and syncs variant matrix on save", async () => {
   const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const workspace = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
+  const editor = await readFile(new URL("../components/product/ProductVariantEditor.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /Tambah atribut/);
+  assert.match(workspace, /ProductVariantEditor/);
+  assert.match(editor, /Tambah atribut/);
+  assert.match(editor, /aria-label="Tambah atribut"/);
+  assert.match(workspace, /className="flex h-11 items-center justify-between rounded-button/);
   assert.match(source, /attributesConfig/);
   assert.match(source, /buildVariantMatrix/);
-  assert.match(source, /attributesKey\(variant\.attributes\)/);
-  assert.match(source, /renameAttribute\(index, event\.target\.value\)/);
-  assert.match(source, /setAttributeOptions\(index, event\.target\.value\.split\(","\)/);
-  assert.match(source, /updateVariantRow\(key, "price"/);
-  assert.match(source, /updateVariantRow\(key, "stock"/);
-  assert.match(source, /updateVariantRow\(key, "barcode"/);
-  assert.match(source, /store\.api\.createVariant\(saved\.id, payload\)/);
-  assert.match(source, /store\.api\.updateVariant\(saved\.id, row\.id, payload\)/);
-  assert.match(source, /store\.api\.deleteVariant\(saved\.id, original\.id\)/);
-  assert.match(source, /Atribut ini masih dipakai oleh variasi aktif/);
-  assert.match(source, /Barcode \(opsional\)/);
+  assert.match(editor, /attributesKey\(variant\.attributes\)/);
+  assert.match(editor, /onUpdateVariant\?\.\(key, "price"/);
+  assert.match(editor, /onUpdateVariant\?\.\(key, "stock"/);
+  assert.match(editor, /onUpdateVariant\?\.\(key, "barcode"/);
+  assert.match(source, /setScannerTarget\(\{ kind: "variant", key \}\)/);
+  assert.match(source, /scannerTarget\?\.kind === "variant"/);
+  assert.doesNotMatch(source, /store\.api\.(?:create|update|delete)Variant/);
+  assert.match(source, /variants:\s*rows\.map/);
+  assert.match(editor, /Barcode \(opsional\)/);
+  assert.doesNotMatch(source, /minimal satu varian aktif/);
+  assert.match(source, /validateVariantDraft/);
+  assert.match(source, /variantValidation\.variantRows/);
+});
+
+test("product editor is one atomic draft split into details and variants", async () => {
+  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const workspace = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /editorStep/);
+  assert.match(source, /routes\.productNew/);
+  assert.match(source, /productEditPath/);
+  assert.match(source, /<ProductEditorWorkspace/);
+  assert.doesNotMatch(source, /<Dialog/);
+  assert.match(workspace, /Informasi produk/);
+  assert.match(workspace, /Atur variasi/);
+  assert.match(workspace, /Kembali ke daftar produk/);
+  assert.match(workspace, /sticky top-0/);
+  assert.match(workspace, /sticky bottom-0/);
+  assert.doesNotMatch(workspace, /<Dialog/);
+  assert.doesNotMatch(workspace, /Langkah [12] dari 2/);
+  assert.doesNotMatch(workspace, /Tahap editor produk/);
+  assert.match(workspace, /<h1[^>]*text-sm[^>]*uppercase[^>]*tracking-\[0\.14em\]/);
+  assert.match(workspace, /<h2[^>]*text-sm[^>]*>\s*\{isVariantsStep \? "Atur variasi" : "Informasi produk"\}/);
+  assert.match(source, /productDraftFingerprint/);
+  assert.match(workspace, /Buang perubahan\?/);
+  assert.match(workspace, /Lanjut mengedit/);
+  assert.match(workspace, /Buang perubahan/);
+  assert.match(source, /focusFirstProductError/);
+  assert.match(source, /prefers-reduced-motion: reduce/);
+  assert.match(source, /event\.(?:metaKey|ctrlKey)/);
+});
+
+test("typing in the product editor does not move focus back to the section heading", async () => {
+  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /const editorHasDraft = Boolean\(editing\);/);
+  assert.match(source, /\[discardConfirmOpen, editorHasDraft, editorStep\]/);
+  assert.doesNotMatch(source, /\[discardConfirmOpen, editing, editorStep\]/);
 });

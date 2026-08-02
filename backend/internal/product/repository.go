@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"balanja/backend/internal/platform/database"
 	"github.com/google/uuid"
@@ -366,4 +367,28 @@ func (PostgresRepository) VariantSoldHistory(ctx context.Context, tx database.Tx
 		return false, fmt.Errorf("check variant sold history: %w", err)
 	}
 	return exists, nil
+}
+
+func (PostgresRepository) ValidateVariantBarcodeUnique(ctx context.Context, tx database.Tx, orgID, barcode string, excludeProductID, excludeVariantID uuid.UUID) error {
+	barcode = strings.TrimSpace(barcode)
+	if barcode == "" {
+		return nil
+	}
+	var productConflict bool
+	err := tx.QueryRow(ctx, `select exists(select 1 from products where org_id=$1 and barcode=$2 and id<>$3)`, orgID, barcode, excludeProductID).Scan(&productConflict)
+	if err != nil {
+		return fmt.Errorf("check barcode product conflict: %w", err)
+	}
+	if productConflict {
+		return ErrVariantBarcodeConflict
+	}
+	var variantConflict bool
+	err = tx.QueryRow(ctx, `select exists(select 1 from product_variants where org_id=$1 and barcode=$2 and id<>$3)`, orgID, barcode, excludeVariantID).Scan(&variantConflict)
+	if err != nil {
+		return fmt.Errorf("check barcode variant conflict: %w", err)
+	}
+	if variantConflict {
+		return ErrVariantBarcodeConflict
+	}
+	return nil
 }

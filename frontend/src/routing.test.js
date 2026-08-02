@@ -23,6 +23,8 @@ test("signed-out users are sent from private routes to login", () => {
 
 test("signed-in users retain private routes", () => {
   assert.equal(normalizePath("/pos", true), "/pos");
+  assert.equal(normalizePath("/products/new", true), "/products/new");
+  assert.equal(normalizePath("/products/product-123/edit", true), "/products/product-123/edit");
   assert.equal(normalizePath("/design-system", true), "/design-system");
 });
 

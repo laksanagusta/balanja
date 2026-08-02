@@ -213,6 +213,8 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 				return Result{}, fmt.Errorf("update variant stock: %w", err)
 			}
 			stock.Stock = after
+			stock.ProductID = requested.ProductID
+			stock.VariantID = requested.VariantID
 		} else {
 			product := products[requested.ProductID]
 			before = product.Stock
@@ -223,6 +225,7 @@ func (PostgresRepository) Execute(ctx context.Context, tx database.Tx, id databa
 			if err := tx.QueryRow(ctx, `update products set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,stock,updated_at`, id.OrgID, requested.ProductID, after).Scan(&stock.ID, &stock.Stock, &stock.UpdatedAt); err != nil {
 				return Result{}, fmt.Errorf("update product stock: %w", err)
 			}
+			stock.ProductID = requested.ProductID
 		}
 		if _, err := tx.Exec(ctx, `insert into stock_movements (org_id,product_id,product_variant_id,type,quantity_delta,stock_before,stock_after,reason,reference_type,reference_id,created_by_user_id,created_by_user_name) values ($1,$2,$3,'sale',$4,$5,$6,$7,$8,$9,$10,$11)`, id.OrgID, requested.ProductID, requested.VariantID, -requested.Quantity, before, after, "Completed sale "+number, referenceType, result.Transaction.ID, id.UserID, cashierName); err != nil {
 			return Result{}, fmt.Errorf("insert sale stock movement: %w", err)

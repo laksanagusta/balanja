@@ -13,7 +13,7 @@ import SettingsPage from "./pages/SettingsPage.jsx";
 import StockPage from "./pages/StockPage.jsx";
 import TransactionsPage from "./pages/TransactionsPage.jsx";
 import { routes } from "./shared.jsx";
-import { normalizePath } from "./routing.js";
+import { isProductEditorPath, normalizePath } from "./routing.js";
 
 function usePathname(isSignedIn, isAuthLoaded) {
   const [location, setLocation] = React.useState(() => ({
@@ -37,11 +37,11 @@ function usePathname(isSignedIn, isAuthLoaded) {
     setLocation({ pathname: nextPath, search: nextPath === window.location.pathname ? window.location.search : "" });
   }, [isAuthLoaded, isSignedIn]);
 
-  const navigate = React.useCallback((path) => {
+  const navigate = React.useCallback((path, { replace = false } = {}) => {
     const target = new URL(path, window.location.origin);
     const nextPath = normalizePath(target.pathname, isSignedIn, isAuthLoaded);
     const nextURL = nextPath === target.pathname ? `${nextPath}${target.search}` : nextPath;
-    window.history.pushState({}, "", nextURL);
+    window.history[replace ? "replaceState" : "pushState"]({}, "", nextURL);
     setLocation({ pathname: nextPath, search: nextPath === target.pathname ? target.search : "" });
     window.scrollTo(0, 0);
   }, [isAuthLoaded, isSignedIn]);
@@ -51,7 +51,7 @@ function usePathname(isSignedIn, isAuthLoaded) {
 
 function AppPage({ pathname, search, onNavigate }) {
   if (pathname === routes.dashboard) return <DashboardPage onNavigate={onNavigate} />;
-  if (pathname === routes.products) return <ProductsPage />;
+  if (pathname === routes.products || isProductEditorPath(pathname)) return <ProductsPage pathname={pathname} onNavigate={onNavigate} />;
   if (pathname === routes.stock) return <StockPage />;
   if (pathname === routes.transactions) return <TransactionsPage />;
   if (pathname === routes.reportsSales) return <SalesReportPage onNavigate={onNavigate} />;
@@ -63,6 +63,7 @@ export default function App() {
   const { isLoaded, isSignedIn } = useAuth();
   const [location, navigate] = usePathname(Boolean(isSignedIn), isLoaded);
   const pathname = location.pathname;
+  const shellPathname = isProductEditorPath(pathname) ? routes.products : pathname;
 
   if (!isLoaded) {
     return <div className="min-h-screen bg-app-bg" aria-busy="true" />;
@@ -90,7 +91,7 @@ export default function App() {
         {pathname === routes.designSystem ? (
           <DesignSystemPage onNavigate={navigate} />
         ) : (
-          <AppShell pathname={pathname} onNavigate={navigate}>
+          <AppShell pathname={shellPathname} onNavigate={navigate} immersive={isProductEditorPath(pathname)}>
             <AppPage pathname={pathname} search={location.search} onNavigate={navigate} />
           </AppShell>
         )}

@@ -19,6 +19,26 @@ test("low stock products include only active products at or below the threshold"
   assert.deepEqual(result.map((product) => product.id), ["two", "ten"]);
 });
 
+test("low stock products expose configured variants independently", () => {
+  const result = getLowStockProducts([{
+    id: "tea",
+    name: "Tea",
+    active: true,
+    stock: 99,
+    attributesConfig: [{ name: "Ukuran", options: ["M", "L"] }],
+    variants: [
+      { id: "m", attributes: { Ukuran: "M" }, stock: 2, active: true },
+      { id: "l", attributes: { Ukuran: "L" }, stock: 12, active: true },
+    ],
+  }]);
+
+  assert.equal(result.length, 1);
+  assert.equal(result[0].id, "tea");
+  assert.equal(result[0].variantId, "m");
+  assert.equal(result[0].variantAttributes, "Ukuran: M");
+  assert.equal(result[0].stock, 2);
+});
+
 test("stock progress is bounded to the available track", () => {
   assert.equal(getStockProgress(-2, 10), 0);
   assert.equal(getStockProgress(4, 10), 40);

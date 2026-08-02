@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { applyCheckoutResult, loadProducts, loadSettings, loadStockMovementPage, loadStockMovements, loadTransactionPage, loadTransactions, searchProducts, toProductFormData, toProductPayload } from "./store-data.js";
+import { applyCheckoutResult, applyProductStock, loadProducts, loadSettings, loadStockMovementPage, loadStockMovements, loadTransactionPage, loadTransactions, searchProducts, toProductFormData, toProductPayload } from "./store-data.js";
 
 test("catalog page loading does not replace the shared POS products", async () => {
   const source = await readFile(new URL("../pages/ProductsPage.jsx", import.meta.url), "utf8");
@@ -120,6 +120,8 @@ test("loads stock movements without fetching unrelated resources", async () => {
     items: [{
       id: "m1",
       productId: undefined,
+      variantId: "",
+      variantAttributes: "",
       productName: "Unknown product",
       productBarcode: "",
       productCategory: "",
@@ -164,6 +166,29 @@ test("applies authoritative checkout stock returned by server", () => {
   assert.deepEqual(result, [{ id: "p1", stock: 7, updatedAt: "now" }, { id: "p2", stock: 4 }]);
 });
 
+test("applies authoritative variant checkout stock to its parent product", () => {
+  const result = applyCheckoutResult([
+    { id: "p1", stock: 12, variants: [{ id: "v1", attributes: { Ukuran: "M" }, stock: 7 }, { id: "v2", attributes: { Ukuran: "L" }, stock: 5 }] },
+  ], {
+    products: [{ id: "v1", productId: "p1", variantId: "v1", stock: 4, updatedAt: "now" }],
+  });
+
+  assert.equal(result[0].stock, 12);
+  assert.deepEqual(result[0].variants, [
+    { id: "v1", attributes: { Ukuran: "M" }, stock: 4, updatedAt: "now" },
+    { id: "v2", attributes: { Ukuran: "L" }, stock: 5 },
+  ]);
+});
+
+test("mirrors a default variant stock update onto its simple parent product", () => {
+  const result = applyProductStock([
+    { id: "p1", stock: 12, variants: [{ id: "v1", attributes: {}, stock: 12 }] },
+  ], { productId: "p1", variantId: "v1", stock: 8, updatedAt: "now" });
+
+  assert.equal(result[0].stock, 8);
+  assert.equal(result[0].variants[0].stock, 8);
+});
+
 test("product update payload never contains stock", () => {
   const payload = toProductPayload({ name: "Tea", barcode: "1", categoryId: "cat-1", price: 10, stock: 99, unitId: "unit-1", image: "", active: true }, false);
   assert.equal("stock" in payload, false);
@@ -190,6 +215,22 @@ test("product payload emits categoryId and unitId instead of labels", () => {
   assert.equal("unit" in payload, false);
 });
 
+test("product payload carries the complete variant matrix for atomic saves", () => {
+  const variants = [{ id: "v1", attributes: { Ukuran: "M" }, price: 10000, stock: 3, barcode: "M", active: true }];
+  const payload = toProductPayload({
+    name: "Tea",
+    barcode: "parent",
+    categoryId: "cat-1",
+    price: 10000,
+    stock: 3,
+    unitId: "unit-1",
+    attributesConfig: [{ name: "Ukuran", options: ["M"] }],
+    variants,
+  }, true);
+
+  assert.deepEqual(payload.variants, variants);
+});
+
 test("product form data carries one photo and create-only stock", () => {
   const file = new File(["png"], "rice.png", { type: "image/png" });
   const form = toProductFormData({ name: "Rice", barcode: "1", category: "Sembako", price: 10, stock: 2, unit: "pcs", imageFile: file }, true);
@@ -205,6 +246,13 @@ test("product form data sends removal intent without a file", () => {
   assert.equal(form.get("remove_image"), "true");
   assert.equal(form.has("image_file"), false);
   assert.equal(form.has("stock"), false);
+});
+
+test("product form data serializes attributes config as JSON", () => {
+  const config = [{ name: "Berat", options: ["M", "L"] }];
+  const form = toProductFormData({ name: "Rice", barcode: "1", category: "Sembako", price: 10, unit: "pcs", attributesConfig: config }, false);
+  assert.equal(form.get("attributesConfig"), JSON.stringify(config));
+  assert.equal(form.get("attributesConfig"), '[{"name":"Berat","options":["M","L"]}]');
 });
 
 test("product saves can rethrow API errors for field-level feedback", async () => {

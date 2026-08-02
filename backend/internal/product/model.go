@@ -76,6 +76,7 @@ type CreateInput struct {
 }
 
 type VariantInput struct {
+	ID         uuid.UUID         `json:"id,omitempty"`
 	Attributes map[string]string `json:"attributes"`
 	Price      int               `json:"price"`
 	Stock      int               `json:"stock"`

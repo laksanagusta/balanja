@@ -11,9 +11,15 @@ const PRIVATE_PATHS = new Set([
   "/design-system",
 ]);
 
+const PRODUCT_EDITOR_PATH = /^\/products\/(?:new|[^/]+\/edit)$/;
+
+export function isProductEditorPath(pathname) {
+  return PRODUCT_EDITOR_PATH.test(pathname);
+}
+
 export function routeAccess(pathname) {
   if (PUBLIC_PATHS.has(pathname)) return "public";
-  if (PRIVATE_PATHS.has(pathname)) return "private";
+  if (PRIVATE_PATHS.has(pathname) || isProductEditorPath(pathname)) return "private";
   return "unknown";
 }
 

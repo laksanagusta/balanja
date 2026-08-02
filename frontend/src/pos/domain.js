@@ -155,7 +155,22 @@ export function validateScannedProduct(product, products) {
 
 export function findProductByBarcode(products, barcode) {
   const normalized = normalizeBarcode(barcode);
-  return products.find((item) => item.active && normalizeBarcode(item.barcode) === normalized) || null;
+  return findProductVariantByBarcode(products, normalized)?.product || null;
+}
+
+export function findProductVariantByBarcode(products, barcode) {
+  const normalized = normalizeBarcode(barcode);
+  if (!normalized) return null;
+  const matches = [];
+  for (const product of products) {
+    if (!product.active) continue;
+    if (normalizeBarcode(product.barcode) === normalized) matches.push({ product, variant: null });
+    for (const variant of product.variants || []) {
+      if (variant.active !== false && normalizeBarcode(variant.barcode) === normalized) matches.push({ product, variant });
+    }
+  }
+  if (matches.length !== 1) return matches.length > 1 ? { ambiguous: true } : null;
+  return matches[0];
 }
 
 export function variantKey(productId, variantId) {
@@ -168,12 +183,13 @@ export function formatVariantAttributes(attributes) {
 }
 
 export function addProductToCart(cart, products, barcodeOrProductId, variant) {
-  const product =
-    products.find((item) => item.active && item.id === barcodeOrProductId) ||
-    findProductByBarcode(products, barcodeOrProductId);
+  const productByID = products.find((item) => item.active && item.id === barcodeOrProductId);
+  const barcodeMatch = productByID ? null : findProductVariantByBarcode(products, barcodeOrProductId);
+  if (barcodeMatch?.ambiguous) return { ok: false, error: "Barcode matches multiple products", cart };
+  const product = productByID || barcodeMatch?.product;
   if (!product) return { ok: false, error: "Product not found", cart };
 
-  const targetVariant = variant || (product.variants && product.variants.length === 1 ? product.variants[0] : null);
+  const targetVariant = variant || barcodeMatch?.variant || (product.variants && product.variants.length === 1 ? product.variants[0] : null);
   if (product.variants && product.variants.length > 1 && !targetVariant) {
     return { ok: false, error: "Select a variant", cart };
   }

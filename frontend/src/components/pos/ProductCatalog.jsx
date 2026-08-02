@@ -25,7 +25,14 @@ export const ProductCatalog = React.memo(function ProductCatalog({
     const normalizedQuery = deferredQuery.trim().toLowerCase();
     return activeProducts.filter((product) => {
       const matchesCategory = !category || product.categoryId === category;
-      const searchableText = `${product.name} ${product.barcode}`.toLowerCase();
+      const searchableText = [
+        product.name,
+        product.barcode,
+        ...(product.variants || []).flatMap((variant) => [
+          variant.barcode,
+          ...Object.values(variant.attributes || {}),
+        ]),
+      ].join(" ").toLowerCase();
       return matchesCategory && searchableText.includes(normalizedQuery);
     });
   }, [activeProducts, category, deferredQuery]);
@@ -52,21 +59,36 @@ export const ProductCatalog = React.memo(function ProductCatalog({
           </div>
         ) : (
           products.map((product) => {
-            const hasMultipleVariants = Array.isArray(product.variants) && product.variants.length > 1;
-            const lineKey = variantKey(product.id, "");
+            const variants = Array.isArray(product.variants) ? product.variants : [];
+            const configuredVariants = product.attributesConfig?.length > 0
+              ? variants.filter((variant) => Object.keys(variant.attributes || {}).length > 0)
+              : variants;
+            const variantsWithAvailability = configuredVariants.map((variant) => ({
+              ...variant,
+              availableStock: Math.max(Number(variant.stock) - (qtyByLine.get(variantKey(product.id, variant.id)) || 0), 0),
+            }));
+            const hasMultipleVariants = product.attributesConfig?.length > 0 && variantsWithAvailability.length > 1;
+            const directVariant = variantsWithAvailability.length === 1 ? variantsWithAvailability[0] : null;
+            const lineKey = variantKey(product.id, directVariant?.id || "");
             const qtyInCart = qtyByLine.get(lineKey) || 0;
-            const remainingStock = Math.max(Number(product.stock) - qtyInCart, 0);
+            const remainingStock = directVariant
+              ? directVariant.availableStock
+              : Math.max(Number(product.stock) - qtyInCart, 0);
+            const availableStock = hasMultipleVariants
+              ? Math.max(0, ...variantsWithAvailability.filter((variant) => variant.active !== false).map((variant) => variant.availableStock))
+              : remainingStock;
 
             return (
               <PosProductCard
                 key={product.id}
                 product={{
                   ...product,
-                  stock: hasMultipleVariants ? Math.max(...product.variants.map((v) => v.stock)) : remainingStock,
+                  variants: variantsWithAvailability,
+                  stock: availableStock,
                   price: formatPrice(product.price).replace(/^Rp/, ""),
                   qty: qtyInCart,
                 }}
-                disabled={checkoutPending || (!hasMultipleVariants && remainingStock <= 0)}
+                disabled={checkoutPending || availableStock <= 0}
                 onAdd={() => onAdd(product.id)}
                 onOpenVariants={setSelectorProduct}
               />
@@ -84,10 +106,10 @@ export const ProductCatalog = React.memo(function ProductCatalog({
           <VariantSelector
             product={selectorProduct}
             onChoose={(variant) => {
-              onAdd(selectorProduct.id, variant);
-              setSelectorProduct(null);
+              const result = onAdd(selectorProduct.id, variant);
+              if (result?.ok) setSelectorProduct(null);
+              return result;
             }}
-            onClose={() => setSelectorProduct(null)}
           />
         )}
       </Dialog>

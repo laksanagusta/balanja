@@ -101,7 +101,7 @@ func lockVariantStock(ctx context.Context, tx database.Tx, orgID string, product
 
 func updateStock(ctx context.Context, tx database.Tx, orgID string, productID uuid.UUID, variantID *uuid.UUID, stock int) (ProductStock, error) {
 	if variantID != nil {
-		var updated ProductStock
+		updated := ProductStock{ProductID: productID, VariantID: variantID}
 		err := tx.QueryRow(ctx, `update product_variants set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,stock,updated_at`, orgID, *variantID, stock).Scan(&updated.ID, &updated.Stock, &updated.UpdatedAt)
 		if err != nil {
 			return ProductStock{}, fmt.Errorf("update variant stock: %w", err)
@@ -117,18 +117,21 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 		return nil, err
 	}
 	query := fmt.Sprintf(`
-		select sm.id, sm.product_id, sm.product_variant_id, coalesce(p.name, ''), coalesce(p.barcode, ''),
-			coalesce(c.name, ''), coalesce(u.name, ''), sm.type, sm.quantity_delta,
+			select sm.id, sm.product_id, sm.product_variant_id,
+				coalesce((select string_agg(entry.key || ': ' || entry.value, ', ' order by entry.key) from jsonb_each_text(pv.attributes) entry), ''),
+				coalesce(p.name, ''), coalesce(nullif(pv.barcode, ''), p.barcode, ''),
+				coalesce(c.name, ''), coalesce(u.name, ''), sm.type, sm.quantity_delta,
 			sm.stock_before, sm.stock_after, sm.reason, sm.reference_type, sm.reference_id,
 			sm.created_by_user_id, coalesce(sm.created_by_user_name, ''), sm.created_at
 		from stock_movements sm
-		join products p on p.org_id = sm.org_id and p.id = sm.product_id
+			join products p on p.org_id = sm.org_id and p.id = sm.product_id
+			left join product_variants pv on pv.org_id = sm.org_id and pv.id = sm.product_variant_id
 		join categories c on c.org_id = p.org_id and c.id = p.category_id
 		join units u on u.org_id = p.org_id and u.id = p.unit_id
 		where sm.org_id = $1
 			and ($2::uuid is null or sm.product_id = $2)
 			and ($3::text = '' or sm.type = $3)
-			and ($4::text = '' or p.name ilike '%%' || $4 || '%%' or p.barcode ilike '%%' || $4 || '%%' or c.name ilike '%%' || $4 || '%%')
+				and ($4::text = '' or p.name ilike '%%' || $4 || '%%' or p.barcode ilike '%%' || $4 || '%%' or pv.barcode ilike '%%' || $4 || '%%' or c.name ilike '%%' || $4 || '%%')
 			and ($5::timestamptz is null or sm.created_at >= $5)
 			and ($6::timestamptz is null or sm.created_at <= $6)
 			and (not $7::boolean or (%s,sm.id) %s ($8,$9::uuid))
@@ -145,7 +148,7 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 	movements := make([]Movement, 0, filter.Limit)
 	for rows.Next() {
 		var movement Movement
-		if err := rows.Scan(&movement.ID, &movement.ProductID, &movement.VariantID, &movement.ProductName, &movement.ProductBarcode, &movement.ProductCategory, &movement.ProductUnit, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt); err != nil {
+		if err := rows.Scan(&movement.ID, &movement.ProductID, &movement.VariantID, &movement.VariantAttributes, &movement.ProductName, &movement.ProductBarcode, &movement.ProductCategory, &movement.ProductUnit, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan stock movement: %w", err)
 		}
 		movements = append(movements, movement)
@@ -169,7 +172,7 @@ func lockProduct(ctx context.Context, tx database.Tx, orgID string, productID uu
 }
 
 func updateProductStock(ctx context.Context, tx database.Tx, orgID string, productID uuid.UUID, stock int) (ProductStock, error) {
-	var updated ProductStock
+	updated := ProductStock{ProductID: productID}
 	err := tx.QueryRow(ctx, `update products set stock=$3,updated_at=now() where org_id=$1 and id=$2 returning id,stock,updated_at`, orgID, productID, stock).Scan(&updated.ID, &updated.Stock, &updated.UpdatedAt)
 	if err != nil {
 		return ProductStock{}, fmt.Errorf("update product stock: %w", err)

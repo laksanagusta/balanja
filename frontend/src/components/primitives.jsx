@@ -4,6 +4,7 @@ import {
   ArchiveBoxIcon,
   ArrowDownLeftIcon,
   ArrowPathIcon,
+  ArrowTurnDownLeftIcon,
   ArrowUpRightIcon,
   BanknotesIcon,
   Bars3Icon,
@@ -177,6 +178,7 @@ const heroIcons = {
   ticket: TicketIcon,
   loader: ArrowPathIcon,
   more: EllipsisHorizontalIcon,
+  enter: ArrowTurnDownLeftIcon,
   inbound: ArrowDownLeftIcon,
   outbound: ArrowUpRightIcon,
   adjust: CubeIcon,
@@ -880,13 +882,26 @@ export function useOverlayDepth(active) {
   }, [active]);
 }
 
-export function Dialog({ open, onClose, size = "md", title, icon, iconBg, children, footer }) {
+export function Dialog({
+  open,
+  onClose,
+  size = "md",
+  title,
+  icon,
+  iconBg,
+  headerContent,
+  closeLabel = "Tutup dialog",
+  children,
+  footer,
+  contentClassName = "",
+  footerClassName = "",
+}) {
   const { isPresent, isVisible } = useDialogPresence(open);
   useOverlayDepth(isVisible);
   const titleId = React.useId();
   const dialogRef = React.useRef(null);
-  const snap = React.useRef({ children, title, icon, iconBg, footer });
-  if (open) snap.current = { children, title, icon, iconBg, footer };
+  const snap = React.useRef({ children, title, icon, iconBg, headerContent, closeLabel, footer, contentClassName, footerClassName });
+  if (open) snap.current = { children, title, icon, iconBg, headerContent, closeLabel, footer, contentClassName, footerClassName };
 
   React.useEffect(() => {
     if (!isVisible) return undefined;
@@ -928,13 +943,15 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
     sm: "max-w-sm",
     md: "max-w-md",
     lg: "max-w-lg",
+    xl: "max-w-5xl",
+    full: "h-[100svh] max-h-[100svh] max-w-none rounded-none border-0 sm:h-[calc(100svh-2rem)] sm:max-h-[calc(100svh-2rem)] sm:max-w-[min(88rem,calc(100vw-2rem))] sm:rounded-overlay sm:border",
   };
 
   const c = snap.current;
 
   return createPortal((
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ease-standard motion-reduce:transition-opacity ${
+      className={`fixed inset-0 z-50 flex items-center justify-center ${size === "full" ? "p-0 sm:p-4" : "p-4"} transition-opacity duration-200 ease-standard motion-reduce:transition-opacity ${
         isVisible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
       aria-hidden={!isVisible}
@@ -946,39 +963,46 @@ export function Dialog({ open, onClose, size = "md", title, icon, iconBg, childr
         aria-modal="true"
         aria-labelledby={c.title ? titleId : undefined}
         tabIndex={-1}
-        className={`relative flex max-h-[calc(100svh-2rem)] w-full flex-col overflow-hidden outline-none ${sizes[size]} rounded-overlay border border-border bg-surface shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
+        className={`relative flex max-h-[calc(100svh-2rem)] w-full flex-col overflow-hidden outline-none ${sizes[size]} ${size === "full" ? "" : "rounded-overlay border border-border"} bg-surface shadow-panel transition-[opacity,transform] duration-200 ease-standard motion-reduce:scale-100 motion-reduce:transition-opacity ${
           isVisible ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
         } ${
           !c.footer && !c.icon ? "text-center" : ""
         }`}
       >
-        {(c.icon || c.title) && (
-          <div className="overlay-sticky-header shrink-0 px-6 pb-4 pt-6">
+        {(c.icon || c.title || c.headerContent) && (
+          <div className="overlay-sticky-header shrink-0 px-4 pb-4 pt-4 sm:px-6 sm:pt-6">
             {c.icon && (
               <div className={`mb-4 mx-auto flex size-12 items-center justify-center rounded-full ${c.iconBg || "bg-accent-soft text-accent"}`}>
                 <Icon name={c.icon} className="size-6" />
               </div>
             )}
             {c.title && (
-              <div className="flex items-center justify-between">
+              <div className="flex min-h-11 items-center justify-between gap-4">
                 <h4 id={titleId} className="text-lg font-semibold text-text">{c.title}</h4>
                 {onClose && (
-                  <button type="button" onClick={onClose} className="text-text-muted hover:text-text">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label={c.closeLabel}
+                    title={c.closeLabel}
+                    className="grid size-11 shrink-0 place-items-center rounded-control text-text-muted transition-[background-color,color,transform] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                  >
                     <Icon name="x" className="size-5" />
                   </button>
                 )}
               </div>
             )}
+            {c.headerContent}
           </div>
         )}
         {c.children && (
-          <div className={`min-h-0 overflow-y-auto overscroll-contain px-6 text-sm text-text-muted ${
+          <div className={`min-h-0 overflow-y-auto overscroll-contain px-4 text-sm text-text-muted sm:px-6 ${
             c.title || c.icon ? "" : "pt-6"
-          } ${c.footer ? "" : "pb-6"}`}>
+          } ${c.footer ? "" : "pb-6"} ${c.contentClassName}`}>
             {c.children}
           </div>
         )}
-        {c.footer && <div className="shrink-0 bg-surface px-6 pb-6 pt-6 flex justify-end gap-2">{c.footer}</div>}
+        {c.footer && <div className={`shrink-0 bg-surface px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pb-6 flex justify-end gap-2 ${c.footerClassName}`}>{c.footer}</div>}
       </div>
     </div>
   ), document.body);

@@ -15,7 +15,7 @@ export default function SalesReportToolbar({ filters, cashierOptions = [], error
     onApply();
   };
   return (
-    <form className="grid shrink-0 gap-3 bg-surface px-4 py-3" onSubmit={submit}>
+    <form className="grid shrink-0 gap-2 bg-surface px-4 py-3" onSubmit={submit}>
       <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
@@ -34,14 +34,14 @@ export default function SalesReportToolbar({ filters, cashierOptions = [], error
       </div>
       <div
         id={filterPanelId}
-        className={`${filtersExpanded ? "grid" : "hidden"} max-h-[min(70svh,32rem)] gap-3 overflow-y-auto overscroll-contain pr-1`}
+        className={`${filtersExpanded ? "grid" : "hidden"} max-h-[min(70svh,32rem)] gap-2 overflow-y-auto overscroll-contain pr-1`}
       >
         <div className="flex flex-wrap items-center gap-2">
           {presets.map(([value, label]) => (
             <Button key={value} type="button" size="sm" compactVisual variant={filters.preset === value ? "secondary" : "ghost"} aria-pressed={filters.preset === value} onClick={() => onPreset(value)}>{label}</Button>
           ))}
         </div>
-        <div className="grid gap-3">
+        <div className="grid gap-2">
           <Input label="Tanggal dari" error={error} inputProps={{ type: "date", value: filters.dateFrom, max: filters.dateTo, onChange: (event) => onChange({ dateFrom: event.target.value, preset: "custom" }) }} />
           <Input label="Tanggal sampai" inputProps={{ type: "date", value: filters.dateTo, min: filters.dateFrom, onChange: (event) => onChange({ dateTo: event.target.value, preset: "custom" }) }} />
           <SelectField label="Metode pembayaran" value={filters.paymentMethod} onChange={(paymentMethod) => onChange({ paymentMethod })} options={[{ value: "", label: "Semua metode" }, { value: "cash", label: "Tunai" }, { value: "qris", label: "QRIS" }]} />

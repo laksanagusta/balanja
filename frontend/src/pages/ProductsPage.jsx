@@ -2,7 +2,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import BarcodeScanner from "../components/BarcodeScanner.jsx";
-import { Button, Dialog, Icon, Input, Switch } from "../components/primitives.jsx";
+import { Button, Icon } from "../components/primitives.jsx";
 import { ProductsPageSkeleton } from "../components/page-loading.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
@@ -11,43 +11,31 @@ import { activeMasterOptions, resolveMasterName } from "../pos/master-data.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { EmptyState } from "../components/feedback/EmptyState.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
-import { SwapText } from "../components/motion/SwapText.jsx";
 import { ProductList } from "../components/product/ProductList.jsx";
-import MasterDataSelectField from "../components/product/MasterDataSelectField.jsx";
 import { ProductFilterDrawer } from "../components/product/ProductFilterDrawer.jsx";
-import { ProductPhotoField } from "../components/product/ProductPhotoField.jsx";
+import ProductEditorWorkspace from "../components/product/ProductEditorWorkspace.jsx";
 import { validateProductPhoto } from "../components/product/product-photo.js";
 import { primeScanSuccessSound } from "../preferences/scan-feedback.js";
+import {
+  applyVariantBulkValues,
+  attributesKey,
+  buildVariantMatrix,
+  clearVariantFieldError,
+  countVariantCombinations,
+  duplicateVariantAttribute,
+  moveVariantAttribute,
+  renameVariantAttribute,
+  validateVariantDraft,
+  withVariantDraftIdentity,
+} from "../product/product-variant-form.js";
+import { productDraftFingerprint } from "../product/product-editor-state.js";
+import { productEditPath, routes } from "../shared.jsx";
+import { isProductEditorPath } from "../routing.js";
+
+const MAX_VARIANT_COMBINATIONS = 100;
 
 function emptyProduct(categoryId = "", unitId = "") {
   return { id: "", name: "", barcode: "", categoryId, unitId, price: "", stock: 0, image: "", imageFile: null, removeImage: false, active: true, attributesConfig: [], variants: [] };
-}
-
-function attributesKey(attributes) {
-  return JSON.stringify(attributes || {});
-}
-
-function cartesianCombinations(config) {
-  if (config.length === 0) return [[]];
-  const [head, ...rest] = config;
-  const combos = cartesianCombinations(rest);
-  return head.options.flatMap((option) => combos.map((combo) => [{ name: head.name, value: option }, ...combo]));
-}
-
-function buildVariantMatrix(config, existingVariants, defaults) {
-  const existing = new Map((existingVariants || []).map((variant) => [attributesKey(variant.attributes), variant]));
-  return cartesianCombinations(config).map((combo) => {
-    const attributes = Object.fromEntries(combo.map((entry) => [entry.name, entry.value]));
-    const previous = existing.get(attributesKey(attributes));
-    return {
-      id: previous?.id || "",
-      attributes,
-      price: previous ? previous.price : defaults.price,
-      stock: previous ? previous.stock : defaults.stock,
-      barcode: previous ? previous.barcode : "",
-      active: previous ? previous.active : true,
-    };
-  });
 }
 
 function formatNumberInput(value) {
@@ -61,7 +49,38 @@ function normalizeNumberField(value) {
   return digits ? formatNumberInput(digits) : "";
 }
 
-export default function ProductsPage() {
+function editorProductId(pathname) {
+  const match = pathname.match(/^\/products\/([^/]+)\/edit$/);
+  if (!match) return "";
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return "";
+  }
+}
+
+function createEditorDraft(product) {
+  const identified = withVariantDraftIdentity(product.attributesConfig || [], product.variants || []);
+  const attributesConfig = identified.config;
+  const variants = attributesConfig.length > 0
+    ? buildVariantMatrix(attributesConfig, identified.variants, { price: product.price, stock: product.stock })
+    : identified.variants;
+  return { ...product, attributesConfig, variants, imageFile: null, removeImage: false };
+}
+
+function focusFirstProductError() {
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      const invalidFields = [...document.querySelectorAll('#product-form [aria-invalid="true"]')];
+      const firstInvalid = invalidFields.find((field) => field.offsetParent !== null) || invalidFields[0];
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      firstInvalid?.scrollIntoView?.({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+      firstInvalid?.focus?.({ preventScroll: true });
+    });
+  });
+}
+
+export default function ProductsPage({ pathname = routes.products, onNavigate = () => {} }) {
   const store = usePOSStore();
   const { loadCategories, loadProducts, loadUnits } = store;
   const [query, setQuery] = React.useState("");
@@ -69,13 +88,19 @@ export default function ProductsPage() {
   const [status, setStatus] = React.useState("");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [editing, setEditing] = React.useState(null);
+  const [editorStep, setEditorStep] = React.useState("details");
+  const [editorBaseline, setEditorBaseline] = React.useState("");
+  const [discardConfirmOpen, setDiscardConfirmOpen] = React.useState(false);
+  const [variantUndo, setVariantUndo] = React.useState(null);
   const [productErrors, setProductErrors] = React.useState({});
-  const [scannerOpen, setScannerOpen] = React.useState(false);
+  const [scannerTarget, setScannerTarget] = React.useState(null);
   const [savingProduct, setSavingProduct] = React.useState(false);
   const [photoPreviewURL, setPhotoPreviewURL] = React.useState("");
   const [enteringProductIds, setEnteringProductIds] = React.useState([]);
   const [topBarActionsTarget, setTopBarActionsTarget] = React.useState(null);
-  const originalVariantsRef = React.useRef([]);
+  const [editorRouteError, setEditorRouteError] = React.useState("");
+  const editorStepHeadingRef = React.useRef(null);
+  const initializedEditorPathRef = React.useRef("");
   const debouncedQuery = useDebouncedValue(query, 220);
   const productFilters = React.useMemo(() => ({
     q: debouncedQuery.trim(),
@@ -103,6 +128,11 @@ export default function ProductsPage() {
     initialSortDir: "desc",
     initialPageSize: 6,
   });
+  const editorHasDraft = Boolean(editing);
+  const editorDirty = editorHasDraft && productDraftFingerprint(editing) !== editorBaseline;
+  const productIdFromRoute = editorProductId(pathname);
+  const editorRouteActive = pathname === routes.productNew || Boolean(productIdFromRoute);
+  const editorVisible = editorRouteActive || Boolean(editing && (editorDirty || discardConfirmOpen));
 
   React.useEffect(() => () => {
     if (photoPreviewURL) {
@@ -122,30 +152,148 @@ export default function ProductsPage() {
   }, [loadCategories, loadUnits]);
 
   React.useEffect(() => {
+    if (!editorRouteActive) {
+      initializedEditorPathRef.current = "";
+      return undefined;
+    }
+    if (editing || initializedEditorPathRef.current === pathname) return undefined;
+    if (pathname === routes.productNew && !(store.loaded.categories && store.loaded.units)) return undefined;
+
+    initializedEditorPathRef.current = pathname;
+    setEditorRouteError("");
+    if (pathname === routes.productNew) {
+      const draft = createEditorDraft(emptyProduct(defaultCategoryId, defaultUnitId));
+      setEditing(draft);
+      setEditorBaseline(productDraftFingerprint(draft));
+      setEditorStep("details");
+      return undefined;
+    }
+
+    let cancelled = false;
+    const loadEditorProduct = async () => {
+      try {
+        let products = store.products;
+        if (!products.some((item) => item.id === productIdFromRoute)) products = await loadProducts();
+        if (cancelled) return;
+        const product = products.find((item) => item.id === productIdFromRoute);
+        if (!product) {
+          setEditorRouteError("Produk tidak ditemukan atau sudah tidak tersedia.");
+          return;
+        }
+        const draft = createEditorDraft(product);
+        setEditing(draft);
+        setEditorBaseline(productDraftFingerprint(draft));
+        setEditorStep("details");
+      } catch (error) {
+        if (!cancelled) setEditorRouteError(error?.message || "Produk gagal dimuat.");
+      }
+    };
+    void loadEditorProduct();
+    return () => { cancelled = true; };
+  }, [defaultCategoryId, defaultUnitId, editing, editorRouteActive, loadProducts, pathname, productIdFromRoute, store.loaded.categories, store.loaded.units, store.products]);
+
+  React.useEffect(() => {
+    if (editorRouteActive || !editing || editorDirty || discardConfirmOpen) return;
+    setPhotoPreviewURL("");
+    setEditing(null);
+    setEditorStep("details");
+    setEditorBaseline("");
+    setVariantUndo(null);
+    setProductErrors({});
+  }, [discardConfirmOpen, editing, editorDirty, editorRouteActive]);
+
+  React.useEffect(() => {
+    if (!editing || !editorDirty) return undefined;
+    const protectBrowserBack = () => {
+      if (isProductEditorPath(window.location.pathname)) return;
+      window.history.forward();
+      setDiscardConfirmOpen(true);
+    };
+    window.addEventListener("popstate", protectBrowserBack);
+    return () => window.removeEventListener("popstate", protectBrowserBack);
+  }, [editing, editorDirty]);
+
+  React.useEffect(() => {
     setTopBarActionsTarget(document.getElementById("app-top-bar-actions"));
   }, []);
 
-  if (table.isInitialLoading) {
-    return <ProductsPageSkeleton />;
-  }
+  React.useEffect(() => {
+    if (!editorHasDraft || discardConfirmOpen) return undefined;
+    const frame = window.requestAnimationFrame(() => editorStepHeadingRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [discardConfirmOpen, editorHasDraft, editorStep]);
+
+  React.useEffect(() => {
+    if (!editorDirty) return undefined;
+    const warnBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [editorDirty]);
+
+  React.useEffect(() => {
+    if (!editing || discardConfirmOpen || scannerTarget) return undefined;
+    const handleEditorShortcut = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase("id-ID") === "s") {
+        event.preventDefault();
+        if (!savingProduct) document.getElementById("product-form")?.requestSubmit();
+      }
+    };
+    document.addEventListener("keydown", handleEditorShortcut);
+    return () => document.removeEventListener("keydown", handleEditorShortcut);
+  }, [discardConfirmOpen, editing, savingProduct, scannerTarget]);
+
+  React.useEffect(() => {
+    if (!variantUndo?.visible) return undefined;
+    const timeout = window.setTimeout(() => {
+      setVariantUndo((current) => (current ? { ...current, visible: false } : current));
+    }, 5000);
+    return () => window.clearTimeout(timeout);
+  }, [variantUndo?.message, variantUndo?.visible]);
 
   const isProductsMutating = savingProduct;
 
-  const closeEditor = () => {
+  const closeEditor = ({ navigate = true } = {}) => {
     setPhotoPreviewURL("");
     setEditing(null);
+    setEditorStep("details");
+    setEditorBaseline("");
+    setDiscardConfirmOpen(false);
+    setVariantUndo(null);
     setProductErrors({});
+    setEditorRouteError("");
+    initializedEditorPathRef.current = "";
+    if (navigate) onNavigate(routes.products, { replace: true });
+  };
+
+  const requestCloseEditor = () => {
+    if (savingProduct) return;
+    if (discardConfirmOpen) {
+      setDiscardConfirmOpen(false);
+      return;
+    }
+    if (editorDirty) {
+      setDiscardConfirmOpen(true);
+      return;
+    }
+    closeEditor();
   };
 
   const openEditor = (product) => {
     setPhotoPreviewURL("");
-    const attributesConfig = product.attributesConfig || [];
-    const variants = attributesConfig.length > 0
-      ? buildVariantMatrix(attributesConfig, product.variants || [], { price: product.price, stock: product.stock })
-      : [];
-    setEditing({ ...product, attributesConfig, variants, imageFile: null, removeImage: false });
-    originalVariantsRef.current = (product.variants || []).map((variant) => ({ ...variant }));
+    const draft = createEditorDraft(product);
+    setEditing(draft);
+    setEditorBaseline(productDraftFingerprint(draft));
+    setEditorStep("details");
+    setDiscardConfirmOpen(false);
+    setVariantUndo(null);
     setProductErrors({});
+    setEditorRouteError("");
+    const nextPath = product.id ? productEditPath(product.id) : routes.productNew;
+    initializedEditorPathRef.current = nextPath;
+    onNavigate(nextPath);
   };
 
   const selectPhoto = (file) => {
@@ -168,27 +316,55 @@ export default function ProductsPage() {
     const config = editing.attributesConfig || [];
     const variantMode = config.length > 0;
     const rows = variantMode ? editing.variants || [] : [];
-    const formProduct = variantMode ? { ...editing, price: rows[0]?.price || editing.price, stock: 0 } : editing;
+    const fallbackVariantPrice = rows
+      .map((row) => parseNumberInput(row.price))
+      .find((price) => Number.isFinite(price) && price > 0);
+    const formProduct = variantMode ? {
+      ...editing,
+      price: fallbackVariantPrice || parseNumberInput(editing.price) || 1,
+      stock: 0,
+      variants: rows.map((row) => ({
+        ...(row.id ? { id: row.id } : {}),
+        attributes: row.attributes,
+        price: Number.isFinite(parseNumberInput(row.price)) ? parseNumberInput(row.price) : 0,
+        stock: parseNumberInput(row.stock),
+        barcode: String(row.barcode || "").trim(),
+        active: row.active !== false,
+      })),
+    } : { ...editing, variants: [] };
 
     let validation = validateProduct(formProduct, store.products);
-    const rowErrors = rows
-      .map((row) => {
-        const label = Object.entries(row.attributes).map(([key, value]) => `${key}: ${value}`).join(" · ");
-        if (parseNumberInput(row.price) < 1) return `Harga ${label} minimal 1`;
-        if (parseNumberInput(row.stock) < 0) return `Stok ${label} tidak boleh negatif`;
-        return "";
-      })
-      .filter(Boolean);
-    const configErrors = config
-      .filter((attr) => attr.options.length === 0)
-      .map((attr) => `Atribut "${attr.name}" membutuhkan minimal satu pilihan.`);
+    const occupiedBarcodes = new Set(store.products
+      .filter((product) => product.id !== editing.id)
+      .flatMap((product) => [product.barcode, ...(product.variants || []).map((variant) => variant.barcode)])
+      .map((barcode) => String(barcode || "").trim().toLocaleLowerCase("id-ID"))
+      .filter(Boolean));
+    const parentBarcode = String(editing.barcode || "").trim().toLocaleLowerCase("id-ID");
+    if (occupiedBarcodes.has(parentBarcode)) validation.errors.barcode = "Barcode sudah dipakai produk atau varian lain";
+    const variantValidation = variantMode ? validateVariantDraft({
+      attributes: config,
+      variants: rows,
+      parentBarcode: editing.barcode,
+      occupiedBarcodes,
+    }) : { ok: true, attributeRows: {}, variantRows: {}, summary: [] };
     if (variantMode) {
       delete validation.errors.price;
       delete validation.errors.stock;
-      validation.ok = Object.keys(validation.errors).length === 0;
     }
-    setProductErrors({ ...validation.errors, variants: rowErrors[0] || configErrors[0] || "" });
-    if (!validation.ok || rowErrors.length > 0 || configErrors.length > 0) return;
+    validation.ok = Object.keys(validation.errors).length === 0;
+    setProductErrors((current) => ({
+      ...validation.errors,
+      variants: variantValidation.summary[0] || "",
+      variantSummary: variantValidation.summary,
+      variantRows: variantValidation.variantRows,
+      attributeRows: variantValidation.attributeRows,
+      variantFocusRequest: (current.variantFocusRequest || 0) + (variantValidation.ok ? 0 : 1),
+    }));
+    if (!validation.ok || !variantValidation.ok) {
+      setEditorStep(!variantValidation.ok ? "variants" : "details");
+      focusFirstProductError();
+      return;
+    }
 
     setSavingProduct(true);
     try {
@@ -196,29 +372,6 @@ export default function ProductsPage() {
       if (!saved) {
         toast.error("Gagal menyimpan produk");
         return;
-      }
-
-      if (variantMode) {
-        const currentKeys = new Set(rows.map((row) => attributesKey(row.attributes)));
-        for (const original of originalVariantsRef.current) {
-          if (original.id && !currentKeys.has(attributesKey(original.attributes))) {
-            await store.api.deleteVariant(saved.id, original.id);
-          }
-        }
-        for (const row of rows) {
-          const payload = {
-            attributes: row.attributes,
-            price: parseNumberInput(row.price),
-            stock: parseNumberInput(row.stock),
-            barcode: String(row.barcode || "").trim(),
-            active: row.active !== false,
-          };
-          if (row.id) {
-            await store.api.updateVariant(saved.id, row.id, payload);
-          } else {
-            await store.api.createVariant(saved.id, payload);
-          }
-        }
       }
 
       toast.success(editing.id ? "Produk diperbarui" : "Produk ditambahkan", {
@@ -242,50 +395,118 @@ export default function ProductsPage() {
     }
   };
 
+  const rememberVariantStructure = (message) => {
+    setVariantUndo({
+      message,
+      visible: true,
+      attributesConfig: editing.attributesConfig,
+      variants: editing.variants,
+      price: editing.price,
+      stock: editing.stock,
+    });
+  };
+
   const addAttribute = () => {
+    rememberVariantStructure("1 atribut ditambahkan.");
     setEditing((current) => {
       const index = current.attributesConfig.length;
-      const config = [...current.attributesConfig, { name: index === 0 ? "Ukuran" : `Atribut ${index + 1}`, options: [] }];
+      const [attribute] = withVariantDraftIdentity([
+        { name: index === 0 ? "Ukuran" : `Atribut ${index + 1}`, options: [] },
+      ]).config;
+      const config = [...current.attributesConfig, attribute];
       return { ...current, attributesConfig: config };
     });
+    setProductErrors((current) => ({ ...current, variants: "", attributeRows: {} }));
   };
 
   const renameAttribute = (index, name) => {
     setEditing((current) => {
-      const config = current.attributesConfig.map((attr, i) => (i === index ? { ...attr, name } : attr));
-      const oldName = current.attributesConfig[index]?.name;
-      const variants = (current.variants || []).map((variant) => {
-        if (!oldName || oldName === name || variant.attributes[oldName] === undefined) return variant;
-        const attributes = { ...variant.attributes };
-        delete attributes[oldName];
-        attributes[name] = variant.attributes[oldName];
-        return { ...variant, attributes };
-      });
+      const { config, variants } = renameVariantAttribute(current.attributesConfig, current.variants, index, name);
       return { ...current, attributesConfig: config, variants };
     });
   };
 
   const setAttributeOptions = (index, options) => {
+    const nextConfig = editing.attributesConfig.map((attr, i) => (i === index ? { ...attr, options } : attr));
+    const combinationCount = countVariantCombinations(nextConfig);
+    if (combinationCount > MAX_VARIANT_COMBINATIONS) {
+      setProductErrors((current) => ({
+        ...current,
+        variants: `Maksimal ${MAX_VARIANT_COMBINATIONS} variasi per produk. Kurangi jumlah pilihan.`,
+      }));
+      return;
+    }
+    const delta = combinationCount - (editing.variants || []).length;
+    const message = delta > 0
+      ? `${delta} variasi ditambahkan.`
+      : delta < 0
+        ? `${Math.abs(delta)} variasi dihapus.`
+        : "Kombinasi variasi diperbarui.";
+    rememberVariantStructure(message);
     setEditing((current) => {
       const config = current.attributesConfig.map((attr, i) => (i === index ? { ...attr, options } : attr));
       const variants = buildVariantMatrix(config, current.variants || [], { price: current.price, stock: current.stock });
       return { ...current, attributesConfig: config, variants };
     });
+    setProductErrors((current) => ({ ...current, variants: "", variantRows: {}, attributeRows: {} }));
+  };
+
+  const duplicateAttribute = (index) => {
+    const result = duplicateVariantAttribute(
+      editing.attributesConfig,
+      editing.variants,
+      index,
+      { price: editing.price, stock: 0 },
+    );
+    if (countVariantCombinations(result.config) > MAX_VARIANT_COMBINATIONS) {
+      setProductErrors((current) => ({ ...current, variants: `Maksimal ${MAX_VARIANT_COMBINATIONS} variasi per produk. Kurangi jumlah pilihan.` }));
+      return;
+    }
+    rememberVariantStructure(`${result.variants.length - editing.variants.length} variasi ditambahkan.`);
+    setEditing((current) => ({ ...current, attributesConfig: result.config, variants: result.variants }));
+  };
+
+  const moveAttribute = (fromIndex, toIndex) => {
+    rememberVariantStructure("Urutan atribut diperbarui.");
+    setEditing((current) => {
+      const result = moveVariantAttribute(current.attributesConfig, current.variants, fromIndex, toIndex);
+      return { ...current, attributesConfig: result.config, variants: result.variants };
+    });
   };
 
   const removeAttribute = (index) => {
-    const attrName = editing.attributesConfig[index]?.name;
-    const inUse = (editing.variants || []).some((variant) => variant.active && variant.attributes[attrName] !== undefined);
-    if (inUse) {
-      setProductErrors((current) => ({ ...current, variants: "Atribut ini masih dipakai oleh variasi aktif. Nonaktifkan atau hapus variasinya dulu." }));
-      return;
-    }
-    setProductErrors((current) => ({ ...current, variants: "" }));
+    rememberVariantStructure("Atribut dihapus. Periksa kembali stok hasil penggabungan.");
+    setEditing((current) => {
+      const config = current.attributesConfig.filter((_, i) => i !== index);
+      if (config.length === 0) {
+        return {
+          ...current,
+          attributesConfig: [],
+          variants: [],
+          price: current.variants[0]?.price || current.price,
+          stock: current.variants.reduce((total, variant) => total + (Number(variant.stock) || 0), 0),
+        };
+      }
+      return {
+        ...current,
+        attributesConfig: config,
+        variants: buildVariantMatrix(config, current.variants || [], { price: current.price, stock: 0 }),
+      };
+    });
+    setProductErrors((current) => ({ ...current, variants: "", variantRows: {}, attributeRows: {} }));
+  };
+
+  const undoVariantStructure = () => {
+    if (!variantUndo) return;
     setEditing((current) => ({
       ...current,
-      attributesConfig: current.attributesConfig.filter((_, i) => i !== index),
-      variants: (current.variants || []).filter((variant) => variant.attributes[attrName] === undefined),
+      attributesConfig: variantUndo.attributesConfig,
+      variants: variantUndo.variants,
+      price: variantUndo.price,
+      stock: variantUndo.stock,
     }));
+    setVariantUndo(null);
+    setProductErrors((current) => ({ ...current, variants: "", variantRows: {}, attributeRows: {} }));
   };
 
   const updateVariantRow = (key, field, value) => {
@@ -293,6 +514,34 @@ export default function ProductsPage() {
       ...current,
       variants: (current.variants || []).map((variant) => (attributesKey(variant.attributes) === key ? { ...variant, [field]: value } : variant)),
     }));
+    setProductErrors((current) => ({
+      ...current,
+      variants: "",
+      variantRows: clearVariantFieldError(current.variantRows, key, field),
+    }));
+  };
+
+  const applyBulkVariantValues = (values, message = `${editing.variants.length} variasi diperbarui.`) => {
+    rememberVariantStructure(message);
+    setEditing((current) => ({
+      ...current,
+      variants: applyVariantBulkValues(current.variants, values),
+    }));
+    setProductErrors((current) => ({ ...current, variants: "", variantRows: {} }));
+  };
+
+  const setAllVariantsActive = (active, message) => {
+    rememberVariantStructure(message || (active ? "Semua variasi diaktifkan." : "Semua variasi dinonaktifkan."));
+    setEditing((current) => ({
+      ...current,
+      variants: current.variants.map((variant) => ({ ...variant, active })),
+    }));
+  };
+
+  const openVariantEditor = () => {
+    if (editing.attributesConfig.length === 0) addAttribute();
+    setDiscardConfirmOpen(false);
+    setEditorStep("variants");
   };
 
   const updateEditing = (field, value) => {
@@ -313,6 +562,112 @@ export default function ProductsPage() {
       .filter(Boolean);
     setEnteringProductIds(nextIds);
   };
+
+  if (editorVisible) {
+    if (!editing) {
+      return (
+        <div className="flex h-full min-h-0 flex-col bg-surface text-text">
+          <header className="sticky top-0 z-20 flex min-h-16 shrink-0 items-center gap-3 bg-surface/92 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78 sm:px-6">
+            <button
+              type="button"
+              onClick={() => closeEditor()}
+              aria-label="Kembali ke daftar produk"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-control px-2 text-sm font-semibold text-text-muted transition-[transform,background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
+              <Icon name="chevron-left" className="size-4" />
+              Kembali
+            </button>
+            <h1 className="text-lg font-semibold tracking-[-0.01em]">{pathname === routes.productNew ? "Tambah produk" : "Ubah produk"}</h1>
+          </header>
+          <main className="grid min-h-0 flex-1 place-items-center px-4 py-10" aria-busy={!editorRouteError}>
+            {editorRouteError ? (
+              <div className="grid max-w-md justify-items-center gap-3 text-center">
+                <div className="grid size-10 place-items-center rounded-full bg-danger-soft text-danger" aria-hidden="true"><Icon name="x" className="size-5" /></div>
+                <h2 className="text-base font-semibold">Produk tidak dapat dibuka</h2>
+                <p className="text-sm leading-6 text-text-muted">{editorRouteError}</p>
+                <Button type="button" variant="secondary" onClick={() => closeEditor()}>Kembali ke produk</Button>
+              </div>
+            ) : (
+              <p className="text-sm text-text-muted">Memuat editor produk...</p>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <ProductEditorWorkspace
+          editing={editing}
+          editorStep={editorStep}
+          headingRef={editorStepHeadingRef}
+          discardConfirmOpen={discardConfirmOpen}
+          savingProduct={savingProduct}
+          productErrors={productErrors}
+          categories={store.categories}
+          units={store.units}
+          photoPreviewURL={photoPreviewURL}
+          variantUndoMessage={variantUndo?.visible ? variantUndo.message : ""}
+          onBack={requestCloseEditor}
+          onSubmit={save}
+          onContinueEditing={() => setDiscardConfirmOpen(false)}
+          onDiscard={() => closeEditor()}
+          onStepChange={setEditorStep}
+          onOpenVariantEditor={openVariantEditor}
+          onUpdate={updateEditing}
+          onSelectPhoto={selectPhoto}
+          onRemovePhoto={removePhoto}
+          onCreateCategory={store.createCategory}
+          onRestoreCategory={store.restoreCategory}
+          onCreateUnit={store.createUnit}
+          onRestoreUnit={store.restoreUnit}
+          onScanProductBarcode={() => {
+            void primeScanSuccessSound();
+            setScannerTarget({ kind: "product" });
+          }}
+          onUndoVariant={undoVariantStructure}
+          onAddAttribute={addAttribute}
+          onRenameAttribute={renameAttribute}
+          onCommitOptions={setAttributeOptions}
+          onDuplicateAttribute={duplicateAttribute}
+          onMoveAttribute={moveAttribute}
+          onRemoveAttribute={removeAttribute}
+          onUpdateVariant={updateVariantRow}
+          onApplyBulk={applyBulkVariantValues}
+          onSetAllActive={setAllVariantsActive}
+          onScanVariantBarcode={(key) => {
+            void primeScanSuccessSound();
+            setScannerTarget({ kind: "variant", key });
+          }}
+          formatNumberInput={formatNumberInput}
+          normalizeNumberField={normalizeNumberField}
+        />
+
+        <BarcodeScanner
+          open={Boolean(scannerTarget)}
+          title={scannerTarget?.kind === "variant" ? "Pindai barcode varian" : "Pindai barcode produk"}
+          onClose={() => setScannerTarget(null)}
+          onDetected={(code) => {
+            if (scannerTarget?.kind === "variant") {
+              updateVariantRow(scannerTarget.key, "barcode", code);
+            } else {
+              setEditing((current) => ({ ...current, barcode: code }));
+            }
+            return {
+              ok: true,
+              message: scannerTarget?.kind === "variant" ? "Barcode varian berhasil dipindai" : "Barcode berhasil dipindai",
+              description: code,
+              close: true,
+            };
+          }}
+        />
+      </>
+    );
+  }
+
+  if (table.isInitialLoading) {
+    return <ProductsPageSkeleton />;
+  }
 
   const topBarActions = topBarActionsTarget
     ? createPortal(
@@ -419,278 +774,6 @@ export default function ProductsPage() {
         </button>
       </div>
 
-      <Dialog
-        open={Boolean(editing)}
-        onClose={() => {
-          if (savingProduct) return;
-          closeEditor();
-        }}
-        title={editing?.id ? "Ubah produk" : "Tambah produk"}
-        size="lg"
-        footer={
-          <>
-            <Button type="submit" variant="primary" form="product-form" disabled={savingProduct} className="w-full">
-              <SwapText value={savingProduct ? "Menyimpan..." : "Simpan"} />
-            </Button>
-          </>
-        }
-      >
-        {editing && (
-          <form id="product-form" noValidate onSubmit={save} className="mt-4 grid gap-4 text-text">
-            <Input
-              label="Nama"
-              placeholder="Beras Ramos 5kg"
-              error={productErrors.name}
-              inputProps={{
-                value: editing.name,
-                onChange: (event) => updateEditing("name", event.target.value),
-                required: true,
-                disabled: savingProduct,
-              }}
-            />
-
-            <ProductPhotoField
-              product={{ ...editing, image: editing.removeImage ? "" : editing.image }}
-              previewURL={photoPreviewURL}
-              filename={editing.imageFile?.name}
-              error={productErrors.image}
-              disabled={savingProduct}
-              onSelect={selectPhoto}
-              onRemove={removePhoto}
-            />
-
-            <div className="grid gap-2">
-              <span className="text-sm font-semibold text-text">Barcode</span>
-              <div className="flex items-start gap-2">
-                <div className="flex-1">
-                  <Input
-                    placeholder="8991001000011"
-                    error={productErrors.barcode}
-                    inputClassName="font-mono tabular-nums tracking-[0.01em]"
-                    inputProps={{
-                      value: editing.barcode,
-                      onChange: (event) => updateEditing("barcode", event.target.value),
-                      required: true,
-                      disabled: savingProduct,
-                    }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  aria-label="Pindai barcode"
-                  title="Pindai barcode"
-                  disabled={savingProduct}
-                  onClick={() => {
-                    void primeScanSuccessSound();
-                    setScannerOpen(true);
-                  }}
-                  className="mt-1.5 grid size-9 shrink-0 place-items-center rounded-control text-text-muted transition-[background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                >
-                  <Icon name="scan" className="size-5" />
-                </button>
-              </div>
-            </div>
-
-            <MasterDataSelectField
-              entityLabel="Kategori"
-              value={editing.categoryId}
-              items={store.categories}
-              onChange={(nextCategoryId) => updateEditing("categoryId", nextCategoryId)}
-              onCreate={store.createCategory}
-              onRestore={store.restoreCategory}
-              disabled={savingProduct}
-              error={productErrors.categoryId}
-            />
-
-            <div className="grid gap-2 rounded-panel border border-border bg-surface-muted/40 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-sm font-semibold text-text">Variasi</p>
-                  <p className="text-xs text-text-muted">Atribut seperti ukuran atau warna dengan harga dan stok sendiri.</p>
-                </div>
-                <Button variant="secondary" size="sm" disabled={savingProduct} onClick={addAttribute}>
-                  Tambah atribut
-                </Button>
-              </div>
-
-              {editing.attributesConfig.map((attr, index) => (
-                <div key={index} className="grid gap-2 rounded-md border border-border bg-surface p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <Input
-                        label={`Nama atribut ${index + 1}`}
-                        placeholder="Ukuran"
-                        inputProps={{
-                          value: attr.name,
-                          onChange: (event) => renameAttribute(index, event.target.value),
-                          disabled: savingProduct,
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      aria-label={`Hapus atribut ${attr.name}`}
-                      disabled={savingProduct}
-                      onClick={() => removeAttribute(index)}
-                      className="mt-6 grid size-9 shrink-0 place-items-center rounded-control text-text-muted transition hover:bg-danger-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
-                    >
-                      <Icon name="trash" className="size-4" />
-                    </button>
-                  </div>
-                  <Input
-                    label="Pilihan"
-                    placeholder="M, L, XL (pisahkan dengan koma)"
-                    inputProps={{
-                      value: attr.options.join(", "),
-                      onChange: (event) => setAttributeOptions(index, event.target.value.split(",").map((option) => option.trim()).filter(Boolean)),
-                      disabled: savingProduct,
-                    }}
-                  />
-                </div>
-              ))}
-
-              {editing.attributesConfig.length > 0 && (
-                <>
-                  {editing.variants.length > 0 ? (
-                    <div className="grid max-h-72 gap-2 overflow-y-auto pr-1">
-                      {editing.variants.map((variant) => {
-                        const key = attributesKey(variant.attributes);
-                        return (
-                          <div key={key} className="grid gap-2 rounded-md border border-border bg-surface p-3">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-xs font-semibold text-text">
-                                {Object.entries(variant.attributes).map(([name, value]) => `${name}: ${value}`).join(" · ")}
-                              </p>
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked={variant.active}
-                                disabled={savingProduct}
-                                onClick={() => updateVariantRow(key, "active", !variant.active)}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                              >
-                                <Switch checked={variant.active} tone="success" decorative />
-                              </button>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <Input
-                                label="Harga"
-                                inputClassName="font-mono tabular-nums"
-                                inputProps={{
-                                  value: formatNumberInput(variant.price),
-                                  onChange: (event) => updateVariantRow(key, "price", normalizeNumberField(event.target.value)),
-                                  inputMode: "numeric",
-                                  disabled: savingProduct,
-                                }}
-                              />
-                              <Input
-                                label="Stok"
-                                inputClassName="font-mono tabular-nums"
-                                inputProps={{
-                                  value: formatNumberInput(variant.stock),
-                                  onChange: (event) => updateVariantRow(key, "stock", normalizeNumberField(event.target.value)),
-                                  inputMode: "numeric",
-                                  disabled: savingProduct,
-                                }}
-                              />
-                              <div className="col-span-2">
-                                <Input
-                                  label="Barcode (opsional)"
-                                  placeholder="8991001000011"
-                                  inputClassName="font-mono tabular-nums tracking-[0.01em]"
-                                  inputProps={{
-                                    value: variant.barcode,
-                                    onChange: (event) => updateVariantRow(key, "barcode", event.target.value),
-                                    disabled: savingProduct,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-text-muted">Tambahkan minimal satu pilihan pada setiap atribut untuk membuat variasi.</p>
-                  )}
-                  {productErrors.variants && <p className="text-xs font-medium text-danger">{productErrors.variants}</p>}
-                </>
-              )}
-            </div>
-
-            {editing.attributesConfig.length === 0 && (
-              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-                <Input
-                  label="Harga"
-                  placeholder="72000"
-                  error={productErrors.price}
-                  inputClassName="font-mono tabular-nums"
-                  inputProps={{
-                    value: formatNumberInput(editing.price),
-                    onChange: (event) => updateEditing("price", normalizeNumberField(event.target.value)),
-                    inputMode: "numeric",
-                    required: true,
-                    disabled: savingProduct,
-                  }}
-                />
-                <Input
-                  label="Stok"
-                  placeholder={editing.id ? "Dikelola oleh transaksi penjualan dan penyesuaian stok" : "18"}
-                  error={productErrors.stock}
-                  inputClassName="font-mono tabular-nums"
-                  inputProps={{
-                    value: formatNumberInput(editing.stock),
-                    onChange: editing.id ? undefined : (event) => updateEditing("stock", normalizeNumberField(event.target.value)),
-                    inputMode: "numeric",
-                    required: true,
-                    disabled: Boolean(editing.id) || savingProduct,
-                  }}
-                />
-              </div>
-            )}
-
-            <div>
-              <MasterDataSelectField
-                entityLabel="Satuan"
-                value={editing.unitId}
-                items={store.units}
-                onChange={(nextUnitId) => updateEditing("unitId", nextUnitId)}
-                onCreate={store.createUnit}
-                onRestore={store.restoreUnit}
-                disabled={savingProduct}
-                error={productErrors.unitId}
-              />
-            </div>
-
-            <button
-              type="button"
-              role="switch"
-              aria-checked={editing.active}
-              disabled={savingProduct}
-              onClick={() => updateEditing("active", !editing.active)}
-              className="flex h-10 items-center justify-between rounded-button border border-border bg-surface px-3.5 text-sm font-semibold text-text shadow-inner-soft transition hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
-            >
-              <span>Aktif</span>
-              <Switch checked={editing.active} tone="success" decorative />
-            </button>
-          </form>
-        )}
-      </Dialog>
-
-      <BarcodeScanner
-        open={scannerOpen}
-        title="Pindai barcode produk"
-        onClose={() => setScannerOpen(false)}
-        onDetected={(code) => {
-          setEditing((current) => ({ ...current, barcode: code }));
-          return {
-            ok: true,
-            message: "Barcode berhasil dipindai",
-            description: code,
-            close: true,
-          };
-        }}
-      />
     </>
   );
 }

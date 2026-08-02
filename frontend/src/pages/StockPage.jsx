@@ -9,6 +9,7 @@ import { StockFilterDrawer } from "../components/stock/StockFilterDrawer.jsx";
 import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { usePOSStore } from "../pos/store.jsx";
+import { formatVariantAttributes } from "../pos/domain.js";
 import { loadStockMovementPage } from "../pos/store-data.js";
 import { calculateStockPreview, parseQuantityInput } from "../stock/movement-preview.js";
 import { getLowStockProducts } from "../stock/stock-overview.js";
@@ -47,6 +48,7 @@ export default function StockPage() {
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [dialogProductId, setDialogProductId] = React.useState("");
+  const [dialogVariantId, setDialogVariantId] = React.useState("");
   const [topBarActionsTarget, setTopBarActionsTarget] = React.useState(null);
   const debouncedQuery = useDebouncedValue(query, 220);
   const movementFilters = React.useMemo(() => ({
@@ -123,6 +125,7 @@ export default function StockPage() {
               onLoadMore={() => table.error && !table.hasMore ? table.retry() : table.loadMore()}
               onRestock={(product) => {
                 setDialogProductId(product.id);
+                setDialogVariantId(product.variantId || "");
                 setDialogOpen(true);
               }}
             />
@@ -135,6 +138,7 @@ export default function StockPage() {
           title="Pergerakan baru"
           onClick={() => {
             setDialogProductId("");
+            setDialogVariantId("");
             setDialogOpen(true);
           }}
           className="app-shell-floating-action absolute right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
@@ -147,9 +151,11 @@ export default function StockPage() {
             products={activeProducts}
             searchProducts={searchProducts}
             initialProductId={dialogProductId}
+            initialVariantId={dialogVariantId}
             onClose={() => {
               setDialogOpen(false);
               setDialogProductId("");
+              setDialogVariantId("");
             }}
             onSubmit={async (input) => {
               const result = await createStockMovement(input);
@@ -168,19 +174,36 @@ export default function StockPage() {
   );
 }
 
-function MovementDialog({ products, searchProducts, initialProductId = "", onClose, onSubmit }) {
+function MovementDialog({ products, searchProducts, initialProductId = "", initialVariantId = "", onClose, onSubmit }) {
   const [productId, setProductId] = React.useState(initialProductId || products[0]?.id || "");
+  const [selectedVariantId, setSelectedVariantId] = React.useState(initialVariantId);
   const [typeLabel, setTypeLabel] = React.useState("Tambah stok");
   const [quantityText, setQuantityText] = React.useState("");
   const [reason, setReason] = React.useState("");
   const [submitAttempted, setSubmitAttempted] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const product = React.useMemo(() => products.find((item) => item.id === productId), [products, productId]);
+  const variants = React.useMemo(
+    () => (product?.variants || []).filter((variant) => variant.active !== false),
+    [product],
+  );
+  const selectedVariant = React.useMemo(
+    () => variants.find((variant) => variant.id === selectedVariantId) || null,
+    [selectedVariantId, variants],
+  );
+  React.useEffect(() => {
+    setSelectedVariantId((current) => (variants.some((variant) => variant.id === current) ? current : variants[0]?.id || ""));
+  }, [variants]);
   const type = movementValueByLabel[typeLabel];
   const quantity = parseQuantityInput(quantityText);
-  const preview = calculateStockPreview({ type, currentStock: product?.stock || 0, quantity });
+  const currentStock = selectedVariant?.stock ?? product?.stock ?? 0;
+  const preview = calculateStockPreview({ type, currentStock, quantity });
   const quantityError = getQuantityError({ type, quantityText, quantity, product, preview });
-  const productError = !product ? "Pilih produk aktif." : "";
+  const productError = !product
+    ? "Pilih produk aktif."
+    : variants.length > 0 && !selectedVariant
+      ? "Pilih varian aktif."
+      : "";
   const canSubmit = !productError && !quantityError && !isSaving;
   const showErrors = submitAttempted;
 
@@ -190,7 +213,8 @@ function MovementDialog({ products, searchProducts, initialProductId = "", onClo
     if (!canSubmit) return;
     setIsSaving(true);
     try {
-      await onSubmit({ productId, type, quantity, reason: reason.trim() });
+      const variantId = selectedVariant?.id;
+      await onSubmit({ productId, variantId, type, quantity, reason: reason.trim() });
     } finally {
       setIsSaving(false);
     }
@@ -210,17 +234,31 @@ function MovementDialog({ products, searchProducts, initialProductId = "", onClo
         </>
       )}
     >
-      <form id="stock-movement-form" onSubmit={submit} className="grid gap-4 text-text">
-        <div className="grid gap-4">
+      <form id="stock-movement-form" onSubmit={submit} className="grid gap-2 text-text">
+        <div className="grid gap-2">
           <ProductSearchPicker
             label="Produk"
             products={products}
             searchProducts={searchProducts}
             value={productId}
-            onChange={setProductId}
+            onChange={(nextProductId) => {
+              setProductId(nextProductId);
+              setSelectedVariantId("");
+            }}
             error={showErrors ? productError : ""}
             placeholder="Nama produk"
           />
+          {variants.length > 0 && (
+            <SelectField
+              label="Varian"
+              value={selectedVariantId}
+              options={variants.map((variant) => ({
+                value: variant.id,
+                label: formatVariantAttributes(variant.attributes) || "Varian utama",
+              }))}
+              onChange={setSelectedVariantId}
+            />
+          )}
           <SelectField label="Jenis pergerakan" value={typeLabel} options={movementOptions} onChange={setTypeLabel} />
           <Input
             label={type === "set_exact" ? "Target stok" : "Jumlah"}
@@ -238,8 +276,8 @@ function MovementDialog({ products, searchProducts, initialProductId = "", onClo
             inputProps={{ value: reason, onChange: (event) => setReason(event.target.value) }}
           />
 
-          <div className="grid grid-cols-3 gap-3 rounded-card border border-border bg-surface-muted p-3">
-            <PreviewMetric label="Saat ini" value={numberFormatter.format(product?.stock || 0)} />
+          <div className="grid grid-cols-3 gap-2 rounded-card border border-border bg-surface-muted p-3">
+            <PreviewMetric label="Saat ini" value={numberFormatter.format(currentStock)} />
             <PreviewMetric label="Selisih" value={`${preview.delta > 0 ? "+" : ""}${numberFormatter.format(preview.delta)}`} tone={preview.delta >= 0 ? "success" : "danger"} />
             <PreviewMetric label="Setelah" value={numberFormatter.format(preview.stockAfter)} />
           </div>

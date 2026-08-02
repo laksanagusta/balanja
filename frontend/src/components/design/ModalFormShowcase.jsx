@@ -50,7 +50,7 @@ export default function ModalFormShowcase() {
             </>
           }
         >
-          <div className="mt-4 grid gap-4">
+          <div className="mt-4 grid gap-2">
             <Input label="Product name" placeholder="e.g. Beras Premium 5kg" inputProps={{ defaultValue: "" }} />
             <div className="grid gap-2">
               <span className="text-sm font-semibold text-text">Barcode</span>
@@ -62,7 +62,7 @@ export default function ModalFormShowcase() {
                     inputProps={{ defaultValue: "" }}
                   />
                 </div>
-                <button type="button" aria-label="Scan barcode" className="mt-1.5 grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
+                <button type="button" aria-label="Scan barcode" className="grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text">
                   <Icon name="scan" className="size-5" />
                 </button>
               </div>
@@ -86,7 +86,7 @@ export default function ModalFormShowcase() {
             </>
           }
         >
-          <div className="mt-4 grid gap-4">
+          <div className="mt-4 grid gap-2">
             <Input label="Full name" placeholder="e.g. John Doe" inputProps={{ defaultValue: "" }} />
             <Input label="Phone number" placeholder="+62 812-3456-7890" inputProps={{ defaultValue: "" }} />
             <Input label="Email" placeholder="john@example.com" inputProps={{ type: "email", defaultValue: "" }} />
@@ -106,7 +106,7 @@ export default function ModalFormShowcase() {
             </>
           }
         >
-          <div className="mt-4 grid gap-4">
+          <div className="mt-4 grid gap-2">
             <SelectField label="Discount type" value="Percentage" options={["Percentage", "Fixed amount"]} />
             <Input label="Value" placeholder="10" inputProps={{ type: "number", defaultValue: "" }} />
             <Input label="Reason (optional)" placeholder="e.g. Loyalty program" inputProps={{ defaultValue: "" }} />

@@ -8,7 +8,8 @@ const tokens = [
   ["Danger Soft", "--color-danger-soft", "#fff1f1"],
   ["Standard radius", "--radius-control", "10px"],
   ["Utility radius", "--radius-button", "8px"],
-  ["Mobile standard", "--control-height-mobile-button", "44px"],
+  ["Mobile button hit", "--control-height-mobile-button-hit", "36px"],
+  ["Mobile standard", "--control-height-mobile-button", "36px"],
   ["Mobile primary large", "--control-height-mobile-button-large", "52px"],
   ["Mobile compact visual", "--control-height-mobile-compact", "36px"],
   ["Focus", "--color-focus", "#4a4a4d"],
@@ -20,7 +21,7 @@ export default function ButtonShowcase() {
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Button</h3>
-        <p className="mt-1 text-sm text-text-muted">Buttons use one flat Uber-inspired system without gradients, bevels, or elevation shadows. Shared Button actions use the 10px control radius, while compact option and utility rows may use the dedicated 8px button radius. On mobile, standard actions are 44px, large primary actions are 52px, and compact buttons keep a 36px visual surface inside a minimum 44px hit area. Desktop retains the compact operational scale. Every variant keeps the same focus outline, disabled opacity, and immediate press scale.</p>
+        <p className="mt-1 text-sm text-text-muted">Buttons use one flat Uber-inspired system without gradients, bevels, or elevation shadows. Shared Button actions use the 10px control radius, while compact option and utility rows may use the dedicated 8px button radius. Standard and compact buttons use matching 36px visual and hit areas; large primary actions remain 52px. Desktop retains the compact operational scale. Every variant keeps the same focus outline, disabled opacity, and immediate press scale.</p>
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="grid gap-5">
@@ -41,7 +42,7 @@ export default function ButtonShowcase() {
           <div className="grid gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Mobile sizing contract</p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button>Standard · 44</Button>
+              <Button>Standard · 36</Button>
               <Button variant="primary" mobileSize="large">Primary besar · 52</Button>
               <Button size="sm" compactVisual>Compact · 36/44</Button>
             </div>

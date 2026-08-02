@@ -139,7 +139,7 @@ export function ProductCard({ product, onAdd, onDecrease }) {
 
 export function PosProductCard({ product, onAdd, onOpenVariants, disabled = false }) {
   const outOfStock = Number(product.stock) <= 0;
-  const hasMultipleVariants = Array.isArray(product.variants) && product.variants.length > 1;
+  const hasMultipleVariants = product.attributesConfig?.length > 0 && Array.isArray(product.variants) && product.variants.length > 1;
   const blocked = disabled || outOfStock;
   const { addFeedback, handleAdd } = useAddFeedback({
     onAdd: () => {

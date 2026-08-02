@@ -55,9 +55,11 @@ type CreateInput struct {
 }
 
 type ProductStock struct {
-	ID        uuid.UUID `json:"id"`
-	Stock     int       `json:"stock"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        uuid.UUID  `json:"id"`
+	ProductID uuid.UUID  `json:"productId"`
+	VariantID *uuid.UUID `json:"variantId,omitempty"`
+	Stock     int        `json:"stock"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
 type CreateResult struct {
