@@ -40,8 +40,10 @@ export default function MarketingPatternsShowcase() {
           </div>
         </div>
 
-        <div className="grid min-h-48 place-items-center rounded-panel bg-surface-muted p-4">
-          <PosProductMockup compact />
+        <div className="grid min-h-48 place-items-center rounded-panel bg-surface p-4">
+          <div className="landing-feature-mockup-frame">
+            <div className="landing-feature-mockup-surface"><PosProductMockup compact /></div>
+          </div>
         </div>
 
         <div className="mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel bg-white px-5 py-16 text-center">

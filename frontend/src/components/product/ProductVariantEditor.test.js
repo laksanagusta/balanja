@@ -21,8 +21,13 @@ test("variant editor uses structured tokens, attribute menus, and safe removal c
   assert.match(source, /Hapus atribut/);
   assert.match(source, /querySelectorAll\('\[role="menuitem"\]:not\(\[disabled\]\)'\)/);
   assert.match(source, /event\.key === "ArrowDown"/);
-  assert.match(source, /Hapus atribut ‘\{pendingDelete\.name\}’\?/);
+  assert.match(source, /Hapus atribut ‘\{pendingDelete\?\.name \|\| attribute\.name\}’\?/);
   assert.match(source, /Data harga, stok, dan barcode dari variasi yang terkait juga akan dihapus/);
+  assert.match(source, /pendingDeleteCancelRefs/);
+  assert.match(source, /attribute-field-crossfade/);
+  assert.match(source, /attribute-field-state/);
+  assert.match(source, /role="alert" aria-hidden=\{!isDeletePending\} aria-labelledby=\{`remove-attribute-\$\{attributeId\}`\}/);
+  assert.match(source, /addAttributeRef/);
 });
 
 test("variant editor renders a semantic desktop table and a mobile disclosure flow", async () => {
@@ -80,6 +85,8 @@ test("variant editor keeps currency prefixes and reduced-motion-safe structural 
   assert.match(source, /motion-reduce:transition-none/);
   assert.match(source, /aria-live="polite"/);
   assert.doesNotMatch(source, /font-mono/);
+  assert.match(source, /variant-popover-exit/);
+  assert.doesNotMatch(source, /variant-token-out/);
 });
 
 test("correcting a variant field does not retrigger mobile validation focus", async () => {

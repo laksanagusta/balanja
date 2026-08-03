@@ -221,18 +221,23 @@ test("legacy panel-left icon is not rendered by the mobile-first shell", async (
   assert.doesNotMatch(shell, /<Icon name="sidebar"/);
 });
 
-test("shared Heroicons keep product and stock distinct in navigation", async () => {
+test("shared navigation uses the approved home, transaction, and filter glyphs while keeping product distinct", async () => {
   const shell = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
   const icons = await readFile(new URL("./primitives.jsx", import.meta.url), "utf8");
   const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
   const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
-  assert.match(icons, /from "@heroicons\/react\/24\/outline"/);
+  assert.match(icons, /function HomeGlyph\(\{ className \}\)/);
+  assert.match(icons, /function DocumentGlyph\(\{ className \}\)/);
+  assert.match(icons, /function FilterGlyph\(\{ className \}\)/);
+  assert.match(icons, /home: HomeGlyph/);
   assert.match(icons, /box: TagIcon/);
+  assert.match(icons, /file: DocumentGlyph/);
+  assert.match(icons, /filter: FilterGlyph/);
   assert.match(icons, /package: ArchiveBoxIcon/);
   assert.doesNotMatch(shell, /function navIcon/);
   assert.match(shell, /\["Produk", "box", routes\.products\]/);
   assert.match(shell, /\["Stok", "package", routes\.stock\]/);
   assert.match(showcase, /smartphone information architecture/);
-  assert.match(designGuide, /Produk route uses a tag icon while Stok uses an archive-box icon/);
+  assert.match(designGuide, /Beranda uses the approved home glyph, Produk uses a tag icon, Transaksi uses the approved document glyph, and filter actions use the approved filter glyph/);
 });

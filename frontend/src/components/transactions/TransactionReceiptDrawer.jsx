@@ -1,6 +1,6 @@
 import React from "react";
 import { Drawer } from "vaul";
-import { Button, Icon, useOverlayDepth } from "../primitives.jsx";
+import { useOverlayDepth } from "../primitives.jsx";
 import { formatPrice } from "../../shared.jsx";
 
 function formatReceiptDate(value) {
@@ -12,20 +12,6 @@ function formatReceiptDate(value) {
 
 export function TransactionReceiptDrawer({ transaction, onClose }) {
   useOverlayDepth(Boolean(transaction));
-
-  const printReceipt = React.useCallback(() => {
-    if (!transaction || typeof window === "undefined" || typeof window.print !== "function") return;
-
-    const cleanup = () => {
-      document.body.classList.remove("printing-receipt");
-      window.removeEventListener("afterprint", cleanup);
-    };
-
-    document.body.classList.add("printing-receipt");
-    window.addEventListener("afterprint", cleanup, { once: true });
-    window.print();
-    window.setTimeout(cleanup, 1500);
-  }, [transaction]);
 
   if (!transaction) return null;
 
@@ -56,16 +42,11 @@ export function TransactionReceiptDrawer({ transaction, onClose }) {
                 {transaction?.number || "—"}
               </span>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <Button type="button" size="sm" variant="secondary" compactVisual onClick={printReceipt}>
-                <Icon name="printer" className="size-4" />
-                <span>Cetak struk</span>
-              </Button>
-            </div>
           </header>
 
-          <div className="transaction-receipt-paper relative min-h-0 flex-1 overflow-hidden rounded-card bg-surface">
-            <div className="transaction-receipt-scroll relative min-h-0 h-full overflow-y-auto px-5 py-8 sm:px-8 sm:py-10">
+          <div className="transaction-receipt-paper-frame relative min-h-0 flex-1">
+            <div className="transaction-receipt-paper relative h-full min-h-0 overflow-hidden rounded-card bg-surface">
+              <div className="transaction-receipt-scroll relative min-h-0 h-full overflow-y-auto px-5 py-8 sm:px-8 sm:py-10">
               <div className="text-center font-mono">
                 <p className="font-mono text-sm font-semibold tracking-[0.24em] text-text">BALANJA</p>
                 <p className="mt-2 text-xs text-text-muted">Detail transaksi</p>
@@ -104,6 +85,7 @@ export function TransactionReceiptDrawer({ transaction, onClose }) {
                   <dd className="font-mono tabular-nums">{formatPrice(transaction.total)}</dd>
                 </div>
               </dl>
+              </div>
             </div>
           </div>
 

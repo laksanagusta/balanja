@@ -65,6 +65,8 @@ export default function ProductVariantShowcase() {
         Gunakan heading operasional 14px secara konsisten, field token setinggi text field dengan affordance Enter,
         chip yang lebih kecil dari permukaan field, label visual singkat, tombol aksi berbentuk pill,
         disclosure inline untuk detail variasi mobile, dan alignment field-action tanpa offset manual.
+        Konfirmasi hapus atribut menggantikan field atribut di slot yang sama dengan crossfade, memindahkan fokus ke aksi pemulihan,
+        dan popover memiliki jalur keluar yang simetris tanpa menunda perubahan draft.
         Saat pengguna memperbaiki field, metadata error yang sudah kosong harus dibuang tanpa membuka ulang disclosure atau memindahkan fokus.
         Kasir tetap melihat pilihan yang tersedia, harga aktual, serta stok setelah isi keranjang diperhitungkan.
       </p>

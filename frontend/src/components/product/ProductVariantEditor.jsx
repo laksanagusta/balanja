@@ -33,8 +33,6 @@ function AttributeTokenField({ attributeId, options, disabled, error, onCommit }
   const [draft, setDraft] = React.useState("");
   const [editingIndex, setEditingIndex] = React.useState(-1);
   const [localError, setLocalError] = React.useState("");
-  const [ghosts, setGhosts] = React.useState([]);
-  const ghostIdRef = React.useRef(0);
   const inputRef = React.useRef(null);
   const tokenRefs = React.useRef([]);
   const fieldId = `${attributeId}-options`;
@@ -77,11 +75,6 @@ function AttributeTokenField({ attributeId, options, disabled, error, onCommit }
 
   const removeToken = (index) => {
     const nextOptions = options.filter((_, optionIndex) => optionIndex !== index);
-    const ghostId = ++ghostIdRef.current;
-    setGhosts((current) => [...current, { id: ghostId, label: options[index] }]);
-    window.setTimeout(() => {
-      setGhosts((current) => current.filter((ghost) => ghost.id !== ghostId));
-    }, 160);
     onCommit(nextOptions);
     resetDraft();
     if (nextOptions.length) focusToken(Math.min(index, nextOptions.length - 1));
@@ -208,15 +201,6 @@ function AttributeTokenField({ attributeId, options, disabled, error, onCommit }
               <Icon name="enter" className="size-4" />
             </button>
           </div>
-          {ghosts.map((ghost) => (
-            <span
-              key={ghost.id}
-              aria-hidden="true"
-              className="variant-token-out pointer-events-none inline-flex h-7 max-w-full items-center rounded-full border border-border bg-surface-muted px-2.5 text-sm font-medium text-text-muted"
-            >
-              {ghost.label}
-            </span>
-          ))}
         </div>
       </div>
       <p className="text-xs font-normal leading-5 text-text-muted">Enter atau koma untuk menambahkan. Pilih token untuk mengubahnya.</p>
@@ -370,14 +354,21 @@ function VariationFields({ variant, rowErrors, disabled, onUpdateVariant, onScan
 
 function BulkActions({ count, disabled, onApplyBulk, onSetAllActive }) {
   const [mode, setMode] = React.useState("");
+  const [closingMode, setClosingMode] = React.useState("");
   const [value, setValue] = React.useState("");
   const triggerRefs = React.useRef({});
   const panelRef = React.useRef(null);
+  const closeTimeoutRef = React.useRef(null);
 
   const close = (restoreFocus = false) => {
     const previousMode = mode;
     setMode("");
     setValue("");
+    if (closeTimeoutRef.current) window.clearTimeout(closeTimeoutRef.current);
+    if (previousMode) {
+      setClosingMode(previousMode);
+      closeTimeoutRef.current = window.setTimeout(() => setClosingMode(""), 160);
+    }
     if (restoreFocus) window.requestAnimationFrame(() => triggerRefs.current[previousMode]?.focus());
   };
 
@@ -396,7 +387,12 @@ function BulkActions({ count, disabled, onApplyBulk, onSetAllActive }) {
 
   const open = (nextMode) => {
     setValue("");
-    setMode((current) => (current === nextMode ? "" : nextMode));
+    if (mode === nextMode) {
+      close(false);
+      return;
+    }
+    setClosingMode("");
+    setMode(nextMode);
   };
 
   const applyValue = () => {
@@ -406,8 +402,11 @@ function BulkActions({ count, disabled, onApplyBulk, onSetAllActive }) {
     close(true);
   };
 
+  const visibleMode = mode || closingMode;
+  const isOpen = Boolean(mode);
+
   return (
-    <section aria-labelledby="variant-bulk-title" className="relative border-b border-border bg-surface/95 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/80 motion-reduce:transition-none">
+    <section aria-labelledby="variant-bulk-title" className="product-editor-material relative border-b border-border bg-surface/95 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/80 motion-reduce:transition-none">
       <div className="flex flex-wrap items-center gap-2">
         <h3 id="variant-bulk-title" className="mr-auto text-sm font-semibold text-text">Edit massal</h3>
         {[
@@ -431,14 +430,15 @@ function BulkActions({ count, disabled, onApplyBulk, onSetAllActive }) {
           </Button>
         ))}
       </div>
-      {mode && (
+      {visibleMode && (
         <div
           ref={panelRef}
           role="dialog"
-          aria-label={mode === "price" ? "Atur harga massal" : mode === "stock" ? "Atur stok massal" : "Ubah status semua"}
-          className="variant-popover-enter absolute right-0 top-[calc(100%+0.5rem)] z-30 grid w-[min(22rem,calc(100vw-3rem))] gap-3 rounded-panel border border-border bg-surface p-4 shadow-panel"
+          aria-hidden={!isOpen}
+          aria-label={visibleMode === "price" ? "Atur harga massal" : visibleMode === "stock" ? "Atur stok massal" : "Ubah status semua"}
+          className={`${isOpen ? "variant-popover-enter" : "variant-popover-exit pointer-events-none"} product-editor-material absolute right-0 top-[calc(100%+0.5rem)] z-30 grid w-[min(22rem,calc(100vw-3rem))] gap-3 rounded-panel border border-border bg-surface p-4 shadow-panel`}
           onKeyDown={(event) => {
-            if (event.key === "Escape") {
+            if (isOpen && event.key === "Escape") {
               event.stopPropagation();
               close(true);
             }
@@ -446,26 +446,26 @@ function BulkActions({ count, disabled, onApplyBulk, onSetAllActive }) {
         >
           <div>
             <p className="text-sm font-semibold text-text">
-              {mode === "price" ? "Atur harga" : mode === "stock" ? "Atur stok" : "Ubah status semua"}
+              {visibleMode === "price" ? "Atur harga" : visibleMode === "stock" ? "Atur stok" : "Ubah status semua"}
             </p>
             <p className="mt-1 text-xs leading-5 text-text-muted">Perubahan akan diterapkan ke {count} variasi dan dapat diurungkan.</p>
           </div>
-          {mode === "price" && (
-            <PriceField id="bulk-variant-price" label="Harga semua" value={value} disabled={disabled} onChange={setValue} />
+          {visibleMode === "price" && (
+            <PriceField id="bulk-variant-price" label="Harga semua" value={value} disabled={disabled || !isOpen} onChange={setValue} />
           )}
-          {mode === "stock" && (
-            <StockField id="bulk-variant-stock" label="Stok semua" value={value} disabled={disabled} onChange={setValue} />
+          {visibleMode === "stock" && (
+            <StockField id="bulk-variant-stock" label="Stok semua" value={value} disabled={disabled || !isOpen} onChange={setValue} />
           )}
-          {mode === "status" ? (
+          {visibleMode === "status" ? (
             <div className="grid gap-2">
-              <Button type="button" onClick={() => { onSetAllActive?.(true, "Semua variasi diaktifkan."); close(true); }}>Aktifkan semua</Button>
-              <Button type="button" onClick={() => { onSetAllActive?.(false, "Semua variasi dinonaktifkan."); close(true); }}>Nonaktifkan semua</Button>
+              <Button type="button" disabled={!isOpen} onClick={() => { onSetAllActive?.(true, "Semua variasi diaktifkan."); close(true); }}>Aktifkan semua</Button>
+              <Button type="button" disabled={!isOpen} onClick={() => { onSetAllActive?.(false, "Semua variasi dinonaktifkan."); close(true); }}>Nonaktifkan semua</Button>
             </div>
           ) : (
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={() => close(true)}>Batal</Button>
-              <Button type="button" variant="primary" disabled={!value} onClick={applyValue}>
-                {mode === "price" ? "Terapkan harga" : "Terapkan stok"}
+              <Button type="button" variant="ghost" disabled={!isOpen} onClick={() => close(true)}>Batal</Button>
+              <Button type="button" variant="primary" disabled={!isOpen || !value} onClick={applyValue}>
+                {visibleMode === "price" ? "Terapkan harga" : "Terapkan stok"}
               </Button>
             </div>
           )}
@@ -507,7 +507,7 @@ function VariantUndoToast({ message, disabled, onUndo }) {
 
   return (
     <div
-      className={`fixed bottom-24 left-1/2 z-[60] flex w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 items-center gap-3 rounded-panel border border-border bg-surface/95 px-4 py-3 text-text shadow-panel backdrop-blur-xl transition-[opacity,translate] duration-slow ease-standard motion-reduce:transition-none ${
+      className={`product-editor-material fixed bottom-24 left-1/2 z-[60] flex w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 items-center gap-3 rounded-panel border border-border bg-surface/95 px-4 py-3 text-text shadow-panel backdrop-blur-xl transition-[opacity,translate] duration-slow ease-standard motion-reduce:transition-none ${
         state === "entering" || state === "leaving" ? "translate-y-[calc(100%+5rem)] opacity-0" : ""
       }`}
       role="status"
@@ -541,11 +541,14 @@ export default function ProductVariantEditor({
   const [pendingDelete, setPendingDelete] = React.useState(null);
   const [mobileVariantKey, setMobileVariantKey] = React.useState("");
   const [enteringKey, setEnteringKey] = React.useState(null);
-  const [leavingKey, setLeavingKey] = React.useState(null);
+  const [closingAttributeMenu, setClosingAttributeMenu] = React.useState(-1);
   const knownAttributeKeysRef = React.useRef(null);
   const attributeNameRefs = React.useRef([]);
   const attributeMenuRefs = React.useRef([]);
   const attributePopupRefs = React.useRef([]);
+  const pendingDeleteCancelRefs = React.useRef([]);
+  const addAttributeRef = React.useRef(null);
+  const attributeCloseTimeoutRef = React.useRef(null);
   const editorRef = React.useRef(null);
   const attributes = product.attributesConfig || [];
   const variants = product.variants || [];
@@ -553,6 +556,20 @@ export default function ProductVariantEditor({
   const activeCount = variants.filter((variant) => variant.active !== false).length;
   const hasCompleteMatrix = combinationCount > 0 && variants.length > 0;
   const selectedMobileVariant = variants.find((variant) => attributesKey(variant.attributes) === mobileVariantKey);
+
+  const closeAttributeMenu = (restoreFocus = false) => {
+    const index = attributeMenu;
+    setAttributeMenu(-1);
+    setOrderMenu(false);
+    if (attributeCloseTimeoutRef.current) window.clearTimeout(attributeCloseTimeoutRef.current);
+    if (index >= 0) {
+      setClosingAttributeMenu(index);
+      attributeCloseTimeoutRef.current = window.setTimeout(() => {
+        setClosingAttributeMenu((current) => (current === index ? -1 : current));
+      }, 160);
+    }
+    if (restoreFocus && index >= 0) window.requestAnimationFrame(() => attributeMenuRefs.current[index]?.focus());
+  };
 
   if (knownAttributeKeysRef.current === null) {
     knownAttributeKeysRef.current = new Set(attributes.map(attributeRowKey));
@@ -573,11 +590,16 @@ export default function ProductVariantEditor({
   }, [mobileVariantKey, selectedMobileVariant]);
 
   React.useEffect(() => {
+    if (!pendingDelete) return undefined;
+    const frame = window.requestAnimationFrame(() => pendingDeleteCancelRefs.current[pendingDelete.index]?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [pendingDelete]);
+
+  React.useEffect(() => {
     if (attributeMenu < 0) return undefined;
     const handlePointer = (event) => {
       if (!event.target.closest?.("[data-attribute-menu]")) {
-        setAttributeMenu(-1);
-        setOrderMenu(false);
+        closeAttributeMenu(false);
       }
     };
     document.addEventListener("pointerdown", handlePointer);
@@ -598,13 +620,6 @@ export default function ProductVariantEditor({
     return () => window.cancelAnimationFrame(frame);
   }, [errors.variantFocusRequest, mobileVariantKey]);
 
-  const closeAttributeMenu = (restoreFocus = false) => {
-    const index = attributeMenu;
-    setAttributeMenu(-1);
-    setOrderMenu(false);
-    if (restoreFocus) window.requestAnimationFrame(() => attributeMenuRefs.current[index]?.focus());
-  };
-
   const focusAttributeMenuItem = (index, edge = "first") => {
     window.requestAnimationFrame(() => {
       const items = attributePopupRefs.current[index]?.querySelectorAll('[role="menuitem"]:not([disabled])');
@@ -623,14 +638,12 @@ export default function ProductVariantEditor({
   const confirmRemoveAttribute = () => {
     const index = pendingDelete?.index;
     if (index == null) return;
-    const key = attributeRowKey(attributes[index]);
     setPendingDelete(null);
-    setLeavingKey(key);
-    window.setTimeout(() => {
-      onRemoveAttribute?.(index);
-      setLeavingKey(null);
-      window.requestAnimationFrame(() => attributeMenuRefs.current[Math.max(0, index - 1)]?.focus());
-    }, 320);
+    onRemoveAttribute?.(index);
+    window.requestAnimationFrame(() => {
+      const target = attributeMenuRefs.current[Math.max(0, index - 1)] || addAttributeRef.current;
+      target?.focus();
+    });
   };
 
   const handleAttributeMenuKeyDown = (event) => {
@@ -686,38 +699,20 @@ export default function ProductVariantEditor({
             <h3 id="variant-attributes-title" className="text-sm font-semibold text-text">Atribut</h3>
             <p className="mt-1 text-xs leading-5 text-text-muted">Susun pilihan yang membentuk kombinasi variasi.</p>
           </div>
-          <Button type="button" variant="secondary" aria-label="Tambah atribut" radius="rounded-full" disabled={disabled} onClick={onAddAttribute}>
+          <Button ref={addAttributeRef} type="button" variant="secondary" aria-label="Tambah atribut" radius="rounded-full" disabled={disabled} onClick={onAddAttribute}>
             <Icon name="plus" className="size-4" />
             Tambah atribut
           </Button>
         </div>
 
-        {pendingDelete && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel border border-danger/20 bg-danger-soft/50 px-4 py-3" role="group" aria-labelledby="remove-attribute-title">
-            <div className="min-w-0">
-              <p id="remove-attribute-title" className="text-sm font-semibold text-text">Hapus atribut ‘{pendingDelete.name}’?</p>
-              <p className="mt-0.5 text-xs font-normal leading-5 text-text-muted">Data harga, stok, dan barcode dari variasi yang terkait juga akan dihapus.</p>
-            </div>
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button type="button" onClick={cancelPendingDelete}>Batal</Button>
-              <Button
-                type="button"
-                variant="danger"
-                onClick={confirmRemoveAttribute}
-              >
-                Hapus atribut
-              </Button>
-            </div>
-          </div>
-        )}
-
         <div className="divide-y divide-border border-y border-border">
           {attributes.map((attribute, index) => {
             const attributeId = attributeRowKey(attribute);
+            const isDeletePending = pendingDelete?.index === index;
             return (
               <div
                 key={attributeId}
-                className={`grid gap-4 py-5 first:pt-4 last:pb-4 ${enteringKey === attributeId ? "attribute-row-enter" : ""} ${leavingKey === attributeId ? "attribute-row-exit" : ""}`}
+                className={`grid gap-4 py-5 first:pt-4 last:pb-4 ${enteringKey === attributeId ? "attribute-row-enter" : ""}`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.08em] text-text-subtle">Atribut {index + 1}</p>
@@ -732,7 +727,12 @@ export default function ProductVariantEditor({
                       disabled={disabled}
                       onClick={() => {
                         setOrderMenu(false);
-                        setAttributeMenu((current) => (current === index ? -1 : index));
+                        if (attributeMenu === index) {
+                          closeAttributeMenu(false);
+                        } else {
+                          setClosingAttributeMenu(-1);
+                          setAttributeMenu(index);
+                        }
                       }}
                       onKeyDown={(event) => {
                         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -746,47 +746,60 @@ export default function ProductVariantEditor({
                     >
                       <Icon name="more" className="size-5" />
                     </button>
-                    {attributeMenu === index && (
+                    {(attributeMenu === index || closingAttributeMenu === index) && (
                       <div
                         ref={(node) => { attributePopupRefs.current[index] = node; }}
                         role="menu"
                         aria-label={`Tindakan atribut ${attribute.name || index + 1}`}
-                        className="variant-popover-enter absolute right-0 top-[calc(100%+0.25rem)] z-30 grid w-52 rounded-panel border border-border bg-surface p-1.5 shadow-panel"
+                        aria-hidden={attributeMenu !== index}
+                        className={`${attributeMenu === index ? "variant-popover-enter" : "variant-popover-exit pointer-events-none"} absolute right-0 top-[calc(100%+0.25rem)] z-30 grid w-52 rounded-panel border border-border bg-surface p-1.5 shadow-panel`}
                         onKeyDown={handleAttributeMenuKeyDown}
                       >
-                        <button role="menuitem" type="button" className="min-h-11 rounded-control px-3 text-left text-sm font-medium hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-focus" onClick={() => { closeAttributeMenu(false); attributeNameRefs.current[index]?.focus(); }}>Ubah nama</button>
-                        <button role="menuitem" type="button" className="min-h-11 rounded-control px-3 text-left text-sm font-medium hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-focus" onClick={() => { onDuplicateAttribute?.(index); closeAttributeMenu(true); }}>Duplikat atribut</button>
-                        <button role="menuitem" type="button" aria-expanded={orderMenu} className="min-h-11 rounded-control px-3 text-left text-sm font-medium hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-focus" onClick={() => setOrderMenu((current) => !current)}>Ubah urutan</button>
+                        <button role="menuitem" tabIndex={attributeMenu === index ? 0 : -1} type="button" className="min-h-11 rounded-control px-3 text-left text-sm font-medium hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-focus" onClick={() => { closeAttributeMenu(false); attributeNameRefs.current[index]?.focus(); }}>Ubah nama</button>
+                        <button role="menuitem" tabIndex={attributeMenu === index ? 0 : -1} type="button" className="min-h-11 rounded-control px-3 text-left text-sm font-medium hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-focus" onClick={() => { onDuplicateAttribute?.(index); closeAttributeMenu(true); }}>Duplikat atribut</button>
+                        <button role="menuitem" tabIndex={attributeMenu === index ? 0 : -1} type="button" aria-expanded={orderMenu} className="min-h-11 rounded-control px-3 text-left text-sm font-medium hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-focus" onClick={() => setOrderMenu((current) => !current)}>Ubah urutan</button>
                         {orderMenu && (
                           <div className="grid border-l border-border pl-2">
-                            <button role="menuitem" type="button" disabled={index === 0} className="min-h-11 rounded-control px-3 text-left text-sm text-text-muted hover:bg-surface-muted disabled:opacity-40" onClick={() => { onMoveAttribute?.(index, index - 1); closeAttributeMenu(true); }}>Pindah ke atas</button>
-                            <button role="menuitem" type="button" disabled={index === attributes.length - 1} className="min-h-11 rounded-control px-3 text-left text-sm text-text-muted hover:bg-surface-muted disabled:opacity-40" onClick={() => { onMoveAttribute?.(index, index + 1); closeAttributeMenu(true); }}>Pindah ke bawah</button>
+                            <button role="menuitem" tabIndex={attributeMenu === index ? 0 : -1} type="button" disabled={index === 0} className="min-h-11 rounded-control px-3 text-left text-sm text-text-muted hover:bg-surface-muted disabled:opacity-40" onClick={() => { onMoveAttribute?.(index, index - 1); closeAttributeMenu(true); }}>Pindah ke atas</button>
+                            <button role="menuitem" tabIndex={attributeMenu === index ? 0 : -1} type="button" disabled={index === attributes.length - 1} className="min-h-11 rounded-control px-3 text-left text-sm text-text-muted hover:bg-surface-muted disabled:opacity-40" onClick={() => { onMoveAttribute?.(index, index + 1); closeAttributeMenu(true); }}>Pindah ke bawah</button>
                           </div>
                         )}
-                        <button role="menuitem" type="button" className="min-h-11 rounded-control px-3 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-danger" onClick={() => { setPendingDelete({ index, name: attribute.name || `Atribut ${index + 1}` }); closeAttributeMenu(false); }}>Hapus atribut</button>
+                        <button role="menuitem" tabIndex={attributeMenu === index ? 0 : -1} type="button" className="min-h-11 rounded-control px-3 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-danger" onClick={() => { setPendingDelete({ index, name: attribute.name || `Atribut ${index + 1}` }); closeAttributeMenu(false); }}>Hapus atribut</button>
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="grid gap-4 lg:grid-cols-[minmax(12rem,0.7fr)_minmax(0,1.3fr)] lg:items-start">
-                  <Input
-                    label="Nama atribut"
-                    placeholder="Ukuran"
-                    error={errors.attributeRows?.[index]?.name}
-                    inputProps={{
-                      ref: (node) => { attributeNameRefs.current[index] = node; },
-                      value: attribute.name,
-                      disabled,
-                      onChange: (event) => onRenameAttribute?.(index, event.target.value),
-                    }}
-                  />
-                  <AttributeTokenField
-                    attributeId={attributeId}
-                    options={attribute.options || []}
-                    disabled={disabled}
-                    error={errors.attributeRows?.[index]?.options}
-                    onCommit={(options) => onCommitOptions?.(index, options)}
-                  />
+                <div className="attribute-field-crossfade">
+                  <div className={`attribute-field-state grid gap-4 lg:grid-cols-[minmax(12rem,0.7fr)_minmax(0,1.3fr)] lg:items-start ${isDeletePending ? "is-inactive" : "is-active"}`} aria-hidden={isDeletePending}>
+                    <Input
+                      label="Nama atribut"
+                      placeholder="Ukuran"
+                      error={errors.attributeRows?.[index]?.name}
+                      inputProps={{
+                        ref: (node) => { attributeNameRefs.current[index] = node; },
+                        value: attribute.name,
+                        disabled: disabled || isDeletePending,
+                        onChange: (event) => onRenameAttribute?.(index, event.target.value),
+                      }}
+                    />
+                    <AttributeTokenField
+                      attributeId={attributeId}
+                      options={attribute.options || []}
+                      disabled={disabled || isDeletePending}
+                      error={errors.attributeRows?.[index]?.options}
+                      onCommit={(options) => onCommitOptions?.(index, options)}
+                    />
+                  </div>
+                  <div className={`attribute-field-state flex flex-wrap items-center justify-between gap-3 rounded-panel border border-danger/20 bg-danger-soft/50 px-4 py-3 ${isDeletePending ? "is-active" : "is-inactive"}`} role="alert" aria-hidden={!isDeletePending} aria-labelledby={`remove-attribute-${attributeId}`}>
+                    <div className="min-w-0">
+                      <p id={`remove-attribute-${attributeId}`} className="text-sm font-semibold text-text">Hapus atribut ‘{pendingDelete?.name || attribute.name}’?</p>
+                      <p className="mt-0.5 text-xs font-normal leading-5 text-text-muted">Data harga, stok, dan barcode dari variasi yang terkait juga akan dihapus.</p>
+                    </div>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button ref={(node) => { pendingDeleteCancelRefs.current[index] = node; }} type="button" disabled={!isDeletePending} onClick={cancelPendingDelete}>Batal</Button>
+                      <Button type="button" variant="danger" disabled={!isDeletePending} onClick={confirmRemoveAttribute}>Hapus atribut</Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
@@ -821,7 +834,7 @@ export default function ProductVariantEditor({
             <div className="hidden border-b border-border md:block">
               <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
                 <caption className="sr-only">Harga, stok, barcode, dan status jual setiap variasi produk.</caption>
-                <thead className="sticky top-[4.25rem] z-10 bg-surface/95 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/85">
+                <thead className="product-editor-material sticky top-[4.25rem] z-10 bg-surface/95 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/85">
                   <tr className="text-xs font-semibold text-text-subtle">
                     <th scope="col" className="w-[18%] border-b border-border px-3 py-3">Variasi</th>
                     <th scope="col" className="w-[18%] border-b border-border px-3 py-3">Harga</th>

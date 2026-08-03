@@ -30,17 +30,17 @@ function ProductImagePlaceholder({ className = "" }) {
   );
 }
 
-export default function PosProductMockup({ compact = false }) {
+export default function PosProductMockup({ compact = false, cropBottom = false }) {
   const visibleCategories = compact ? categories.slice(0, 3) : categories;
   const visibleProducts = products.slice(0, 4);
 
   return (
     <div
       aria-hidden="true"
-      className={`overflow-hidden border border-border-strong bg-app-bg shadow-[0_40px_90px_-50px_rgba(0,0,0,0.5)] ${
+      className={`overflow-hidden bg-app-bg smooth-shadow-ring shadow-black smooth-ring-neutral-300/30 ${
         compact
-          ? "mx-auto w-full max-w-[34rem] rounded-card text-[9px]"
-          : "rounded-panel text-[10px] lg:text-[11px]"
+          ? "mx-auto grid h-full w-full max-w-[34rem] grid-rows-[auto_minmax(0,1fr)] rounded-card text-[9px]"
+          : `${cropBottom ? "landing-hero-mockup" : "rounded-panel"} text-[10px] lg:text-[11px]`
       }`}
     >
       <div className="flex items-center gap-1.5 bg-surface-muted px-3 py-2.5">
@@ -49,8 +49,8 @@ export default function PosProductMockup({ compact = false }) {
         <span className="size-2.5 rounded-full bg-text/[0.08]" />
       </div>
 
-      <div className={`relative flex ${compact ? "" : "h-[360px] sm:h-[470px] lg:h-[520px]"}`}>
-        <div className="min-w-0 flex-1 bg-app-bg">
+      <div className={`relative flex min-h-0 ${compact ? "" : "h-[360px] sm:h-[470px] lg:h-[520px]"}`}>
+        <div className="min-h-0 min-w-0 flex-1 overflow-hidden bg-app-bg">
           <div className="flex items-center justify-between gap-3 px-4 py-2.5">
             <span className="text-base font-extrabold tracking-normal text-text">Kasir</span>
             <div className="flex items-center gap-1">
@@ -86,7 +86,7 @@ export default function PosProductMockup({ compact = false }) {
               <article key={product.name} className={`pos-product-card content-start gap-2 ${!compact && index > 1 ? "hidden sm:grid" : "grid"}`}>
                 <div className="relative aspect-square w-full overflow-hidden rounded-panel bg-surface-muted">
                   <ProductImagePlaceholder className="h-full w-full" />
-                  <span className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full border border-border bg-surface text-text shadow-low">
+                  <span className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-surface text-text smooth-shadow-ring shadow-black smooth-ring-neutral-300/30">
                     <Icon name="plus" className="size-4" />
                   </span>
                 </div>
@@ -98,13 +98,15 @@ export default function PosProductMockup({ compact = false }) {
             ))}
           </div>
 
-          <div className={`${compact ? "my-3" : "absolute inset-x-0 bottom-16 lg:hidden"} flex justify-center`}>
-            <span className="inline-flex h-13 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-white">
-              <Icon name="cart" className="size-4" />
-              <span>Keranjang</span>
-              <span className="grid min-w-5 place-items-center rounded-full bg-white/16 px-1.5 text-xs tabular-nums">4</span>
-            </span>
-          </div>
+          {!compact && (
+            <div className="absolute inset-x-0 bottom-16 flex justify-center lg:hidden">
+              <span className="inline-flex h-13 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-white smooth-shadow-ring shadow-black smooth-ring-neutral-300/30">
+                <Icon name="cart" className="size-4" />
+                <span>Keranjang</span>
+                <span className="grid min-w-5 place-items-center rounded-full bg-white/16 px-1.5 text-xs tabular-nums">4</span>
+              </span>
+            </div>
+          )}
 
           <nav className={`${compact ? "relative" : "absolute inset-x-0 bottom-0 lg:hidden"} grid grid-cols-5 bg-surface/88 p-1 backdrop-blur-xl`}>
             {bottomNavItems.map(([label, icon], index) => (

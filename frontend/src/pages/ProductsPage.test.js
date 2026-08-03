@@ -193,6 +193,7 @@ test("product editor is one atomic draft split into details and variants", async
   assert.match(workspace, /<h2[^>]*text-sm[^>]*>\s*\{isVariantsStep \? "Atur variasi" : "Informasi produk"\}/);
   assert.match(source, /productDraftFingerprint/);
   assert.match(workspace, /Buang perubahan\?/);
+  assert.match(workspace, /Perubahan produk yang belum disimpan akan hilang/);
   assert.match(workspace, /Lanjut mengedit/);
   assert.match(workspace, /Buang perubahan/);
   assert.match(source, /focusFirstProductError/);

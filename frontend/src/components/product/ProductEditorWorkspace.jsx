@@ -49,7 +49,7 @@ export default function ProductEditorWorkspace({
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-surface text-text">
-      <header className="sticky top-0 z-20 shrink-0 bg-surface/92 px-4 pb-4 pt-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78 motion-reduce:backdrop-blur-none sm:px-6">
+      <header className="product-editor-material sticky top-0 z-20 shrink-0 bg-surface/92 px-4 pb-4 pt-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78 sm:px-6">
         <div className="mx-auto w-full max-w-7xl">
           <div className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <button
@@ -85,7 +85,7 @@ export default function ProductEditorWorkspace({
         {discardConfirmOpen ? (
           <section className="mx-auto grid min-h-full w-full max-w-xl content-center gap-1 py-8" role="alert" aria-labelledby="discard-product-title">
             <h2 id="discard-product-title" ref={headingRef} tabIndex={-1} className="text-sm font-semibold outline-none">Buang perubahan?</h2>
-            <p className="max-w-md text-sm leading-6 text-text-muted">Perubahan variasi yang belum disimpan akan hilang.</p>
+            <p className="max-w-md text-sm leading-6 text-text-muted">Perubahan produk yang belum disimpan akan hilang.</p>
           </section>
         ) : (
           <form id="product-form" noValidate onSubmit={onSubmit} className="grid text-text">
@@ -101,16 +101,6 @@ export default function ProductEditorWorkspace({
                     required: true,
                     disabled: savingProduct,
                   }}
-                />
-
-                <ProductPhotoField
-                  product={{ ...editing, image: editing.removeImage ? "" : editing.image }}
-                  previewURL={photoPreviewURL}
-                  filename={editing.imageFile?.name}
-                  error={productErrors.image}
-                  disabled={savingProduct}
-                  onSelect={onSelectPhoto}
-                  onRemove={onRemovePhoto}
                 />
 
                 <div className="grid gap-2">
@@ -195,6 +185,16 @@ export default function ProductEditorWorkspace({
                   error={productErrors.unitId}
                 />
 
+                <ProductPhotoField
+                  product={{ ...editing, image: editing.removeImage ? "" : editing.image }}
+                  previewURL={photoPreviewURL}
+                  filename={editing.imageFile?.name}
+                  error={productErrors.image}
+                  disabled={savingProduct}
+                  onSelect={onSelectPhoto}
+                  onRemove={onRemovePhoto}
+                />
+
                 <div className="flex items-center justify-between gap-3 rounded-panel border border-border bg-surface-muted/40 p-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-text">
@@ -248,7 +248,7 @@ export default function ProductEditorWorkspace({
         )}
       </main>
 
-      <footer className="sticky bottom-0 z-20 shrink-0 bg-surface/94 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/82 motion-reduce:backdrop-blur-none sm:px-6 sm:pb-4">
+      <footer className="product-editor-material sticky bottom-0 z-20 shrink-0 bg-surface/94 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/82 sm:px-6 sm:pb-4">
         <div className="mx-auto flex w-full max-w-7xl justify-end gap-2">
           {discardConfirmOpen ? (
             <>

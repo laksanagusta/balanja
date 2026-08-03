@@ -130,23 +130,23 @@
     animation: transaction-receipt-scrim-out 160ms var(--ease-standard) both;
   }
 
-  .transaction-receipt-paper::before,
-  .transaction-receipt-paper::after {
+  .transaction-receipt-paper-frame::before,
+  .transaction-receipt-paper-frame::after {
     position: absolute;
     z-index: 2;
     inset-inline: 0;
     block-size: 6px;
-    background: var(--color-surface-muted);
-    clip-path: polygon(0 0, 1.5% 100%, 3% 0, 4.5% 100%, 6% 0, 7.5% 100%, 9% 0, 10.5% 100%, 12% 0, 13.5% 100%, 15% 0, 16.5% 100%, 18% 0, 19.5% 100%, 21% 0, 22.5% 100%, 24% 0, 25.5% 100%, 27% 0, 28.5% 100%, 30% 0, 31.5% 100%, 33% 0, 34.5% 100%, 36% 0, 37.5% 100%, 39% 0, 40.5% 100%, 42% 0, 43.5% 100%, 45% 0, 46.5% 100%, 48% 0, 49.5% 100%, 51% 0, 52.5% 100%, 54% 0, 55.5% 100%, 57% 0, 58.5% 100%, 60% 0, 61.5% 100%, 63% 0, 64.5% 100%, 66% 0, 67.5% 100%, 69% 0, 70.5% 100%, 72% 0, 73.5% 100%, 75% 0, 76.5% 100%, 78% 0, 79.5% 100%, 81% 0, 82.5% 100%, 84% 0, 85.5% 100%, 87% 0, 88.5% 100%, 90% 0, 91.5% 100%, 93% 0, 94.5% 100%, 96% 0, 97.5% 100%, 99% 0, 100% 0);
+    background: transparent;
+    clip-path: polygon(0 0, 2% 100%, 4% 0, 6% 100%, 8% 0, 10% 100%, 12% 0, 14% 100%, 16% 0, 18% 100%, 20% 0, 22% 100%, 24% 0, 26% 100%, 28% 0, 30% 100%, 32% 0, 34% 100%, 36% 0, 38% 100%, 40% 0, 42% 100%, 44% 0, 46% 100%, 48% 0, 50% 100%, 52% 0, 54% 100%, 56% 0, 58% 100%, 60% 0, 62% 100%, 64% 0, 66% 100%, 68% 0, 70% 100%, 72% 0, 74% 100%, 76% 0, 78% 100%, 80% 0, 82% 100%, 84% 0, 86% 100%, 88% 0, 90% 100%, 92% 0, 94% 100%, 96% 0, 98% 100%, 100% 0);
     content: "";
     pointer-events: none;
   }
 
-  .transaction-receipt-paper::before {
+  .transaction-receipt-paper-frame::before {
     inset-block-start: 0;
   }
 
-  .transaction-receipt-paper::after {
+  .transaction-receipt-paper-frame::after {
     inset-block-end: 0;
     transform: rotate(180deg);
   }
@@ -918,6 +918,40 @@
     animation: marketing-reveal 420ms var(--ease-standard) both;
     animation-delay: var(--reveal-delay, 0ms);
   }
+
+  .landing-hero-mockup {
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+  }
+
+  .landing-feature-mockup-frame {
+    display: grid;
+    block-size: 100%;
+    place-items: start center;
+    overflow: hidden;
+    padding: 1rem;
+    background: transparent;
+    border-radius: 1.75rem;
+  }
+
+  .landing-feature-visual-frame {
+    block-size: 100%;
+    padding: 1rem;
+  }
+
+  .landing-feature-mockup-surface {
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 1.5rem;
+  }
+
+  .landing-feature-mockup-surface > [aria-hidden="true"] {
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: none !important;
+  }
 }
 
 .public-header .header-compact-action-surface {
@@ -925,6 +959,12 @@
 }
 
 @media (prefers-reduced-transparency: reduce) {
+  .product-editor-material {
+    background: var(--color-surface) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   .overlay-scrim {
     background: rgb(255 255 255 / 0.9);
     backdrop-filter: none;
@@ -1210,6 +1250,11 @@
   animation: variant-popover-in var(--duration-fast) var(--ease-standard);
 }
 
+.variant-popover-exit {
+  transform-origin: top right;
+  animation: variant-popover-out var(--duration-fast) var(--ease-standard) forwards;
+}
+
 @keyframes variant-popover-in {
   from {
     transform: scale(0.96);
@@ -1218,6 +1263,17 @@
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes variant-popover-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.96);
+    opacity: 0;
   }
 }
 
@@ -1239,6 +1295,26 @@
   transition-delay: 0s;
 }
 
+.attribute-field-crossfade {
+  display: grid;
+}
+
+.attribute-field-state {
+  grid-area: 1 / 1;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity var(--duration-fast) var(--ease-standard), visibility 0s linear var(--duration-fast);
+}
+
+.attribute-field-state.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
 .variant-token-in {
   animation: variant-token-in var(--duration-fast) var(--ease-standard);
 }
@@ -1254,21 +1330,6 @@
   }
 }
 
-.variant-token-out {
-  animation: variant-token-out var(--duration-fast) var(--ease-standard) forwards;
-}
-
-@keyframes variant-token-out {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.75);
-  }
-}
-
 .attribute-row-enter {
   animation: attribute-row-in var(--duration-slow) var(--ease-standard);
 }
@@ -1281,21 +1342,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-.attribute-row-exit {
-  animation: attribute-row-out var(--duration-slow) var(--ease-standard) forwards;
-}
-
-@keyframes attribute-row-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-14px);
   }
 }
 
@@ -1333,26 +1379,29 @@
     animation: none !important;
   }
 
+  .variant-popover-exit {
+    animation: none !important;
+    opacity: 0;
+  }
+
   .variant-panel {
     transition: none;
   }
 
-  .variant-token-in,
-  .variant-token-out {
+  .attribute-field-state {
+    transition: opacity 120ms linear, visibility 0s linear 120ms;
+  }
+
+  .attribute-field-state.is-active {
+    transition-delay: 0s;
+  }
+
+  .variant-token-in {
     animation: none !important;
   }
 
-  .variant-token-out {
-    opacity: 0;
-  }
-
-  .attribute-row-enter,
-  .attribute-row-exit {
+  .attribute-row-enter {
     animation: none !important;
-  }
-
-  .attribute-row-exit {
-    opacity: 0;
   }
 
   .pos-filter-drawer,
@@ -1617,51 +1666,5 @@
   textarea,
   select {
     font-size: 16px;
-  }
-}
-
-@media print {
-  body.printing-receipt > * {
-    visibility: hidden !important;
-  }
-
-  body.printing-receipt .transaction-detail-drawer,
-  body.printing-receipt .transaction-detail-drawer * {
-    visibility: visible !important;
-  }
-
-  body.printing-receipt .transaction-detail-drawer {
-    position: static !important;
-    inset: auto !important;
-    width: 80mm !important;
-    height: auto !important;
-    max-height: none !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    animation: none !important;
-  }
-
-  body.printing-receipt .transaction-detail-drawer-overlay,
-  body.printing-receipt .transaction-receipt-controls,
-  body.printing-receipt .transaction-receipt-handle {
-    display: none !important;
-  }
-
-  body.printing-receipt .transaction-receipt-paper {
-    min-height: auto !important;
-    overflow: visible !important;
-    border-radius: 0 !important;
-  }
-
-  body.printing-receipt .transaction-receipt-paper::before,
-  body.printing-receipt .transaction-receipt-paper::after {
-    display: none !important;
-  }
-
-  body.printing-receipt .transaction-receipt-scroll {
-    overflow: visible !important;
-    max-height: none !important;
   }
 }
