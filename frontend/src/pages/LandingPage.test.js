@@ -15,6 +15,7 @@ test("landing content covers verified retail workflows", () => {
       "Scan barcode, kurangi salah pilih",
     ],
   );
+  assert.deepEqual(features.map((feature) => feature.row), ["lead", "lead", "supporting", "supporting", "supporting"]);
   assert.equal(faqs.length, 6);
 });
 
@@ -70,6 +71,24 @@ test("hero uses the faithful POS mockup over the generated retail image", async 
   assert.match(mockup, /Selesaikan transaksi/);
   assert.match(page, /rounded-panel pt-12 sm:pt-16/);
   assert.match(page, /rounded-t-panel bg-white\/25 px-2 pt-2/);
+  assert.match(page, /min-h-\[24rem\]/);
+  assert.match(page, /h-\[15rem\]/);
+  assert.match(page, /min-h-0 px-5 pb-6 pt-4/);
+  assert.match(page, /landing-feature-visual-frame/);
+  assert.match(page, /function FeatureCard/);
+  assert.match(page, /row === "lead"/);
+  assert.match(page, /row === "supporting"/);
+  assert.match(page, /landing-feature-mockup-frame/);
+  assert.match(page, /landing-feature-mockup-surface/);
+  assert.match(page, /<PosProductMockup compact \/>/);
+  assert.match(page, /feature\.size === "wide" \? "lg:col-span-8" : "lg:col-span-4"/);
+  assert.match(page, /grid-rows-\[22rem_auto\]/);
+  assert.match(page, /feature\.row === "lead" \? "grid-rows-\[22rem_auto\]"/);
+  assert.match(page, /feature\.row === "lead" \? "h-\[22rem\]"/);
+  assert.match(page, /grid min-h-0 grid-rows-5/);
+  assert.doesNotMatch(page, /grid h-full grid-rows-\[minmax\(12rem,1fr\)_auto\]/);
+  assert.match(mockup, /cropBottom = false/);
+  assert.match(mockup, /landing-hero-mockup/);
   assert.match(mockup, /visibleProducts = products\.slice\(0, 4\)/);
   assert.match(mockup, /compact \? "" : "flex-wrap"/);
   assert.match(mockup, /h-\[360px\] sm:h-\[470px\] lg:h-\[520px\]/);
@@ -79,18 +98,35 @@ test("hero uses the faithful POS mockup over the generated retail image", async 
 test("compact POS feature mockup is a complete centered frame", async () => {
   const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
   const showcase = await readFile(new URL("../components/design/MarketingPatternsShowcase.jsx", import.meta.url), "utf8");
   const design = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
-  assert.match(page, /grid h-full place-items-center p-4/);
-  assert.match(mockup, /mx-auto w-full max-w-\[34rem\] rounded-card/);
+  assert.match(page, /landing-feature-mockup-frame/);
+  assert.match(mockup, /mx-auto grid h-full w-full max-w-\[34rem\] grid-rows-\[auto_minmax\(0,1fr\)\] rounded-card/);
   assert.match(mockup, /visibleProducts = products\.slice\(0, 4\)/);
   assert.match(mockup, /compact \? categories\.slice\(0, 3\) : categories/);
   assert.doesNotMatch(mockup, /compact \? "h-\[280px\]"/);
   assert.match(mockup, /compact \? "relative" : "absolute inset-x-0 bottom-0 lg:hidden"/);
   assert.match(mockup, /compact \? "hidden" : "hidden lg:flex"/);
-  assert.match(showcase, /grid min-h-48 place-items-center rounded-panel bg-surface-muted p-4/);
-  assert.match(design, /hero retains its established responsive preview heights of 360px, 470px, and 520px/);
+  assert.match(mockup, /!compact && \(/);
+  assert.match(mockup, /smooth-shadow-ring shadow-black smooth-ring-neutral-300\/30/);
+  assert.match(page, /smooth-shadow-ring shadow-black smooth-ring-neutral-300\/30/);
+  const featureFrameRuleStart = css.indexOf('.landing-feature-mockup-surface > [aria-hidden="true"]');
+  const featureFrameRule = css.slice(featureFrameRuleStart, css.indexOf("\n  }", featureFrameRuleStart));
+  assert.match(css, /\.landing-feature-mockup-frame[\s\S]*padding: 1rem;[\s\S]*background: transparent;/);
+  assert.match(css, /\.landing-feature-mockup-frame[\s\S]*border-radius: 1\.75rem;/);
+  assert.match(css, /\.landing-feature-mockup-surface[\s\S]*background: var\(--color-surface\);[\s\S]*border: 1px solid var\(--color-border\);[\s\S]*border-radius: 1\.5rem;/);
+  assert.match(css, /\.landing-feature-mockup-surface[\s\S]*block-size: 100%;/);
+  assert.match(mockup, /relative flex min-h-0/);
+  assert.match(mockup, /min-h-0 min-w-0 flex-1 overflow-hidden bg-app-bg/);
+  assert.match(featureFrameRule, /inline-size: 100%/);
+  assert.doesNotMatch(featureFrameRule, /transform: scale/);
+  assert.match(showcase, /grid min-h-48 place-items-center rounded-panel bg-surface p-4/);
+  assert.match(showcase, /landing-feature-mockup-frame/);
+  assert.match(showcase, /landing-feature-mockup-surface/);
+  assert.match(design, /POS feature visual area stays white/);
+  assert.match(design, /bounded grid and clip internal content/);
 });
 
 test("POS mockup uses neutral placeholders instead of product photos", async () => {
@@ -209,7 +245,7 @@ test("landing keeps the retail backdrop while product items remain placeholders"
   const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
 
   assert.match(page, /hero-ascii-magic-5\.png/);
-  assert.match(page, /<PosProductMockup \/>/);
+  assert.match(page, /<PosProductMockup cropBottom \/>/);
   assert.doesNotMatch(mockup, /\bpriority\b/);
   assert.doesNotMatch(mockup, /<img\b/);
 });

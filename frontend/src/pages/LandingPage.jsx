@@ -10,8 +10,8 @@ import { ScrollReveal } from "../landing/ScrollReveal.jsx";
 function FeatureVisual({ type }) {
   if (type === "barcode") {
     return (
-      <div className="grid h-full content-center gap-3 p-5">
-        <div className="flex h-11 items-center gap-3 rounded-card border border-border bg-surface px-3 text-xs text-text-muted shadow-low">
+      <div aria-hidden="true" className="grid h-full content-center gap-3">
+        <div className="flex h-11 items-center gap-3 rounded-card bg-surface px-3 text-xs text-text-muted smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30">
           <Icon name="barcode" className="size-5 text-text" />
           <span className="flex-1">Scan barcode produk</span>
           <span className="rounded-control bg-accent px-2 py-1 font-semibold text-white">Pindai</span>
@@ -23,9 +23,9 @@ function FeatureVisual({ type }) {
 
   if (type === "dashboard") {
     return (
-      <div className="grid h-full content-center gap-3 p-4">
+      <div aria-hidden="true" className="grid h-full content-center gap-3">
         <div className="grid grid-cols-3 gap-2">
-          {["Rp4,8jt", "42", "117"].map((value) => <div key={value} className="rounded-control bg-surface p-2 font-mono text-xs font-semibold text-text shadow-low">{value}</div>)}
+          {["Rp4,8jt", "42", "117"].map((value) => <div key={value} className="rounded-control bg-surface p-2 font-mono text-xs font-semibold text-text smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30">{value}</div>)}
         </div>
         <svg viewBox="0 0 240 80" className="w-full overflow-visible text-success" fill="none" aria-hidden="true">
           <path d="M2 68C23 60 32 44 50 49s26 17 43 4 26-30 45-25 22 28 42 21 29-31 58-34" stroke="currentColor" strokeWidth="2" />
@@ -39,21 +39,23 @@ function FeatureVisual({ type }) {
     ? [["TRX-0814", "Rp62.000"], ["TRX-0813", "Rp148.000"], ["TRX-0812", "Rp37.500"]]
     : type === "stock"
       ? [["Kopi Susu", "+24"], ["Matcha Botol", "18"], ["Roti Bawang", "31"]]
-      : [["Kopi Susu", "Rp18.000"], ["Matcha Botol", "Rp22.000"], ["Roti Bawang", "Rp16.000"]];
+      : [["Kopi Susu", "Rp18.000"], ["Matcha Botol", "Rp22.000"], ["Roti Bawang", "Rp16.000"], ["Teh Botol 450ml", "Rp6.000"], ["Biskuit Cokelat", "Rp11.500"]];
 
   return (
-    <div className="grid h-full content-center p-4">
-      <div className="overflow-hidden rounded-card border border-border bg-surface shadow-low">
+    <div aria-hidden="true" className={`grid h-full ${type === "products" ? "" : "content-center"}`}>
+      <div className={`${type === "products" ? "grid h-full grid-rows-[auto_1fr]" : ""} overflow-hidden rounded-card bg-surface smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30`}>
         <div className="flex items-center gap-2 bg-surface-muted px-3 py-2 text-[10px] text-text-muted">
           <Icon name="search" className="size-3" />
           Cari {type === "transactions" ? "transaksi" : "produk"}
         </div>
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between px-3 py-2.5 text-[10px]">
-            <span className="font-semibold text-text">{label}</span>
-            <span className={type === "stock" && value.startsWith("+") ? "text-success" : "text-text-muted"}>{value}</span>
-          </div>
-        ))}
+        <div className={type === "products" ? "grid min-h-0 grid-rows-5" : ""}>
+          {rows.map(([label, value]) => (
+            <div key={label} className="flex items-center justify-between border-t border-border px-3 py-2.5 text-[10px]">
+              <span className="font-semibold text-text">{label}</span>
+              <span className={type === "stock" && value.startsWith("+") ? "text-success" : "text-text-muted"}>{value}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -77,8 +79,34 @@ function PublicHeader({ isSignedIn, onNavigate }) {
   );
 }
 
+function FeatureCard({ feature, delay = 0, className = "" }) {
+  return (
+    <ScrollReveal
+      as="article"
+      delay={delay}
+      className={`grid min-h-[24rem] ${feature.row === "lead" ? "grid-rows-[22rem_auto]" : "grid-rows-[15rem_auto]"} overflow-hidden rounded-panel bg-surface smooth-shadow-ring shadow-black smooth-ring-neutral-300/30 ${className}`}
+    >
+      <div className={`${feature.row === "lead" ? "h-[22rem]" : "h-[15rem]"} overflow-hidden bg-surface`}>
+        {feature.visual === "pos" ? (
+          <div className="landing-feature-mockup-frame">
+            <div className="landing-feature-mockup-surface"><PosProductMockup compact /></div>
+          </div>
+        ) : (
+          <div className="landing-feature-visual-frame"><FeatureVisual type={feature.visual} /></div>
+        )}
+      </div>
+      <div className="min-h-0 px-5 pb-6 pt-4">
+        <h3 className="text-base font-semibold text-text">{feature.title}</h3>
+        <p className="mt-2 text-sm leading-6 text-text-muted">{feature.description}</p>
+      </div>
+    </ScrollReveal>
+  );
+}
+
 export default function LandingPage({ isSignedIn, onNavigate }) {
   const openApp = () => onNavigate(isSignedIn ? routes.dashboard : routes.login);
+  const leadFeatures = features.filter((feature) => feature.row === "lead");
+  const supportingFeatures = features.filter((feature) => feature.row === "supporting");
 
   return (
     <div className="min-h-screen bg-surface text-text antialiased">
@@ -105,8 +133,8 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
             <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-5.png')" }} />
             <div aria-hidden="true" className="absolute inset-0 bg-accent/20" />
             <div className="relative px-3 pt-3 sm:px-10 lg:px-20">
-              <div className="rounded-t-panel bg-white/25 px-2 pt-2 shadow-[0_40px_100px_-40px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-                <PosProductMockup />
+              <div className="rounded-t-panel bg-white/25 px-2 pt-2 backdrop-blur-xl smooth-shadow-ring shadow-black smooth-ring-neutral-300/30">
+                <PosProductMockup cropBottom />
               </div>
             </div>
           </div>
@@ -120,37 +148,11 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
 
             <div className="mt-12 grid gap-4">
               <div className="grid gap-4 lg:grid-cols-12">
-                {features.slice(0, 2).map((feature, index) => (
-                  <ScrollReveal
-                    as="article"
-                    key={feature.title}
-                    delay={index * 60}
-                    className={`grid overflow-hidden rounded-panel border border-border bg-surface shadow-low ${index === 0 ? "lg:col-span-7" : "lg:col-span-5"}`}
-                  >
-                    <div className="min-h-48 bg-surface-muted">{feature.visual === "pos" ? <div className="grid h-full place-items-center p-4"><PosProductMockup compact /></div> : <FeatureVisual type={feature.visual} />}</div>
-                    <div className="p-4">
-                      <h3 className="text-base font-semibold text-text">{feature.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-text-muted">{feature.description}</p>
-                    </div>
-                  </ScrollReveal>
-                ))}
+                {leadFeatures.map((feature, index) => <FeatureCard key={feature.title} feature={feature} delay={index * 60} className={feature.size === "wide" ? "lg:col-span-8" : "lg:col-span-4"} />)}
               </div>
 
               <div className="grid gap-4 lg:grid-cols-3">
-                {features.slice(2).map((feature, index) => (
-                  <ScrollReveal
-                    as="article"
-                    key={feature.title}
-                    delay={(index + 2) * 60}
-                    className="grid overflow-hidden rounded-panel border border-border bg-surface shadow-low"
-                  >
-                    <div className="min-h-48 bg-surface-muted">{feature.visual === "pos" ? <div className="grid h-full place-items-center p-4"><PosProductMockup compact /></div> : <FeatureVisual type={feature.visual} />}</div>
-                    <div className="p-4">
-                      <h3 className="text-base font-semibold text-text">{feature.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-text-muted">{feature.description}</p>
-                    </div>
-                  </ScrollReveal>
-                ))}
+                {supportingFeatures.map((feature, index) => <FeatureCard key={feature.title} feature={feature} delay={(index + leadFeatures.length) * 60} />)}
               </div>
             </div>
           </div>
@@ -166,7 +168,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
                 {workflowPoints.map((point) => <li key={point} className="flex items-start gap-3 text-sm leading-6 text-text-muted"><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent text-white"><Icon name="check" className="size-3" /></span>{point}</li>)}
               </ul>
             </div>
-            <div className="overflow-hidden rounded-panel border border-border bg-surface p-3 shadow-panel">
+            <div className="overflow-hidden rounded-panel bg-surface p-3 smooth-shadow-ring shadow-black smooth-ring-neutral-300/30">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {["Penjualan", "Transaksi", "Produk terjual", "Stok menipis"].map((label, index) => <ScrollReveal key={label} delay={index * 60} className="rounded-card bg-surface-muted p-3"><p className="text-[10px] text-text-muted">{label}</p><p className="mt-2 font-mono text-lg font-semibold text-text">{["Rp4,8jt", "42", "117", "6"][index]}</p></ScrollReveal>)}
               </div>

@@ -37,7 +37,7 @@ test("transaction history uses full-width cards with amount-first hierarchy", as
   assert.doesNotMatch(source, /DataTable|<table/);
 });
 
-test("transaction detail uses a centered receipt drawer with print action", async () => {
+test("transaction detail uses a centered receipt drawer without print action", async () => {
   const [page, source, styles] = await Promise.all([
     readFile(new URL("../../pages/TransactionsPage.jsx", import.meta.url), "utf8"),
     readFile(new URL("./TransactionReceiptDrawer.jsx", import.meta.url), "utf8"),
@@ -57,9 +57,9 @@ test("transaction detail uses a centered receipt drawer with print action", asyn
   assert.match(source, /font-mono text-sm font-semibold tracking-\[0\.24em\]/);
   assert.match(source, /grid gap-3 font-mono text-sm/);
   assert.match(source, /grid gap-2 font-mono text-sm/);
-  assert.match(source, /compactVisual onClick=\{printReceipt\}/);
-  assert.match(source, /onClick=\{printReceipt\}/);
-  assert.match(source, />\s*Cetak struk\s*</);
+  assert.doesNotMatch(source, /printReceipt|Cetak struk|printing-receipt/);
+  assert.match(source, /transaction-receipt-paper-frame relative min-h-0 flex-1/);
+  assert.match(source, /transaction-receipt-paper relative h-full min-h-0 overflow-hidden rounded-card bg-surface/);
   assert.match(source, /if \(!transaction\) return null/);
   assert.doesNotMatch(source, /ui-button-mobile-hit-area/);
   assert.doesNotMatch(source, /transaction-receipt-qr/);
@@ -69,7 +69,8 @@ test("transaction detail uses a centered receipt drawer with print action", asyn
   assert.ok(paperStart >= 0 && paperEnd > paperStart);
   assert.doesNotMatch(source.slice(paperStart, paperEnd), /transaction-receipt-controls|transaction-receipt-handle/);
   assert.match(styles, /@keyframes transaction-receipt-open/);
-  assert.match(styles, /transaction-receipt-paper::before,[\s\S]*block-size: 6px/);
+  assert.match(styles, /transaction-receipt-paper-frame::before,[\s\S]*block-size: 6px/);
+  assert.match(styles, /clip-path: polygon\(0 0, 2% 100%,[\s\S]*98% 100%, 100% 0\)/);
   assert.match(styles, /transaction-detail-drawer\[data-state="open"\][\s\S]*transaction-receipt-open/);
   assert.doesNotMatch(source, /mt-4 grid gap-4/);
   assert.doesNotMatch(source, /<Dialog/);

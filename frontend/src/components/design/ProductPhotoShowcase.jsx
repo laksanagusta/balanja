@@ -23,6 +23,7 @@ export default function ProductPhotoShowcase() {
       <p className="mb-3 max-w-2xl text-sm leading-6 text-text-muted">
         Field foto memakai satu area unggah besar dengan garis putus-putus, ikon kamera, instruksi utama, dan helper
         format agar mudah dikenali dan disentuh. Setelah dipilih, preview dan aksi ganti tetap berada di area yang sama.
+        Di editor produk, field ini ditempatkan setelah informasi operasional agar input berulang tetap cepat.
         Upload menerima satu JPG, PNG, atau WebP hingga 5 MB dan backend menyimpan hasil kompresi maksimal 200 KB. Foto
         tersimpan dimuat lewat endpoint first-party aplikasi dengan cache immutable, bukan langsung melalui endpoint
         development R2. Kegagalan sementara tetap menampilkan placeholder netral selama retry bertahap.

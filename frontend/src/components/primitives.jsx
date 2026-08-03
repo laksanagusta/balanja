@@ -15,11 +15,8 @@ import {
   CameraIcon,
   Cog6ToothIcon,
   CubeIcon,
-  DocumentTextIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
-  FunnelIcon,
-  HomeIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
   MinusIcon,
@@ -140,10 +137,43 @@ function PanelLeftIcon({ className }) {
   );
 }
 
+function HomeGlyph({ className }) {
+  return (
+    <svg aria-hidden="true" className={className} fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9.07874 16.1354H14.8937" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path clipRule="evenodd" d="M2.40002 13.713C2.40002 8.082 3.01402 8.475 6.31902 5.41C7.76502 4.246 10.015 2 11.958 2C13.9 2 16.195 4.235 17.654 5.41C20.959 8.475 21.572 8.082 21.572 13.713C21.572 22 19.613 22 11.986 22C4.35903 22 2.40002 22 2.40002 13.713Z" fillRule="evenodd" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function DocumentGlyph({ className }) {
+  return (
+    <svg aria-hidden="true" className={className} fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" transform="translate(3 2)">
+        <line x1="12.7162" x2="5.4962" y1="14.2234" y2="14.2234" />
+        <line x1="12.7162" x2="5.4962" y1="10.0369" y2="10.0369" />
+        <line x1="8.2513" x2="5.4963" y1="5.8601" y2="5.8601" />
+        <path d="M12.9086,0.7498 C12.9086,0.7498 5.2316,0.7538 5.2196,0.7538 C2.4596,0.7708 0.7506,2.5868 0.7506,5.3568 L0.7506,14.5528 C0.7506,17.3368 2.4726,19.1598 5.2566,19.1598 C5.2566,19.1598 12.9326,19.1568 12.9456,19.1568 C15.7056,19.1398 17.4156,17.3228 17.4156,14.5528 L17.4156,5.3568 C17.4156,2.5728 15.6926,0.7498 12.9086,0.7498 Z" />
+      </g>
+    </svg>
+  );
+}
+
+function FilterGlyph({ className }) {
+  return (
+    <svg aria-hidden="true" className={className} fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11.1437 17.8828H4.67114" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path clipRule="evenodd" d="M15.205 17.8837C15.205 19.9254 15.8859 20.6054 17.9267 20.6054C19.9676 20.6054 20.6485 19.9254 20.6485 17.8837C20.6485 15.8419 19.9676 15.1619 17.9267 15.1619C15.8859 15.1619 15.205 15.8419 15.205 17.8837Z" fillRule="evenodd" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path d="M14.1765 7.39415H20.6481" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path clipRule="evenodd" d="M10.1153 7.39281C10.1153 5.35192 9.43436 4.67102 7.39346 4.67102C5.35167 4.67102 4.67078 5.35192 4.67078 7.39281C4.67078 9.4346 5.35167 10.1146 7.39346 10.1146C9.43436 10.1146 10.1153 9.4346 10.1153 7.39281Z" fillRule="evenodd" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 const heroIcons = {
   grid: Squares2X2Icon,
   sidebar: PanelLeftIcon,
-  home: HomeIcon,
+  home: HomeGlyph,
   receipt: ReceiptPercentIcon,
   bag: ShoppingBagIcon,
   cart: ShoppingCartIcon,
@@ -156,7 +186,7 @@ const heroIcons = {
   menu: Bars3Icon,
   users: UsersIcon,
   search: MagnifyingGlassIcon,
-  filter: FunnelIcon,
+  filter: FilterGlyph,
   eye: EyeIcon,
   trash: TrashIcon,
   settings: Cog6ToothIcon,
@@ -166,7 +196,7 @@ const heroIcons = {
   "chevron-left": ChevronLeftIcon,
   plus: PlusIcon,
   minus: MinusIcon,
-  file: DocumentTextIcon,
+  file: DocumentGlyph,
   image: PhotoIcon,
   camera: CameraIcon,
   cash: BanknotesIcon,

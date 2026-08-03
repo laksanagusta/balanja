@@ -10,30 +10,35 @@ export const features = [
     description: "Cari atau pindai produk, atur jumlah, pilih pembayaran, lalu selesaikan penjualan dari satu layar kasir.",
     visual: "pos",
     size: "wide",
+    row: "lead",
   },
   {
     title: "Katalog yang mudah dirapikan",
     description: "Simpan nama, kategori, harga, barcode, dan status produk agar kasir selalu memakai informasi yang sama.",
     visual: "products",
     size: "standard",
+    row: "lead",
   },
   {
     title: "Temukan transaksi saat dibutuhkan",
     description: "Cari kembali transaksi berdasarkan nomor, metode pembayaran, atau tanggal tanpa membongkar catatan terpisah.",
     visual: "transactions",
     size: "standard",
+    row: "supporting",
   },
   {
     title: "Lihat kondisi toko sekilas",
     description: "Baca ringkasan penjualan dan stok menipis dari transaksi yang sudah selesai agar langkah berikutnya lebih jelas.",
     visual: "dashboard",
     size: "standard",
+    row: "supporting",
   },
   {
     title: "Scan barcode, kurangi salah pilih",
     description: "Tambahkan produk yang tepat ke keranjang langsung dari barcode saat antrean sedang berjalan.",
     visual: "barcode",
     size: "standard",
+    row: "supporting",
   },
 ];
 
