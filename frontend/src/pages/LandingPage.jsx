@@ -50,7 +50,7 @@ function FeatureVisual({ type }) {
         </div>
         <div className={type === "products" ? "grid min-h-0 grid-rows-5" : ""}>
           {rows.map(([label, value]) => (
-            <div key={label} className="flex items-center justify-between border-t border-border px-3 py-2.5 text-[10px]">
+            <div key={label} className="flex items-center justify-between px-3 py-2.5 text-[10px]">
               <span className="font-semibold text-text">{label}</span>
               <span className={type === "stock" && value.startsWith("+") ? "text-success" : "text-text-muted"}>{value}</span>
             </div>
