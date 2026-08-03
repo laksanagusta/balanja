@@ -30,7 +30,7 @@ export default function MarketingPatternsShowcase() {
 
         <div className="w-full px-4 sm:px-6">
           <div className="relative mx-auto max-w-6xl overflow-hidden rounded-panel pt-10 sm:pt-14">
-            <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-5.png')" }} />
+            <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-6.png')" }} />
             <div aria-hidden="true" className="absolute inset-0 bg-accent/20" />
             <div className="relative px-3 sm:px-10 lg:px-20">
               <div className="rounded-t-panel bg-white/25 px-2 pt-2 backdrop-blur-xl">

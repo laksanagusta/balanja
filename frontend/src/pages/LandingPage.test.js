@@ -63,7 +63,7 @@ test("hero uses the faithful POS mockup over the generated retail image", async 
   const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
 
-  assert.match(page, /hero-ascii-magic-5\.png/);
+  assert.match(page, /hero-ascii-magic-6\.png/);
   assert.match(page, /<PosProductMockup/);
   assert.match(mockup, /Kasir/);
   assert.match(mockup, /Cari produk atau barcode/);
@@ -244,7 +244,7 @@ test("landing keeps the retail backdrop while product items remain placeholders"
   const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
 
-  assert.match(page, /hero-ascii-magic-5\.png/);
+  assert.match(page, /hero-ascii-magic-6\.png/);
   assert.match(page, /<PosProductMockup cropBottom \/>/);
   assert.doesNotMatch(mockup, /\bpriority\b/);
   assert.doesNotMatch(mockup, /<img\b/);
