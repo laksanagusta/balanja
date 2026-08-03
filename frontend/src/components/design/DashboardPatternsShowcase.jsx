@@ -2,6 +2,7 @@ import React from "react";
 import DashboardKpiCard from "../dashboard/DashboardKpiCard.jsx";
 import { RevenueTrendPanel, TopProductsPanel } from "../dashboard/DashboardCharts.jsx";
 import LowStockPanel from "../dashboard/LowStockPanel.jsx";
+import SubscriptionCard from "../dashboard/SubscriptionCard.jsx";
 
 const revenueTrend = [82, 104, 96000, 128, 118, 151, 173].map((value, index) => ({
   date: new Date(2026, 6, 4 + index),
@@ -31,8 +32,9 @@ export default function DashboardPatternsShowcase() {
         <p className="text-sm leading-6 text-text-muted">
           Home menempatkan ringkasan, perhatian operasional, dan tindakan lanjutan dalam urutan yang jelas. Pendapatan memakai violet sebagai satu-satunya chart utama,
           produk terlaris memakai ranked list yang menampilkan unit dan nilai tepat, sedangkan analisis metode pembayaran tetap berada di Laporan Penjualan.
-          Nilai KPI tidak dipotong, dan stok habis selalu didahulukan dari stok menipis.
+          Nilai KPI tidak dipotong, stok habis selalu didahulukan dari stok menipis, dan paket Free memakai trigger compact dengan gradient lembut yang membuka detail Pro di bottom drawer. Drawer menjaga inset dan rhythm spacing yang konsisten, sementara fitur Pro berada dalam frame abu-abu yang terpisah.
         </p>
+        <SubscriptionCard preview />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="min-w-0 sm:col-span-2 xl:col-span-2">
             <DashboardKpiCard label="Pendapatan" value="Rp786.000" comparison={{ direction: "up", percent: 12.4 }} emphasis />

@@ -3,9 +3,11 @@ import { Button, Icon } from "../components/primitives.jsx";
 import { Logo, routes } from "../shared.jsx";
 import FaqSection from "../landing/FaqSection.jsx";
 import PosProductMockup from "../landing/PosProductMockup.jsx";
+import PricingSection from "../landing/PricingSection.jsx";
 import { features, navItems, workflowPoints } from "../landing/content.js";
 import { scrollToSectionRespectingMotion, scrollToTopRespectingMotion } from "../landing/motion.js";
 import { ScrollReveal } from "../landing/ScrollReveal.jsx";
+import { upgradeContacts } from "../entitlements/contact-links.js";
 
 function FeatureVisual({ type }) {
   if (type === "barcode") {
@@ -84,7 +86,7 @@ function FeatureCard({ feature, delay = 0, className = "" }) {
     <ScrollReveal
       as="article"
       delay={delay}
-      className={`grid min-h-[24rem] ${feature.row === "lead" ? "grid-rows-[22rem_auto]" : "grid-rows-[15rem_auto]"} overflow-hidden rounded-panel bg-surface smooth-shadow-ring shadow-black smooth-ring-neutral-300/30 ${className}`}
+      className={`grid min-h-[24rem] ${feature.row === "lead" ? "grid-rows-[22rem_auto]" : "grid-rows-[15rem_auto]"} overflow-hidden rounded-panel bg-surface smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30 ${className}`}
     >
       <div className={`${feature.row === "lead" ? "h-[22rem]" : "h-[15rem]"} overflow-hidden bg-surface`}>
         {feature.visual === "pos" ? (
@@ -105,6 +107,10 @@ function FeatureCard({ feature, delay = 0, className = "" }) {
 
 export default function LandingPage({ isSignedIn, onNavigate }) {
   const openApp = () => onNavigate(isSignedIn ? routes.dashboard : routes.login);
+  const pricingContacts = React.useMemo(() => upgradeContacts({
+    whatsapp: import.meta.env.VITE_UPGRADE_WHATSAPP_NUMBER,
+    email: import.meta.env.VITE_UPGRADE_EMAIL,
+  }), []);
   const leadFeatures = features.filter((feature) => feature.row === "lead");
   const supportingFeatures = features.filter((feature) => feature.row === "supporting");
 
@@ -119,7 +125,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
               Jualan rapi. Stok terkendali. <span className="text-text-subtle">Toko lebih tenang.</span>
             </h1>
             <p className="marketing-reveal mx-auto mt-6 max-w-2xl text-base leading-7 text-text-muted" style={{ "--reveal-delay": "110ms" }}>
-              Balanja menyatukan kasir, produk, stok, dan riwayat transaksi dalam satu alur sederhana—supaya Anda tahu apa yang terjual dan apa yang perlu diisi ulang.
+              Wipay menyatukan kasir, produk, stok, dan riwayat transaksi dalam satu alur sederhana—supaya Anda tahu apa yang terjual dan apa yang perlu diisi ulang.
             </p>
             <div className="marketing-reveal mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row" style={{ "--reveal-delay": "150ms" }}>
               <Button type="button" variant="primary" size="lg" onClick={openApp}>Mulai kelola toko</Button>
@@ -130,7 +136,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
 
         <section className="marketing-reveal w-full px-4 sm:px-6" style={{ "--reveal-delay": "180ms" }}>
           <div className="relative mx-auto max-w-6xl overflow-hidden rounded-panel pt-12 sm:pt-16">
-            <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-5.png')" }} />
+            <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-6.png')" }} />
             <div aria-hidden="true" className="absolute inset-0 bg-accent/20" />
             <div className="relative px-3 pt-3 sm:px-10 lg:px-20">
               <div className="rounded-t-panel bg-white/25 px-2 pt-2 backdrop-blur-xl smooth-shadow-ring shadow-black smooth-ring-neutral-300/30">
@@ -144,7 +150,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
           <div className="mx-auto max-w-6xl">
             <p className={eyebrowLabelClassName}>Operasional tanpa catatan terpencar</p>
             <h2 className="mt-4 max-w-3xl text-[38px] font-semibold leading-[1.02] tracking-[-0.04em] text-text sm:text-[52px]">Satu alur, bukan banyak catatan.</h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-text-muted">Saat penjualan, produk, stok, dan riwayat berada di tempat berbeda, keputusan jadi lambat. Balanja merapikannya dalam satu alur kerja yang mudah diikuti.</p>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-text-muted">Saat penjualan, produk, stok, dan riwayat berada di tempat berbeda, keputusan jadi lambat. Wipay merapikannya dalam satu alur kerja yang mudah diikuti.</p>
 
             <div className="mt-12 grid gap-4">
               <div className="grid gap-4 lg:grid-cols-12">
@@ -180,6 +186,8 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
           </div>
         </section>
 
+        <PricingSection contacts={pricingContacts} />
+
         <FaqSection />
 
         <section className="px-4 pt-2.5 pb-8 sm:px-6 sm:pt-3 sm:pb-10 lg:pt-3.5 lg:pb-12">
@@ -200,7 +208,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
             <div><Logo /><p className="mt-4 max-w-sm text-sm leading-6 text-text-muted">POS sederhana untuk UMKM retail yang ingin melayani pembeli, mengatur stok, dan memantau transaksi dari satu alur.</p></div>
             <div><p className={eyebrowLabelClassName}>Produk</p><div className="mt-2 grid">{navItems.map((item) => <a key={item.href} href={item.href} className="press-feedback inline-flex min-h-11 items-center text-sm text-text-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{item.label}</a>)}</div></div>
           </div>
-          <div className="mt-12 flex flex-col gap-2 border-t border-border pt-5 font-mono text-xs tracking-[0.08em] text-text-subtle sm:flex-row sm:items-center sm:justify-between"><span>© BALANJA · V0.1.4</span><span>BALANJA POS</span></div>
+          <div className="mt-12 flex flex-col gap-2 border-t border-border pt-5 font-mono text-xs tracking-[0.08em] text-text-subtle sm:flex-row sm:items-center sm:justify-between"><span>© WIPAY · V0.1.4</span><span>WIPAY POS</span></div>
         </div>
       </footer>
     </div>

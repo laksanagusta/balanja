@@ -1,9 +1,9 @@
 export const defaultSettings = {
-  storeName: "Toko Balanja",
+  storeName: "Toko Wipay",
   storeAddress: "Jl. UMKM No. 1",
   taxEnabled: false,
   taxRate: 11,
-  qrisLabel: "QRIS Toko Balanja",
+  qrisLabel: "QRIS Toko Wipay",
 };
 
 export const retailCategories = ["Semua", "Sembako", "Minuman", "Snack", "Perawatan", "Rumah Tangga"];

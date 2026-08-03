@@ -38,18 +38,18 @@ test("outer app shell stays shadow-free and has no desktop sidebar", async () =>
   assert.doesNotMatch(source, /<section[^>]+shadow-panel/);
 });
 
-test("app shell names the active module while keeping Balanja on home", async () => {
+test("app shell names the active module while keeping Wipay on home", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /\[routes\.dashboard\]: "Balanja"/);
+  assert.match(source, /\[routes\.dashboard\]: "Wipay"/);
   assert.match(source, /\[routes\.pos\]: "Kasir"/);
   assert.match(source, /\[routes\.products\]: "Produk"/);
   assert.match(source, /\[routes\.stock\]: "Stok"/);
   assert.match(source, /\[routes\.transactions\]: "Transaksi"/);
   assert.match(source, /\[routes\.reportsSales\]: "Laporan Penjualan"/);
   assert.match(source, /\[routes\.settings\]: "Pengaturan"/);
-  assert.match(source, /const pageTitle = appPageTitles\[pathname\] \|\| "Balanja"/);
-  assert.match(source, /pageTitle === "Balanja" \? "font-sora font-bold" : "font-extrabold"/);
+  assert.match(source, /const pageTitle = appPageTitles\[pathname\] \|\| "Wipay"/);
+  assert.match(source, /pageTitle === "Wipay" \? "font-sora font-bold" : "font-extrabold"/);
   assert.match(source, /\{pageTitle\}/);
   assert.match(source, /mobile-app-bar[^"]*px-4/);
   assert.match(source, /mobilePrimaryNavigation/);

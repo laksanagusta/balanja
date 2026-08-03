@@ -38,7 +38,7 @@ export default function NavigationPatternsShowcase() {
           </div>
           <div className="rounded-card border border-border bg-surface-muted p-4 sm:col-span-2">
             <p className="text-sm font-semibold text-text">One mobile-first app composition</p>
-            <p className="mt-1 text-sm leading-6 text-text-muted">The top bar names the active module and uses Balanja only on Beranda. Its 16px edges align with page content; all five destinations retain at least a 44px hit target.</p>
+            <p className="mt-1 text-sm leading-6 text-text-muted">The top bar names the active module and uses Wipay only on Beranda. Its 16px edges align with page content; all five destinations retain at least a 44px hit target.</p>
             <div className="relative mt-4 max-w-sm overflow-hidden rounded-panel border border-border bg-app-bg shadow-low">
               <div className="flex min-h-16 items-center justify-between bg-surface px-4 py-2">
                 <span className="text-lg font-extrabold tracking-normal text-text">Produk</span>

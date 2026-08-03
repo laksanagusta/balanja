@@ -1,6 +1,7 @@
 export const navItems = [
   { label: "Fitur", href: "#fitur" },
   { label: "Cara kerja", href: "#cara-kerja" },
+  { label: "Harga", href: "#harga" },
   { label: "FAQ", href: "#faq" },
 ];
 
@@ -50,12 +51,12 @@ export const workflowPoints = [
 
 export const faqs = [
   {
-    question: "Apakah Balanja cocok untuk toko kecil?",
+    question: "Apakah Wipay cocok untuk toko kecil?",
     answer:
-      "Ya. Balanja dirancang untuk UMKM retail yang membutuhkan kasir, katalog produk, pencatatan stok, dan riwayat transaksi dalam satu aplikasi yang mudah dipakai.",
+      "Ya. Wipay dirancang untuk UMKM retail yang membutuhkan kasir, katalog produk, pencatatan stok, dan riwayat transaksi dalam satu aplikasi yang mudah dipakai.",
   },
   {
-    question: "Apakah Balanja mendukung pemindaian barcode?",
+    question: "Apakah Wipay mendukung pemindaian barcode?",
     answer:
       "Ya. Kasir dapat memindai barcode untuk mencari produk dan menambahkannya ke keranjang. Barcode yang belum dikenal dapat dilanjutkan ke alur penambahan produk.",
   },
@@ -72,11 +73,11 @@ export const faqs = [
   {
     question: "Perangkat apa yang dapat digunakan?",
     answer:
-      "Balanja berjalan sebagai aplikasi web responsif di komputer, tablet, dan smartphone modern. Untuk sesi kasir yang panjang, layar yang lebih besar tetap memberi ruang kerja yang lebih nyaman.",
+      "Wipay berjalan sebagai aplikasi web responsif di komputer, tablet, dan smartphone modern. Untuk sesi kasir yang panjang, layar yang lebih besar tetap memberi ruang kerja yang lebih nyaman.",
   },
   {
-    question: "Bagaimana cara mulai menggunakan Balanja?",
+    question: "Bagaimana cara mulai menggunakan Wipay?",
     answer:
-      "Masuk ke aplikasi, siapkan produk dan stok awal, lalu buka layar Kasir untuk mencatat penjualan pertama.",
+      "Masuk ke aplikasi, siapkan produk dan stok awal, lalu buka layar Kasir untuk mencatat penjualan pertama di Wipay.",
   },
 ];

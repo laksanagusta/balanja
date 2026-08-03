@@ -23,7 +23,7 @@ const mobileMoreNavigation = [
   ["Laporan Penjualan", "file", routes.reportsSales],
 ];
 const appPageTitles = {
-  [routes.dashboard]: "Balanja",
+  [routes.dashboard]: "Wipay",
   [routes.pos]: "Kasir",
   [routes.products]: "Produk",
   [routes.stock]: "Stok",
@@ -276,7 +276,7 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
   const contentRef = React.useRef(null);
   const bottomNavigationRef = React.useRef(null);
   const avatarSeed = user?.primaryEmailAddress?.emailAddress || user?.fullName || user?.id || "cashier";
-  const pageTitle = appPageTitles[pathname] || "Balanja";
+  const pageTitle = appPageTitles[pathname] || "Wipay";
 
   useCollapsibleBottomNavigation({
     contentRef,
@@ -333,10 +333,10 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
         <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-surface">
           {!immersive && <header className="mobile-app-bar shrink-0 bg-surface px-4 pb-3">
             <div className="flex min-h-14 items-center justify-between">
-              <h1 className={`min-w-0 truncate text-lg tracking-normal text-text ${pageTitle === "Balanja" ? "font-sora font-bold" : "font-extrabold"}`}>
+              <h1 className={`min-w-0 truncate text-lg tracking-normal text-text ${pageTitle === "Wipay" ? "font-sora font-bold" : "font-extrabold"}`}>
                 {pageTitle}
               </h1>
-              <p className="sr-only">Navigasi aplikasi Balanja</p>
+              <p className="sr-only">Navigasi aplikasi Wipay</p>
               <div className="flex shrink-0 items-center gap-1">
                 <div id="app-top-bar-actions" className="flex items-center gap-1" />
                 <button

@@ -120,7 +120,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
 
                     <Input
                       label="Nama toko"
-                      placeholder="Toko Balanja"
+                      placeholder="Toko Wipay"
                       inputProps={{
                         value: draft.storeName,
                         onChange: (event) => setDraft({ ...draft, storeName: event.target.value }),
@@ -139,7 +139,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                     />
                     <Input
                       label="Label QRIS"
-                      placeholder="QRIS Toko Balanja"
+                      placeholder="QRIS Toko Wipay"
                       inputProps={{
                         value: draft.qrisLabel,
                         onChange: (event) => setDraft({ ...draft, qrisLabel: event.target.value }),

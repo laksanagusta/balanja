@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { features, faqs } from "../landing/content.js";
+import { features, faqs, navItems } from "../landing/content.js";
 
 test("landing content covers verified retail workflows", () => {
   assert.equal(features.length, 5);
@@ -17,11 +17,18 @@ test("landing content covers verified retail workflows", () => {
   );
   assert.deepEqual(features.map((feature) => feature.row), ["lead", "lead", "supporting", "supporting", "supporting"]);
   assert.equal(faqs.length, 6);
+  assert.deepEqual(navItems, [
+    { label: "Fitur", href: "#fitur" },
+    { label: "Cara kerja", href: "#cara-kerja" },
+    { label: "Harga", href: "#harga" },
+    { label: "FAQ", href: "#faq" },
+  ]);
 });
 
 test("landing page keeps the approved hero and public calls to action", async () => {
   const source = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const faq = await readFile(new URL("../landing/FaqSection.jsx", import.meta.url), "utf8");
+  const pricing = await readFile(new URL("../landing/PricingSection.jsx", import.meta.url), "utf8");
 
   assert.match(source, /Fitur baru: Scan barcode langsung dari kasir/);
   assert.match(source, /Jualan rapi/);
@@ -40,7 +47,17 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.match(source, /routes\.login/);
   assert.match(source, /id="fitur"/);
   assert.match(source, /id="cara-kerja"/);
-  assert.match(source, /© BALANJA · V0\.1\.4/);
+  assert.match(source, /<PricingSection contacts={pricingContacts} \/>/);
+  assert.match(source, /VITE_UPGRADE_WHATSAPP_NUMBER/);
+  assert.match(source, /VITE_UPGRADE_EMAIL/);
+  assert.match(pricing, /id="harga"/);
+  assert.match(pricing, /Satu paket Pro untuk toko yang terus berjalan/);
+  assert.match(pricing, /Rp99\.000/);
+  assert.match(pricing, /\/bulan/);
+  assert.match(pricing, /Mulai dengan Pro/);
+  assert.match(pricing, /FloatingPopover/);
+  assert.match(pricing, /Kontak Wipay untuk paket Pro/);
+  assert.match(source, /© WIPAY · V0\.1\.4/);
   assert.match(source, /marketing-reveal w-full px-4 sm:px-6/);
   assert.match(source, /relative mx-auto max-w-6xl overflow-hidden rounded-panel/);
   assert.doesNotMatch(source, />Akses</);
@@ -57,13 +74,17 @@ test("design system owns the solid closing CTA treatment", async () => {
   assert.match(showcase, /rounded-panel bg-white/);
   assert.match(showcase, /Closing CTA on a quiet solid surface/);
   assert.match(designGuide, /closing landing CTA uses a quiet solid white surface/);
+  assert.match(showcase, /Pricing · one plan/);
+  assert.match(showcase, /<PricingPanel showcase \/>/);
+  assert.match(showcase, /compact contact popover/);
+  assert.match(designGuide, /pricing section uses one `Pro` plan/);
 });
 
 test("hero uses the faithful POS mockup over the generated retail image", async () => {
   const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
 
-  assert.match(page, /hero-ascii-magic-5\.png/);
+  assert.match(page, /hero-ascii-magic-6\.png/);
   assert.match(page, /<PosProductMockup/);
   assert.match(mockup, /Kasir/);
   assert.match(mockup, /Cari produk atau barcode/);
@@ -111,17 +132,22 @@ test("compact POS feature mockup is a complete centered frame", async () => {
   assert.match(mockup, /compact \? "hidden" : "hidden lg:flex"/);
   assert.match(mockup, /!compact && \(/);
   assert.match(mockup, /smooth-shadow-ring shadow-black smooth-ring-neutral-300\/30/);
-  assert.match(page, /smooth-shadow-ring shadow-black smooth-ring-neutral-300\/30/);
-  const featureFrameRuleStart = css.indexOf('.landing-feature-mockup-surface > [aria-hidden="true"]');
+  const featureCardStart = page.indexOf('className={`grid min-h-[24rem]');
+  const featureCardClass = page.slice(featureCardStart, page.indexOf('`}', featureCardStart));
+  assert.match(featureCardClass, /smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300\/30/);
+  assert.doesNotMatch(featureCardClass, /border(?:-|\s)/);
+  const featureFrameRuleStart = css.indexOf('.landing-feature-mockup-frame {');
   const featureFrameRule = css.slice(featureFrameRuleStart, css.indexOf("\n  }", featureFrameRuleStart));
+  const featureSurfaceRuleStart = css.indexOf('.landing-feature-mockup-surface > [aria-hidden="true"]');
+  const featureSurfaceRule = css.slice(featureSurfaceRuleStart, css.indexOf("\n  }", featureSurfaceRuleStart));
   assert.match(css, /\.landing-feature-mockup-frame[\s\S]*padding: 1rem;[\s\S]*background: transparent;/);
-  assert.match(css, /\.landing-feature-mockup-frame[\s\S]*border-radius: 1\.75rem;/);
-  assert.match(css, /\.landing-feature-mockup-surface[\s\S]*background: var\(--color-surface\);[\s\S]*border: 1px solid var\(--color-border\);[\s\S]*border-radius: 1\.5rem;/);
+  assert.doesNotMatch(featureFrameRule, /border-radius:/);
+  assert.match(css, /\.landing-feature-mockup-surface[\s\S]*background: var\(--color-surface\);[\s\S]*border: 1px solid var\(--color-border\);[\s\S]*border-radius: var\(--radius-panel\);/);
   assert.match(css, /\.landing-feature-mockup-surface[\s\S]*block-size: 100%;/);
   assert.match(mockup, /relative flex min-h-0/);
   assert.match(mockup, /min-h-0 min-w-0 flex-1 overflow-hidden bg-app-bg/);
-  assert.match(featureFrameRule, /inline-size: 100%/);
-  assert.doesNotMatch(featureFrameRule, /transform: scale/);
+  assert.match(featureSurfaceRule, /inline-size: 100%/);
+  assert.doesNotMatch(featureSurfaceRule, /transform: scale/);
   assert.match(showcase, /grid min-h-48 place-items-center rounded-panel bg-surface p-4/);
   assert.match(showcase, /landing-feature-mockup-frame/);
   assert.match(showcase, /landing-feature-mockup-surface/);
@@ -244,7 +270,7 @@ test("landing keeps the retail backdrop while product items remain placeholders"
   const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
   const mockup = await readFile(new URL("../landing/PosProductMockup.jsx", import.meta.url), "utf8");
 
-  assert.match(page, /hero-ascii-magic-5\.png/);
+  assert.match(page, /hero-ascii-magic-6\.png/);
   assert.match(page, /<PosProductMockup cropBottom \/>/);
   assert.doesNotMatch(mockup, /\bpriority\b/);
   assert.doesNotMatch(mockup, /<img\b/);

@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "../primitives.jsx";
 import PosProductMockup from "../../landing/PosProductMockup.jsx";
+import { PricingPanel } from "../../landing/PricingSection.jsx";
 
 export default function MarketingPatternsShowcase() {
   return (
@@ -30,7 +31,7 @@ export default function MarketingPatternsShowcase() {
 
         <div className="w-full px-4 sm:px-6">
           <div className="relative mx-auto max-w-6xl overflow-hidden rounded-panel pt-10 sm:pt-14">
-            <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-5.png')" }} />
+            <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/landing/hero-ascii-magic-6.png')" }} />
             <div aria-hidden="true" className="absolute inset-0 bg-accent/20" />
             <div className="relative px-3 sm:px-10 lg:px-20">
               <div className="rounded-t-panel bg-white/25 px-2 pt-2 backdrop-blur-xl">
@@ -44,6 +45,14 @@ export default function MarketingPatternsShowcase() {
           <div className="landing-feature-mockup-frame">
             <div className="landing-feature-mockup-surface"><PosProductMockup compact /></div>
           </div>
+        </div>
+
+        <div className="rounded-panel bg-app-bg p-5 sm:p-8">
+          <div className="mb-5">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Pricing · one plan</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-muted">Use one clear Pro offer when there is no meaningful plan comparison to make. The primary action opens a compact contact popover for email and WhatsApp.</p>
+          </div>
+          <PricingPanel showcase />
         </div>
 
         <div className="mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel bg-white px-5 py-16 text-center">
@@ -88,7 +97,7 @@ export default function MarketingPatternsShowcase() {
 
         <p className="rounded-card border border-border bg-surface-muted p-4 text-sm leading-6 text-text-muted">
           Landing copy follows StoryBrand: the merchant is the protagonist, scattered operations are the problem, and
-          Balanja is the practical guide. Lead with operational outcomes, use specific workflow language, and never invent
+          Wipay is the practical guide. Lead with operational outcomes, use specific workflow language, and never invent
           testimonials, customer counts, pricing, guarantees, urgency, or unsupported claims. Public controls use a
           minimum 44px touch target, visible keyboard focus, and immediate press feedback. The floating public header
           is a full-radius translucent pill inset 12px from the viewport edges and capped at the same 1152px container

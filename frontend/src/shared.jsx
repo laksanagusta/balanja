@@ -44,7 +44,7 @@ export const navGroups = [
 export function Logo({ className = "" }) {
   return (
     <div className="flex items-center">
-      <span className={`font-sora text-lg font-bold tracking-normal text-text ${className}`}>Balanja</span>
+      <span className={`font-sora text-lg font-bold tracking-normal text-text ${className}`}>Wipay</span>
     </div>
   );
 }

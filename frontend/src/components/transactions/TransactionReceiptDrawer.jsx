@@ -48,7 +48,7 @@ export function TransactionReceiptDrawer({ transaction, onClose }) {
             <div className="transaction-receipt-paper relative h-full min-h-0 overflow-hidden rounded-card bg-surface">
               <div className="transaction-receipt-scroll relative min-h-0 h-full overflow-y-auto px-5 py-8 sm:px-8 sm:py-10">
               <div className="text-center font-mono">
-                <p className="font-mono text-sm font-semibold tracking-[0.24em] text-text">BALANJA</p>
+                <p className="font-mono text-sm font-semibold tracking-[0.24em] text-text">WIPAY</p>
                 <p className="mt-2 text-xs text-text-muted">Detail transaksi</p>
                 <p className="mt-1 font-mono text-xs tabular-nums text-text-subtle">{formatReceiptDate(transaction.createdAt)}</p>
               </div>
