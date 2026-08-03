@@ -33,6 +33,9 @@ test("dashboard low-stock insight provides a direct stock-management handoff", a
 
 test("dashboard home prioritizes today, attention, and direct report handoff", async () => {
   const dashboard = await readFile(new URL("./DashboardPage.jsx", import.meta.url), "utf8");
+  const subscription = await readFile(new URL("../components/dashboard/SubscriptionCard.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../components/design/DashboardPatternsShowcase.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
   const charts = await readFile(new URL("../components/dashboard/DashboardCharts.jsx", import.meta.url), "utf8");
   const metric = await readFile(new URL("../components/dashboard/DashboardKpiCard.jsx", import.meta.url), "utf8");
   const design = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
@@ -42,9 +45,27 @@ test("dashboard home prioritizes today, attention, and direct report handoff", a
   assert.doesNotMatch(dashboard, /PaymentMixPanel/);
   assert.doesNotMatch(dashboard, /label="Stok menipis"/);
   assert.match(dashboard, /onViewReport=\{\(\) => onNavigate\(routes\.reportsSales\)\}/);
+  assert.match(dashboard, /<SubscriptionCard entitlement=\{store\.entitlement\} contacts=\{subscriptionContacts\} \/>/);
+  assert.match(subscription, /status !== "paid_active"/);
+  assert.match(subscription, /dashboard-subscription-card/);
+  assert.match(subscription, /dashboard-subscription-trigger/);
+  assert.match(subscription, /Drawer\.Root/);
+  assert.match(subscription, /Drawer\.Content/);
+  assert.match(subscription, /max-w-xl/);
+  assert.match(subscription, /gap-8/);
+  assert.match(subscription, /safe-area-inset-bottom/);
+  assert.match(subscription, /bg-surface-muted p-4 smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300\/30[\s\S]*Yang kamu dapatkan/);
+  assert.match(subscription, /Rp99\.000/);
+  assert.match(subscription, /Mulai dengan Pro/);
+  assert.match(subscription, /Upgrade ke Pro/);
+  assert.doesNotMatch(subscription, /FloatingPopover/);
+  assert.match(showcase, /<SubscriptionCard preview \/>/);
+  assert.match(css, /\.dashboard-subscription-trigger[\s\S]*radial-gradient/);
+  assert.doesNotMatch(subscription, /dashboard-subscription-drawer-hero/);
   assert.match(charts, /<ol className="mt-3">/);
   assert.doesNotMatch(charts, /\bdivide-y\b/);
   assert.match(charts, /Lihat laporan penjualan/);
   assert.doesNotMatch(metric, /truncate/);
   assert.match(design, /acts as the authenticated home, not a duplicate sales report/);
+  assert.match(design, /compact subscription trigger[\s\S]*bottom drawer/);
 });

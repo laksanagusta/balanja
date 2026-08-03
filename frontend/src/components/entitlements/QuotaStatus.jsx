@@ -46,8 +46,8 @@ export default function QuotaStatus({
       {warning || urgent || exhausted ? (
         <p className="mt-2 text-xs leading-5 text-text-muted">
           {exhausted
-            ? "Data toko tetap tersedia. Hubungi Balanja untuk melanjutkan transaksi tanpa batas."
-            : "Hubungi Balanja sebelum kuota habis agar operasional kasir tetap lancar."}
+            ? "Data toko tetap tersedia. Hubungi Wipay untuk melanjutkan transaksi tanpa batas."
+            : "Hubungi Wipay sebelum kuota habis agar operasional kasir tetap lancar."}
         </p>
       ) : null}
       {warning || urgent || exhausted ? (

@@ -23,7 +23,7 @@ test("the document installs the shared SVG favicon", async () => {
   assert.equal((inverseFavicon.match(/<path /g) || []).length, 3);
   assert.match(designGuide, /abstract isometric retail volume/);
   assert.match(designGuide, /contains no door, window, letterform, or text/);
-  assert.match(designSystem, /Isometric Balanja mark variations/);
+  assert.match(designSystem, /Isometric Wipay mark variations/);
   assert.match(designSystem, /src="\/favicon-soft\.svg"/);
   assert.match(designSystem, /src="\/favicon-inverse\.svg"/);
 });

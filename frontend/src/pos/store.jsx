@@ -5,7 +5,7 @@ import { sortMasterData } from "./master-data.js";
 import { applyCheckoutResult, applyProductStock, loadCategories as fetchCategories, loadProducts as fetchProducts, loadSettings as fetchSettings, loadUnits as fetchUnits, searchProducts as fetchProductSearch, toProductFormData } from "./store-data.js";
 
 const POSStoreContext = React.createContext(null);
-const defaultSettings = { storeName: "Toko Balanja", storeAddress: "", taxEnabled: false, taxRate: 11, qrisLabel: "QRIS Toko Balanja" };
+const defaultSettings = { storeName: "Toko Wipay", storeAddress: "", taxEnabled: false, taxRate: 11, qrisLabel: "QRIS Toko Wipay" };
 
 export function POSStoreProvider({ children, api, cashierName = "" }) {
   const [products, setProducts] = React.useState([]);

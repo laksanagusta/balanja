@@ -2,10 +2,12 @@ import React from "react";
 import DashboardKpiCard from "../components/dashboard/DashboardKpiCard.jsx";
 import { RevenueTrendPanel, TopProductsPanel } from "../components/dashboard/DashboardCharts.jsx";
 import LowStockPanel from "../components/dashboard/LowStockPanel.jsx";
+import SubscriptionCard from "../components/dashboard/SubscriptionCard.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { DashboardPageSkeleton } from "../components/page-loading.jsx";
 import { usePOSStore } from "../pos/store.jsx";
 import { formatPrice, routes } from "../shared.jsx";
+import { upgradeContacts } from "../entitlements/contact-links.js";
 
 const periods = [
   { value: 1, label: "Hari ini" },
@@ -48,6 +50,12 @@ export default function DashboardPage({ onNavigate }) {
   const shouldShowSkeleton = isSummaryLoading && !analytics;
   const isUpdatingSummary = isSummaryLoading && Boolean(analytics);
   const comparisonContext = days === 1 ? "vs kemarin pada jam yang sama" : "vs periode sebelumnya";
+  const subscriptionContacts = React.useMemo(() => upgradeContacts({
+    whatsapp: import.meta.env.VITE_UPGRADE_WHATSAPP_NUMBER,
+    email: import.meta.env.VITE_UPGRADE_EMAIL,
+    storeName: settings.storeName,
+    supportReference: store.entitlement?.supportReference,
+  }), [settings.storeName, store.entitlement?.supportReference]);
 
   React.useLayoutEffect(() => {
     updatePeriodPill();
@@ -118,6 +126,8 @@ export default function DashboardPage({ onNavigate }) {
             </div>
           </div>
         </section>
+
+        <SubscriptionCard entitlement={store.entitlement} contacts={subscriptionContacts} />
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indikator kinerja utama">
           <div className="min-w-0 sm:col-span-2 xl:col-span-2">

@@ -25,13 +25,13 @@ export function upgradeContacts({
   const result = {};
   const number = normalizeWhatsApp(whatsapp);
   const address = normalizeEmail(email);
-  const safeStoreName = cleanMessageValue(storeName, "Toko Balanja");
+  const safeStoreName = cleanMessageValue(storeName, "Toko Wipay");
   const safeReference = cleanMessageValue(supportReference, "belum tersedia");
-  const message = `Halo, saya ingin mengaktifkan paket berbayar Balanja untuk ${safeStoreName}. ID toko: ${safeReference}.`;
+  const message = `Halo, saya ingin mengaktifkan paket berbayar Wipay untuk ${safeStoreName}. ID toko: ${safeReference}.`;
   if (number) result.whatsapp = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
   if (address) {
     const query = new URLSearchParams({
-      subject: `Aktivasi Balanja — ${safeStoreName}`,
+      subject: `Aktivasi Wipay — ${safeStoreName}`,
       body: message,
     });
     result.email = `mailto:${address}?${query.toString()}`;

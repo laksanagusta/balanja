@@ -53,7 +53,7 @@ export default function DesignSystemPage({ onNavigate }) {
       <section id="design-system" className="mx-auto grid w-full max-w-[1480px] gap-6 px-4 py-10 sm:px-6 [&>*]:min-w-0">
         <div className="grid min-w-0 gap-2">
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-accent">Design system</p>
-          <h2 className="text-3xl font-semibold text-text">Balanja retail POS tokens and components</h2>
+          <h2 className="text-3xl font-semibold text-text">Wipay retail POS tokens and components</h2>
           <p className="max-w-3xl text-base leading-7 text-text-muted">
             Retail POS pages must be built from these primitives and composite patterns: semantic tokens,
             dense controls, barcode-first product cards, quiet borders, dark checkout actions, and compact
@@ -69,7 +69,7 @@ export default function DesignSystemPage({ onNavigate }) {
               <img src="/favicon-inverse.svg" alt="Inverse light favicon" className="size-12" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-lg font-semibold text-text">Isometric Balanja mark variations</h3>
+              <h3 className="text-lg font-semibold text-text">Isometric Wipay mark variations</h3>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-muted">
                 The active browser mark uses the primary dark treatment. Soft and inverse treatments vary only
                 the neutral tones; all versions use the same enlarged, uninterrupted three-plane geometry without doors or text.
