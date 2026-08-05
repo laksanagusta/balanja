@@ -38,10 +38,19 @@ export const ProductCatalog = React.memo(function ProductCatalog({
       return matchesCategory && searchableText.includes(normalizedQuery);
     });
   }, [activeProducts, category, deferredQuery]);
+  const hasActiveFilter = Boolean(deferredQuery.trim() || category);
+  const resultStatus = hasActiveFilter
+    ? products.length > 0
+      ? `${products.length} produk ditemukan.`
+      : "Tidak ada produk yang cocok."
+    : "";
 
   return (
     <>
-      <div className="product-catalog-grid menu-grid-transition grid auto-rows-max gap-4 p-3 sm:p-6">
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {resultStatus}
+      </div>
+      <div className="product-catalog-grid menu-grid-transition grid auto-rows-max gap-2 p-3 sm:p-6">
         {products.length === 0 ? (
           <div className="product-catalog-empty">
             <EmptyState
@@ -55,7 +64,7 @@ export const ProductCatalog = React.memo(function ProductCatalog({
             />
             <div className="mt-3 flex justify-center">
               <Button variant="secondary" onClick={onClearFilters}>
-                Reset filter
+                Atur ulang filter
               </Button>
             </div>
           </div>

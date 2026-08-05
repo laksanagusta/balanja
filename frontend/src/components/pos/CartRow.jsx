@@ -22,6 +22,7 @@ export function CartRow({
   const stockLimit = Number(maxQty);
   const hasStockLimit = Number.isFinite(stockLimit);
   const plusDisabled = hasStockLimit && item.qty >= stockLimit;
+  const productLabel = item.name || "produk";
   const qtyInputRef = React.useRef(null);
   const previousQtyRef = React.useRef(item.qty);
   const qtySlideAnimationRef = React.useRef(null);
@@ -102,7 +103,7 @@ export function CartRow({
               <div className="flex h-8 items-center overflow-hidden rounded-full border border-border bg-surface">
                 <button
                   type="button"
-                  aria-label="Decrease quantity"
+                  aria-label={`Kurangi jumlah ${productLabel}`}
                   onClick={() => onUpdateQty(item.qty === 1 ? 0 : item.qty - 1)}
                   disabled={disabled}
                   className="pos-compact-icon-target grid place-items-center text-text-muted transition hover:bg-surface-muted active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
@@ -111,7 +112,7 @@ export function CartRow({
                 </button>
                 <input
                   ref={qtyInputRef}
-                  aria-label="Kuantitas"
+                  aria-label={`Jumlah ${productLabel}`}
                   inputMode="numeric"
                   pattern="[0-9]*"
                   value={draftQty}
@@ -130,10 +131,10 @@ export function CartRow({
                 />
                 <button
                   type="button"
-                  aria-label="Increase quantity"
+                  aria-label={`Tambah jumlah ${productLabel}`}
                   onClick={() => onUpdateQty(item.qty + 1)}
                   disabled={disabled || plusDisabled}
-                  title={plusDisabled ? "Stock limit reached" : undefined}
+                  title={plusDisabled ? `Batas stok tercapai untuk ${productLabel}` : undefined}
                   className="pos-compact-icon-target grid place-items-center text-text-muted transition hover:bg-surface-muted active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
                 >
                   <Icon name="plus" className="size-3.5" />

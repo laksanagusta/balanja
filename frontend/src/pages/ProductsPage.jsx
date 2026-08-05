@@ -34,6 +34,31 @@ import { isProductEditorPath } from "../routing.js";
 
 const MAX_VARIANT_COMBINATIONS = 100;
 
+const PRODUCT_ERROR_MESSAGES = {
+  AUTH_REQUIRED: "Sesi masuk diperlukan. Masuk kembali untuk melanjutkan.",
+  AUTH_INVALID: "Sesi masuk sudah berakhir. Masuk kembali untuk melanjutkan.",
+  ORGANIZATION_REQUIRED: "Pilih toko terlebih dahulu untuk melihat produk.",
+  NETWORK_ERROR: "Koneksi bermasalah. Periksa internet lalu coba lagi.",
+  REQUEST_TIMEOUT: "Permintaan terlalu lama. Coba lagi.",
+  INVALID_RESPONSE: "Server mengirim respons yang tidak dapat dibaca. Coba lagi.",
+  INTERNAL_ERROR: "Terjadi masalah di server. Coba lagi.",
+  INVALID_CURSOR: "Daftar produk berubah. Muat ulang untuk melanjutkan.",
+  INVALID_PRODUCT: "Data produk belum valid. Coba lagi.",
+  INVALID_PRODUCT_REFERENCE: "Kategori atau satuan produk tidak valid. Periksa kembali isian Anda.",
+  BARCODE_CONFLICT: "Barcode sudah dipakai produk atau varian lain.",
+  PRODUCT_NOT_FOUND: "Produk tidak ditemukan atau sudah tidak tersedia.",
+  VARIANT_NOT_FOUND: "Varian tidak ditemukan atau sudah tidak tersedia.",
+  INVALID_VARIANT_ATTRIBUTES: "Pilihan varian tidak sesuai. Periksa kembali atribut produk.",
+  MIN_VARIANTS: "Produk harus memiliki setidaknya satu varian aktif.",
+  IMAGE_TOO_LARGE: "Ukuran foto maksimal 5 MB.",
+  INVALID_IMAGE: "Gunakan file JPG, PNG, atau WebP yang valid.",
+  IMAGE_STORAGE_UNAVAILABLE: "Penyimpanan foto sedang tidak tersedia. Coba lagi.",
+};
+
+function localizedProductError(error, fallback = "Produk belum dapat dimuat. Coba lagi.") {
+  return PRODUCT_ERROR_MESSAGES[error?.code] || fallback;
+}
+
 function emptyProduct() {
   return { id: "", name: "", barcode: "", categoryId: "", unitId: "", price: "", stock: 0, image: "", imageFile: null, removeImage: false, active: true, attributesConfig: [], variants: [] };
 }
@@ -259,7 +284,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
         setEditorBaseline(productDraftFingerprint(draft));
         setEditorStep("details");
       } catch (error) {
-        if (!cancelled) setEditorRouteError(error?.message || "Produk gagal dimuat.");
+        if (!cancelled) setEditorRouteError(localizedProductError(error, "Produk belum dapat dibuka. Coba lagi."));
       }
     };
     void loadEditorProduct();
@@ -468,15 +493,10 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       closeEditor();
       await Promise.all([table.reset(), loadProducts({ force: true })]);
     } catch (error) {
-      const imageMessages = {
-        INVALID_IMAGE: "Gunakan file JPG, PNG, atau WebP yang valid.",
-        IMAGE_TOO_LARGE: "Ukuran foto maksimal 5 MB.",
-        IMAGE_STORAGE_UNAVAILABLE: "Penyimpanan foto sedang tidak tersedia. Coba lagi.",
-      };
-      if (imageMessages[error?.code]) {
-        setProductErrors((current) => ({ ...current, form: "", image: imageMessages[error.code] }));
+      if (["INVALID_IMAGE", "IMAGE_TOO_LARGE", "IMAGE_STORAGE_UNAVAILABLE"].includes(error?.code)) {
+        setProductErrors((current) => ({ ...current, form: "", image: localizedProductError(error) }));
       } else {
-        const message = error?.message || "Gagal menyimpan produk. Coba lagi.";
+        const message = localizedProductError(error, "Produk belum tersimpan. Periksa isian lalu coba lagi.");
         setProductErrors((current) => ({ ...current, form: message }));
         toast.error(message);
       }
@@ -683,7 +703,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
                 <Button type="button" variant="secondary" onClick={() => closeEditor()}>Kembali ke produk</Button>
               </div>
             ) : (
-              <p className="text-sm text-text-muted">Memuat editor produk...</p>
+              <p className="text-sm text-text-muted">Memuat editor produk…</p>
             )}
           </main>
         </div>
@@ -764,10 +784,6 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     );
   }
 
-  if (table.isInitialLoading) {
-    return <ProductsPageSkeleton />;
-  }
-
   const topBarActions = topBarActionsTarget
     ? createPortal(
       <>
@@ -792,10 +808,31 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     )
     : null;
 
+  if (table.isInitialLoading) {
+    return (
+      <>
+        {topBarActions}
+        <ProductsPageSkeleton />
+      </>
+    );
+  }
+
+  const hasProductFilters = Boolean(debouncedQuery.trim() || categoryId || status);
+  const normalizedQuery = debouncedQuery.trim();
+  const resultAnnouncement = table.error ? "" : `${table.rows.length} produk ditemukan.`;
+  const emptyTitle = normalizedQuery
+    ? `Tidak ada produk untuk “${normalizedQuery}”`
+    : hasProductFilters
+      ? "Tidak ada produk yang cocok dengan filter"
+      : "Belum ada produk";
+  const emptyDescription = hasProductFilters
+    ? "Coba kata kunci, kategori, atau status lain."
+    : "Tambahkan produk pertama agar bisa menjualnya di kasir.";
+
   return (
     <>
       {topBarActions}
-      <div className="relative flex h-full min-h-0 flex-col bg-surface">
+      <main id="products-main" tabIndex={-1} className="relative flex h-full min-h-0 flex-col bg-surface">
         <header className="px-4 py-3">
           <div className="grid w-full">
             <div className="flex w-full min-w-0 items-center gap-2">
@@ -815,6 +852,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
         </header>
 
         <div className="min-h-0 flex-1 overflow-auto p-4">
+          <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">{resultAnnouncement}</div>
           <div className="grid w-full gap-3">
             <div className="overflow-hidden rounded-panel bg-surface smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30">
               {table.rows.length ? (
@@ -828,11 +866,15 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
                 />
               ) : (
                 <EmptyState
-                  icon="search"
-                  title={table.error ? "Produk gagal dimuat" : "Produk tidak ditemukan"}
-                  description={table.error ? table.error.message : "Coba nama, barcode, kategori, atau status lain."}
+                  icon={table.error ? "x" : hasProductFilters ? "search" : "bag"}
+                  title={table.error ? "Produk gagal dimuat" : emptyTitle}
+                  description={table.error ? localizedProductError(table.error) : emptyDescription}
                   action={table.error ? (
                     <Button size="sm" variant="secondary" onClick={table.retry}>Coba lagi</Button>
+                  ) : !hasProductFilters ? (
+                    <Button size="sm" variant="primary" disabled={isProductsMutating} onClick={() => openEditor(emptyProduct())}>
+                      Tambah produk
+                    </Button>
                   ) : (
                     <Button
                       size="sm"
@@ -843,10 +885,17 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
                       Atur ulang filter
                     </Button>
                   )}
+                  role={table.error ? "alert" : undefined}
                   className="m-4 min-h-[240px]"
                 />
               )}
             </div>
+            {table.error && table.rows.length > 0 && (
+              <div role="alert" className="grid gap-1 rounded-card border border-danger/30 bg-danger-soft px-4 py-3 text-sm">
+                <p className="font-semibold text-text">Sebagian produk belum termuat.</p>
+                <p className="leading-6 text-text-muted">{localizedProductError(table.error)} Data yang terlihat mungkin belum lengkap.</p>
+              </div>
+            )}
             {(table.hasMore || (table.error && table.rows.length > 0)) && (
               <Button
                 type="button"
@@ -855,7 +904,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
                 disabled={table.loading}
                 onClick={loadMoreProducts}
               >
-                {table.loading ? "Memuat..." : table.error ? "Coba lagi" : "Muat lebih banyak"}
+                {table.loading ? "Memuat…" : table.error ? "Coba lagi" : "Muat lebih banyak"}
               </Button>
             )}
           </div>
@@ -871,7 +920,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
         >
           <Icon name="plus" className="size-5" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         </button>
-      </div>
+      </main>
 
     </>
   );

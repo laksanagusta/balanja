@@ -259,7 +259,7 @@ function StockField({ id, label, accessibleLabel = label, value, error, disabled
       inputProps={{
         id,
         "aria-label": accessibleLabel,
-        value: value === "" || value === null || value === undefined ? "" : String(value),
+        value: formatNumberInput(value),
         inputMode: "numeric",
         autoComplete: "off",
         min: 0,
@@ -801,7 +801,7 @@ export default function ProductVariantEditor({
                       onBlur={() => onBlurAttributeField?.(index, "options")}
                     />
                   </div>
-                  <div className={`attribute-field-state flex flex-wrap items-center justify-between gap-3 rounded-panel bg-danger-soft/50 px-4 py-3 ${isDeletePending ? "is-active" : "is-inactive"}`} role="alert" aria-hidden={!isDeletePending} aria-labelledby={`remove-attribute-${attributeId}`}>
+                  <div className={`attribute-field-state flex flex-wrap items-center justify-between gap-3 rounded-panel bg-danger-soft/50 px-4 py-3 ${isDeletePending ? "is-active" : "is-inactive"}`} aria-hidden={!isDeletePending} aria-labelledby={`remove-attribute-${attributeId}`}>
                     <div className="min-w-0">
                       <p id={`remove-attribute-${attributeId}`} className="text-sm font-semibold text-text">Hapus atribut ‘{pendingDelete?.name || attribute.name}’?</p>
                       <p className="mt-0.5 text-xs font-normal leading-5 text-text-muted">Data harga, stok, dan barcode dari variasi yang terkait juga akan dihapus.</p>

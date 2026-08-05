@@ -22,7 +22,7 @@ export default function DashboardKpiCard({
       <p className={`mt-4 break-words font-mono font-semibold tracking-tight text-text tabular-nums ${emphasis ? "text-3xl" : "text-2xl"}`}>
         {value}
       </p>
-      <p className={`mt-1.5 text-[11px] font-semibold leading-4 ${comparisonTone}`}>
+      <p className={`mt-1.5 text-xs font-semibold leading-4 text-pretty ${comparisonTone}`}>
         {comparisonLabel(comparison, comparisonContext)}
       </p>
     </Panel>

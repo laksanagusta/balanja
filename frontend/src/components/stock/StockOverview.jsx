@@ -7,6 +7,7 @@ import {
   LOW_STOCK_THRESHOLD,
   LOW_STOCK_VISIBLE_LIMIT,
 } from "../../stock/stock-overview.js";
+import { getStockErrorMessage } from "../../stock/stock-errors.js";
 
 const numberFormatter = new Intl.NumberFormat("id-ID");
 
@@ -30,8 +31,11 @@ export default function StockOverview({
   loadingMore = false,
   onLoadMore,
   onRestock,
+  hasMovementFilters = false,
+  onResetFilters,
 }) {
   const visibleLowStock = lowStockProducts.slice(0, LOW_STOCK_VISIBLE_LIMIT);
+  const movementErrorMessage = getStockErrorMessage(movementError);
 
   return (
     <div className="grid gap-6">
@@ -86,23 +90,38 @@ export default function StockOverview({
               ))}
             </div>
             {(hasMoreMovements || movementError) && onLoadMore && (
-              <Button
-                type="button"
-                variant="secondary"
-                className="mt-3 w-full"
-                disabled={loadingMore}
-                onClick={onLoadMore}
-              >
-                {loadingMore ? "Memuat..." : movementError ? "Coba lagi" : "Muat lebih banyak"}
-              </Button>
+              <>
+                {movementError ? (
+                  <div role="alert" className="mt-3 rounded-control border border-danger/30 bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
+                    {movementErrorMessage}
+                  </div>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="mt-3 w-full"
+                  disabled={loadingMore}
+                  onClick={onLoadMore}
+                >
+                  {loadingMore ? "Memuat…" : movementError ? "Coba lagi" : "Muat lebih banyak"}
+                </Button>
+              </>
             )}
           </>
         ) : movementError ? (
           <EmptyOverviewCard
             icon="help"
             title="Aktivitas stok gagal dimuat"
-            description={movementError.message}
+            description={movementErrorMessage}
+            role="alert"
             action={onRetry ? <Button size="sm" variant="secondary" onClick={onRetry}>Coba lagi</Button> : null}
+          />
+        ) : hasMovementFilters ? (
+          <EmptyOverviewCard
+            icon="search"
+            title="Tidak ada aktivitas yang cocok"
+            description="Coba kata kunci atau jenis pergerakan lain."
+            action={onResetFilters ? <Button size="sm" variant="ghost" onClick={onResetFilters}>Atur ulang filter</Button> : null}
           />
         ) : (
           <EmptyOverviewCard
@@ -200,9 +219,9 @@ function getMovementProduct(movement, products) {
   };
 }
 
-function EmptyOverviewCard({ icon, title, description, action = null }) {
+function EmptyOverviewCard({ icon, title, description, action = null, role }) {
   return (
-    <div className="mt-2 grid min-h-36 place-items-center gap-2 rounded-panel border border-border bg-surface px-4 py-8 text-center">
+    <div role={role} className="mt-2 grid min-h-36 place-items-center gap-2 rounded-panel border border-border bg-surface px-4 py-8 text-center">
       <span className="grid size-11 place-items-center rounded-card bg-surface-muted text-text-muted">
         <Icon name={icon} className="size-5" />
       </span>

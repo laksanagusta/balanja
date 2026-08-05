@@ -17,7 +17,9 @@ test("product page owns one photo preview and list thumbnail", async () => {
   assert.match(list, /font-mono text-xs font-medium tabular-nums tracking-\[0\.01em\]/);
   assert.match(list, /font-mono font-semibold tabular-nums/);
   assert.match(list, /<span className="font-mono tabular-nums">\{formatQuantity\(stock\)\}<\/span>/);
-  assert.match(list, /rounded-full px-2 text-\[10px\]/);
+  assert.match(list, /rounded-full px-2 text-xs/);
+  assert.match(source, /overflow-hidden rounded-panel bg-surface/);
+  assert.match(list, /<ProductThumbnail product=\{product\} size="xl" radius="control" \/>/);
   assert.match(list, /replace\(\/\^Rp\//);
   assert.doesNotMatch(source, /DataTable/);
   assert.doesNotMatch(source, /TablePagination/);
@@ -27,7 +29,8 @@ test("product machine data uses mono without changing human-facing labels", asyn
   const source = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
   const primitives = await readFile(new URL("../components/primitives.jsx", import.meta.url), "utf8");
 
-  assert.match(source, />Barcode<\/span>/);
+  assert.match(source, /<label htmlFor="product-barcode"[^>]*>Barcode<\/label>/);
+  assert.match(source, /inputProps=\{\{[\s\S]{0,120}id: "product-barcode"/);
   assert.match(source, /inputClassName="font-mono tabular-nums tracking-\[0\.01em\]"/);
   assert.match(source, /label="Harga"[\s\S]{0,180}inputClassName="font-mono tabular-nums"/);
   assert.match(source, /label="Stok"[\s\S]{0,260}inputClassName="font-mono tabular-nums"/);
@@ -42,6 +45,23 @@ test("product page maps storage failures to inline photo feedback", async () => 
   assert.match(source, /productErrors.*image/s);
 });
 
+test("product page exposes contextual empty states, localized failures, and a live result status", async () => {
+  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const emptyState = await readFile(new URL("../components/feedback/EmptyState.jsx", import.meta.url), "utf8");
+  const shell = await readFile(new URL("../components/AppShell.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /<main id="products-main" tabIndex=\{-1\}/);
+  assert.match(source, /role="status" aria-live="polite" aria-atomic="true"/);
+  assert.match(source, /Belum ada produk/);
+  assert.match(source, /Tambah produk/);
+  assert.match(source, /Tidak ada produk untuk “\$\{normalizedQuery\}”/);
+  assert.match(source, /function localizedProductError/);
+  assert.match(source, /Sebagian produk belum termuat/);
+  assert.match(emptyState, /role=\{role\}/);
+  assert.match(shell, /href="#app-main-content"/);
+  assert.match(shell, /id="app-main-content" tabIndex=\{-1\}/);
+});
+
 test("product editor uses category and unit IDs with inline creation", async () => {
   const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
   const workspace = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
@@ -52,7 +72,7 @@ test("product editor uses category and unit IDs with inline creation", async () 
 
 test("product barcode scan action shares the labeled row with manual entry", async () => {
   const source = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
-  const barcodeLabelIndex = source.indexOf(">Barcode</span>");
+  const barcodeLabelIndex = source.indexOf('htmlFor="product-barcode"');
   const barcodeInputIndex = source.indexOf('placeholder="8991001000011"', barcodeLabelIndex);
   const scanActionIndex = source.indexOf('aria-label="Pindai barcode"', barcodeInputIndex);
   const scanIconIndex = source.indexOf('<Icon name="scan" className="size-5" />', scanActionIndex);
@@ -141,7 +161,7 @@ test("product save feedback swaps text without resizing its button", async () =>
   const hook = await readFile(new URL("../hooks/useSwapTransition.js", import.meta.url), "utf8");
 
   assert.match(source, /className="min-w-28"/);
-  assert.match(source, /<SwapText value=\{savingProduct \? "Menyimpan\.\.\." : "Simpan"\}/);
+  assert.match(source, /<SwapText value=\{savingProduct \? "Menyimpan…" : "Simpan"\}/);
   assert.match(swap, /-translate-y-1 opacity-0 duration-fast/);
   assert.match(swap, /translate-y-1 opacity-0 duration-0/);
   assert.match(swap, /motion-reduce:translate-y-0 motion-reduce:duration-fast/);
@@ -220,7 +240,7 @@ test("product editor keeps setup explicit and validates recoverably", async () =
   assert.match(source, /onBlurAttributeField/);
   assert.match(source, /onBlurVariantField/);
   assert.match(workspace, /productErrors\.form/);
-  assert.match(source, /Gagal menyimpan produk\. Coba lagi\./);
+  assert.match(source, /Produk belum tersimpan\. Periksa isian lalu coba lagi\./);
   assert.doesNotMatch(source, /const openVariantEditor = \(\) => \{[\s\S]{0,150}addAttribute\(/);
   assert.match(workspace, /Kembali ke daftar/);
   assert.match(workspace, /Kembali ke informasi/);

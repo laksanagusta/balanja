@@ -31,7 +31,8 @@ test("variant editor uses structured tokens, attribute menus, and safe removal c
   assert.match(source, /pendingDeleteCancelRefs/);
   assert.match(source, /attribute-field-crossfade/);
   assert.match(source, /attribute-field-state/);
-  assert.match(source, /role="alert" aria-hidden=\{!isDeletePending\} aria-labelledby=\{`remove-attribute-\$\{attributeId\}`\}/);
+  assert.doesNotMatch(source, /role="alert" aria-hidden=\{!isDeletePending\} aria-labelledby=\{`remove-attribute-\$\{attributeId\}`\}/);
+  assert.match(source, /aria-hidden=\{!isDeletePending\} aria-labelledby=\{`remove-attribute-\$\{attributeId\}`\}/);
   assert.doesNotMatch(source, /<div className="grid gap-1 border-y border-dashed border-border px-4 py-6">/);
   assert.match(source, /addAttributeRef/);
 });

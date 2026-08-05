@@ -87,7 +87,7 @@ export default function ProductEditorWorkspace({
 
       <main id="product-editor-content" className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6">
         {discardConfirmOpen ? (
-          <section className="mx-auto grid min-h-full w-full max-w-xl content-center gap-1 py-8" role="alert" aria-labelledby="discard-product-title">
+          <section className="mx-auto grid min-h-full w-full max-w-xl content-center gap-1 py-8" aria-labelledby="discard-product-title">
             <h2 id="discard-product-title" ref={headingRef} tabIndex={-1} className="text-sm font-semibold outline-none">Buang perubahan?</h2>
             <p className="max-w-md text-sm leading-6 text-text-muted">Perubahan produk yang belum disimpan akan hilang.</p>
           </section>
@@ -110,7 +110,7 @@ export default function ProductEditorWorkspace({
                 />
 
                 <div className="grid gap-2">
-                  <span className="text-sm font-semibold text-text">Barcode</span>
+                  <label htmlFor="product-barcode" className="text-sm font-semibold text-text">Barcode</label>
                   <div className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
                       <Input
@@ -118,6 +118,7 @@ export default function ProductEditorWorkspace({
                         error={productErrors.barcode}
                         inputClassName="font-mono tabular-nums tracking-[0.01em]"
                         inputProps={{
+                          id: "product-barcode",
                           value: editing.barcode,
                           onChange: (event) => onUpdate("barcode", event.target.value),
                           onBlur: () => onBlurField?.("barcode"),
@@ -280,7 +281,7 @@ export default function ProductEditorWorkspace({
                   <Button type="button" disabled={savingProduct} onClick={() => onStepChange("details")}>Kembali ke informasi</Button>
                 )}
                 <Button type="submit" variant="primary" form="product-form" disabled={savingProduct} className="min-w-28">
-                  <SwapText value={savingProduct ? "Menyimpan..." : "Simpan"} />
+                  <SwapText value={savingProduct ? "Menyimpan…" : "Simpan"} />
                 </Button>
               </>
             )}

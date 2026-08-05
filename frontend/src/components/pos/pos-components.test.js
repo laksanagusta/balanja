@@ -47,7 +47,7 @@ test("POS product card is an explicit variant", async () => {
   assert.match(css, /\.pos-product-card\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;/);
   assert.match(css, /\.pos-product-card \.product-card-media\s*\{[\s\S]*aspect-ratio:\s*1;[\s\S]*border-radius:\s*var\(--radius-panel\);/);
   assert.match(css, /\.pos-product-card \.product-card-name\s*\{[\s\S]*font-weight:\s*500;/);
-  assert.match(css, /\.pos-product-card \.product-card-price\s*\{[\s\S]*font-weight:\s*750;[\s\S]*color:\s*var\(--color-text\);/);
+  assert.match(css, /\.pos-product-card \.product-card-price\s*\{[\s\S]*font-family:\s*var\(--font-mono\);[\s\S]*font-variant-numeric:\s*tabular-nums;[\s\S]*font-weight:\s*600;[\s\S]*color:\s*var\(--color-text\);/);
   assert.match(css, /\.pos-product-card \.ui-button\.product-add-button\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset-inline-end:\s*0\.5rem;[\s\S]*inset-block-end:\s*0\.5rem;[\s\S]*inline-size:\s*2\.75rem;[\s\S]*min-block-size:\s*2\.75rem;/);
   assert.ok(
     css.lastIndexOf(".pos-product-card .ui-button.product-add-button") > css.indexOf('.ui-button[data-mobile-size="standard"]'),
@@ -98,9 +98,9 @@ test("cart controls and payment choices stay visually compact with coarse-pointe
   const product = await readFile(new URL("./ProductCard.jsx", import.meta.url), "utf8");
   const payment = await readFile(new URL("./PaymentSummary.jsx", import.meta.url), "utf8");
 
-  assert.match(cart, /aria-label="Decrease quantity"/);
-  assert.match(cart, /aria-label="Increase quantity"/);
-  assert.match(cart, /aria-label="Kuantitas"/);
+  assert.match(cart, /aria-label=\{`Kurangi jumlah \$\{productLabel\}`\}/);
+  assert.match(cart, /aria-label=\{`Tambah jumlah \$\{productLabel\}`\}/);
+  assert.match(cart, /aria-label=\{`Jumlah \$\{productLabel\}`\}/);
   assert.match(cart, /inputMode="numeric"/);
   assert.match(cart, /item\.qty === 1 \? 0 : item\.qty - 1/);
   assert.match(cart, /pos-compact-icon-target/);
@@ -170,7 +170,10 @@ test("product add feedback is announced without exposing decoration", async () =
   assert.doesNotMatch(product, /className="number-ticker"/);
   assert.match(css, /\.product-add-feedback\s*\{[\s\S]*transition:[\s\S]*opacity[\s\S]*transform/);
   assert.doesNotMatch(css, /\.product-add-feedback\s*\{[^}]*animation:/);
+  assert.match(css, /\.product-add-ring\s*\{[\s\S]*border-radius:\s*var\(--radius-panel\)/);
+  assert.match(css, /\.pos-product-card \.product-card-name\s*\{[\s\S]*text-wrap:\s*balance/);
   assert.match(css, /\.cart-qty-input\s*\{[\s\S]*animation-duration: var\(--duration-fast\)/);
+  assert.doesNotMatch(css, /\.cart-qty-input\s*\{[^}]*will-change:/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*\.cart-qty-input\s*\{[\s\S]*animation: none !important/);
   assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)[\s\S]*\.product-card-frame:not\(\.is-out-of-stock\):hover/);
 });
@@ -208,6 +211,11 @@ test("product catalog defers filtering and contains off-screen cards", async () 
   assert.match(catalog, /variantKey\(item\.productId, item\.variantId\)/);
   assert.match(catalog, /Object\.values\(variant\.attributes/);
   assert.match(catalog, /if \(result\?\.ok\) setSelectorProduct\(null\)/);
+  assert.match(catalog, /role="status" aria-live="polite" aria-atomic="true"/);
+  assert.match(catalog, /produk ditemukan/);
+  assert.match(catalog, /Tidak ada produk yang cocok/);
+  assert.match(catalog, /Atur ulang filter/);
+  assert.match(catalog, /product-catalog-grid menu-grid-transition grid auto-rows-max gap-2/);
   assert.match(css, /\.pos-product-card[\s\S]*content-visibility:\s*auto/);
 });
 

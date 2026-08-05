@@ -23,6 +23,10 @@ test("search and cash controls expose accessible form state", async () => {
   assert.doesNotMatch(filterDrawer, /focus-within:outline-2/);
   assert.match(source, /error=\{visibleCashError\}/);
   assert.match(source, /name:\s*"cashReceived"/);
+  assert.match(source, /cashInputRef/);
+  assert.match(source, /mobileCashInputRef/);
+  assert.match(source, /requestAnimationFrame\(focusVisibleCashInput\)/);
+  assert.match(source, /className:\s*"font-mono tabular-nums"/);
   assert.match(filterDrawer, /aria-pressed=\{category === entry\.value\}/);
   assert.match(source, /CashPaymentFeedback/);
   assert.match(source, /cashState\.showShortfall/);
@@ -35,6 +39,9 @@ test("status copy and background refresh follow the interface contract", async (
   assert.match(source, /Menyelesaikan…/);
   assert.match(cashFeedback, /role="status"/);
   assert.match(source, /BackgroundUpdateStatus/);
+  assert.match(source, /toast\.error\(result\.error \|\| "Transaksi belum berhasil\."/);
+  assert.match(source, /description:\s*"Periksa keranjang lalu coba lagi\."/);
+  assert.match(source, /duration:\s*Infinity/);
   assert.doesNotMatch(source, /UpdatingBadge|animate-pulse.*Memperbarui/s);
   assert.doesNotMatch(source, /Cari produk atau barcode\.\.\.|Menyelesaikan\.\.\./);
 });
@@ -49,7 +56,7 @@ test("cashier loading skeleton mirrors visible search and category pills", async
   assert.match(section, /grid flex-none gap-2 px-4 py-3/);
   assert.match(section, /h-11 w-full rounded-card/);
   assert.match(section, /h-8 shrink-0 rounded-full/);
-  assert.match(section, /product-catalog-grid menu-grid-transition/);
+  assert.match(section, /product-catalog-grid menu-grid-transition grid auto-rows-max gap-2/);
   assert.match(section, /aspect-square w-full bg-surface-muted\/80/);
   assert.match(section, /rounded-panel bg-surface-muted/);
   assert.match(section, /absolute bottom-2 right-2 grid size-9 place-items-center rounded-full border border-border bg-surface shadow-low/);
@@ -104,6 +111,7 @@ test("cart barcode scanning stays inside the visible cashier workspace", async (
 
 test("the design system documents and demonstrates the production POS contract", async () => {
   const design = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+  const tokens = await readFile(new URL("../data.js", import.meta.url), "utf8");
   const showcase = await readFile(
     new URL("../components/design/POSPatterns.jsx", import.meta.url),
     "utf8",
@@ -115,6 +123,8 @@ test("the design system documents and demonstrates the production POS contract",
   assert.match(design, /single vertical scroller/i);
   assert.match(design, /smartphone-first shell/i);
   assert.match(design, /44px touch target/i);
+  assert.match(design, /danger text token is `#d32f2f`/i);
+  assert.match(tokens, /\["Danger", "--color-danger", "#d32f2f"\]/);
   assert.match(design, /trap focus while open/i);
   assert.match(design, /rubber-band resistance/i);
   assert.match(design, /cross-fade the drawer/i);
@@ -127,6 +137,8 @@ test("the design system documents and demonstrates the production POS contract",
   assert.match(showcase, /nama produk, harga, jumlah terbaru di keranjang, dan barcode/i);
   assert.match(showcase, /cooldown pasti 1 detik/i);
   assert.match(showcase, /bunyi halus/i);
+  assert.match(showcase, /overflow menu yang dirender melalui portal/i);
+  assert.match(showcase, /live region polite yang stabil/i);
   assert.match(showcase, /MobileCheckoutPanel/);
   assert.match(design, /full viewport/i);
   assert.match(design, /continuity transition/i);
@@ -194,6 +206,10 @@ test("cart is an accessible full-screen bottom drawer at every width", async () 
   assert.match(source, /cartCloseRef\.current\?\.focus/);
   assert.match(source, /cartReturnFocusRef\.current\?\.focus/);
   assert.match(source, /focusableElements/);
+  assert.match(source, /focusableElements\(cartMenuRef\.current\)/);
+  assert.match(source, /const backgroundNodes = \[\];/);
+  assert.match(source, /setAttribute\("inert", ""\)/);
+  assert.match(source, /event\.key === "Tab"/);
   assert.match(source, /aria-controls="retail-pos-cart"/);
   assert.match(source, /event\.key === "Escape"/);
   assert.match(source, /retail-pos-cart-scrim/);
@@ -288,12 +304,15 @@ test("clear cart is a destructive header overflow action instead of a checkout p
     1,
   );
   assert.match(source, /aria-label="Opsi keranjang"/);
+  assert.match(source, /aria-label="Opsi keranjang"[\s\S]*className="pos-touch-target grid size-11/);
   assert.match(source, /aria-haspopup="menu"/);
   assert.match(source, /role="menu"/);
   assert.match(source, /role="menuitem"/);
   assert.match(source, /matchAnchorWidth=\{false\}/);
   assert.match(source, /align="end"/);
   assert.match(source, /text-danger/);
+  assert.match(source, />Pertahankan keranjang</);
+  assert.match(source, />Kosongkan keranjang</);
   assert.match(source, /disabled=\{checkoutPending\}/);
   assert.match(source, /if \(cartMenuOpen\)[\s\S]*setCartMenuOpen\(false\)/);
   assert.match(source, /if \(store\.cart\.length === 0\) setCartMenuOpen\(false\);/);
@@ -321,6 +340,7 @@ test("cart fills the viewport and progressively discloses checkout at every widt
   assert.match(component, /damping: 30/);
   assert.match(component, /mass: 0\.82/);
   assert.match(component, /height: expanded \? "auto" : 0/);
+  assert.match(component, /className="mobile-checkout-details"/);
   assert.match(component, /inert=\{!expanded\}/);
   assert.match(component, /size="md"/);
   assert.doesNotMatch(component, /size=\{expanded \? "sm" : "md"\}/);
@@ -331,6 +351,8 @@ test("cart fills the viewport and progressively discloses checkout at every widt
   assert.match(css, /\.retail-pos-cart-pane\s*\{[\s\S]*width:\s*100%[\s\S]*height:\s*100svh/);
   assert.match(css, /\.retail-pos-standard-checkout\s*\{[\s\S]*display:\s*none/);
   assert.match(css, /\.retail-pos-mobile-checkout\s*\{[\s\S]*display:\s*block/);
+  assert.match(css, /\.mobile-checkout-panel\s*\{[\s\S]*overflow:\s*visible/);
+  assert.match(css, /\.mobile-checkout-details\[aria-hidden="false"\]\s*\{[\s\S]*overflow-y:\s*auto/);
   assert.doesNotMatch(css, /@container retail-pos \(min-width:\s*640px\)/);
 });
 

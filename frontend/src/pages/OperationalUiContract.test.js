@@ -60,6 +60,35 @@ test("stock movement submit uses the Family-like primary CTA hierarchy", async (
   assert.match(source, /type="submit"[\s\S]{0,240}size="md"[\s\S]{0,120}className="w-full"/);
 });
 
+test("stock movement picker exposes a keyboard combobox and inline recovery states", async () => {
+  const source = await readFile(new URL("./StockPage.jsx", import.meta.url), "utf8");
+  const store = await readFile(new URL("../pos/store.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /<label id=\{labelId\} htmlFor=\{inputId\}>\{label\}<\/label>/);
+  assert.match(source, /role="combobox"/);
+  assert.match(source, /aria-activedescendant/);
+  assert.match(source, /role="listbox"/);
+  assert.match(source, /event\.key === "Escape"/);
+  assert.match(source, /Mencari…/);
+  assert.match(source, /role="alert" className="rounded-control border border-danger/);
+  assert.match(store, /return fetchProductSearch\(api, \{ q, limit, signal \}\);/);
+});
+
+test("stock keeps filtered, announced, and loading states aligned with the settled ledger", async () => {
+  const source = await readFile(new URL("./StockPage.jsx", import.meta.url), "utf8");
+  const overview = await readFile(new URL("../components/stock/StockOverview.jsx", import.meta.url), "utf8");
+  const skeleton = await readFile(new URL("../components/page-loading.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /hasMovementFilters=\{hasMovementFilters\}/);
+  assert.match(source, /role="status" aria-live="polite" aria-atomic="true"/);
+  assert.match(source, /getStockErrorMessage/);
+  assert.match(overview, /title="Tidak ada aktivitas yang cocok"/);
+  assert.match(overview, /role="alert"/);
+  assert.match(skeleton, /export function StockPageSkeleton/);
+  assert.match(skeleton, /<main className="min-h-0 flex-1 overflow-auto bg-app-bg p-4">/);
+  assert.match(skeleton, /\[5, 6\]/);
+});
+
 test("transaction filters use the product-style draft-and-apply drawer", async () => {
   const source = await readFile(new URL("./TransactionsPage.jsx", import.meta.url), "utf8");
 
@@ -119,4 +148,13 @@ test("all operational forms use eight-pixel field spacing", async () => {
   assert.match(report, /<form className="grid shrink-0 gap-2/);
   assert.match(report, /<div className="grid gap-2">/);
   assert.match(scanner, /<form onSubmit=\{submitManual\} className="flex gap-2"/);
+});
+
+test("stock movement dialog follows shared input radius and borderless preview surface", async () => {
+  const stock = await readFile(new URL("./StockPage.jsx", import.meta.url), "utf8");
+
+  assert.match(stock, /mobile-search-control flex h-11 items-center gap-3 rounded-control border/);
+  assert.doesNotMatch(stock, /mobile-search-control flex h-11 items-center gap-3 rounded-card border/);
+  assert.match(stock, /grid grid-cols-3 gap-2 rounded-card bg-surface-muted p-3/);
+  assert.doesNotMatch(stock, /grid grid-cols-3 gap-2 rounded-card border border-border bg-surface-muted p-3/);
 });

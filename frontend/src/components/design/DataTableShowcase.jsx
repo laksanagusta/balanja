@@ -133,7 +133,7 @@ export default function DataTableShowcase() {
           <div>
             <p className="text-base font-semibold text-text">Product list</p>
             <p className="mt-1 text-xs leading-5 text-text-muted">
-              Di produksi, trigger filter icon-only ditempatkan di shared top bar.
+              Di produksi, trigger filter icon-only ditempatkan di shared top bar. Frame daftar memakai radius panel 16px dan thumbnail control 10px agar sudut nested tetap rapi.
             </p>
           </div>
           <ProductFilterDrawer

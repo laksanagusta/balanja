@@ -13,6 +13,7 @@ import { formatVariantAttributes } from "../pos/domain.js";
 import { loadStockMovementPage } from "../pos/store-data.js";
 import { calculateStockPreview, parseQuantityInput } from "../stock/movement-preview.js";
 import { getLowStockProducts } from "../stock/stock-overview.js";
+import { getStockErrorMessage } from "../stock/stock-errors.js";
 
 const movementOptions = ["Tambah stok", "Kurangi stok", "Set stok pasti"];
 const movementValueByLabel = {
@@ -76,9 +77,6 @@ export default function StockPage() {
   }, []);
 
   const lowStockProducts = React.useMemo(() => getLowStockProducts(activeProducts), [activeProducts]);
-
-  if ((loading.products && !loaded.products) || table.isInitialLoading) return <StockPageSkeleton />;
-
   const topBarActions = topBarActionsTarget
     ? createPortal(
       <>
@@ -93,6 +91,21 @@ export default function StockPage() {
       topBarActionsTarget,
     )
     : null;
+
+  if ((loading.products && !loaded.products) || table.isInitialLoading) {
+    return (
+      <>
+        {topBarActions}
+        <StockPageSkeleton />
+      </>
+    );
+  }
+
+  const normalizedQuery = debouncedQuery.trim();
+  const hasMovementFilters = Boolean(normalizedQuery || typeFilter !== "Semua pergerakan");
+  const resultAnnouncement = table.error
+    ? ""
+    : `${table.rows.length} aktivitas stok dimuat.`;
 
   return (
     <>
@@ -115,6 +128,9 @@ export default function StockPage() {
 
         <main className="min-h-0 flex-1 overflow-auto bg-app-bg p-4">
           <div className="w-full">
+            <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+              {resultAnnouncement}
+            </div>
             <StockOverview
               lowStockProducts={lowStockProducts}
               products={activeProducts}
@@ -124,6 +140,11 @@ export default function StockPage() {
               hasMoreMovements={table.hasMore}
               loadingMore={table.loading}
               onLoadMore={() => table.error && !table.hasMore ? table.retry() : table.loadMore()}
+              hasMovementFilters={hasMovementFilters}
+              onResetFilters={() => {
+                setQuery("");
+                setTypeFilter("Semua pergerakan");
+              }}
               onRestock={(product) => {
                 setDialogProductId(product.id);
                 setDialogVariantId(product.variantId || "");
@@ -159,14 +180,10 @@ export default function StockPage() {
               setDialogVariantId("");
             }}
             onSubmit={async (input) => {
-              const result = await createStockMovement(input);
-              if (result) {
-                await table.reset();
-                toast.success("Pergerakan stok disimpan");
-                setDialogOpen(false);
-              } else {
-                toast.error("Gagal menyimpan pergerakan stok");
-              }
+              await createStockMovement(input);
+              await table.reset();
+              toast.success("Pergerakan stok disimpan");
+              setDialogOpen(false);
             }}
           />
         )}
@@ -183,6 +200,7 @@ function MovementDialog({ products, searchProducts, initialProductId = "", initi
   const [reason, setReason] = React.useState("");
   const [submitAttempted, setSubmitAttempted] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState("");
   const product = React.useMemo(() => products.find((item) => item.id === productId), [products, productId]);
   const variants = React.useMemo(
     () => (product?.variants || []).filter((variant) => variant.active !== false),
@@ -199,7 +217,7 @@ function MovementDialog({ products, searchProducts, initialProductId = "", initi
   const quantity = parseQuantityInput(quantityText);
   const currentStock = selectedVariant?.stock ?? product?.stock ?? 0;
   const preview = calculateStockPreview({ type, currentStock, quantity });
-  const quantityError = getQuantityError({ type, quantityText, quantity, product, preview });
+  const quantityError = getQuantityError({ type, quantityText, quantity, product, currentStock, preview });
   const productError = !product
     ? "Pilih produk aktif."
     : variants.length > 0 && !selectedVariant
@@ -211,11 +229,14 @@ function MovementDialog({ products, searchProducts, initialProductId = "", initi
   async function submit(event) {
     event.preventDefault();
     setSubmitAttempted(true);
+    setSubmitError("");
     if (!canSubmit) return;
     setIsSaving(true);
     try {
       const variantId = selectedVariant?.id;
       await onSubmit({ productId, variantId, type, quantity, reason: reason.trim() });
+    } catch (error) {
+      setSubmitError(getStockErrorMessage(error, "Pergerakan stok belum tersimpan. Periksa isian lalu coba lagi."));
     } finally {
       setIsSaving(false);
     }
@@ -237,7 +258,7 @@ function MovementDialog({ products, searchProducts, initialProductId = "", initi
             size="md"
             className="w-full"
           >
-            {isSaving ? "Menyimpan..." : "Simpan"}
+            {isSaving ? "Menyimpan…" : "Simpan"}
           </Button>
         </>
       )}
@@ -284,7 +305,13 @@ function MovementDialog({ products, searchProducts, initialProductId = "", initi
             inputProps={{ value: reason, onChange: (event) => setReason(event.target.value) }}
           />
 
-          <div className="grid grid-cols-3 gap-2 rounded-card border border-border bg-surface-muted p-3">
+          {submitError ? (
+            <div role="alert" className="rounded-control border border-danger/30 bg-danger-soft px-3 py-2 text-sm font-medium leading-5 text-danger">
+              {submitError}
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-3 gap-2 rounded-card bg-surface-muted p-3">
             <PreviewMetric label="Saat ini" value={numberFormatter.format(currentStock)} />
             <PreviewMetric label="Selisih" value={`${preview.delta > 0 ? "+" : ""}${numberFormatter.format(preview.delta)}`} tone={preview.delta >= 0 ? "success" : "danger"} />
             <PreviewMetric label="Setelah" value={numberFormatter.format(preview.stockAfter)} />
@@ -300,13 +327,22 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
   const [isOpen, setIsOpen] = React.useState(false);
   const [results, setResults] = React.useState(() => products.slice(0, 6));
   const [isSearching, setIsSearching] = React.useState(false);
+  const [searchError, setSearchError] = React.useState("");
+  const [activeIndex, setActiveIndex] = React.useState(-1);
   const containerRef = React.useRef(null);
   const popoverRef = React.useRef(null);
+  const inputRef = React.useRef(null);
+  const generatedId = React.useId().replaceAll(":", "");
+  const inputId = `${generatedId}-input`;
+  const labelId = `${generatedId}-label`;
+  const listboxId = `${generatedId}-listbox`;
+  const errorId = `${generatedId}-error`;
   const debouncedQuery = useDebouncedValue(query, 220);
   const selectedProduct = React.useMemo(
     () => [...products, ...results].find((item) => item.id === value),
     [products, results, value],
   );
+  const optionId = (index) => `${listboxId}-option-${index}`;
 
   React.useEffect(() => {
     if (!selectedProduct || isOpen) return;
@@ -318,13 +354,21 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
     const controller = new AbortController();
     async function search() {
       setIsSearching(true);
+      setSearchError("");
       const nextProducts = await searchProducts({ q: debouncedQuery.trim(), limit: 6, signal: controller.signal });
       if (!controller.signal.aborted) {
         setResults(nextProducts);
+        setActiveIndex(nextProducts.length ? 0 : -1);
         setIsSearching(false);
       }
     }
-    search();
+    search().catch((searchErrorValue) => {
+      if (controller.signal.aborted) return;
+      setResults([]);
+      setActiveIndex(-1);
+      setSearchError(getStockErrorMessage(searchErrorValue, "Produk belum dapat dicari. Coba lagi."));
+      setIsSearching(false);
+    });
     return () => {
       controller.abort();
     };
@@ -339,20 +383,77 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
     return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
   }, [isOpen]);
 
+  function closePicker() {
+    setIsOpen(false);
+    setActiveIndex(-1);
+  }
+
+  function selectProduct(product) {
+    onChange(product.id);
+    setQuery(formatProductOption(product));
+    closePicker();
+  }
+
+  function handleInputKeyDown(event) {
+    if (event.key === "Escape" && isOpen) {
+      event.preventDefault();
+      event.stopPropagation();
+      closePicker();
+      return;
+    }
+    if (!isOpen && ["ArrowDown", "Enter", " "].includes(event.key)) {
+      event.preventDefault();
+      setIsOpen(true);
+      setActiveIndex(results.length ? 0 : -1);
+      return;
+    }
+    if (!isOpen || !results.length) return;
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      const nextIndex = event.key === "Home"
+        ? 0
+          : event.key === "End"
+            ? results.length - 1
+            : event.key === "ArrowDown"
+              ? Math.min(results.length - 1, Math.max(-1, activeIndex) + 1)
+            : Math.max(0, Math.max(0, activeIndex) - 1);
+      setActiveIndex(nextIndex);
+      return;
+    }
+    if (event.key === "Enter" && activeIndex >= 0) {
+      event.preventDefault();
+      selectProduct(results[activeIndex]);
+    }
+  }
+
   return (
     <div ref={containerRef} className="relative grid gap-2 text-sm font-semibold text-text">
-      <span>{label}</span>
+      <label id={labelId} htmlFor={inputId}>{label}</label>
       <div
-        className={`mobile-search-control flex h-10 items-center gap-3 rounded-card border bg-surface px-3.5 shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 transition-colors duration-base ease-standard motion-reduce:transition-none ${
+        className={`mobile-search-control flex h-11 items-center gap-3 rounded-control border bg-surface px-3.5 shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 transition-colors duration-base ease-standard motion-reduce:transition-none ${
           error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
         }`}
       >
         <Icon name="search" className="size-4 shrink-0 text-text-muted" />
         <input
+          id={inputId}
+          ref={inputRef}
+          role="combobox"
+          aria-labelledby={labelId}
+          aria-autocomplete="list"
+          aria-expanded={isOpen}
+          aria-controls={isOpen && !isSearching && !searchError ? listboxId : undefined}
+          aria-activedescendant={isOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : undefined}
           className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle"
           placeholder={placeholder}
           value={query}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            setIsOpen(true);
+            if (activeIndex < 0 && results.length) setActiveIndex(0);
+          }}
+          onKeyDown={handleInputKeyDown}
           onChange={(event) => {
             setQuery(event.target.value);
             setIsOpen(true);
@@ -367,33 +468,39 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
           className="grid max-h-72 gap-1 overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-panel"
         >
           {isSearching ? (
-            <div className="px-3 py-4 text-sm font-medium text-text-muted">Mencari...</div>
+            <div role="status" className="px-3 py-4 text-sm font-medium text-text-muted">Mencari…</div>
+          ) : searchError ? (
+            <div role="alert" className="px-3 py-4 text-sm font-medium text-danger">{searchError}</div>
           ) : results.length === 0 ? (
             <div className="px-3 py-4 text-sm font-medium text-text-muted">Tidak ada produk yang cocok</div>
           ) : (
-            results.map((product) => (
-              <button
-                key={product.id}
-                type="button"
-                onClick={() => {
-                  onChange(product.id);
-                  setQuery(formatProductOption(product));
-                  setIsOpen(false);
-                }}
-                className={`grid rounded-button px-3 py-2 text-left transition duration-fast ease-standard hover:bg-surface-muted ${
-                  product.id === value ? "bg-surface-muted" : ""
-                }`}
-              >
-                <span className="truncate text-sm font-semibold text-text">{product.name}</span>
-                <span className="truncate text-xs font-medium text-text-muted">
-                  {product.barcode || "Tanpa barcode"} · {product.category || "Tanpa kategori"} · {product.unit || "pcs"}
-                </span>
-              </button>
-            ))
+            <div id={listboxId} role="listbox" aria-labelledby={labelId}>
+              {results.map((product, index) => (
+                <button
+                  key={product.id}
+                  type="button"
+                  id={optionId(index)}
+                  role="option"
+                  aria-selected={product.id === value}
+                  tabIndex={-1}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onClick={() => selectProduct(product)}
+                  className={`grid w-full rounded-button px-3 py-2 text-left transition duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus ${
+                    product.id === value || activeIndex === index ? "bg-surface-muted" : ""
+                  }`}
+                >
+                  <span className="truncate text-sm font-semibold text-text">{product.name}</span>
+                  <span className="truncate text-xs font-medium text-text-muted">
+                    {product.barcode || "Tanpa barcode"} · {product.category || "Tanpa kategori"} · {product.unit || "pcs"}
+                  </span>
+                </button>
+              ))}
+            </div>
           )}
         </FloatingPopover>
       )}
-      <FieldError>{error}</FieldError>
+      <FieldError id={errorId}>{error}</FieldError>
     </div>
   );
 }
@@ -402,12 +509,12 @@ function formatProductOption(product) {
   return product.name;
 }
 
-function getQuantityError({ type, quantityText, quantity, product, preview }) {
+function getQuantityError({ type, quantityText, quantity, product, currentStock, preview }) {
   if (!quantityText) return type === "set_exact" ? "Masukkan target stok." : "Masukkan jumlah.";
   if (type !== "set_exact" && quantity <= 0) return "Jumlah harus lebih dari nol.";
   if (type === "set_exact" && quantity < 0) return "Target stok tidak boleh negatif.";
   if (product && preview.stockAfter < 0) return "Jumlah melebihi stok saat ini.";
-  if (type === "set_exact" && product && quantity === product.stock) return "Target stok harus mengubah stok saat ini.";
+  if (type === "set_exact" && product && quantity === currentStock) return "Target stok harus mengubah stok saat ini.";
   if (!preview.isValid) return "Masukkan jumlah stok yang valid.";
   return "";
 }

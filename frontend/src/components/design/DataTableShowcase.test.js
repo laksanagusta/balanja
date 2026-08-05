@@ -10,6 +10,8 @@ test("design system demonstrates six-item load-more collections", async () => {
   assert.match(source, /ProductFilterDrawer/);
   assert.doesNotMatch(source, /ProductCategoryPills/);
   assert.match(source, /ProductList/);
+  assert.match(source, /rounded-panel border border-border bg-surface/);
+  assert.match(source, /radius panel 16px dan thumbnail control 10px/);
   assert.match(source, /Muat lebih banyak/);
   assert.match(source, /count \+ 6/);
   assert.match(source, /setVisibleTransactionCount\(\(count\) => count \+ 6\)/);

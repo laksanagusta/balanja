@@ -22,6 +22,8 @@ const lowStock = [
   { id: "coffee", name: "Kopi Susu", category: "Minuman", unit: "botol", stock: 0 },
   { id: "bread", name: "Roti Cokelat", category: "Makanan", unit: "pcs", stock: 4 },
   { id: "soap", name: "Sabun Mandi", category: "Kebutuhan rumah", unit: "pcs", stock: 8 },
+  { id: "shampoo", name: "Sampo Keluarga", category: "Perawatan", unit: "botol", stock: 9 },
+  { id: "tissue", name: "Tisu Wajah", category: "Kebutuhan rumah", unit: "pak", stock: 10 },
 ];
 
 export default function DashboardPatternsShowcase() {
@@ -32,7 +34,7 @@ export default function DashboardPatternsShowcase() {
         <p className="text-sm leading-6 text-text-muted">
           Home menempatkan ringkasan, perhatian operasional, dan tindakan lanjutan dalam urutan yang jelas. Pendapatan memakai violet sebagai satu-satunya chart utama,
           produk terlaris memakai ranked list yang menampilkan unit dan nilai tepat, sedangkan analisis metode pembayaran tetap berada di Laporan Penjualan.
-          Nilai KPI tidak dipotong, stok habis selalu didahulukan dari stok menipis, dan paket Free memakai trigger compact dengan gradient lembut yang membuka detail Pro di bottom drawer. Drawer menjaga inset dan rhythm spacing yang konsisten, sementara fitur Pro berada dalam frame abu-abu yang terpisah.
+          Nilai KPI tidak dipotong, jumlah stok menampilkan total meski daftar prioritas dibatasi lima baris, dan paket Free memakai trigger compact dengan gradient lembut yang membuka detail Pro di bottom drawer. Drawer menjaga inset dan rhythm spacing yang konsisten, sementara fitur Pro berada dalam frame abu-abu yang terpisah.
         </p>
         <SubscriptionCard preview />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -43,10 +45,10 @@ export default function DashboardPatternsShowcase() {
           <DashboardKpiCard label="Rata-rata transaksi" value="Rp28.071" comparison={{ direction: "down", percent: -2.3 }} />
         </div>
         <div className="grid gap-4 xl:grid-cols-12">
-          <div className="min-w-0 xl:col-span-4 xl:col-start-9 xl:row-start-1">
-            <LowStockPanel products={lowStock} onManageStock={() => {}} />
+          <div className="min-w-0 xl:col-span-4 xl:col-start-1 xl:row-start-1">
+            <LowStockPanel products={lowStock} count={7} onManageStock={() => {}} />
           </div>
-          <div className="min-w-0 xl:col-span-8 xl:col-start-1 xl:row-start-1">
+          <div className="min-w-0 xl:col-span-8 xl:col-start-5 xl:row-start-1">
             <RevenueTrendPanel data={revenueTrend} hasData days={7} />
           </div>
         </div>

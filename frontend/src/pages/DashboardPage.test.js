@@ -24,11 +24,14 @@ test("dashboard low-stock insight provides a direct stock-management handoff", a
   assert.match(dashboard, /function DashboardPage\(\{ onNavigate \}\)/);
   assert.match(dashboard, /import \{ formatPrice, routes \}/);
   assert.match(dashboard, /onManageStock=\{\(\) => onNavigate\(routes\.stock\)\}/);
-  assert.match(panel, /function LowStockPanel\(\{ products, onManageStock \}\)/);
+  assert.match(panel, /function LowStockPanel\(\{ products = \[\], count = products\.length, onManageStock \}\)/);
   assert.match(panel, /Kelola stok/);
-  assert.match(panel, /products\.length && onManageStock/);
+  assert.match(panel, /hasLowStock && onManageStock/);
+  assert.match(dashboard, /count=\{visibleAnalytics\.lowStockCount\}/);
+  assert.match(panel, /Menampilkan \{products\.length\} produk dengan stok terendah/);
   assert.match(charts, /<Line dataKey="revenue"[^>]*showMarkers=\{data\.length < 3\}/);
-  assert.match(panel, /\{product\.category\} · \{product\.unit\}/);
+  assert.match(panel, /line-clamp-2 text-sm font-semibold text-text/);
+  assert.match(panel, /title=\{product\.name\}/);
 });
 
 test("dashboard home prioritizes today, attention, and direct report handoff", async () => {
@@ -65,7 +68,33 @@ test("dashboard home prioritizes today, attention, and direct report handoff", a
   assert.match(charts, /<ol className="mt-3">/);
   assert.doesNotMatch(charts, /\bdivide-y\b/);
   assert.match(charts, /Lihat laporan penjualan/);
+  assert.match(charts, /Data rinci tren pendapatan/);
+  assert.match(charts, /aria-describedby=\{descriptionId\}/);
   assert.doesNotMatch(metric, /truncate/);
+  assert.match(dashboard, /aria-labelledby="dashboard-heading"/);
+  assert.match(dashboard, /mobile-compact-control relative inline-flex/);
+  assert.match(dashboard, /summaryError/);
+  assert.match(dashboard, /Coba lagi/);
+  assert.match(dashboard, /xl:col-start-1/);
+  assert.match(dashboard, /xl:col-start-5/);
+  assert.match(showcase, /count=\{7\}/);
+  assert.match(design, /complete screen-reader data table/);
   assert.match(design, /acts as the authenticated home, not a duplicate sales report/);
   assert.match(design, /compact subscription trigger[\s\S]*bottom drawer/);
+});
+
+test("dashboard loading and failure states preserve the actionable contract", async () => {
+  const dashboard = await readFile(new URL("./DashboardPage.jsx", import.meta.url), "utf8");
+  const skeleton = await readFile(new URL("../components/page-loading.jsx", import.meta.url), "utf8");
+
+  assert.match(dashboard, /localizedDashboardError/);
+  assert.match(dashboard, /if \(controller\.signal\.aborted\) return;/);
+  assert.match(dashboard, /DashboardErrorState/);
+  assert.match(dashboard, /role="alert"/);
+  assert.match(dashboard, /showSubscription=\{store\.entitlement\?\.status !== "paid_active"\}/);
+  assert.match(skeleton, /function DashboardPageSkeleton\(\{ showSubscription = true \}\)/);
+  assert.match(skeleton, /Memuat periode dashboard/);
+  assert.match(skeleton, /Indikator kinerja utama/);
+  assert.match(skeleton, /showSubscription \?/);
+  assert.match(skeleton, /xl:col-start-5/);
 });

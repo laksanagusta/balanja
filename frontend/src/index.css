@@ -20,12 +20,12 @@
   --color-accent: #1d1d1f;
   --color-accent-hover: #151517;
   --color-accent-soft: #f2f2f3;
-  --color-danger: #ef4444;
+  --color-danger: #d32f2f;
   --color-danger-soft: #fff1f1;
-  --color-success: #168a4a;
+  --color-success: #147a42;
   --color-success-soft: #eaf7ef;
   --color-success-control: #34c759;
-  --color-warning: #ad6a00;
+  --color-warning: #9a5900;
   --color-warning-soft: #fff4da;
   --color-focus: #4a4a4d;
   --color-chart-violet: #7867e6;
@@ -179,6 +179,29 @@
   .font-landing .font-bold,
   .font-landing .font-extrabold {
     font-weight: 600;
+  }
+
+  .public-skip-link,
+  .app-skip-link {
+    position: fixed;
+    z-index: 60;
+    inset-block-start: 0.75rem;
+    inset-inline-start: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-button);
+    background: var(--color-accent);
+    color: white;
+    box-shadow: var(--shadow-panel);
+    transform: translateY(-200%);
+    transition: transform var(--duration-fast) var(--ease-standard);
+  }
+
+  .public-skip-link:focus-visible,
+  .app-skip-link:focus-visible {
+    transform: translateY(0);
+    outline: 2px solid var(--color-surface);
+    outline-offset: 4px;
   }
 
   .mobile-app-bar {
@@ -677,8 +700,18 @@
 
   .mobile-checkout-panel {
     max-block-size: calc(100svh - 5rem);
+    overflow: visible;
+  }
+
+  .mobile-checkout-details[aria-hidden="false"] {
+    max-block-size: min(48svh, 28rem);
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  .mobile-checkout-details[aria-hidden="true"] {
+    overflow: hidden;
   }
 
   .retail-pos-cart-list {
@@ -766,11 +799,14 @@
     font-size: 0.9375rem;
     font-weight: 500;
     line-height: 1.35;
+    text-wrap: balance;
   }
 
   .pos-product-card .product-card-price {
     font-size: 0.9375rem;
-    font-weight: 750;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
     line-height: 1.25;
     color: var(--color-text);
   }
@@ -820,7 +856,7 @@
   .product-add-ring {
     position: absolute;
     inset: 0;
-    border-radius: 6px;
+    border-radius: var(--radius-panel);
     pointer-events: none;
     box-shadow: inset 0 0 0 2px rgb(22 138 74 / 0.28);
     opacity: 0;
@@ -982,6 +1018,13 @@
 
 .public-header .header-compact-action-surface {
   padding-inline: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-skip-link,
+  .app-skip-link {
+    transition: none;
+  }
 }
 
 @media (prefers-reduced-transparency: reduce) {
@@ -1252,7 +1295,6 @@
   animation-duration: var(--duration-fast);
   animation-timing-function: var(--ease-standard);
   transform-origin: center;
-  will-change: transform, color;
 }
 
 @keyframes pos-skeleton-rise {

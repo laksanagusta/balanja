@@ -2,11 +2,11 @@ import React from "react";
 import { Badge, Panel } from "../primitives.jsx";
 
 const tokens = [
-  ["Success", "--color-success", "#168a4a"],
+  ["Success", "--color-success", "#147a42"],
   ["Success Soft", "--color-success-soft", "#eaf7ef"],
-  ["Warning", "--color-warning", "#ad6a00"],
+  ["Warning", "--color-warning", "#9a5900"],
   ["Warning Soft", "--color-warning-soft", "#fff4da"],
-  ["Danger", "--color-danger", "#ef4444"],
+  ["Danger", "--color-danger", "#d32f2f"],
   ["Danger Soft", "--color-danger-soft", "#fff1f1"],
   ["Accent Soft", "--color-accent-soft", "#f2f2f3"],
   ["Muted Surface", "--color-surface-muted", "#f6f6f6"],

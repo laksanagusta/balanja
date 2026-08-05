@@ -10,9 +10,16 @@ export function EmptyState({
   titleClassName = "text-base",
   descriptionClassName = "text-sm",
   borderClassName = "border-2",
+  role,
+  ariaLive,
 }) {
   return (
-    <div className={`grid place-items-center gap-3 rounded-card ${borderClassName} border-dashed border-border bg-surface-muted p-8 text-center ${className}`}>
+    <div
+      role={role}
+      aria-live={ariaLive}
+      aria-atomic={ariaLive ? "true" : undefined}
+      className={`grid place-items-center gap-3 rounded-card ${borderClassName} border-dashed border-border bg-surface-muted p-8 text-center ${className}`}
+    >
       {icon && (
         <span className="flex size-14 items-center justify-center rounded-full bg-surface text-text-subtle">
           <Icon name={icon} className="size-7" />

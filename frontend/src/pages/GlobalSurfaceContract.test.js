@@ -37,7 +37,7 @@ test("page chrome and shared flat collections do not use structural dividers", a
   for (const file of files) {
     const source = await readFile(new URL(file, import.meta.url), "utf8");
     const pattern = file === "./LandingPage.jsx"
-      ? /\b(?:border-b|divide-y)\b|\bborder-t\b(?! border-border pt-5 font-mono)/
+      ? /\b(?:border-b|divide-y)\b|\bborder-t\b(?! border-border pt-5 text-xs font-medium tracking-\[0\.08em\])/
       : dividerPattern;
     assert.doesNotMatch(source, pattern, `${file} contains a structural divider`);
   }

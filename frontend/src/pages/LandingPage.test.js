@@ -45,6 +45,8 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.doesNotMatch(source, /bg-black\/55/);
   assert.match(source, /text-text-muted/);
   assert.match(source, /routes\.login/);
+  assert.match(source, /public-skip-link/);
+  assert.match(source, /id="landing-main" tabIndex=\{-1\}/);
   assert.match(source, /id="fitur"/);
   assert.match(source, /id="cara-kerja"/);
   assert.match(source, /<PricingSection contacts={pricingContacts} \/>/);
@@ -61,7 +63,7 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.match(source, /marketing-reveal w-full px-4 sm:px-6/);
   assert.match(source, /relative mx-auto max-w-6xl overflow-hidden rounded-panel/);
   assert.doesNotMatch(source, />Akses</);
-  assert.match(source, /mt-12 flex flex-col gap-2 border-t border-border pt-5 font-mono text-xs tracking-\[0\.08em\]/);
+  assert.match(source, /mt-12 flex flex-col gap-2 border-t border-border pt-5 text-xs font-medium tracking-\[0\.08em\]/);
   assert.match(faq, /id="faq"/);
 });
 
@@ -83,6 +85,39 @@ test("landing typography is scoped to Inter with the reference weights", async (
   assert.doesNotMatch(showcase, /<span className="text-text-subtle">Toko lebih tenang\.<\/span>/);
 });
 
+test("landing typography balances headings, prettifies short copy, and uses scalable leading", async () => {
+  const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../components/design/MarketingPatternsShowcase.jsx", import.meta.url), "utf8");
+  const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(page, /text-balance/);
+  assert.match(page, /text-pretty/);
+  assert.match(page, /leading-\[1\.6\]/);
+  assert.match(page, /max-w-\[48ch\]/);
+  assert.doesNotMatch(page, /const eyebrowLabelClassName = "[^\"]*font-mono/);
+  assert.doesNotMatch(page, /pt-5 font-mono text-xs/);
+  assert.match(showcase, /text-balance/);
+  assert.match(showcase, /text-pretty/);
+  assert.match(designGuide, /feature-card descriptions cap their measure near 48ch/);
+});
+
+test("landing color roles preserve contrast on translucent chrome and success surfaces", async () => {
+  const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+  const tokens = await readFile(new URL("../data.js", import.meta.url), "utf8");
+  const badgeShowcase = await readFile(new URL("../components/design/BadgeShowcase.jsx", import.meta.url), "utf8");
+  const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(page, /navItems\.map\(\(item\) => <a[\s\S]*text-text hover:text-accent-hover/);
+  assert.match(css, /--color-success:\s*#147a42;/);
+  assert.match(page, /bg-surface\/88/);
+  assert.match(tokens, /\["Subtle Text", "--color-text-subtle", "#6f6f6f"\]/);
+  assert.match(tokens, /\["Success", "--color-success", "#147a42"\]/);
+  assert.match(badgeShowcase, /\["Success", "--color-success", "#147a42"\]/);
+  assert.match(designGuide, /success text token is the darker semantic green `#147a42`/);
+  assert.match(designGuide, /88% surface veil/);
+});
+
 test("design system owns the solid closing CTA treatment", async () => {
   const showcase = await readFile(new URL("../components/design/MarketingPatternsShowcase.jsx", import.meta.url), "utf8");
   const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
@@ -93,7 +128,7 @@ test("design system owns the solid closing CTA treatment", async () => {
   assert.match(showcase, /Closing CTA on a quiet solid surface/);
   assert.match(designGuide, /closing landing CTA uses a quiet solid white surface/);
   assert.match(showcase, /Pricing · one plan/);
-  assert.match(showcase, /<PricingPanel showcase \/>/);
+  assert.match(showcase, /<PricingPanel showcase contacts=/);
   assert.match(showcase, /compact contact popover/);
   assert.match(designGuide, /pricing section uses one `Pro` plan/);
 });
@@ -205,6 +240,40 @@ test("landing interactions keep accessible touch targets and press feedback", as
   assert.match(page, /press-feedback/);
   assert.match(faq, /press-feedback/);
   assert.match(css, /\.press-feedback:active/);
+});
+
+test("landing review fixes stay synchronized across production and showcase patterns", async () => {
+  const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
+  const faq = await readFile(new URL("../landing/FaqSection.jsx", import.meta.url), "utf8");
+  const pricing = await readFile(new URL("../landing/PricingSection.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../components/design/MarketingPatternsShowcase.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+  const design = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
+
+  assert.match(page, /w-\[calc\(100%-2rem\)\] max-w-6xl[\s\S]*bg-surface\/88[\s\S]*sm:w-\[calc\(100%-3rem\)\]/);
+  assert.doesNotMatch(page, /min-h-\[520px\]/);
+  assert.match(faq, /text-balance/);
+  assert.match(faq, /leading-\[1\.6\]/);
+  assert.match(pricing, /hasContactChannel/);
+  assert.match(pricing, /Kontak upgrade belum tersedia/);
+  assert.match(pricing, /size-11/);
+  assert.match(pricing, /text-balance/);
+  assert.match(pricing, /leading-\[1\.6\]/);
+  assert.doesNotMatch(pricing, /Kontak WhatsApp belum tersedia/);
+  assert.doesNotMatch(pricing, /Kontak email belum tersedia/);
+  assert.match(showcase, /contacts=\{\{ whatsapp:/);
+  assert.match(css, /\.public-skip-link:focus-visible/);
+  assert.match(design, /first keyboard stop on the landing page/);
+});
+
+test("public header and footer anchors share offset-aware motion behavior", async () => {
+  const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
+  const motion = await readFile(new URL("../landing/motion.js", import.meta.url), "utf8");
+
+  assert.match(page, /function handlePublicSectionNavigation/);
+  assert.match(page, /onClick=\{\(event\) => handlePublicSectionNavigation\(event, item\.href\)\}/);
+  assert.match(motion, /offset = 96/);
+  assert.match(motion, /prefers-reduced-motion/);
 });
 
 test("compact header action keeps a 44px transparent hit area without changing its visual size", async () => {

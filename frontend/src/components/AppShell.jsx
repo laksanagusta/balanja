@@ -329,6 +329,7 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
 
   return (
     <div className="h-svh overflow-hidden bg-app-bg">
+      <a href="#app-main-content" className="app-skip-link">Lewati ke konten utama</a>
       <div className="mx-auto flex h-full w-full max-w-[1200px] overflow-hidden bg-surface">
         <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-surface">
           {!immersive && <header className="mobile-app-bar shrink-0 bg-surface px-4 pb-3 w-full">
@@ -405,7 +406,7 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
             </div>
           )}
 
-          <div ref={contentRef} className="app-shell-content min-h-0 flex-1 overflow-hidden">{children}</div>
+          <div ref={contentRef} id="app-main-content" tabIndex={-1} className="app-shell-content min-h-0 flex-1 overflow-hidden">{children}</div>
 
           {!immersive && <MobileBottomNavigation
             navigationRef={bottomNavigationRef}

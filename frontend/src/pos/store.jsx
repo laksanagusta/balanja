@@ -81,12 +81,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
   }, [api]);
 
   const searchProducts = React.useCallback(async ({ q = "", limit = 6, signal } = {}) => {
-    try {
-      return await fetchProductSearch(api, { q, limit, signal });
-    } catch (error) {
-      if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to search products");
-      return [];
-    }
+    return fetchProductSearch(api, { q, limit, signal });
   }, [api]);
 
   const loadSettings = React.useCallback(async ({ force = false, signal } = {}) => {
@@ -332,14 +327,10 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
   }, [api, cart, cashierName, loadEntitlement]);
 
   const createStockMovement = React.useCallback(async (input) => {
-    try {
-      const result = await api.createStockMovement({ ...input, createdByUserName: cashierName });
-      setProducts((current) => applyProductStock(current, result.product));
-      productsRef.current = applyProductStock(productsRef.current, result.product);
-      return result;
-    } catch {
-      return null;
-    }
+    const result = await api.createStockMovement({ ...input, createdByUserName: cashierName });
+    setProducts((current) => applyProductStock(current, result.product));
+    productsRef.current = applyProductStock(productsRef.current, result.product);
+    return result;
   }, [api, cashierName]);
 
   const updateSettings = React.useCallback(async (input) => {
