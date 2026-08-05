@@ -9,6 +9,7 @@ export default function ProductEditorWorkspace({
   editing,
   editorStep,
   headingRef,
+  primaryFieldRef,
   discardConfirmOpen,
   savingProduct,
   productErrors,
@@ -23,6 +24,7 @@ export default function ProductEditorWorkspace({
   onStepChange,
   onOpenVariantEditor,
   onUpdate,
+  onBlurField,
   onSelectPhoto,
   onRemovePhoto,
   onCreateCategory,
@@ -37,7 +39,9 @@ export default function ProductEditorWorkspace({
   onDuplicateAttribute,
   onMoveAttribute,
   onRemoveAttribute,
+  onBlurAttributeField,
   onUpdateVariant,
+  onBlurVariantField,
   onApplyBulk,
   onSetAllActive,
   onScanVariantBarcode,
@@ -60,7 +64,7 @@ export default function ProductEditorWorkspace({
               className="inline-flex min-h-11 justify-self-start items-center gap-1.5 rounded-control px-2 text-sm font-semibold text-text-muted transition-[transform,background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
             >
               <Icon name="chevron-left" className="size-4" />
-              Kembali
+              Kembali ke daftar
             </button>
             <h1 className="max-w-[45vw] truncate text-center text-sm font-semibold uppercase tracking-[0.14em] text-text sm:max-w-none">{title}</h1>
             <span aria-hidden="true" />
@@ -96,8 +100,10 @@ export default function ProductEditorWorkspace({
                   placeholder="Beras Ramos 5kg"
                   error={productErrors.name}
                   inputProps={{
+                    ref: primaryFieldRef,
                     value: editing.name,
                     onChange: (event) => onUpdate("name", event.target.value),
+                    onBlur: () => onBlurField?.("name"),
                     required: true,
                     disabled: savingProduct,
                   }}
@@ -114,6 +120,7 @@ export default function ProductEditorWorkspace({
                         inputProps={{
                           value: editing.barcode,
                           onChange: (event) => onUpdate("barcode", event.target.value),
+                          onBlur: () => onBlurField?.("barcode"),
                           required: true,
                           disabled: savingProduct,
                         }}
@@ -139,6 +146,7 @@ export default function ProductEditorWorkspace({
                   onChange={(value) => onUpdate("categoryId", value)}
                   onCreate={onCreateCategory}
                   onRestore={onRestoreCategory}
+                  onBlur={() => onBlurField?.("categoryId")}
                   disabled={savingProduct}
                   error={productErrors.categoryId}
                 />
@@ -153,6 +161,7 @@ export default function ProductEditorWorkspace({
                       inputProps={{
                         value: formatNumberInput(editing.price),
                         onChange: (event) => onUpdate("price", normalizeNumberField(event.target.value)),
+                        onBlur: () => onBlurField?.("price"),
                         inputMode: "numeric",
                         required: true,
                         disabled: savingProduct,
@@ -166,6 +175,7 @@ export default function ProductEditorWorkspace({
                       inputProps={{
                         value: formatNumberInput(editing.stock),
                         onChange: editing.id ? undefined : (event) => onUpdate("stock", normalizeNumberField(event.target.value)),
+                        onBlur: () => onBlurField?.("stock"),
                         inputMode: "numeric",
                         required: true,
                         disabled: Boolean(editing.id) || savingProduct,
@@ -181,6 +191,7 @@ export default function ProductEditorWorkspace({
                   onChange={(value) => onUpdate("unitId", value)}
                   onCreate={onCreateUnit}
                   onRestore={onRestoreUnit}
+                  onBlur={() => onBlurField?.("unitId")}
                   disabled={savingProduct}
                   error={productErrors.unitId}
                 />
@@ -198,15 +209,15 @@ export default function ProductEditorWorkspace({
                 <div className="flex items-center justify-between gap-3 rounded-panel border border-border bg-surface-muted/40 p-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-text">
-                      {editing.attributesConfig.length > 0 ? `${editing.variants.length} variasi` : "Produk sederhana"}
+                      {editing.attributesConfig.length > 0 ? `${editing.variants.length} variasi` : "Produk tanpa variasi"}
                     </p>
                     <p className="mt-0.5 text-xs leading-5 text-text-muted">
                       {editing.attributesConfig.length > 0
-                        ? "Harga dan stok dikelola untuk setiap kombinasi."
-                        : "Tambahkan ukuran, warna, atau pilihan lain bila diperlukan."}
+                        ? "Harga, stok, dan barcode mengikuti setiap kombinasi pilihan."
+                        : "Gunakan satu harga dan stok, atau tambahkan variasi jika produk punya ukuran atau warna berbeda."}
                     </p>
                   </div>
-                  <Button type="button" variant="secondary" disabled={savingProduct} onClick={onOpenVariantEditor}>
+                  <Button type="button" size="sm" variant="secondary" className="whitespace-nowrap" disabled={savingProduct} onClick={onOpenVariantEditor}>
                     {editing.attributesConfig.length > 0 ? "Atur variasi" : "Tambah variasi"}
                   </Button>
                 </div>
@@ -237,7 +248,9 @@ export default function ProductEditorWorkspace({
                   onDuplicateAttribute={onDuplicateAttribute}
                   onMoveAttribute={onMoveAttribute}
                   onRemoveAttribute={onRemoveAttribute}
+                  onBlurAttributeField={onBlurAttributeField}
                   onUpdateVariant={onUpdateVariant}
+                  onBlurVariantField={onBlurVariantField}
                   onApplyBulk={onApplyBulk}
                   onSetAllActive={onSetAllActive}
                   onScanBarcode={onScanVariantBarcode}
@@ -249,22 +262,29 @@ export default function ProductEditorWorkspace({
       </main>
 
       <footer className="product-editor-material sticky bottom-0 z-20 shrink-0 bg-surface/94 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/82 sm:px-6 sm:pb-4">
-        <div className="mx-auto flex w-full max-w-7xl justify-end gap-2">
-          {discardConfirmOpen ? (
-            <>
-              <Button type="button" onClick={onContinueEditing}>Lanjut mengedit</Button>
-              <Button type="button" variant="danger" onClick={onDiscard}>Buang perubahan</Button>
-            </>
-          ) : (
-            <>
-              {isVariantsStep && (
-                <Button type="button" disabled={savingProduct} onClick={() => onStepChange("details")}>Kembali</Button>
-              )}
-              <Button type="submit" variant="primary" form="product-form" disabled={savingProduct} className="min-w-28">
-                <SwapText value={savingProduct ? "Menyimpan..." : "Simpan"} />
-              </Button>
-            </>
+        <div className="mx-auto w-full max-w-7xl">
+          {productErrors.form && (
+            <p role="alert" className="mb-2 rounded-control border border-danger bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
+              {productErrors.form}
+            </p>
           )}
+          <div className="form-actions w-full sm:mx-auto sm:max-w-md">
+            {discardConfirmOpen ? (
+              <>
+                <Button type="button" onClick={onContinueEditing}>Lanjut mengedit</Button>
+                <Button type="button" variant="danger" onClick={onDiscard}>Buang perubahan</Button>
+              </>
+            ) : (
+              <>
+                {isVariantsStep && (
+                  <Button type="button" disabled={savingProduct} onClick={() => onStepChange("details")}>Kembali ke informasi</Button>
+                )}
+                <Button type="submit" variant="primary" form="product-form" disabled={savingProduct} className="min-w-28">
+                  <SwapText value={savingProduct ? "Menyimpan..." : "Simpan"} />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </footer>
     </div>

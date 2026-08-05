@@ -82,6 +82,7 @@ test("account control stays in the persistent top bar", async () => {
   assert.doesNotMatch(accountButton, /border border-border/);
   assert.doesNotMatch(accountButton, /bg-surface-muted|bg-border/);
   assert.match(accountButton, /bg-transparent/);
+  assert.match(accountButton, /-mr-1\.5/);
   assert.doesNotMatch(source, /relative mt-auto|footer/);
 });
 
@@ -116,6 +117,9 @@ test("mobile navigation uses a full-bleed top bar and accessible floating five-i
   ]);
 
   assert.match(source, /className="mobile-app-bar shrink-0 bg-surface/);
+  assert.match(source, /mobile-app-bar[^\"]*w-full/);
+  assert.match(source, /className="flex min-h-14 items-center justify-between w-full min-w-0"/);
+  assert.match(source, /className="flex shrink-0 items-center gap-1 min-w-0 justify-end"/);
   assert.doesNotMatch(source, /\bborder-b\b/);
   assert.match(source, /aria-label="Navigasi utama mobile"/);
   assert.match(source, /grid-cols-5/);

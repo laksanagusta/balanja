@@ -55,7 +55,7 @@ test("validateProduct blocks duplicate active barcodes", () => {
   );
 
   assert.equal(result.ok, false);
-  assert.equal(result.errors.barcode, "Barcode already exists");
+  assert.equal(result.errors.barcode, "Barcode sudah digunakan.");
 });
 
 test("validateProduct blocks a zero price", () => {
@@ -74,8 +74,8 @@ test("validateProduct blocks a zero price", () => {
   );
 
   assert.equal(result.ok, false);
-  assert.equal(result.errors.price, "Price must be at least 1");
-  assert.equal(result.errors.unitId, "Unit is required");
+  assert.equal(result.errors.price, "Harga minimal Rp1.");
+  assert.equal(result.errors.unitId, "Satuan wajib dipilih.");
 });
 
 test("validateProduct accepts thousand-separated numeric fields", () => {
@@ -114,9 +114,9 @@ test("validateScannedProduct requires a sellable stock quantity and unit", () =>
   );
 
   assert.equal(result.ok, false);
-  assert.equal(result.errors.price, "Price must be at least 1");
-  assert.equal(result.errors.stock, "Stock must be at least 1 to add this product to cart");
-  assert.equal(result.errors.unitId, "Unit is required");
+  assert.equal(result.errors.price, "Harga minimal Rp1.");
+  assert.equal(result.errors.stock, "Stok minimal 1 untuk menambahkan produk ke kasir.");
+  assert.equal(result.errors.unitId, "Satuan wajib dipilih.");
 });
 
 test("addProductToCart adds by barcode and respects stock", () => {

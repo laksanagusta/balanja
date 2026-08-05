@@ -169,7 +169,7 @@ export function PosProductCard({ product, onAdd, onOpenVariants, disabled = fals
             className="product-add-button-surface"
             aria-hidden="true"
           >
-            <Icon name="plus" className="size-5" />
+            <Icon name="plus" className="size-5" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
           </span>
         </Button>
       )}

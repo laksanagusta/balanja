@@ -2,10 +2,10 @@ import React from "react";
 import { createPortal } from "react-dom";
 import {
   ArchiveBoxIcon,
-  ArrowDownLeftIcon,
+  ArrowDownIcon,
   ArrowPathIcon,
   ArrowTurnDownLeftIcon,
-  ArrowUpRightIcon,
+  ArrowUpIcon,
   BanknotesIcon,
   Bars3Icon,
   CheckIcon,
@@ -209,14 +209,14 @@ const heroIcons = {
   loader: ArrowPathIcon,
   more: EllipsisHorizontalIcon,
   enter: ArrowTurnDownLeftIcon,
-  inbound: ArrowDownLeftIcon,
-  outbound: ArrowUpRightIcon,
+  inbound: ArrowDownIcon,
+  outbound: ArrowUpIcon,
   adjust: CubeIcon,
 };
 
-export function Icon({ name, className = "size-5" }) {
+export function Icon({ name, className = "size-5", strokeWidth, strokeLinecap, strokeLinejoin }) {
   const IconComponent = heroIcons[name] ?? QuestionMarkCircleIcon;
-  return <IconComponent className={name === "loader" ? [className, "animate-spin motion-reduce:animate-none"].join(" ") : className} aria-hidden="true" />;
+  return <IconComponent className={name === "loader" ? [className, "animate-spin motion-reduce:animate-none"].join(" ") : className} strokeWidth={strokeWidth} strokeLinecap={strokeLinecap} strokeLinejoin={strokeLinejoin} aria-hidden="true" />;
 
   const common = {
     className,
@@ -400,7 +400,7 @@ export function Button({
   size = "md",
   mobileSize,
   compactVisual = false,
-  radius = "rounded-control",
+  radius,
   className = "",
   ...props
 }) {
@@ -415,12 +415,12 @@ export function Button({
   };
 
   const sizes = {
-    xs: "h-6 gap-1 px-2 text-xs",
-    sm: "h-9 gap-1.5 px-2.5 text-sm",
-    base: "h-11 gap-2 px-3.5 text-sm",
-    md: "h-11 gap-2 px-3.5 text-sm",
-    lg: "h-12 gap-2.5 px-5 text-lg",
-    xl: "h-13 gap-3 px-6 text-xl",
+    xs: "h-6 gap-1 px-2 text-xs leading-4",
+    sm: "h-9 gap-1.5 px-2.5 text-sm leading-5",
+    base: "h-12 gap-2 px-3.5 text-base leading-6 tracking-[-0.01em]",
+    md: "h-12 gap-2 px-3.5 text-base leading-6 tracking-[-0.01em]",
+    lg: "h-12 gap-2.5 px-5 text-lg leading-6 tracking-[-0.015em]",
+    xl: "h-13 gap-3 px-6 text-xl leading-7 tracking-[-0.02em]",
   };
   const resolvedMobileSize = mobileSize
     || (compactVisual || size === "xs" || size === "sm"
@@ -428,16 +428,18 @@ export function Button({
       : size === "lg" || size === "xl"
         ? "large"
         : "standard");
+  const resolvedRadius = radius || (compactVisual ? "rounded-control" : "rounded-full");
 
   return (
     <button
       data-mobile-size={resolvedMobileSize}
+      data-ui-size={size}
       data-compact-visual={compactVisual ? "true" : "false"}
-      className={`ui-button inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${compactVisual ? "h-11 rounded-control bg-transparent px-1.5 text-sm" : `${variants[variant]} ${sizes[size]} ${radius}`} ${className}`}
+      className={`ui-button inline-flex items-center justify-center font-semibold transition-[transform,background-color,border-color,color] duration-base ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45 ${compactVisual ? "h-11 rounded-control bg-transparent px-1.5 text-sm" : `${variants[variant]} ${sizes[size]} ${resolvedRadius}`} ${className}`}
       {...props}
     >
       {compactVisual ? (
-        <span className={`header-compact-action-surface pointer-events-none inline-flex items-center justify-center ${variants[variant]} ${sizes[size]} ${radius}`}>
+        <span className={`header-compact-action-surface pointer-events-none inline-flex items-center justify-center ${variants[variant]} ${sizes[size]} ${resolvedRadius}`}>
           {children}
         </span>
       ) : (
@@ -1032,7 +1034,7 @@ export function Dialog({
             {c.children}
           </div>
         )}
-        {c.footer && <div className={`shrink-0 bg-surface px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pb-6 flex justify-end gap-2 ${c.footerClassName}`}>{c.footer}</div>}
+        {c.footer && <div className={`form-actions shrink-0 bg-surface px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pb-6 ${c.footerClassName}`}>{c.footer}</div>}
       </div>
     </div>
   ), document.body);

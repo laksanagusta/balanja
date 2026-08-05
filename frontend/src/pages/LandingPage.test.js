@@ -65,6 +65,24 @@ test("landing page keeps the approved hero and public calls to action", async ()
   assert.match(faq, /id="faq"/);
 });
 
+test("landing typography is scoped to Inter with the reference weights", async () => {
+  const page = await readFile(new URL("./LandingPage.jsx", import.meta.url), "utf8");
+  const showcase = await readFile(new URL("../components/design/MarketingPatternsShowcase.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+  const html = await readFile(new URL("../../index.html", import.meta.url), "utf8");
+
+  assert.match(page, /className="landing-page font-landing/);
+  assert.match(showcase, /className="font-landing overflow-hidden/);
+  assert.match(css, /--font-landing: Inter,/);
+  assert.match(css, /\.font-landing[\s\S]*font-family: var\(--font-landing\)/);
+  assert.match(css, /\.font-landing \.font-bold,[\s\S]*\.font-landing \.font-extrabold[\s\S]*font-weight: 600/);
+  assert.match(html, /family=Inter:wght@400;500;600/);
+  assert.match(page, /text-\[42px\] font-medium[\s\S]*sm:text-\[58px\] lg:text-\[68px\]/);
+  assert.match(showcase, /text-\[42px\] font-medium[\s\S]*sm:text-\[56px\] lg:text-\[68px\]/);
+  assert.doesNotMatch(page, /<span className="text-text-subtle">Toko lebih tenang\.<\/span>/);
+  assert.doesNotMatch(showcase, /<span className="text-text-subtle">Toko lebih tenang\.<\/span>/);
+});
+
 test("design system owns the solid closing CTA treatment", async () => {
   const showcase = await readFile(new URL("../components/design/MarketingPatternsShowcase.jsx", import.meta.url), "utf8");
   const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");

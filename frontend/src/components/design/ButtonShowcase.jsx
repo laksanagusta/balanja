@@ -6,10 +6,11 @@ const tokens = [
   ["Accent Hover", "--color-accent-hover", "#151517"],
   ["Danger", "--color-danger", "#ef4444"],
   ["Danger Soft", "--color-danger-soft", "#fff1f1"],
-  ["Standard radius", "--radius-control", "10px"],
-  ["Utility radius", "--radius-button", "8px"],
+  ["Control radius", "--radius-control", "10px"],
+  ["Utility radius", "--radius-button", "12px"],
+  ["Standard button", "rounded-full", "pill"],
   ["Touch target", "--control-height-mobile-button-hit", "44px"],
-  ["Standard", "--control-height-mobile-button", "44px"],
+  ["Standard", "--control-height-mobile-button", "48px"],
   ["Primary large", "--control-height-mobile-button-large", "48px"],
   ["Mobile compact visual", "--control-height-mobile-compact", "36px"],
   ["Focus", "--color-focus", "#4a4a4d"],
@@ -21,7 +22,7 @@ export default function ButtonShowcase() {
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Button</h3>
-        <p className="mt-1 text-sm text-text-muted">Buttons use one flat system without gradients, bevels, or elevation shadows. Standard actions use a 44px visual height, prominent primary actions use 48px, and compact actions keep a 36px visual surface inside a 44px interaction target. Every variant keeps the same focus outline, disabled opacity, and immediate pointer-down press scale.</p>
+        <p className="mt-1 text-sm text-text-muted">Buttons use one flat system without gradients, bevels, or elevation shadows. Standard text buttons use a 48px full-pill surface with 16px semibold text and 24px line-height; large actions use 18px type, while compact actions use 14px type on a 36px visual surface inside a 44px interaction target. Form and dialog actions fill their available width, switching to two equal columns when there are two buttons. Every variant keeps the same focus outline, disabled opacity, and immediate pointer-down press scale.</p>
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="grid gap-5">
@@ -42,9 +43,9 @@ export default function ButtonShowcase() {
           <div className="grid gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Mobile sizing contract</p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button>Standard · 44</Button>
+              <Button>Standard · 48</Button>
               <Button variant="primary" mobileSize="large">Primary besar · 48</Button>
-              <Button size="sm" compactVisual>Compact · 36/44</Button>
+              <Button size="sm" compactVisual>Compact · 14px · 36/44</Button>
             </div>
           </div>
         </div>

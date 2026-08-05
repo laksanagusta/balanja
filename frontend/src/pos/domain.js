@@ -120,16 +120,16 @@ export function validateProduct(product, products) {
   const price = parseNumberInput(product.price);
   const stock = parseNumberInput(product.stock);
 
-  if (!String(product.name || "").trim()) errors.name = "Name is required";
-  if (!barcode) errors.barcode = "Barcode is required";
-  if (duplicate) errors.barcode = "Barcode already exists";
-  if (!String(product.categoryId || "").trim()) errors.categoryId = "Category is required";
-  if (!String(product.unitId || "").trim()) errors.unitId = "Unit is required";
+  if (!String(product.name || "").trim()) errors.name = "Nama wajib diisi.";
+  if (!barcode) errors.barcode = "Barcode wajib diisi.";
+  if (duplicate) errors.barcode = "Barcode sudah digunakan.";
+  if (!String(product.categoryId || "").trim()) errors.categoryId = "Kategori wajib dipilih.";
+  if (!String(product.unitId || "").trim()) errors.unitId = "Satuan wajib dipilih.";
   if (price < 1 || Number.isNaN(price)) {
-    errors.price = "Price must be at least 1";
+    errors.price = "Harga minimal Rp1.";
   }
   if (stock < 0 || Number.isNaN(stock)) {
-    errors.stock = "Stock must be zero or greater";
+    errors.stock = "Stok harus 0 atau lebih.";
   }
 
   return { ok: Object.keys(errors).length === 0, errors };
@@ -143,12 +143,12 @@ export function validateScannedProduct(product, products) {
   const stock = parseNumberInput(product.stock);
 
   if (price < 1 || Number.isNaN(price)) {
-    errors.price = "Price must be at least 1";
+    errors.price = "Harga minimal Rp1.";
   }
   if (stock < 1 || Number.isNaN(stock)) {
-    errors.stock = "Stock must be at least 1 to add this product to cart";
+    errors.stock = "Stok minimal 1 untuk menambahkan produk ke kasir.";
   }
-  if (!String(product.unitId || "").trim()) errors.unitId = "Unit is required";
+  if (!String(product.unitId || "").trim()) errors.unitId = "Satuan wajib dipilih.";
 
   return { ok: Object.keys(errors).length === 0, errors };
 }

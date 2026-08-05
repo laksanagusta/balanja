@@ -23,10 +23,16 @@ test("variant editor uses structured tokens, attribute menus, and safe removal c
   assert.match(source, /event\.key === "ArrowDown"/);
   assert.match(source, /Hapus atribut ‘\{pendingDelete\?\.name \|\| attribute\.name\}’\?/);
   assert.match(source, /Data harga, stok, dan barcode dari variasi yang terkait juga akan dihapus/);
+  assert.match(source, /<Button ref=\{\(node\) => \{ pendingDeleteCancelRefs\.current\[index\] = node; \}\} type="button" size="sm"/);
+  assert.match(source, /<Button type="button" size="sm" variant="danger"/);
+  assert.match(source, /<Icon name="plus" className="size-4" strokeWidth=\{2\.8\} strokeLinecap="round" strokeLinejoin="round" \/>/);
+  assert.match(source, /attribute-field-state flex flex-wrap items-center justify-between gap-3 rounded-panel bg-danger-soft\/50/);
+  assert.doesNotMatch(source, /attribute-field-state flex flex-wrap items-center justify-between gap-3 rounded-panel border border-danger\/20/);
   assert.match(source, /pendingDeleteCancelRefs/);
   assert.match(source, /attribute-field-crossfade/);
   assert.match(source, /attribute-field-state/);
   assert.match(source, /role="alert" aria-hidden=\{!isDeletePending\} aria-labelledby=\{`remove-attribute-\$\{attributeId\}`\}/);
+  assert.doesNotMatch(source, /<div className="grid gap-1 border-y border-dashed border-border px-4 py-6">/);
   assert.match(source, /addAttributeRef/);
 });
 
@@ -35,6 +41,7 @@ test("variant editor renders a semantic desktop table and a mobile disclosure fl
 
   assert.match(source, /<table/);
   assert.match(source, /<thead/);
+  assert.doesNotMatch(source, /<div className="hidden border-b border-border md:block">/);
   assert.match(source, /Variasi/);
   assert.match(source, /Barcode \(opsional\)/);
   assert.match(source, /Dijual/);

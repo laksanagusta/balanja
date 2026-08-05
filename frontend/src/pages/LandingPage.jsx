@@ -69,7 +69,7 @@ function PublicHeader({ isSignedIn, onNavigate }) {
   return (
     <header className="public-header sticky top-3 z-30 mx-auto flex w-[calc(100%-1.5rem)] max-w-5xl items-center justify-between gap-4 rounded-full border border-border bg-surface/65 px-4 py-1.5 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-surface/45 sm:px-5">
       <button type="button" onClick={() => scrollToTopRespectingMotion(window)} aria-label="Kembali ke bagian atas" className="press-feedback inline-flex min-h-11 min-w-11 items-center rounded-button focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus">
-        <Logo />
+      <Logo className="font-landing-logo" />
       </button>
       <nav aria-label="Navigasi utama" className="hidden items-center gap-8 md:flex">
         {navItems.map((item) => <a key={item.href} href={item.href} onClick={(event) => { event.preventDefault(); scrollToSectionRespectingMotion(document.querySelector(item.href)); }} className="press-feedback inline-flex min-h-11 items-center text-sm font-medium text-text-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus">{item.label}</a>)}
@@ -115,14 +115,14 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
   const supportingFeatures = features.filter((feature) => feature.row === "supporting");
 
   return (
-    <div className="min-h-screen bg-surface text-text antialiased">
+    <div className="landing-page font-landing min-h-screen bg-surface text-text antialiased">
       <PublicHeader isSignedIn={isSignedIn} onNavigate={onNavigate} />
       <main>
         <section className="px-4 pb-12 pt-16 text-center sm:px-6 sm:pb-16 sm:pt-24 lg:pt-28">
           <div className="mx-auto max-w-5xl">
             <p className="marketing-reveal mx-auto inline-flex rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-text-muted">Fitur baru: Scan barcode langsung dari kasir</p>
-            <h1 className="marketing-reveal mx-auto mt-6 max-w-4xl text-[42px] font-semibold leading-[0.98] tracking-[-0.055em] text-text sm:text-[58px] lg:text-[72px]" style={{ "--reveal-delay": "60ms" }}>
-              Jualan rapi. Stok terkendali. <span className="text-text-subtle">Toko lebih tenang.</span>
+            <h1 className="marketing-reveal mx-auto mt-6 max-w-4xl text-[42px] font-medium leading-[0.98] tracking-[-0.055em] text-text sm:text-[58px] lg:text-[68px]" style={{ "--reveal-delay": "60ms" }}>
+              Jualan rapi. Stok terkendali. Toko lebih tenang.
             </h1>
             <p className="marketing-reveal mx-auto mt-6 max-w-2xl text-base leading-7 text-text-muted" style={{ "--reveal-delay": "110ms" }}>
               Wipay menyatukan kasir, produk, stok, dan riwayat transaksi dalam satu alur sederhana—supaya Anda tahu apa yang terjual dan apa yang perlu diisi ulang.
@@ -205,7 +205,7 @@ export default function LandingPage({ isSignedIn, onNavigate }) {
       <footer className="px-4 pb-8 sm:px-6">
         <div className="mx-auto max-w-6xl pt-12">
           <div className="grid gap-10 sm:grid-cols-[1fr_auto] sm:gap-16">
-            <div><Logo /><p className="mt-4 max-w-sm text-sm leading-6 text-text-muted">POS sederhana untuk UMKM retail yang ingin melayani pembeli, mengatur stok, dan memantau transaksi dari satu alur.</p></div>
+            <div><Logo className="font-landing-logo" /><p className="mt-4 max-w-sm text-sm leading-6 text-text-muted">POS sederhana untuk UMKM retail yang ingin melayani pembeli, mengatur stok, dan memantau transaksi dari satu alur.</p></div>
             <div><p className={eyebrowLabelClassName}>Produk</p><div className="mt-2 grid">{navItems.map((item) => <a key={item.href} href={item.href} className="press-feedback inline-flex min-h-11 items-center text-sm text-text-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{item.label}</a>)}</div></div>
           </div>
           <div className="mt-12 flex flex-col gap-2 border-t border-border pt-5 font-mono text-xs tracking-[0.08em] text-text-subtle sm:flex-row sm:items-center sm:justify-between"><span>© WIPAY · V0.1.4</span><span>WIPAY POS</span></div>

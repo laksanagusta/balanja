@@ -247,11 +247,11 @@ export const tokenGroups = [
   {
     name: "Typography",
     tokens: [
-      ["Sans", "--font-sans", "Manrope, Inter, system-ui, sans-serif"],
+      ["Sans", "--font-sans", "Quicksand, ui-sans-serif, system-ui, sans-serif"],
       ["Mono", "--font-mono", "JetBrains Mono, ui-monospace, monospace"],
-      ["Body", "text-base", "16px / 1.5 (Manrope 500)"],
-      ["Heading", "text-2xl", "24px / 1.3 (Manrope 600)"],
-      ["Display", "text-3xl", "30px / 1.2 (Manrope 700)"],
+      ["Body", "text-base", "16px / 1.5 (Quicksand 500)"],
+      ["Heading", "text-2xl", "24px / 1.3 (Quicksand 600)"],
+      ["Display", "text-3xl", "30px / 1.2 (Quicksand 700)"],
       ["Value", "font-mono", "tabular-nums (JetBrains Mono 500)"],
     ],
   },

@@ -279,7 +279,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
       setNotice("");
       return saved;
     } catch (error) {
-      setNotice(error.message || "Failed to save product");
+      setNotice(error.message || "Gagal menyimpan produk. Coba lagi.");
       if (throwOnError) throw error;
       return null;
     }

@@ -5,7 +5,7 @@ import { PricingPanel } from "../../landing/PricingSection.jsx";
 
 export default function MarketingPatternsShowcase() {
   return (
-    <section className="overflow-hidden rounded-panel border border-border bg-surface shadow-low">
+    <section className="font-landing overflow-hidden rounded-panel border border-border bg-surface shadow-low">
       <div className="p-4 sm:p-6">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-success">Marketing page patterns</p>
         <h3 className="mt-3 text-2xl font-semibold text-text">Public display, CTA, and product frame</h3>
@@ -18,8 +18,8 @@ export default function MarketingPatternsShowcase() {
         <div className="grid gap-6 rounded-panel bg-app-bg p-5 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Fitur baru: Scan barcode langsung dari kasir</p>
-            <p className="mt-4 max-w-4xl text-[42px] font-semibold leading-[0.98] tracking-[-0.055em] text-text sm:text-[56px] lg:text-[72px]">
-              Jualan rapi. Stok terkendali. <span className="text-text-subtle">Toko lebih tenang.</span>
+            <p className="mt-4 max-w-4xl text-[42px] font-medium leading-[0.98] tracking-[-0.055em] text-text sm:text-[56px] lg:text-[68px]">
+              Jualan rapi. Stok terkendali. Toko lebih tenang.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

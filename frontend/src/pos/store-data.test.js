@@ -123,6 +123,7 @@ test("loads stock movements without fetching unrelated resources", async () => {
       variantId: "",
       variantAttributes: "",
       productName: "Unknown product",
+      productImage: "",
       productBarcode: "",
       productCategory: "",
       productUnit: "pcs",

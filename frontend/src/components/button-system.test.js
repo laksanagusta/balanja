@@ -21,8 +21,10 @@ test("button surfaces use the global flat hierarchy without elevation utilities"
 
   assert.match(css, /\.primary-button\s*\{[\s\S]*box-shadow:\s*none;[\s\S]*text-shadow:\s*none;/);
   assert.match(css, /\.primary-button::before,[\s\S]*\.primary-button::after\s*\{[\s\S]*display:\s*none;/);
+  assert.match(css, /\.form-actions\s*\{[\s\S]*grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(css, /\.form-actions:has\(> :nth-child\(2\)\)\s*\{[\s\S]*repeat\(2, minmax\(0, 1fr\)\);/);
   assert.doesNotMatch(css, /--primary-button-(?:ring|inner-shadow|close-shadow|far-shadow)|checkout-3d/);
-  assert.match(design, /Every button follows one Uber-inspired flat system/);
+  assert.match(design, /Every button follows one Family-influenced flat system/);
 
   for (const source of sources) {
     assert.doesNotMatch(source, /<(?:button|Button)\b[^>]*\bshadow-(?:low|accent)\b/s);
@@ -58,13 +60,20 @@ test("mobile controls follow the shared height and hit-area contract", async () 
   assert.match(primitives, /data-mobile-size=\{resolvedMobileSize\}/);
   assert.match(primitives, /data-ui-size=\{size\}/);
   assert.match(primitives, /className="ui-button-mobile-hit-area"/);
-  assert.match(primitives, /radius = "rounded-control"/);
-  assert.match(buttonShowcase, /Standard radius/);
+  assert.match(primitives, /xs: "h-6 gap-1 px-2 text-xs leading-4"/);
+  assert.match(primitives, /sm: "h-9 gap-1\.5 px-2\.5 text-sm leading-5"/);
+  assert.match(primitives, /const resolvedRadius = radius \|\| \(compactVisual \? "rounded-control" : "rounded-full"\)/);
+  assert.match(primitives, /base: "h-12 gap-2 px-3\.5 text-base leading-6 tracking-\[-0\.01em\]"/);
+  assert.match(buttonShowcase, /Control radius/);
   assert.match(buttonShowcase, /Utility radius/);
+  assert.match(buttonShowcase, /Standard button/);
   assert.match(buttonShowcase, /Primary besar · 48/);
-  assert.match(buttonShowcase, /Standard · 44/);
+  assert.match(buttonShowcase, /Standard · 48/);
+  assert.match(buttonShowcase, /16px semibold text and 24px line-height/);
+  assert.match(buttonShowcase, /Compact · 14px · 36\/44/);
+  assert.match(buttonShowcase, /two equal columns when there are two buttons/);
   assert.match(formShowcase, /<Input size="large"/);
-  assert.match(design, /standard buttons, inputs, dropdowns, and search fields use 44px/);
-  assert.match(design, /prominent primary actions and large fields use 48px/);
-  assert.match(design, /`control` is 10px for shared buttons/);
+  assert.match(design, /standard text buttons use a 48px visual and interaction height/);
+  assert.match(design, /inputs, dropdowns, and search fields use 44px/);
+  assert.match(design, /`control` is 10px for inputs/);
 });

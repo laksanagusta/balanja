@@ -21,7 +21,7 @@ export default function FormShowcase() {
     <Panel className="grid gap-6 p-6">
       <div>
         <h3 className="text-xl font-semibold text-text">Form fields</h3>
-        <p className="mt-1 text-sm text-text-muted">Standard input, select, and search surfaces use a 44px visual and interaction height. Large fields use 48px, while compact field surfaces may remain 36px only when their interaction target reaches 44px. Editable text stays at least 16px on touch devices so focusing a field never triggers browser auto-zoom. Human-facing labels remain Manrope; machine data such as barcode, price, and stock values may use JetBrains Mono with tabular figures.</p>
+        <p className="mt-1 text-sm text-text-muted">Standard input, select, and search surfaces use a 44px visual and interaction height. Large fields use 48px, while compact field surfaces may remain 36px only when their interaction target reaches 44px. Editable text stays at least 16px on touch devices so focusing a field never triggers browser auto-zoom. Human-facing labels use Quicksand; machine data such as barcode, price, and stock values may use JetBrains Mono with tabular figures.</p>
       </div>
       <div className="grid gap-8 xl:grid-cols-[1fr_240px]">
         <div className="grid max-w-md gap-2">

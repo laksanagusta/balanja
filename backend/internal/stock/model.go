@@ -30,6 +30,7 @@ type Movement struct {
 	VariantID         *uuid.UUID   `json:"variantId,omitempty"`
 	VariantAttributes string       `json:"variantAttributes,omitempty"`
 	ProductName       string       `json:"productName"`
+	ProductImage      string       `json:"productImage,omitempty"`
 	ProductBarcode    string       `json:"productBarcode"`
 	ProductCategory   string       `json:"productCategory"`
 	ProductUnit       string       `json:"productUnit"`

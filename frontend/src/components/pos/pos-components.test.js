@@ -35,7 +35,7 @@ test("POS product card is an explicit variant", async () => {
   assert.match(source, /product-card-actions/);
   assert.match(source, /mediaAction=\{\(/);
   assert.match(source, /aria-label=\{outOfStock \? `\$\{product\.name\}: stok habis` : `Tambah \$\{product\.name\}`\}/);
-  assert.match(source, /<span[\s\S]*className="product-add-button-surface"[\s\S]*aria-hidden="true"[\s\S]*>[\s\S]*<Icon name="plus" className="size-5" \/>/);
+  assert.match(source, /<span[\s\S]*className="product-add-button-surface"[\s\S]*aria-hidden="true"[\s\S]*>[\s\S]*<Icon name="plus" className="size-5" strokeWidth=\{3\} strokeLinecap="round" strokeLinejoin="round" \/>/);
   assert.match(source, /showStockBadge=\{false\}/);
   assert.match(source, /priceOnly/);
   assert.doesNotMatch(source, /min-h-\[304px\]|product-card-actions mt-auto|border-t border-border/);
@@ -74,7 +74,7 @@ test("POS catalog groups compact price and add action without repeating Rp", asy
   assert.match(showcase, /aksi tambah berupa lingkaran putih berborder 36px dengan ikon plus di kanan bawah foto/);
   assert.match(showcase, /tanpa frame, border, atau shadow/);
   assert.match(design, /Product-card prices omit the repeated `Rp` prefix/);
-  assert.match(design, /Every button follows one Uber-inspired flat system/);
+  assert.match(design, /Every button follows one Family-influenced flat system/);
   assert.match(design, /white circular plus control over the product photo/);
 });
 
