@@ -120,7 +120,13 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 			select sm.id, sm.product_id, sm.product_variant_id,
 				coalesce((select string_agg(entry.key || ': ' || entry.value, ', ' order by entry.key) from jsonb_each_text(pv.attributes) entry), ''),
 				coalesce(p.name, ''), coalesce(nullif(pv.barcode, ''), p.barcode, ''),
-				coalesce(c.name, ''), coalesce(u.name, ''), sm.type, sm.quantity_delta,
+			coalesce(c.name, ''), coalesce(u.name, ''),
+			case
+				when coalesce(nullif(pv.image_key, ''), nullif(p.image_key, '')) <> ''
+					then '/api/v1/product-images/' || coalesce(nullif(pv.image_key, ''), nullif(p.image_key, ''))
+				else coalesce(nullif(pv.image, ''), p.image, '')
+			end,
+			sm.type, sm.quantity_delta,
 			sm.stock_before, sm.stock_after, sm.reason, sm.reference_type, sm.reference_id,
 			sm.created_by_user_id, coalesce(sm.created_by_user_name, ''), sm.created_at
 		from stock_movements sm
@@ -148,7 +154,7 @@ func (PostgresRepository) List(ctx context.Context, tx database.Tx, identity dat
 	movements := make([]Movement, 0, filter.Limit)
 	for rows.Next() {
 		var movement Movement
-		if err := rows.Scan(&movement.ID, &movement.ProductID, &movement.VariantID, &movement.VariantAttributes, &movement.ProductName, &movement.ProductBarcode, &movement.ProductCategory, &movement.ProductUnit, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt); err != nil {
+		if err := rows.Scan(&movement.ID, &movement.ProductID, &movement.VariantID, &movement.VariantAttributes, &movement.ProductName, &movement.ProductBarcode, &movement.ProductCategory, &movement.ProductUnit, &movement.ProductImage, &movement.Type, &movement.QuantityDelta, &movement.StockBefore, &movement.StockAfter, &movement.Reason, &movement.ReferenceType, &movement.ReferenceID, &movement.CreatedByUserID, &movement.CreatedByUserName, &movement.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan stock movement: %w", err)
 		}
 		movements = append(movements, movement)

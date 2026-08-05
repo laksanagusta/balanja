@@ -29,7 +29,7 @@ function attributeRowKey(attribute) {
   return attribute.clientId || `attribute-${attribute.name.toLocaleLowerCase("id-ID").replace(/\s+/g, "-")}`;
 }
 
-function AttributeTokenField({ attributeId, options, disabled, error, onCommit }) {
+function AttributeTokenField({ attributeId, options, disabled, error, onCommit, onBlur }) {
   const [draft, setDraft] = React.useState("");
   const [editingIndex, setEditingIndex] = React.useState(-1);
   const [localError, setLocalError] = React.useState("");
@@ -186,6 +186,7 @@ function AttributeTokenField({ attributeId, options, disabled, error, onCommit }
               onKeyDown={handleInputKeyDown}
               onBlur={() => {
                 if (draft.trim()) commitDraft();
+                window.requestAnimationFrame(() => onBlur?.());
               }}
               className="h-9 min-w-0 flex-1 bg-transparent px-2 text-sm font-medium text-text outline-none placeholder:text-text-subtle"
             />
@@ -225,7 +226,7 @@ function VariantSwitch({ label, checked, disabled, onChange }) {
   );
 }
 
-function PriceField({ id, label, accessibleLabel = label, value, error, disabled, onChange, hideLabel = false }) {
+function PriceField({ id, label, accessibleLabel = label, value, error, disabled, onChange, onBlur, hideLabel = false }) {
   return (
     <Input
       label={label}
@@ -242,12 +243,13 @@ function PriceField({ id, label, accessibleLabel = label, value, error, disabled
         min: 0,
         disabled,
         onChange: (event) => onChange(normalizeNumberField(event.target.value)),
+        onBlur,
       }}
     />
   );
 }
 
-function StockField({ id, label, accessibleLabel = label, value, error, disabled, onChange, hideLabel = false }) {
+function StockField({ id, label, accessibleLabel = label, value, error, disabled, onChange, onBlur, hideLabel = false }) {
   return (
     <Input
       label={label}
@@ -264,12 +266,13 @@ function StockField({ id, label, accessibleLabel = label, value, error, disabled
         step: 1,
         disabled,
         onChange: (event) => onChange(event.target.value.replace(/[^\d]/g, "")),
+        onBlur,
       }}
     />
   );
 }
 
-function BarcodeField({ id, label, value, error, disabled, onChange, onScan, hideLabel = false }) {
+function BarcodeField({ id, label, value, error, disabled, onChange, onBlur, onScan, hideLabel = false }) {
   return (
     <div className="grid min-w-0 gap-2 text-sm font-semibold text-text">
       <label htmlFor={id} className={hideLabel ? "sr-only" : ""}>Barcode (opsional)</label>
@@ -286,6 +289,7 @@ function BarcodeField({ id, label, value, error, disabled, onChange, onScan, hid
             autoComplete: "off",
             disabled,
             onChange: (event) => onChange(event.target.value),
+            onBlur,
           }}
         />
         <button
@@ -303,7 +307,7 @@ function BarcodeField({ id, label, value, error, disabled, onChange, onScan, hid
   );
 }
 
-function VariationFields({ variant, rowErrors, disabled, onUpdateVariant, onScanBarcode, stacked = false }) {
+function VariationFields({ variant, rowErrors, disabled, onUpdateVariant, onBlurVariantField, onScanBarcode, stacked = false }) {
   const dataKey = attributesKey(variant.attributes);
   const stableKey = variantRowKey(variant).replace(/[^a-zA-Z0-9_-]/g, "-");
   const label = variantLabel(variant.attributes);
@@ -318,6 +322,7 @@ function VariationFields({ variant, rowErrors, disabled, onUpdateVariant, onScan
         disabled={disabled}
         hideLabel={!stacked}
         onChange={(value) => onUpdateVariant?.(dataKey, "price", value)}
+        onBlur={() => onBlurVariantField?.(dataKey, "price")}
       />
       <StockField
         id={`variant-${stableKey}-stock`}
@@ -328,6 +333,7 @@ function VariationFields({ variant, rowErrors, disabled, onUpdateVariant, onScan
         disabled={disabled}
         hideLabel={!stacked}
         onChange={(value) => onUpdateVariant?.(dataKey, "stock", value)}
+        onBlur={() => onBlurVariantField?.(dataKey, "stock")}
       />
       <BarcodeField
         id={`variant-${stableKey}-barcode`}
@@ -337,6 +343,7 @@ function VariationFields({ variant, rowErrors, disabled, onUpdateVariant, onScan
         disabled={disabled}
         hideLabel={!stacked}
         onChange={(value) => onUpdateVariant?.(dataKey, "barcode", value)}
+        onBlur={() => onBlurVariantField?.(dataKey, "barcode")}
         onScan={() => onScanBarcode?.(dataKey)}
       />
       <div className={stacked ? "flex items-center justify-between gap-3" : "flex justify-center"}>
@@ -531,7 +538,9 @@ export default function ProductVariantEditor({
   onDuplicateAttribute,
   onMoveAttribute,
   onRemoveAttribute,
+  onBlurAttributeField,
   onUpdateVariant,
+  onBlurVariantField,
   onApplyBulk,
   onSetAllActive,
   onScanBarcode,
@@ -699,14 +708,14 @@ export default function ProductVariantEditor({
             <h3 id="variant-attributes-title" className="text-sm font-semibold text-text">Atribut</h3>
             <p className="mt-1 text-xs leading-5 text-text-muted">Susun pilihan yang membentuk kombinasi variasi.</p>
           </div>
-          <Button ref={addAttributeRef} type="button" variant="secondary" aria-label="Tambah atribut" radius="rounded-full" disabled={disabled} onClick={onAddAttribute}>
-            <Icon name="plus" className="size-4" />
+          <Button ref={addAttributeRef} type="button" size="sm" variant="secondary" aria-label="Tambah atribut" radius="rounded-full" disabled={disabled} onClick={onAddAttribute}>
+            <Icon name="plus" className="size-4" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" />
             Tambah atribut
           </Button>
         </div>
 
         <div className="divide-y divide-border border-y border-border">
-          {attributes.map((attribute, index) => {
+          {attributes.length ? attributes.map((attribute, index) => {
             const attributeId = attributeRowKey(attribute);
             const isDeletePending = pendingDelete?.index === index;
             return (
@@ -780,6 +789,7 @@ export default function ProductVariantEditor({
                         value: attribute.name,
                         disabled: disabled || isDeletePending,
                         onChange: (event) => onRenameAttribute?.(index, event.target.value),
+                        onBlur: () => onBlurAttributeField?.(index, "name"),
                       }}
                     />
                     <AttributeTokenField
@@ -788,22 +798,28 @@ export default function ProductVariantEditor({
                       disabled={disabled || isDeletePending}
                       error={errors.attributeRows?.[index]?.options}
                       onCommit={(options) => onCommitOptions?.(index, options)}
+                      onBlur={() => onBlurAttributeField?.(index, "options")}
                     />
                   </div>
-                  <div className={`attribute-field-state flex flex-wrap items-center justify-between gap-3 rounded-panel border border-danger/20 bg-danger-soft/50 px-4 py-3 ${isDeletePending ? "is-active" : "is-inactive"}`} role="alert" aria-hidden={!isDeletePending} aria-labelledby={`remove-attribute-${attributeId}`}>
+                  <div className={`attribute-field-state flex flex-wrap items-center justify-between gap-3 rounded-panel bg-danger-soft/50 px-4 py-3 ${isDeletePending ? "is-active" : "is-inactive"}`} role="alert" aria-hidden={!isDeletePending} aria-labelledby={`remove-attribute-${attributeId}`}>
                     <div className="min-w-0">
                       <p id={`remove-attribute-${attributeId}`} className="text-sm font-semibold text-text">Hapus atribut ‘{pendingDelete?.name || attribute.name}’?</p>
                       <p className="mt-0.5 text-xs font-normal leading-5 text-text-muted">Data harga, stok, dan barcode dari variasi yang terkait juga akan dihapus.</p>
                     </div>
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Button ref={(node) => { pendingDeleteCancelRefs.current[index] = node; }} type="button" disabled={!isDeletePending} onClick={cancelPendingDelete}>Batal</Button>
-                      <Button type="button" variant="danger" disabled={!isDeletePending} onClick={confirmRemoveAttribute}>Hapus atribut</Button>
+                      <Button ref={(node) => { pendingDeleteCancelRefs.current[index] = node; }} type="button" size="sm" disabled={!isDeletePending} onClick={cancelPendingDelete}>Batal</Button>
+                      <Button type="button" size="sm" variant="danger" disabled={!isDeletePending} onClick={confirmRemoveAttribute}>Hapus atribut</Button>
                     </div>
                   </div>
                 </div>
               </div>
             );
-          })}
+          }) : (
+            <div className="grid gap-1 px-4 py-6">
+              <p className="text-sm font-semibold text-text">Belum ada atribut</p>
+              <p className="text-sm leading-6 text-text-muted">Tambahkan atribut seperti Ukuran atau Warna untuk membentuk kombinasi variasi.</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -831,7 +847,7 @@ export default function ProductVariantEditor({
 
         {hasCompleteMatrix ? (
           <>
-            <div className="hidden border-b border-border md:block">
+            <div className="hidden md:block">
               <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
                 <caption className="sr-only">Harga, stok, barcode, dan status jual setiap variasi produk.</caption>
                 <thead className="product-editor-material sticky top-[4.25rem] z-10 bg-surface/95 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/85">
@@ -861,6 +877,7 @@ export default function ProductVariantEditor({
                             disabled={disabled}
                             hideLabel
                             onChange={(value) => onUpdateVariant?.(key, "price", value)}
+                            onBlur={() => onBlurVariantField?.(key, "price")}
                           />
                         </td>
                         <td className="px-3 py-3">
@@ -873,6 +890,7 @@ export default function ProductVariantEditor({
                             disabled={disabled}
                             hideLabel
                             onChange={(value) => onUpdateVariant?.(key, "stock", value)}
+                            onBlur={() => onBlurVariantField?.(key, "stock")}
                           />
                         </td>
                         <td className="px-3 py-3">
@@ -884,6 +902,7 @@ export default function ProductVariantEditor({
                             disabled={disabled}
                             hideLabel
                             onChange={(value) => onUpdateVariant?.(key, "barcode", value)}
+                            onBlur={() => onBlurVariantField?.(key, "barcode")}
                             onScan={() => onScanBarcode?.(key)}
                           />
                         </td>
@@ -939,6 +958,7 @@ export default function ProductVariantEditor({
                               rowErrors={errors.variantRows?.[key] || {}}
                               disabled={disabled}
                               onUpdateVariant={onUpdateVariant}
+                              onBlurVariantField={onBlurVariantField}
                               onScanBarcode={onScanBarcode}
                               stacked
                             />

@@ -65,7 +65,7 @@ export default function MasterDataPatternsShowcase() {
             <p className="text-sm font-semibold text-text">Bunyi pemindaian</p>
             <p className="mt-0.5 text-xs leading-5 text-text-muted">Konfirmasi halus setelah barcode berhasil diproses. Preferensi ini tersimpan lokal pada perangkat kasir.</p>
           </div>
-          <Switch checked decorative />
+          <Switch checked tone="success" decorative />
         </div>
       </div>
     </section>

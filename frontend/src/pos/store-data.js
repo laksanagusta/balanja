@@ -150,6 +150,7 @@ function normalizeStockMovement(movement) {
     variantId: movement.variantId || "",
     variantAttributes: movement.variantAttributes || "",
     productName: movement.productName || "Unknown product",
+    productImage: movement.productImage || movement.product_image || "",
     productBarcode: movement.productBarcode || "",
     productCategory: movement.productCategory || "",
     productUnit: movement.productUnit || "pcs",

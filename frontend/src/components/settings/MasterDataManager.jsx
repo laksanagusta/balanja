@@ -190,15 +190,14 @@ export default function MasterDataManager({
                   }}
                 />
                 <div className="master-data-actions">
-                  <Button className="header-compact-action settings-touch-target" type="button" size="base" variant="ghost" compactVisual onClick={() => setRenamingId("")}>
+                  <Button className="header-compact-action settings-touch-target w-full" type="button" size="sm" variant="ghost" onClick={() => setRenamingId("")}>
                     Batal
                   </Button>
                   <Button
-                    className="header-compact-action settings-touch-target"
+                    className="header-compact-action settings-touch-target w-full"
                     type="button"
-                    size="base"
+                    size="sm"
                     variant="primary"
-                    compactVisual
                     disabled={!renameValue.trim() || pendingId === item.id}
                     onClick={async () => {
                       const renamed = await run(() => onRename?.(item.id, { name: renameValue }), item.id);

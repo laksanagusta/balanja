@@ -37,4 +37,12 @@ test("settings tabs use query parameters with profile fallback", async () => {
   assert.match(source, /useScanSoundPreference/);
   assert.match(source, /role="switch"/);
   assert.match(source, /Bunyi pemindaian/);
+  assert.match(source, /settings-profile-form grid gap-4/);
+  assert.match(source, /<Switch checked=\{scanSoundEnabled\} tone="success" decorative \/>/);
+  assert.match(source, /aria-checked=\{Boolean\(draft\.taxEnabled\)\}/);
+  assert.match(source, /<Switch checked=\{Boolean\(draft\.taxEnabled\)\} tone="success" decorative \/>/);
+  assert.match(source, /disabled: !draft\.taxEnabled \|\| isSaving/);
+  assert.doesNotMatch(source, /type="checkbox"/);
+  assert.doesNotMatch(source, /<Icon name="check"/);
+  assert.doesNotMatch(source, /settings-form-actions/);
 });

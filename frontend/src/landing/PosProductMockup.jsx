@@ -92,7 +92,7 @@ export default function PosProductMockup({ compact = false, cropBottom = false }
                 </div>
                 <div className="grid gap-1 px-0 pb-0 pt-1">
                   <p className="line-clamp-2 text-[15px] font-medium leading-[1.35] text-text">{product.name}</p>
-                  <p className="text-[15px] font-[750] leading-tight tabular-nums text-text">{product.price}</p>
+                  <p className="text-[15px] font-semibold leading-tight tabular-nums text-text">{product.price}</p>
                 </div>
               </article>
             ))}

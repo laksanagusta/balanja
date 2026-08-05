@@ -331,13 +331,13 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
     <div className="h-svh overflow-hidden bg-app-bg">
       <div className="mx-auto flex h-full w-full max-w-[1200px] overflow-hidden bg-surface">
         <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-surface">
-          {!immersive && <header className="mobile-app-bar shrink-0 bg-surface px-4 pb-3">
-            <div className="flex min-h-14 items-center justify-between">
+          {!immersive && <header className="mobile-app-bar shrink-0 bg-surface px-4 pb-3 w-full">
+            <div className="flex min-h-14 items-center justify-between w-full min-w-0">
               <h1 className={`min-w-0 truncate text-lg tracking-normal text-text ${pageTitle === "Wipay" ? "font-sora font-bold" : "font-extrabold"}`}>
                 {pageTitle}
               </h1>
               <p className="sr-only">Navigasi aplikasi Wipay</p>
-              <div className="flex shrink-0 items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1 min-w-0 justify-end">
                 <div id="app-top-bar-actions" className="flex items-center gap-1" />
                 <button
                   type="button"
@@ -347,7 +347,7 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
                     setMobileMoreOpen(false);
                     setAccountOpen((open) => !open);
                   }}
-                  className="grid size-11 place-items-center rounded-full bg-transparent transition-transform duration-fast ease-standard active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                  className="-mr-1.5 grid size-11 place-items-center rounded-full bg-transparent transition-transform duration-fast ease-standard active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                 >
                   <span className="account-avatar size-8 overflow-hidden rounded-full bg-surface">
                     <GradientAvatar seed={avatarSeed} size={32} />

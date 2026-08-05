@@ -30,7 +30,10 @@ test("design system page includes the production stock overview pattern", async 
   assert.match(source, /StockPatternsShowcase/);
   assert.match(showcase, /StockOverview/);
   assert.match(showcase, /StockFilterDrawer/);
-  assert.match(showcase, /progress indicator/i);
+  assert.match(showcase, /ledger flat/i);
+  assert.match(showcase, /gambar produk square/i);
+  assert.match(showcase, /badge ikon status/i);
+  assert.match(showcase, /floating action di kanan bawah/i);
   assert.match(showcase, /delta bertanda/i);
 });
 
@@ -80,5 +83,9 @@ test("design system publishes the production product variant patterns", async ()
   assert.match(showcase, /tanpa step indicator/);
   assert.match(showcase, /heading operasional 14px/);
   assert.match(showcase, /affordance Enter/);
+  assert.match(showcase, /ikon plus stroke 2\.8px/);
+  assert.match(showcase, /permukaan danger tanpa border/);
+  assert.match(showcase, /status produk tanpa variasi/);
+  assert.match(showcase, /action `Tambah variasi` berukuran small dengan label satu baris/);
   assert.match(showcase, /disclosure inline/);
 });

@@ -68,7 +68,7 @@ test("rounded rectangles use cross-browser border radius without corner smoothin
   assert.match(tokens, /\["M - Panels", "--radius-panel", "16px"\]/);
   assert.match(tokens, /\["L - Modals & Drawers", "--radius-overlay", "32px"\]/);
   assert.doesNotMatch(tokens, /corner-smoothing|corner-superellipse/);
-  assert.match(design, /12px\/10px\/16px\/32px hierarchy/);
+  assert.match(design, /12px\/10px\/16px\/32px base hierarchy/);
   assert.match(design, /Use standard CSS `border-radius` geometry consistently across browsers/);
   assert.match(design, /do not apply `corner-shape`, superellipse, corner smoothing/);
   assert.match(design, /Modal and drawer headers use the shared sticky-header contract/);

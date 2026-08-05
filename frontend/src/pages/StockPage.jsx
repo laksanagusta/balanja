@@ -117,6 +117,7 @@ export default function StockPage() {
           <div className="w-full">
             <StockOverview
               lowStockProducts={lowStockProducts}
+              products={activeProducts}
               movements={table.rows}
               movementError={table.error}
               onRetry={table.retry}
@@ -143,7 +144,7 @@ export default function StockPage() {
           }}
           className="app-shell-floating-action absolute right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
-          <Icon name="plus" className="size-5" />
+          <Icon name="plus" className="size-5" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         </button>
 
         {dialogOpen && (
@@ -228,7 +229,14 @@ function MovementDialog({ products, searchProducts, initialProductId = "", initi
       title="Pergerakan stok baru"
       footer={(
         <>
-          <Button type="submit" form="stock-movement-form" variant="primary" disabled={isSaving} className="w-full">
+          <Button
+            type="submit"
+            form="stock-movement-form"
+            variant="primary"
+            disabled={isSaving}
+            size="md"
+            className="w-full"
+          >
             {isSaving ? "Menyimpan..." : "Simpan"}
           </Button>
         </>

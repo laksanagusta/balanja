@@ -59,10 +59,9 @@ export default function StockPatternsShowcase() {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-success">Operational pattern</p>
           <h3 className="mt-2 text-xl font-semibold text-text">Stock alerts and recent activity</h3>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
-            Stok menipis memakai kartu prioritas dengan border semantik, jumlah, ambang minimum, dan progress indicator. Filter jenis memakai
-            icon-only bottom drawer yang menyimpan draft sampai Terapkan, sama seperti filter Produk. Activity cards mempertahankan
-            border yang sama, dua baris informasi, delta bertanda, serta waktu relatif. Daftar memenuhi canvas dan menambahkan enam aktivitas lewat
-            Muat lebih banyak tanpa footer pagination.
+            Stok menipis dan aktivitas terbaru memakai ledger flat bergaya mobile: gambar produk square dengan badge ikon status di kiri atas,
+            ritme vertikal yang rapat, gambar produk tanpa badge untuk stok menipis, badge panah aktivitas berwarna solid dengan arah ke bawah saat stok bertambah dan ke atas saat stok keluar, line 5px yang lebih pendek dan ujung membulat, dua baris konteks yang mudah dipindai, delta bertanda beserta satuan di sisi kanan, dan waktu relatif. Filter jenis memakai icon-only bottom drawer yang menyimpan draft sampai Terapkan,
+            sama seperti filter Produk. Aksi `Pergerakan baru` tetap menjadi floating action di kanan bawah agar header tetap fokus untuk pencarian. Dialog pergerakan memakai CTA `Simpan` 48px full-pill dengan teks 16px semibold. Daftar memenuhi canvas dan menambahkan enam aktivitas lewat Muat lebih banyak tanpa footer pagination.
           </p>
         </div>
         <StockFilterDrawer

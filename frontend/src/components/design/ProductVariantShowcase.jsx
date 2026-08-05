@@ -63,10 +63,13 @@ export default function ProductVariantShowcase() {
         Simpan parent dan matrix secara atomik. Setiap kombinasi menjaga ID dan nilai operasionalnya,
         tetapi gunakan halaman editor khusus dengan dua tahap tanpa step indicator agar informasi produk dan editor variasi tidak menjadi satu form panjang atau modal bertumpuk.
         Gunakan heading operasional 14px secara konsisten, field token setinggi text field dengan affordance Enter,
-        chip yang lebih kecil dari permukaan field, label visual singkat, tombol aksi berbentuk pill,
+        chip yang lebih kecil dari permukaan field, label visual singkat, tombol aksi kecil dengan tipografi 14px dan ikon plus stroke 2.8px,
         disclosure inline untuk detail variasi mobile, dan alignment field-action tanpa offset manual.
-        Konfirmasi hapus atribut menggantikan field atribut di slot yang sama dengan crossfade, memindahkan fokus ke aksi pemulihan,
-        dan popover memiliki jalur keluar yang simetris tanpa menunda perubahan draft.
+        Konfirmasi hapus atribut menggantikan field atribut di slot yang sama dengan crossfade, memakai permukaan danger tanpa border dan aksi compact,
+        lalu memindahkan fokus ke aksi pemulihan,
+        dan popover memiliki jalur keluar yang simetris tanpa menunda perubahan draft. Pada tahap informasi produk,
+        status produk tanpa variasi dipasangkan dengan copy yang menjelaskan satu harga dan stok serta action `Tambah variasi` berukuran small dengan label satu baris.
+        Aksi tersebut hanya membuka workspace variasi yang kosong; atribut pertama baru dibuat setelah pengguna menekan `Tambah atribut`, sehingga perubahan draft tidak terjadi diam-diam.
         Saat pengguna memperbaiki field, metadata error yang sudah kosong harus dibuang tanpa membuka ulang disclosure atau memindahkan fokus.
         Kasir tetap melihat pilihan yang tersedia, harga aktual, serta stok setelah isi keranjang diperhitungkan.
       </p>

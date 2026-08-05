@@ -888,10 +888,10 @@ export default function RetailPosPage() {
         }}
         title="Kosongkan keranjang?"
         footer={
-          <div className="flex w-full justify-end gap-2">
+          <>
             <Button className="pos-touch-target" disabled={checkoutPending} onClick={() => setClearCartOpen(false)}>Tetap simpan</Button>
             <Button variant="danger" className="pos-touch-target" disabled={checkoutPending} onClick={clearCart}>Kosongkan</Button>
-          </div>
+          </>
         }
       >
         Semua item akan dihapus dari keranjang saat ini. Stok produk tidak akan berubah.

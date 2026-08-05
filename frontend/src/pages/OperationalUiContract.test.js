@@ -20,6 +20,8 @@ test("stock creation matches the round product add action", async () => {
   assert.match(button, /size-11/);
   assert.match(button, /rounded-full bg-accent text-white/);
   assert.match(button, /<Icon name="plus" className="size-5"/);
+  assert.match(button, /strokeWidth=\{3\} strokeLinecap="round" strokeLinejoin="round"/);
+  assert.match(button, /app-shell-floating-action absolute right-4/);
 });
 
 test("stock activity fills the canvas and appends six rows without a footer", async () => {
@@ -48,6 +50,14 @@ test("stock movement selects and submits a product variant", async () => {
   assert.match(source, /variantId/);
   assert.match(source, /selectedVariant/);
   assert.match(source, /onSubmit\(\{ productId, variantId/);
+});
+
+test("stock movement submit uses the Family-like primary CTA hierarchy", async () => {
+  const source = await readFile(new URL("./StockPage.jsx", import.meta.url), "utf8");
+
+  const submitButtonStart = source.indexOf('<Button type="submit"');
+  assert.equal(submitButtonStart, -1);
+  assert.match(source, /type="submit"[\s\S]{0,240}size="md"[\s\S]{0,120}className="w-full"/);
 });
 
 test("transaction filters use the product-style draft-and-apply drawer", async () => {
@@ -103,7 +113,8 @@ test("all operational forms use eight-pixel field spacing", async () => {
 
   assert.match(products, /<form id="product-form"[^>]*className="grid text-text"/);
   assert.match(products, /max-w-xl gap-2 py-5/);
-  assert.match(settings, /<form onSubmit=\{save\} className="grid gap-2"/);
+  assert.match(settings, /<form onSubmit=\{save\} className="settings-profile-form grid gap-4"/);
+  assert.match(settings, /settings-profile-form[\s\S]{0,160}<div className="grid gap-2">/);
   assert.match(stock, /<form id="stock-movement-form"[^>]*className="grid gap-2 text-text">\s*<div className="grid gap-2">/);
   assert.match(report, /<form className="grid shrink-0 gap-2/);
   assert.match(report, /<div className="grid gap-2">/);

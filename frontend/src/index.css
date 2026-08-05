@@ -4,9 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: Manrope, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: Quicksand, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-landing: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Code", "Fira Code", monospace;
-  --font-sora: "Sora", Manrope, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sora: "Sora", Quicksand, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   --color-app-bg: #ffffff;
   --color-surface: #ffffff;
@@ -168,6 +169,18 @@
     box-shadow: var(--shadow-avatar);
   }
 
+  .font-landing,
+  .font-landing .font-sans,
+  .font-landing .font-mono,
+  .font-landing .font-sora {
+    font-family: var(--font-landing);
+  }
+
+  .font-landing .font-bold,
+  .font-landing .font-extrabold {
+    font-weight: 600;
+  }
+
   .mobile-app-bar {
     padding-block-start: max(0.75rem, env(safe-area-inset-top, 0px));
   }
@@ -177,7 +190,7 @@
   }
 
   .app-shell-content {
-    --app-bottom-navigation-clearance: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    --app-bottom-navigation-clearance: calc(4.75rem + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-bottom-navigation {
@@ -414,15 +427,6 @@
     white-space: nowrap;
   }
 
-  .settings-form-actions {
-    display: grid;
-  }
-
-  .settings-form-actions > * {
-    inline-size: 100%;
-    min-block-size: 2.75rem;
-  }
-
   .master-data-manager {
     container-name: master-data;
     container-type: inline-size;
@@ -451,7 +455,6 @@
 
   .master-data-actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
   }
 
@@ -538,7 +541,7 @@
     display: flex;
     position: absolute;
     z-index: 20;
-    inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 1rem);
     inset-inline-start: 50%;
     transform: translateX(-50%);
     translate: 0 calc(-1 * var(--app-bottom-navigation-clearance) * (1 - var(--app-bottom-navigation-progress, 0)));
@@ -962,6 +965,21 @@
   }
 }
 
+.form-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.form-actions:has(> :nth-child(2)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-actions > * {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
 .public-header .header-compact-action-surface {
   padding-inline: 1.25rem;
 }
@@ -1007,8 +1025,8 @@
 
 .ui-button[data-mobile-size="standard"] {
     position: relative;
-    block-size: var(--control-height-mobile-button);
-    min-block-size: var(--control-height-mobile-button);
+    block-size: var(--control-height-mobile-button-large);
+    min-block-size: var(--control-height-mobile-button-large);
 }
 
 /* Unlayered so the POS overlay can override the unlayered shared positioning rule. */
@@ -1295,9 +1313,8 @@
   opacity: 0;
   visibility: hidden;
   transition:
-    grid-template-rows var(--duration-base) var(--ease-standard),
-    opacity var(--duration-base) var(--ease-standard),
-    visibility 0s linear var(--duration-base);
+    opacity var(--duration-fast) var(--ease-standard),
+    visibility 0s linear var(--duration-fast);
 }
 
 .variant-panel.is-open {
@@ -1397,7 +1414,7 @@
   }
 
   .variant-panel {
-    transition: none;
+    transition: opacity 120ms linear, visibility 0s linear 120ms;
   }
 
   .attribute-field-state {

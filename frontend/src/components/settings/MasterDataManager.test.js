@@ -32,6 +32,8 @@ test("master data manager uses flat responsive rows and protects long item names
   assert.doesNotMatch(source, /rounded-card border border-border bg-surface p-3/);
   assert.equal(source.match(/density="compact"/g)?.length, 2);
   assert.match(source, /variant="primary"\s+size="base"\s+compactVisual/);
-  assert.match(source, /size="base"\s+variant="ghost"\s+compactVisual/);
-  assert.match(source, /size="base"\s+variant="primary"\s+compactVisual/);
+  assert.match(source, /className="header-compact-action settings-touch-target w-full" type="button" size="sm" variant="ghost"/);
+  assert.match(source, /className="header-compact-action settings-touch-target w-full"[\s\S]*size="sm"[\s\S]*variant="primary"/);
+  assert.match(css, /\.master-data-actions\s*\{[^}]*display:\s*grid;[^}]*gap:\s*0\.5rem/);
+  assert.doesNotMatch(css, /\.master-data-actions\s*\{[^}]*grid-template-columns:/);
 });

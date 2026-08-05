@@ -34,8 +34,8 @@ import { isProductEditorPath } from "../routing.js";
 
 const MAX_VARIANT_COMBINATIONS = 100;
 
-function emptyProduct(categoryId = "", unitId = "") {
-  return { id: "", name: "", barcode: "", categoryId, unitId, price: "", stock: 0, image: "", imageFile: null, removeImage: false, active: true, attributesConfig: [], variants: [] };
+function emptyProduct() {
+  return { id: "", name: "", barcode: "", categoryId: "", unitId: "", price: "", stock: 0, image: "", imageFile: null, removeImage: false, active: true, attributesConfig: [], variants: [] };
 }
 
 function formatNumberInput(value) {
@@ -66,6 +66,81 @@ function createEditorDraft(product) {
     ? buildVariantMatrix(attributesConfig, identified.variants, { price: product.price, stock: product.stock })
     : identified.variants;
   return { ...product, attributesConfig, variants, imageFile: null, removeImage: false };
+}
+
+function buildEditorSubmission(editing) {
+  const config = editing.attributesConfig || [];
+  const variantMode = config.length > 0;
+  const rows = variantMode ? editing.variants || [] : [];
+  const fallbackVariantPrice = rows
+    .map((row) => parseNumberInput(row.price))
+    .find((price) => Number.isFinite(price) && price > 0);
+
+  return {
+    config,
+    rows,
+    variantMode,
+    formProduct: variantMode
+      ? {
+        ...editing,
+        price: fallbackVariantPrice || parseNumberInput(editing.price) || 1,
+        stock: 0,
+        variants: rows.map((row) => ({
+          ...(row.id ? { id: row.id } : {}),
+          attributes: row.attributes,
+          price: Number.isFinite(parseNumberInput(row.price)) ? parseNumberInput(row.price) : 0,
+          stock: parseNumberInput(row.stock),
+          barcode: String(row.barcode || "").trim(),
+          active: row.active !== false,
+        })),
+      }
+      : { ...editing, variants: [] },
+  };
+}
+
+function validateEditorDraft(editing, products) {
+  const { config, rows, variantMode, formProduct } = buildEditorSubmission(editing);
+  let validation = validateProduct(formProduct, products);
+  const occupiedBarcodes = new Set((products || [])
+    .filter((product) => product.id !== editing.id)
+    .flatMap((product) => [product.barcode, ...(product.variants || []).map((variant) => variant.barcode)])
+    .map((barcode) => String(barcode || "").trim().toLocaleLowerCase("id-ID"))
+    .filter(Boolean));
+  const parentBarcode = String(editing.barcode || "").trim().toLocaleLowerCase("id-ID");
+  if (occupiedBarcodes.has(parentBarcode)) validation.errors.barcode = "Barcode sudah dipakai produk atau varian lain.";
+  const variantValidation = variantMode ? validateVariantDraft({
+    attributes: config,
+    variants: rows,
+    parentBarcode: editing.barcode,
+    occupiedBarcodes,
+  }) : { ok: true, attributeRows: {}, variantRows: {}, summary: [] };
+  if (variantMode) {
+    delete validation.errors.price;
+    delete validation.errors.stock;
+  }
+  validation.ok = Object.keys(validation.errors).length === 0;
+
+  return {
+    formProduct,
+    variantValidation,
+    valid: validation.ok && variantValidation.ok,
+    errors: {
+      ...validation.errors,
+      variants: variantValidation.summary[0] || "",
+      variantSummary: variantValidation.summary,
+      variantRows: variantValidation.variantRows,
+      attributeRows: variantValidation.attributeRows,
+    },
+  };
+}
+
+function clearAttributeFieldError(attributeRows = {}, index, field) {
+  const nextRows = { ...attributeRows };
+  const nextRow = { ...(nextRows[index] || {}) };
+  delete nextRow[field];
+  if (Object.values(nextRow).some(Boolean)) nextRows[index] = nextRow;
+  else delete nextRows[index];
+  return nextRows;
 }
 
 function focusFirstProductError() {
@@ -99,7 +174,10 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
   const [enteringProductIds, setEnteringProductIds] = React.useState([]);
   const [topBarActionsTarget, setTopBarActionsTarget] = React.useState(null);
   const [editorRouteError, setEditorRouteError] = React.useState("");
+  const [touchedFields, setTouchedFields] = React.useState({});
   const editorStepHeadingRef = React.useRef(null);
+  const editorPrimaryFieldRef = React.useRef(null);
+  const focusPrimaryEditorFieldRef = React.useRef(false);
   const initializedEditorPathRef = React.useRef("");
   const debouncedQuery = useDebouncedValue(query, 220);
   const productFilters = React.useMemo(() => ({
@@ -111,12 +189,6 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     () => [{ value: "", label: "Semua kategori" }, ...activeMasterOptions(store.categories)],
     [store.categories],
   );
-  const unitOptions = React.useMemo(
-    () => activeMasterOptions(store.units),
-    [store.units],
-  );
-  const defaultCategoryId = categoryOptions[1]?.value || "";
-  const defaultUnitId = unitOptions[0]?.value || "";
   const fetchProductPage = React.useCallback(
     (request) => store.api.listProducts(request),
     [store.api],
@@ -162,7 +234,8 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     initializedEditorPathRef.current = pathname;
     setEditorRouteError("");
     if (pathname === routes.productNew) {
-      const draft = createEditorDraft(emptyProduct(defaultCategoryId, defaultUnitId));
+      const draft = createEditorDraft(emptyProduct());
+      focusPrimaryEditorFieldRef.current = true;
       setEditing(draft);
       setEditorBaseline(productDraftFingerprint(draft));
       setEditorStep("details");
@@ -181,6 +254,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
           return;
         }
         const draft = createEditorDraft(product);
+        focusPrimaryEditorFieldRef.current = true;
         setEditing(draft);
         setEditorBaseline(productDraftFingerprint(draft));
         setEditorStep("details");
@@ -190,7 +264,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     };
     void loadEditorProduct();
     return () => { cancelled = true; };
-  }, [defaultCategoryId, defaultUnitId, editing, editorRouteActive, loadProducts, pathname, productIdFromRoute, store.loaded.categories, store.loaded.units, store.products]);
+  }, [editing, editorRouteActive, loadProducts, pathname, productIdFromRoute, store.loaded.categories, store.loaded.units, store.products]);
 
   React.useEffect(() => {
     if (editorRouteActive || !editing || editorDirty || discardConfirmOpen) return;
@@ -200,6 +274,8 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     setEditorBaseline("");
     setVariantUndo(null);
     setProductErrors({});
+    setTouchedFields({});
+    focusPrimaryEditorFieldRef.current = false;
   }, [discardConfirmOpen, editing, editorDirty, editorRouteActive]);
 
   React.useEffect(() => {
@@ -219,7 +295,13 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
 
   React.useEffect(() => {
     if (!editorHasDraft || discardConfirmOpen) return undefined;
-    const frame = window.requestAnimationFrame(() => editorStepHeadingRef.current?.focus());
+    const frame = window.requestAnimationFrame(() => {
+      const target = focusPrimaryEditorFieldRef.current && editorStep === "details"
+        ? editorPrimaryFieldRef.current
+        : editorStepHeadingRef.current;
+      target?.focus?.();
+      focusPrimaryEditorFieldRef.current = false;
+    });
     return () => window.cancelAnimationFrame(frame);
   }, [discardConfirmOpen, editorHasDraft, editorStep]);
 
@@ -263,8 +345,10 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     setDiscardConfirmOpen(false);
     setVariantUndo(null);
     setProductErrors({});
+    setTouchedFields({});
     setEditorRouteError("");
     initializedEditorPathRef.current = "";
+    focusPrimaryEditorFieldRef.current = false;
     if (navigate) onNavigate(routes.products, { replace: true });
   };
 
@@ -290,7 +374,9 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     setDiscardConfirmOpen(false);
     setVariantUndo(null);
     setProductErrors({});
+    setTouchedFields({});
     setEditorRouteError("");
+    focusPrimaryEditorFieldRef.current = true;
     const nextPath = product.id ? productEditPath(product.id) : routes.productNew;
     initializedEditorPathRef.current = nextPath;
     onNavigate(nextPath);
@@ -298,7 +384,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
 
   const selectPhoto = (file) => {
     const error = file ? validateProductPhoto(file) : "";
-    setProductErrors((current) => ({ ...current, image: error }));
+    setProductErrors((current) => ({ ...current, form: "", image: error }));
     if (error || !file) return;
     setPhotoPreviewURL(URL.createObjectURL(file));
     setEditing((current) => ({ ...current, imageFile: file, removeImage: false }));
@@ -307,70 +393,72 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
   const removePhoto = () => {
     setPhotoPreviewURL("");
     setEditing((current) => ({ ...current, imageFile: null, removeImage: true }));
-    setProductErrors((current) => ({ ...current, image: "" }));
+    setProductErrors((current) => ({ ...current, form: "", image: "" }));
+  };
+
+  const handleProductBlur = (field) => {
+    if (!editing) return;
+    const validation = validateEditorDraft(editing, store.products);
+    setTouchedFields((current) => ({ ...current, [field]: true }));
+    setProductErrors((current) => ({
+      ...current,
+      form: "",
+      [field]: validation.errors[field] || "",
+    }));
+  };
+
+  const handleVariantBlur = (key, field) => {
+    if (!editing) return;
+    const validation = validateEditorDraft(editing, store.products);
+    const error = validation.variantValidation.variantRows?.[key]?.[field] || "";
+    setProductErrors((current) => ({
+      ...current,
+      form: "",
+      variants: validation.errors.variants || current.variants,
+      variantRows: error
+        ? { ...current.variantRows, [key]: { ...current.variantRows?.[key], [field]: error } }
+        : clearVariantFieldError(current.variantRows, key, field),
+    }));
+  };
+
+  const handleAttributeBlur = (index, field) => {
+    if (!editing) return;
+    const validation = validateEditorDraft(editing, store.products);
+    const error = validation.variantValidation.attributeRows?.[index]?.[field] || "";
+    setProductErrors((current) => ({
+      ...current,
+      form: "",
+      variants: validation.errors.variants || current.variants,
+      attributeRows: error
+        ? { ...current.attributeRows, [index]: { ...current.attributeRows?.[index], [field]: error } }
+        : clearAttributeFieldError(current.attributeRows, index, field),
+    }));
   };
 
   const save = async (event) => {
     event.preventDefault();
     if (savingProduct) return;
-    const config = editing.attributesConfig || [];
-    const variantMode = config.length > 0;
-    const rows = variantMode ? editing.variants || [] : [];
-    const fallbackVariantPrice = rows
-      .map((row) => parseNumberInput(row.price))
-      .find((price) => Number.isFinite(price) && price > 0);
-    const formProduct = variantMode ? {
-      ...editing,
-      price: fallbackVariantPrice || parseNumberInput(editing.price) || 1,
-      stock: 0,
-      variants: rows.map((row) => ({
-        ...(row.id ? { id: row.id } : {}),
-        attributes: row.attributes,
-        price: Number.isFinite(parseNumberInput(row.price)) ? parseNumberInput(row.price) : 0,
-        stock: parseNumberInput(row.stock),
-        barcode: String(row.barcode || "").trim(),
-        active: row.active !== false,
-      })),
-    } : { ...editing, variants: [] };
-
-    let validation = validateProduct(formProduct, store.products);
-    const occupiedBarcodes = new Set(store.products
-      .filter((product) => product.id !== editing.id)
-      .flatMap((product) => [product.barcode, ...(product.variants || []).map((variant) => variant.barcode)])
-      .map((barcode) => String(barcode || "").trim().toLocaleLowerCase("id-ID"))
-      .filter(Boolean));
-    const parentBarcode = String(editing.barcode || "").trim().toLocaleLowerCase("id-ID");
-    if (occupiedBarcodes.has(parentBarcode)) validation.errors.barcode = "Barcode sudah dipakai produk atau varian lain";
-    const variantValidation = variantMode ? validateVariantDraft({
-      attributes: config,
-      variants: rows,
-      parentBarcode: editing.barcode,
-      occupiedBarcodes,
-    }) : { ok: true, attributeRows: {}, variantRows: {}, summary: [] };
-    if (variantMode) {
-      delete validation.errors.price;
-      delete validation.errors.stock;
-    }
-    validation.ok = Object.keys(validation.errors).length === 0;
+    const validation = validateEditorDraft(editing, store.products);
+    const touched = { name: true, barcode: true, categoryId: true, price: true, stock: true, unitId: true };
+    setTouchedFields(touched);
     setProductErrors((current) => ({
       ...validation.errors,
-      variants: variantValidation.summary[0] || "",
-      variantSummary: variantValidation.summary,
-      variantRows: variantValidation.variantRows,
-      attributeRows: variantValidation.attributeRows,
-      variantFocusRequest: (current.variantFocusRequest || 0) + (variantValidation.ok ? 0 : 1),
+      form: "",
+      variantFocusRequest: (current.variantFocusRequest || 0) + (validation.variantValidation.ok ? 0 : 1),
     }));
-    if (!validation.ok || !variantValidation.ok) {
-      setEditorStep(!variantValidation.ok ? "variants" : "details");
+    if (!validation.valid) {
+      setEditorStep(!validation.variantValidation.ok ? "variants" : "details");
       focusFirstProductError();
       return;
     }
 
     setSavingProduct(true);
     try {
-      const saved = await store.saveProduct(formProduct, { throwOnError: true });
+      const saved = await store.saveProduct(validation.formProduct, { throwOnError: true });
       if (!saved) {
-        toast.error("Gagal menyimpan produk");
+        const message = "Gagal menyimpan produk. Coba lagi.";
+        setProductErrors((current) => ({ ...current, form: message }));
+        toast.error(message);
         return;
       }
 
@@ -386,9 +474,11 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
         IMAGE_STORAGE_UNAVAILABLE: "Penyimpanan foto sedang tidak tersedia. Coba lagi.",
       };
       if (imageMessages[error?.code]) {
-        setProductErrors((current) => ({ ...current, image: imageMessages[error.code] }));
+        setProductErrors((current) => ({ ...current, form: "", image: imageMessages[error.code] }));
       } else {
-        toast.error(error?.message || "Failed to save product");
+        const message = error?.message || "Gagal menyimpan produk. Coba lagi.";
+        setProductErrors((current) => ({ ...current, form: message }));
+        toast.error(message);
       }
     } finally {
       setSavingProduct(false);
@@ -416,7 +506,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       const config = [...current.attributesConfig, attribute];
       return { ...current, attributesConfig: config };
     });
-    setProductErrors((current) => ({ ...current, variants: "", attributeRows: {} }));
+    setProductErrors((current) => ({ ...current, form: "", variants: "", attributeRows: {} }));
   };
 
   const renameAttribute = (index, name) => {
@@ -424,6 +514,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       const { config, variants } = renameVariantAttribute(current.attributesConfig, current.variants, index, name);
       return { ...current, attributesConfig: config, variants };
     });
+    setProductErrors((current) => ({ ...current, form: "" }));
   };
 
   const setAttributeOptions = (index, options) => {
@@ -432,6 +523,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     if (combinationCount > MAX_VARIANT_COMBINATIONS) {
       setProductErrors((current) => ({
         ...current,
+        form: "",
         variants: `Maksimal ${MAX_VARIANT_COMBINATIONS} variasi per produk. Kurangi jumlah pilihan.`,
       }));
       return;
@@ -448,7 +540,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       const variants = buildVariantMatrix(config, current.variants || [], { price: current.price, stock: current.stock });
       return { ...current, attributesConfig: config, variants };
     });
-    setProductErrors((current) => ({ ...current, variants: "", variantRows: {}, attributeRows: {} }));
+    setProductErrors((current) => ({ ...current, form: "", variants: "", variantRows: {}, attributeRows: {} }));
   };
 
   const duplicateAttribute = (index) => {
@@ -459,11 +551,12 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       { price: editing.price, stock: 0 },
     );
     if (countVariantCombinations(result.config) > MAX_VARIANT_COMBINATIONS) {
-      setProductErrors((current) => ({ ...current, variants: `Maksimal ${MAX_VARIANT_COMBINATIONS} variasi per produk. Kurangi jumlah pilihan.` }));
+      setProductErrors((current) => ({ ...current, form: "", variants: `Maksimal ${MAX_VARIANT_COMBINATIONS} variasi per produk. Kurangi jumlah pilihan.` }));
       return;
     }
     rememberVariantStructure(`${result.variants.length - editing.variants.length} variasi ditambahkan.`);
     setEditing((current) => ({ ...current, attributesConfig: result.config, variants: result.variants }));
+    setProductErrors((current) => ({ ...current, form: "" }));
   };
 
   const moveAttribute = (fromIndex, toIndex) => {
@@ -472,6 +565,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       const result = moveVariantAttribute(current.attributesConfig, current.variants, fromIndex, toIndex);
       return { ...current, attributesConfig: result.config, variants: result.variants };
     });
+    setProductErrors((current) => ({ ...current, form: "" }));
   };
 
   const removeAttribute = (index) => {
@@ -493,7 +587,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
         variants: buildVariantMatrix(config, current.variants || [], { price: current.price, stock: 0 }),
       };
     });
-    setProductErrors((current) => ({ ...current, variants: "", variantRows: {}, attributeRows: {} }));
+    setProductErrors((current) => ({ ...current, form: "", variants: "", variantRows: {}, attributeRows: {} }));
   };
 
   const undoVariantStructure = () => {
@@ -506,7 +600,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       stock: variantUndo.stock,
     }));
     setVariantUndo(null);
-    setProductErrors((current) => ({ ...current, variants: "", variantRows: {}, attributeRows: {} }));
+    setProductErrors((current) => ({ ...current, form: "", variants: "", variantRows: {}, attributeRows: {} }));
   };
 
   const updateVariantRow = (key, field, value) => {
@@ -516,6 +610,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     }));
     setProductErrors((current) => ({
       ...current,
+      form: "",
       variants: "",
       variantRows: clearVariantFieldError(current.variantRows, key, field),
     }));
@@ -527,7 +622,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       ...current,
       variants: applyVariantBulkValues(current.variants, values),
     }));
-    setProductErrors((current) => ({ ...current, variants: "", variantRows: {} }));
+    setProductErrors((current) => ({ ...current, form: "", variants: "", variantRows: {} }));
   };
 
   const setAllVariantsActive = (active, message) => {
@@ -536,10 +631,10 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
       ...current,
       variants: current.variants.map((variant) => ({ ...variant, active })),
     }));
+    setProductErrors((current) => ({ ...current, form: "" }));
   };
 
   const openVariantEditor = () => {
-    if (editing.attributesConfig.length === 0) addAttribute();
     setDiscardConfirmOpen(false);
     setEditorStep("variants");
   };
@@ -547,12 +642,12 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
   const updateEditing = (field, value) => {
     const updated = { ...editing, [field]: value };
     setEditing(updated);
-    if (productErrors[field]) {
-      setProductErrors((current) => ({
-        ...current,
-        [field]: validateProduct(updated, store.products).errors[field],
-      }));
-    }
+    const shouldValidate = touchedFields[field] || productErrors[field];
+    setProductErrors((current) => ({
+      ...current,
+      form: "",
+      ...(shouldValidate ? { [field]: validateEditorDraft(updated, store.products).errors[field] || "" } : {}),
+    }));
   };
 
   const loadMoreProducts = async () => {
@@ -601,6 +696,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
           editing={editing}
           editorStep={editorStep}
           headingRef={editorStepHeadingRef}
+          primaryFieldRef={editorPrimaryFieldRef}
           discardConfirmOpen={discardConfirmOpen}
           savingProduct={savingProduct}
           productErrors={productErrors}
@@ -615,6 +711,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
           onStepChange={setEditorStep}
           onOpenVariantEditor={openVariantEditor}
           onUpdate={updateEditing}
+          onBlurField={handleProductBlur}
           onSelectPhoto={selectPhoto}
           onRemovePhoto={removePhoto}
           onCreateCategory={store.createCategory}
@@ -632,7 +729,9 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
           onDuplicateAttribute={duplicateAttribute}
           onMoveAttribute={moveAttribute}
           onRemoveAttribute={removeAttribute}
+          onBlurAttributeField={handleAttributeBlur}
           onUpdateVariant={updateVariantRow}
+          onBlurVariantField={handleVariantBlur}
           onApplyBulk={applyBulkVariantValues}
           onSetAllActive={setAllVariantsActive}
           onScanVariantBarcode={(key) => {
@@ -651,7 +750,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
             if (scannerTarget?.kind === "variant") {
               updateVariantRow(scannerTarget.key, "barcode", code);
             } else {
-              setEditing((current) => ({ ...current, barcode: code }));
+              updateEditing("barcode", code);
             }
             return {
               ok: true,
@@ -767,10 +866,10 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
           aria-label="Tambah produk"
           title="Tambah produk"
           disabled={isProductsMutating}
-          onClick={() => openEditor(emptyProduct(defaultCategoryId, defaultUnitId))}
+          onClick={() => openEditor(emptyProduct())}
           className="app-shell-floating-action absolute right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
         >
-          <Icon name="plus" className="size-5" />
+          <Icon name="plus" className="size-5" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         </button>
       </div>
 

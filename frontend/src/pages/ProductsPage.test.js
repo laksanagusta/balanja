@@ -69,9 +69,11 @@ test("product barcode scan action shares the labeled row with manual entry", asy
 
 test("product creation is a floating action button at bottom-right", async () => {
   const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
   assert.match(source, /aria-label="Tambah produk"/);
-  assert.match(source, /<Icon name="plus" className="size-5"/);
+  assert.match(source, /<Icon name="plus" className="size-5" strokeWidth=\{3\} strokeLinecap="round" strokeLinejoin="round" \/>/);
   assert.match(source, /app-shell-floating-action absolute right-4/);
+  assert.match(css, /--app-bottom-navigation-clearance: calc\(4\.75rem \+ env\(safe-area-inset-bottom, 0px\)\)/);
   assert.doesNotMatch(source, /mobile-search-control[\s\S]{0,1200}aria-label="Tambah produk"/);
 });
 
@@ -153,6 +155,10 @@ test("product editor manages attributes and syncs variant matrix on save", async
   const editor = await readFile(new URL("../components/product/ProductVariantEditor.jsx", import.meta.url), "utf8");
 
   assert.match(workspace, /ProductVariantEditor/);
+  assert.match(workspace, /Produk tanpa variasi/);
+  assert.match(workspace, /Harga, stok, dan barcode mengikuti setiap kombinasi pilihan/);
+  assert.match(workspace, /Gunakan satu harga dan stok, atau tambahkan variasi jika produk punya ukuran atau warna berbeda/);
+  assert.match(workspace, /<Button type="button" size="sm" variant="secondary" className="whitespace-nowrap" disabled=\{savingProduct\} onClick=\{onOpenVariantEditor\}>/);
   assert.match(editor, /Tambah atribut/);
   assert.match(editor, /aria-label="Tambah atribut"/);
   assert.match(workspace, /className="flex h-11 items-center justify-between rounded-button/);
@@ -199,6 +205,29 @@ test("product editor is one atomic draft split into details and variants", async
   assert.match(source, /focusFirstProductError/);
   assert.match(source, /prefers-reduced-motion: reduce/);
   assert.match(source, /event\.(?:metaKey|ctrlKey)/);
+});
+
+test("product editor keeps setup explicit and validates recoverably", async () => {
+  const source = await readFile(new URL("./ProductsPage.jsx", import.meta.url), "utf8");
+  const workspace = await readFile(new URL("../components/product/ProductEditorWorkspace.jsx", import.meta.url), "utf8");
+  const variant = await readFile(new URL("../components/product/ProductVariantEditor.jsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../index.css", import.meta.url), "utf8");
+
+  assert.match(source, /function emptyProduct\(\)/);
+  assert.doesNotMatch(source, /defaultCategoryId|defaultUnitId/);
+  assert.match(source, /primaryFieldRef/);
+  assert.match(source, /onBlurField/);
+  assert.match(source, /onBlurAttributeField/);
+  assert.match(source, /onBlurVariantField/);
+  assert.match(workspace, /productErrors\.form/);
+  assert.match(source, /Gagal menyimpan produk\. Coba lagi\./);
+  assert.doesNotMatch(source, /const openVariantEditor = \(\) => \{[\s\S]{0,150}addAttribute\(/);
+  assert.match(workspace, /Kembali ke daftar/);
+  assert.match(workspace, /Kembali ke informasi/);
+  assert.match(workspace, /primaryFieldRef/);
+  assert.match(variant, /Belum ada atribut/);
+  assert.match(styles, /\.variant-panel \{[\s\S]{0,220}opacity var\(--duration-fast\)/);
+  assert.doesNotMatch(styles, /\.variant-panel \{[\s\S]{0,220}grid-template-rows var\(--duration-fast\)/);
 });
 
 test("typing in the product editor does not move focus back to the section heading", async () => {

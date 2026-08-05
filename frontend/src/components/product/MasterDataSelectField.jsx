@@ -9,6 +9,7 @@ export default function MasterDataSelectField({
   error = "",
   disabled = false,
   onChange,
+  onBlur,
   onCreate,
   onRestore,
 }) {
@@ -108,6 +109,7 @@ export default function MasterDataSelectField({
         aria-describedby={error ? errorId : undefined}
         disabled={disabled}
         onClick={() => (open ? closePopover() : setOpen(true))}
+        onBlur={onBlur}
         onKeyDown={(event) => {
           if (event.key === "Escape") closePopover();
           if (!open && ["ArrowDown", "Enter", " "].includes(event.key)) {

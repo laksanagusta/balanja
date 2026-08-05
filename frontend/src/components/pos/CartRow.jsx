@@ -99,7 +99,7 @@ export function CartRow({
         {(onUpdateQty || onRemove) && (
           <div className="cart-item-action-rail mt-2 flex items-center justify-between gap-3">
             {onUpdateQty && (
-              <div className="flex h-8 items-center overflow-hidden rounded-md border border-border bg-surface">
+              <div className="flex h-8 items-center overflow-hidden rounded-full border border-border bg-surface">
                 <button
                   type="button"
                   aria-label="Decrease quantity"

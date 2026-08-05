@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
-import { Button, Icon, Input, Panel, Switch } from "../components/primitives.jsx";
+import { Button, Input, Panel, Switch } from "../components/primitives.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { SettingsPageSkeleton } from "../components/page-loading.jsx";
 import MasterDataManager from "../components/settings/MasterDataManager.jsx";
@@ -108,55 +108,61 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
             >
               {tab === "profile" ? (
                 <Panel className="p-4">
-                  <form onSubmit={save} className="grid gap-2">
-                    <div className="pb-3">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-text">Profil toko</p>
-                          <p className="text-xs text-text-muted">Digunakan di layar kasir dan konteks transaksi.</p>
+                  <form onSubmit={save} className="settings-profile-form grid gap-4">
+                    <div className="grid gap-2">
+                      <div className="pb-2">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-text">Profil toko</p>
+                            <p className="text-xs text-text-muted">Digunakan di layar kasir dan konteks transaksi.</p>
+                          </div>
                         </div>
                       </div>
+
+                      <Input
+                        label="Nama toko"
+                        placeholder="Toko Wipay"
+                        inputProps={{
+                          value: draft.storeName,
+                          onChange: (event) => setDraft({ ...draft, storeName: event.target.value }),
+                          required: true,
+                          disabled: isSaving,
+                        }}
+                      />
+                      <Input
+                        label="Alamat toko"
+                        placeholder="Jl. UMKM No. 1"
+                        inputProps={{
+                          value: draft.storeAddress,
+                          onChange: (event) => setDraft({ ...draft, storeAddress: event.target.value }),
+                          disabled: isSaving,
+                        }}
+                      />
+                      <Input
+                        label="Label QRIS"
+                        placeholder="QRIS Toko Wipay"
+                        inputProps={{
+                          value: draft.qrisLabel,
+                          onChange: (event) => setDraft({ ...draft, qrisLabel: event.target.value }),
+                          disabled: isSaving,
+                        }}
+                      />
                     </div>
 
-                    <Input
-                      label="Nama toko"
-                      placeholder="Toko Wipay"
-                      inputProps={{
-                        value: draft.storeName,
-                        onChange: (event) => setDraft({ ...draft, storeName: event.target.value }),
-                        required: true,
-                        disabled: isSaving,
-                      }}
-                    />
-                    <Input
-                      label="Alamat toko"
-                      placeholder="Jl. UMKM No. 1"
-                      inputProps={{
-                        value: draft.storeAddress,
-                        onChange: (event) => setDraft({ ...draft, storeAddress: event.target.value }),
-                        disabled: isSaving,
-                      }}
-                    />
-                    <Input
-                      label="Label QRIS"
-                      placeholder="QRIS Toko Wipay"
-                      inputProps={{
-                        value: draft.qrisLabel,
-                        onChange: (event) => setDraft({ ...draft, qrisLabel: event.target.value }),
-                        disabled: isSaving,
-                      }}
-                    />
-
                     <div className="grid gap-2 rounded-card border border-border bg-surface-muted p-4">
-                      <label className="flex min-h-11 min-w-0 items-center justify-between gap-4 text-sm font-semibold text-text">
-                        Aktifkan pajak
-                        <input
-                          type="checkbox"
-                          checked={draft.taxEnabled}
-                          onChange={(event) => setDraft({ ...draft, taxEnabled: event.target.checked })}
-                          disabled={isSaving}
-                        />
-                      </label>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={Boolean(draft.taxEnabled)}
+                        disabled={isSaving}
+                        onClick={() => setDraft({ ...draft, taxEnabled: !draft.taxEnabled })}
+                        className="flex min-h-11 min-w-0 items-center justify-between gap-4 rounded-button text-left text-sm font-semibold text-text transition-[background-color,transform] duration-fast ease-standard hover:bg-surface-muted active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+                      >
+                        <span className="min-w-0">Aktifkan pajak</span>
+                        <span className="shrink-0">
+                          <Switch checked={Boolean(draft.taxEnabled)} tone="success" decorative />
+                        </span>
+                      </button>
                       <Input
                         label="Tarif pajak"
                         placeholder="11"
@@ -164,7 +170,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                           value: draft.taxRate,
                           onChange: (event) => setDraft({ ...draft, taxRate: event.target.value }),
                           inputMode: "numeric",
-                          disabled: isSaving,
+                          disabled: !draft.taxEnabled || isSaving,
                         }}
                       />
                     </div>
@@ -176,16 +182,17 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                       onClick={() => setScanSoundEnabled(!scanSoundEnabled)}
                       className="flex min-h-11 w-full items-center justify-between gap-4 rounded-button border border-border bg-surface px-4 py-3 text-left transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                     >
-                      <span>
+                      <span className="min-w-0">
                         <span className="block text-sm font-semibold text-text">Bunyi pemindaian</span>
                         <span className="mt-0.5 block text-xs leading-5 text-text-muted">Putar bunyi halus setelah barcode berhasil diproses pada perangkat ini.</span>
                       </span>
-                      <Switch checked={scanSoundEnabled} decorative />
+                      <span className="shrink-0">
+                        <Switch checked={scanSoundEnabled} tone="success" decorative />
+                      </span>
                     </button>
 
-                    <div className="settings-form-actions">
+                    <div className="form-actions">
                       <Button type="submit" variant="primary" disabled={isSaving}>
-                        <Icon name="check" className="size-4" />
                         {isSaving ? "Menyimpan..." : "Simpan pengaturan"}
                       </Button>
                     </div>

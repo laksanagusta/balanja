@@ -95,25 +95,25 @@ export default function DesignSystemPage({ onNavigate }) {
           <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Button sizes</h3>
           <div className="grid gap-4 rounded-panel border border-border bg-surface p-4">
             <div className="flex flex-wrap items-end gap-3">
-              <Button size="xs">text-xs</Button>
-              <Button size="sm">text-sm</Button>
-              <Button size="base">text-base</Button>
-              <Button size="lg">text-lg</Button>
-              <Button size="xl">text-xl</Button>
+              <Button size="xs">XS · 12px</Button>
+              <Button size="sm">Small · 14px</Button>
+              <Button size="base">Base · 16px</Button>
+              <Button size="lg">Large · 18px</Button>
+              <Button size="xl">XL · 20px</Button>
             </div>
             <div className="flex flex-wrap items-end gap-3">
-              <Button variant="primary" size="xs">text-xs</Button>
-              <Button variant="primary" size="sm">text-sm</Button>
-              <Button variant="primary" size="base">text-base</Button>
-              <Button variant="primary" size="lg">text-lg</Button>
-              <Button variant="primary" size="xl">text-xl</Button>
+              <Button variant="primary" size="xs">XS · 12px</Button>
+              <Button variant="primary" size="sm">Small · 14px</Button>
+              <Button variant="primary" size="base">Base · 16px</Button>
+              <Button variant="primary" size="lg">Large · 18px</Button>
+              <Button variant="primary" size="xl">XL · 20px</Button>
             </div>
             <div className="flex flex-wrap items-end gap-3">
-              <Button variant="ghost" size="xs">text-xs</Button>
-              <Button variant="ghost" size="sm">text-sm</Button>
-              <Button variant="ghost" size="base">text-base</Button>
-              <Button variant="ghost" size="lg">text-lg</Button>
-              <Button variant="ghost" size="xl">text-xl</Button>
+              <Button variant="ghost" size="xs">XS · 12px</Button>
+              <Button variant="ghost" size="sm">Small · 14px</Button>
+              <Button variant="ghost" size="base">Base · 16px</Button>
+              <Button variant="ghost" size="lg">Large · 18px</Button>
+              <Button variant="ghost" size="xl">XL · 20px</Button>
             </div>
             <div className="flex flex-wrap items-end gap-3">
               <Button variant="primary" size="base">
