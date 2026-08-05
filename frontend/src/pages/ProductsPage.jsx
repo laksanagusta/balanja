@@ -682,7 +682,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
     if (!editing) {
       return (
         <div className="flex h-full min-h-0 flex-col bg-surface text-text">
-          <header className="sticky top-0 z-20 flex min-h-16 shrink-0 items-center gap-3 bg-surface/92 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78 sm:px-6">
+          <header className="z-20 flex min-h-16 shrink-0 items-center gap-3 bg-surface/92 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78 sm:px-6">
             <button
               type="button"
               onClick={() => closeEditor()}

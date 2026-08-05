@@ -505,7 +505,7 @@ export default function RetailPosPage() {
     if (!cartPresent) return undefined;
 
     const content = document.querySelector(".app-shell-content");
-    const shell = content?.closest(".h-svh");
+    const shell = content?.closest(".h-dvh");
     if (!content || !shell) return undefined;
     const backgroundNodes = [];
     let current = content;

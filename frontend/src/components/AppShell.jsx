@@ -11,7 +11,7 @@ import {
   seedBottomNavigationScrollPositions,
 } from "./bottom-navigation.js";
 
-const appShellScrollLockClass = "app-shell-scroll-lock";
+const appShellScrollChannelClass = "app-shell-scroll-channel";
 const mobilePrimaryNavigation = [
   ["Beranda", "home", routes.dashboard],
   ["Kasir", "receipt", routes.pos],
@@ -32,11 +32,69 @@ const appPageTitles = {
   [routes.settings]: "Pengaturan",
 };
 
-function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, expanded }) {
+function useAppShellScrollBridge({ contentRef, topBarRef, pathname, immersive }) {
+  React.useEffect(() => {
+    const content = contentRef.current;
+    const topBar = topBarRef.current;
+    if (!content) return undefined;
+
+    const scrollPositions = new WeakMap();
+    let topBarHeight = 0;
+    let topBarCollapsed = false;
+    const setTopBarCollapsed = (collapsed) => {
+      if (!topBar) return;
+      topBarCollapsed = collapsed;
+      topBar.style.setProperty(
+        "--app-shell-topbar-collapse-distance",
+        collapsed ? `${topBarHeight}px` : "0px",
+      );
+      topBar.style.setProperty(
+        "--app-shell-topbar-block-size",
+        collapsed ? "0px" : `${topBarHeight}px`,
+      );
+    };
+    const measureTopBar = () => {
+      if (!topBar) return;
+      const wasCollapsed = topBarCollapsed;
+      topBarCollapsed = false;
+      topBar.style.removeProperty("--app-shell-topbar-block-size");
+      topBarHeight = topBar.offsetHeight;
+      setTopBarCollapsed(wasCollapsed);
+    };
+    const handleScroll = (event) => {
+      const scrollRegion = event.target;
+      if (
+        !(scrollRegion instanceof HTMLElement)
+        || !content.contains(scrollRegion)
+        || scrollRegion.closest('[role="dialog"], [role="listbox"], [aria-modal="true"]')
+        || scrollRegion.scrollHeight <= scrollRegion.clientHeight + 1
+      ) return;
+
+      const scrollTop = Math.max(0, scrollRegion.scrollTop);
+      const previousScrollTop = scrollPositions.get(scrollRegion) ?? 0;
+      scrollPositions.set(scrollRegion, scrollTop);
+      const delta = scrollTop - previousScrollTop;
+      if (Math.abs(delta) < 0.5 || document.activeElement?.closest(".mobile-bottom-navigation")) return;
+      setTopBarCollapsed(delta > 0);
+      window.scrollTo(0, delta > 0 ? 1 : 0);
+    };
+
+    measureTopBar();
+    content.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", measureTopBar);
+    return () => {
+      content.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", measureTopBar);
+      setTopBarCollapsed(false);
+    };
+  }, [contentRef, immersive, pathname, topBarRef]);
+}
+
+function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, expanded, enabled }) {
   React.useEffect(() => {
     const content = contentRef.current;
     const navigation = navigationRef.current;
-    if (!content || !navigation) return undefined;
+    if (!enabled || !content || !navigation) return undefined;
 
     const scrollPositions = new WeakMap();
     let progress = 0;
@@ -108,12 +166,12 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
       const previousScrollTop = scrollPositions.get(scrollRegion) ?? 0;
       scrollPositions.set(scrollRegion, scrollTop);
       isScrolledAway = scrollTop > 4;
+      const delta = scrollTop - previousScrollTop;
       if (navigation.contains(document.activeElement)) {
         renderProgress(scrollTop <= 4 ? 0 : progress);
         return;
       }
 
-      const delta = scrollTop - previousScrollTop;
       if (Math.abs(delta) >= 0.5) {
         lastDirection = delta > 0 ? "down" : "up";
         upwardScrollDistance = delta > 0 ? 0 : upwardScrollDistance - delta;
@@ -146,7 +204,7 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
       window.clearTimeout(settleTimer);
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, [contentRef, expanded, navigationRef, pathname]);
+  }, [contentRef, enabled, expanded, navigationRef, pathname]);
 }
 
 function MobileBottomNavigation({ navigationRef, pathname, onNavigate, moreOpen, onToggleMore }) {
@@ -275,22 +333,26 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
   const [accountOpen, setAccountOpen] = React.useState(false);
   const contentRef = React.useRef(null);
   const bottomNavigationRef = React.useRef(null);
+  const topBarRef = React.useRef(null);
   const avatarSeed = user?.primaryEmailAddress?.emailAddress || user?.fullName || user?.id || "cashier";
   const pageTitle = appPageTitles[pathname] || "Wipay";
+
+  useAppShellScrollBridge({ contentRef, topBarRef, pathname, immersive });
 
   useCollapsibleBottomNavigation({
     contentRef,
     navigationRef: bottomNavigationRef,
     pathname,
     expanded: mobileMoreOpen,
+    enabled: !immersive,
   });
 
   React.useEffect(() => {
-    document.documentElement.classList.add(appShellScrollLockClass);
-    document.body.classList.add(appShellScrollLockClass);
+    document.documentElement.classList.add(appShellScrollChannelClass);
+    document.body.classList.add(appShellScrollChannelClass);
     return () => {
-      document.documentElement.classList.remove(appShellScrollLockClass);
-      document.body.classList.remove(appShellScrollLockClass);
+      document.documentElement.classList.remove(appShellScrollChannelClass);
+      document.body.classList.remove(appShellScrollChannelClass);
     };
   }, []);
 
@@ -328,11 +390,11 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
   }, [immersive]);
 
   return (
-    <div className="h-svh overflow-hidden bg-app-bg">
+    <div className="h-dvh overflow-hidden bg-app-bg">
       <a href="#app-main-content" className="app-skip-link">Lewati ke konten utama</a>
       <div className="mx-auto flex h-full w-full max-w-[1200px] overflow-hidden bg-surface">
         <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-surface">
-          {!immersive && <header className="mobile-app-bar shrink-0 bg-surface px-4 pb-3 w-full">
+          {!immersive && <header ref={topBarRef} className="mobile-app-bar shrink-0 bg-surface px-4 pb-3 w-full">
             <div className="flex min-h-14 items-center justify-between w-full min-w-0">
               <h1 className={`min-w-0 truncate text-lg tracking-normal text-text ${pageTitle === "Wipay" ? "font-sora font-bold" : "font-extrabold"}`}>
                 {pageTitle}

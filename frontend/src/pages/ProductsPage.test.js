@@ -210,7 +210,7 @@ test("product editor is one atomic draft split into details and variants", async
   assert.match(workspace, /Informasi produk/);
   assert.match(workspace, /Atur variasi/);
   assert.match(workspace, /Kembali ke daftar produk/);
-  assert.match(workspace, /sticky top-0/);
+  assert.doesNotMatch(workspace, /sticky top-0/);
   assert.match(workspace, /sticky bottom-0/);
   assert.doesNotMatch(workspace, /<Dialog/);
   assert.doesNotMatch(workspace, /Langkah [12] dari 2/);

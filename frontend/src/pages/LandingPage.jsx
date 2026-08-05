@@ -72,7 +72,7 @@ function handlePublicSectionNavigation(event, href) {
 
 function PublicHeader({ isSignedIn, onNavigate }) {
   return (
-    <header className="public-header sticky top-3 z-30 mx-auto flex w-[calc(100%-2rem)] max-w-6xl items-center justify-between gap-4 rounded-full border border-border bg-surface/88 px-4 py-1.5 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-surface/88 sm:w-[calc(100%-3rem)] sm:px-5">
+    <header className="public-header z-30 mx-auto flex w-[calc(100%-2rem)] max-w-6xl items-center justify-between gap-4 rounded-full border border-border bg-surface/88 px-4 py-1.5 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-surface/88 sm:w-[calc(100%-3rem)] sm:px-5">
       <button type="button" onClick={() => scrollToTopRespectingMotion(window)} aria-label="Kembali ke bagian atas" className="press-feedback inline-flex min-h-11 min-w-11 items-center justify-center rounded-button focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus">
         <Logo className="font-landing-logo" />
       </button>

@@ -44,6 +44,10 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
   const { isPresent, isVisible } = useDialogPresence(open);
   const videoRef = React.useRef(null);
   const controlsRef = React.useRef(null);
+  const readerRef = React.useRef(null);
+  const startPromiseRef = React.useRef(null);
+  const activeScanEffectRef = React.useRef(false);
+  const scanEffectIdRef = React.useRef(0);
   const onDetectedRef = React.useRef(onDetected);
   const onCloseRef = React.useRef(onClose);
   const lastDetectionRef = React.useRef({ code: "", acceptedAt: 0 });
@@ -165,7 +169,13 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
     if (!open) return undefined;
 
     let cancelled = false;
-    const reader = new BrowserMultiFormatReader(undefined, { delayBetweenScanAttempts: 250 });
+    const effectId = scanEffectIdRef.current + 1;
+    scanEffectIdRef.current = effectId;
+    activeScanEffectRef.current = true;
+    window.clearTimeout(streamStopTimerRef.current);
+    streamStopTimerRef.current = null;
+    const reader = readerRef.current || new BrowserMultiFormatReader(undefined, { delayBetweenScanAttempts: 250 });
+    readerRef.current = reader;
 
     async function start() {
       if (!videoRef.current) {
@@ -181,20 +191,33 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
           return;
         }
 
-        const controls = await reader.decodeFromConstraints(SCANNER_CAMERA_CONSTRAINTS, videoRef.current, (result, err) => {
-          if (result) {
-            if (processingRef.current) return;
-            const text = result.getText();
-            const now = Date.now();
-            const repeatedTooSoon = lastDetectionRef.current.code === text
-              && now - lastDetectionRef.current.acceptedAt < SAME_CODE_COOLDOWN_MS;
-            if (repeatedTooSoon) return;
-            lastDetectionRef.current = { code: text, acceptedAt: now };
-            void processDetection(text);
-          }
-        });
+        if (!startPromiseRef.current) {
+          const request = reader.decodeFromConstraints(SCANNER_CAMERA_CONSTRAINTS, videoRef.current, (result, err) => {
+            if (result) {
+              if (processingRef.current) return;
+              const text = result.getText();
+              const now = Date.now();
+              const repeatedTooSoon = lastDetectionRef.current.code === text
+                && now - lastDetectionRef.current.acceptedAt < SAME_CODE_COOLDOWN_MS;
+              if (repeatedTooSoon) return;
+              lastDetectionRef.current = { code: text, acceptedAt: now };
+              void processDetection(text);
+            }
+          });
+          const sharedRequest = request.finally(() => {
+            if (startPromiseRef.current === sharedRequest) startPromiseRef.current = null;
+          });
+          startPromiseRef.current = sharedRequest;
+        }
 
-        if (cancelled) {
+        const controls = await startPromiseRef.current;
+
+        if (cancelled || scanEffectIdRef.current !== effectId) {
+          if (!activeScanEffectRef.current) controls.stop();
+          return;
+        }
+
+        if (!videoRef.current) {
           controls.stop();
           return;
         }
@@ -218,10 +241,16 @@ export default function BarcodeScanner({ open, title = "Pindai barcode", onDetec
       cancelAnimationFrame(raf);
       setScanning(false);
       window.clearTimeout(streamStopTimerRef.current);
-      streamStopTimerRef.current = window.setTimeout(() => {
+      streamStopTimerRef.current = null;
+      activeScanEffectRef.current = false;
+      const stopTimer = window.setTimeout(() => {
+        if (streamStopTimerRef.current !== stopTimer) return;
+        streamStopTimerRef.current = null;
+        if (scanEffectIdRef.current !== effectId || activeScanEffectRef.current) return;
         controlsRef.current?.stop();
         controlsRef.current = null;
       }, 0);
+      streamStopTimerRef.current = stopTimer;
     };
   }, [open, processDetection]);
 
