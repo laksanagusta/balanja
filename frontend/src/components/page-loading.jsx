@@ -119,7 +119,7 @@ export function RetailPosSkeleton() {
             ))}
           </div>
         </header>
-        <div className="product-catalog-grid menu-grid-transition grid auto-rows-max gap-4 p-3 sm:p-6">
+        <div className="product-catalog-grid menu-grid-transition grid auto-rows-max gap-2 p-3 sm:p-6">
           {Array.from({ length: 8 }, (_, index) => (
             <article
               key={index}
@@ -194,11 +194,11 @@ export function RetailPosSkeleton() {
   );
 }
 
-export function DashboardPageSkeleton() {
+export function DashboardPageSkeleton({ showSubscription = true }) {
   return (
     <div className="h-full overflow-auto bg-app-bg">
       <main className="grid gap-4 p-4">
-        <section className="flex flex-wrap items-center justify-between gap-3" aria-label="Loading dashboard period">
+        <section className="flex flex-wrap items-center justify-between gap-3" aria-label="Memuat periode dashboard">
           <Skeleton className="h-4 w-40 bg-surface-muted/80" />
           <div className="inline-flex rounded-control border border-border bg-surface-muted p-1">
             <Skeleton className="h-8 w-16 rounded-md bg-surface" />
@@ -207,7 +207,19 @@ export function DashboardPageSkeleton() {
           </div>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key performance indicators">
+        {showSubscription ? (
+          <Panel className="relative min-h-16 overflow-hidden px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="grid min-w-0 gap-2">
+                <Skeleton className="h-3 w-20 bg-surface-muted/80" />
+                <Skeleton className="h-5 w-36 bg-surface-muted/80" />
+              </div>
+              <Skeleton className="h-11 w-28 rounded-control bg-surface-muted/80" />
+            </div>
+          </Panel>
+        ) : null}
+
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indikator kinerja utama">
           <div className="min-w-0 sm:col-span-2 xl:col-span-2">
             <DashboardMetricSkeleton delay={0} emphasis />
           </div>
@@ -216,7 +228,7 @@ export function DashboardPageSkeleton() {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-12">
-          <div className="min-w-0 xl:col-span-4 xl:col-start-9 xl:row-start-1">
+          <div className="min-w-0 xl:col-span-4 xl:col-start-1 xl:row-start-1">
             <Panel className="h-full min-w-0 overflow-hidden p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="grid gap-2">
@@ -225,9 +237,9 @@ export function DashboardPageSkeleton() {
                 </div>
                 <Skeleton className="h-6 w-16 rounded-full bg-surface-muted/80" />
               </div>
-              <div className="mt-4 grid gap-3">
+              <div className="mt-4 rounded-card border border-border">
                 {Array.from({ length: 5 }, (_, index) => (
-                  <div key={index} className="flex items-center justify-between gap-4 rounded-card border border-border bg-surface-muted p-3">
+                  <div key={index} className="flex items-center justify-between gap-3 px-3 py-3">
                     <div className="grid gap-2">
                       <Skeleton className="h-4 w-28 bg-surface" />
                       <Skeleton className="h-3 w-20 bg-surface" />
@@ -238,7 +250,7 @@ export function DashboardPageSkeleton() {
               </div>
             </Panel>
           </div>
-          <div className="min-w-0 xl:col-span-8 xl:col-start-1 xl:row-start-1">
+          <div className="min-w-0 xl:col-span-8 xl:col-start-5 xl:row-start-1">
             <ChartPanelSkeleton delay={0} titleWidth="w-24" bodyRows={2} chartHeight="h-[260px]" />
           </div>
         </section>
@@ -338,13 +350,12 @@ export function ProductsPageSkeleton() {
         <div className="grid w-full gap-3">
           <div className="flex items-center gap-2">
             <Skeleton className="h-11 min-w-0 flex-1 rounded-card bg-surface-muted/80" />
-            <Skeleton className="size-11 shrink-0 rounded-full bg-surface-muted/80" />
           </div>
         </div>
       </header>
 
-      <main className="min-h-0 flex-1 overflow-hidden p-4">
-        <div className="w-full overflow-hidden rounded-panel border border-border bg-surface">
+      <main className="min-h-0 flex-1 overflow-auto p-4">
+        <div className="w-full overflow-hidden rounded-panel border border-border bg-surface divide-y divide-border">
           {Array.from({ length: 6 }, (_, index) => (
             <div key={index} className="grid min-h-32 grid-cols-[minmax(0,1fr)_5rem] items-center gap-4 px-4 py-4">
               <div className="grid self-stretch">
@@ -414,54 +425,33 @@ export function StockPageSkeleton() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface" aria-busy="true">
       <header className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-11 min-w-0 flex-1 rounded-card bg-surface-muted/80" />
-          <Skeleton className="size-11 shrink-0 rounded-full bg-accent/20" />
-        </div>
+        <Skeleton className="h-11 min-w-0 w-full rounded-card bg-surface-muted/80" />
       </header>
 
-      <main className="min-h-0 flex-1 overflow-hidden bg-app-bg p-4">
-        <div className="grid w-full gap-8">
-          {[3, 6].map((rowCount, sectionIndex) => (
+      <main className="min-h-0 flex-1 overflow-auto bg-app-bg p-4">
+        <div className="grid w-full gap-6">
+          {[5, 6].map((rowCount, sectionIndex) => (
             <section key={rowCount}>
               <div className="flex items-center justify-between gap-3">
                 <Skeleton className={`h-5 bg-surface-muted/80 ${sectionIndex ? "w-32" : "w-28"}`} />
                 {!sectionIndex && <Skeleton className="h-7 w-16 rounded-full bg-danger-soft/70" />}
               </div>
-              <div className="mt-4 grid gap-3">
+              <div className="mt-2 grid gap-0">
                 {Array.from({ length: rowCount }, (_, index) => (
                   <RiseSkeleton
                     key={index}
                     delay={(sectionIndex * 3 + index) * 60}
-                    className="min-h-24 rounded-card bg-surface p-4 shadow-low"
+                    className="grid min-h-16 grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3 py-2"
                   >
-                    {sectionIndex ? (
-                      <div className="grid h-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3">
-                        <Skeleton className="size-12 rounded-card bg-surface-muted/80" />
-                        <div className="grid gap-2">
-                          <Skeleton className="h-4 w-3/4 bg-surface-muted/80" />
-                          <Skeleton className="h-3.5 w-1/2 bg-surface-muted/80" />
-                        </div>
-                        <div className="grid justify-items-end gap-2">
-                          <Skeleton className="h-5 w-10 bg-surface-muted/80" />
-                          <Skeleton className="h-3 w-14 bg-surface-muted/80" />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid h-full gap-4">
-                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                          <div className="grid gap-2">
-                            <Skeleton className="h-4 w-3/4 bg-surface-muted/80" />
-                            <Skeleton className="h-3.5 w-1/2 bg-surface-muted/80" />
-                          </div>
-                          <div className="grid justify-items-end gap-2">
-                            <Skeleton className="h-5 w-10 bg-surface-muted/80" />
-                            <Skeleton className="h-3 w-14 bg-surface-muted/80" />
-                          </div>
-                        </div>
-                        <Skeleton className="h-2 w-full rounded-full bg-surface-muted/80" />
-                      </div>
-                    )}
+                    <Skeleton className="size-12 rounded-card bg-surface-muted/80" />
+                    <div className="grid min-w-0 gap-2">
+                      <Skeleton className="h-3.5 w-3/4 bg-surface-muted/80" />
+                      <Skeleton className="h-4 w-4/5 bg-surface-muted/80" />
+                    </div>
+                    <div className="grid justify-items-end gap-2">
+                      <Skeleton className="h-5 w-16 bg-surface-muted/80" />
+                      <Skeleton className="h-3 w-14 bg-surface-muted/80" />
+                    </div>
                     <LoadingSheen delay={(sectionIndex * 3 + index) * 60} />
                   </RiseSkeleton>
                 ))}

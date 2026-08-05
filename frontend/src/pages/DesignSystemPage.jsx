@@ -138,6 +138,22 @@ export default function DesignSystemPage({ onNavigate }) {
         <DialogShowcase />
         <ProductPhotoShowcase />
         <ProductVariantShowcase />
+        <section className="rounded-panel border border-border bg-surface p-4 shadow-low">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Products page contract</p>
+          <h3 className="mt-2 text-xl font-semibold text-text">Accessible catalog states and operational data</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
+            The catalog keeps one semantic main landmark, a shared skip-to-content target, and a polite result-count announcement.
+            Empty catalogs invite the first product; filtered no-results states explain the active search or filters and offer a reset.
+          </p>
+          <ul className="mt-3 grid gap-2 text-sm leading-6 text-text-muted sm:grid-cols-2">
+            <li>Barcode fields use visible labels associated with their inputs.</li>
+            <li>Server error codes become Indonesian recovery copy.</li>
+            <li>Loading geometry mirrors the settled list and shared filter action.</li>
+            <li>Warning text uses the accessible `--color-warning` token.</li>
+            <li>Stock values show Indonesian thousand separators.</li>
+            <li>Status pills use at least 12px operational text.</li>
+          </ul>
+        </section>
         <MasterDataPatternsShowcase />
         <ModalFormShowcase />
         <DataTableShowcase />

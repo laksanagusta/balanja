@@ -82,7 +82,7 @@ function ProductCardFrame({
           </h3>
           <p
             className={`product-card-price ${
-              priceOnly ? "text-[15px] font-[750] leading-tight text-text" : "text-xs font-medium text-text-muted"
+              priceOnly ? "font-mono text-[15px] font-semibold leading-tight text-text" : "text-xs font-medium text-text-muted"
             }`}
           >
             <span className={priceOnly ? "tabular-nums" : "font-mono tabular-nums"}>{product.price}</span>

@@ -56,7 +56,7 @@ export function MobileCheckoutPanel({
 
   return (
     <motion.section
-      aria-label="Pembayaran cart"
+      aria-label="Pembayaran keranjang"
       className="mobile-checkout-panel relative z-10 bg-surface px-4 py-3 shadow-[0_-10px_22px_-20px_rgb(29_29_31_/_0.32)]"
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
@@ -87,7 +87,7 @@ export function MobileCheckoutPanel({
                   : { ...hiddenBlendState, y: -3, transition: blendOutTransition }}
                 className="absolute inset-0 flex min-w-0 flex-col justify-center"
               >
-                <p className="text-xs font-medium text-text-muted">Grand total</p>
+                <p className="text-xs font-medium text-text-muted">Total akhir</p>
                 <p className="truncate font-mono text-lg font-semibold tabular-nums text-text">{grandTotal}</p>
               </motion.div>
             )}
@@ -138,7 +138,7 @@ export function MobileCheckoutPanel({
           opacity: expanded ? 1 : 0,
         }}
         transition={detailTransition}
-        className="overflow-hidden"
+        className="mobile-checkout-details"
       >
         <motion.div
           animate={shouldReduceMotion

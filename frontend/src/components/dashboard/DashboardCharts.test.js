@@ -10,3 +10,13 @@ test("dashboard revenue chart marks only sparse series and uses a monotone time-
   assert.match(line, /curveMonotoneX/);
   assert.doesNotMatch(line, /curveNatural/);
 });
+
+test("dashboard revenue chart exposes an accessible summary and complete data table", async () => {
+  const dashboard = await readFile(new URL("./DashboardCharts.jsx", import.meta.url), "utf8");
+
+  assert.match(dashboard, /function RevenueTrendAccessibleData/);
+  assert.match(dashboard, /<table>/);
+  assert.match(dashboard, /<caption>Data rinci tren pendapatan/);
+  assert.match(dashboard, /<p id=\{descriptionId\} className="sr-only"/);
+  assert.match(dashboard, /descriptionId=\{hasRevenueData \? descriptionId : undefined\}/);
+});

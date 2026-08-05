@@ -760,9 +760,9 @@ export function Pill({ children, tone = "neutral", selected = false, className =
   );
 }
 
-export function Panel({ children, className = "" }) {
+export function Panel({ children, className = "", ...props }) {
   return (
-    <section className={`rounded-panel border border-border bg-surface shadow-panel ${className}`}>
+    <section {...props} className={`rounded-panel border border-border bg-surface shadow-panel ${className}`}>
       {children}
     </section>
   );

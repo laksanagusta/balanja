@@ -8,7 +8,7 @@ export default function FaqSection() {
     <section id="faq" className="scroll-mt-24 px-4 pt-20 pb-8 sm:px-6 sm:pt-28 sm:pb-10 lg:pt-36 lg:pb-12">
       <div className="mx-auto max-w-3xl">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">FAQ</p>
-        <h2 className="mt-4 max-w-2xl text-[36px] font-semibold leading-[1.04] tracking-[-0.035em] text-text sm:text-[48px]">
+        <h2 className="mt-4 max-w-2xl text-balance text-[36px] font-semibold leading-[1.04] tracking-[-0.035em] text-text sm:text-[48px]">
           Pertanyaan yang sering ditanyakan.
         </h2>
 
@@ -39,7 +39,7 @@ export default function FaqSection() {
                   className={`faq-answer-grid ${isOpen ? "is-open" : ""}`}
                 >
                   <div className="min-h-0 overflow-hidden">
-                    <p className="pb-5 pr-10 text-sm leading-7 text-text-muted sm:text-base">{faq.answer}</p>
+                    <p className="pb-5 pr-10 text-sm leading-[1.6] text-text-muted sm:text-base">{faq.answer}</p>
                   </div>
                 </div>
               </div>

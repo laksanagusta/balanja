@@ -15,7 +15,8 @@ export function PricingPanel({ onStart, contacts = null, showcase = false }) {
   const triggerRef = React.useRef(null);
   const popoverRef = React.useRef(null);
   const contactPopoverId = React.useId();
-  const canOpenContact = Boolean(onStart || contacts);
+  const hasContactChannel = Boolean(contacts?.whatsapp || contacts?.email);
+  const canStart = Boolean(onStart || hasContactChannel);
 
   React.useEffect(() => {
     if (!contactOpen) return undefined;
@@ -38,7 +39,11 @@ export function PricingPanel({ onStart, contacts = null, showcase = false }) {
   }, [contactOpen]);
 
   function handleStart() {
-    if (!canOpenContact) return;
+    if (!canStart) return;
+    if (!hasContactChannel) {
+      onStart?.();
+      return;
+    }
     setContactOpen((open) => !open);
     onStart?.();
   }
@@ -48,8 +53,8 @@ export function PricingPanel({ onStart, contacts = null, showcase = false }) {
       <div className="flex flex-col justify-between gap-8">
         <div>
           <p className="text-xs font-mono font-medium uppercase tracking-[0.14em] text-white/60">Paket Wipay</p>
-          <h2 id="pricing-title" className="mt-4 max-w-xl text-[38px] font-semibold leading-[1.02] tracking-[-0.04em] sm:text-[52px]">Satu paket Pro untuk toko yang terus berjalan.</h2>
-          <p className="mt-5 max-w-lg text-base leading-7 text-white/70">Semua alur penting toko dalam satu paket yang jelas—dari melayani pembeli sampai memantau stok dan transaksi.</p>
+          <h2 id="pricing-title" className="mt-4 max-w-xl text-balance text-[38px] font-semibold leading-[1.02] tracking-[-0.04em] sm:text-[52px]">Satu paket Pro untuk toko yang terus berjalan.</h2>
+          <p className="mt-5 max-w-lg text-base leading-[1.6] text-white/70">Semua alur penting toko dalam satu paket yang jelas—dari melayani pembeli sampai memantau stok dan transaksi.</p>
         </div>
         <span className="w-fit rounded-full border border-white/20 px-3 py-1.5 text-xs font-semibold text-white/80">Hanya satu pilihan</span>
       </div>
@@ -71,21 +76,25 @@ export function PricingPanel({ onStart, contacts = null, showcase = false }) {
           ))}
         </ul>
         <div ref={triggerRef} className="relative mt-8">
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            onClick={handleStart}
-            aria-expanded={canOpenContact ? contactOpen : undefined}
-            aria-controls={canOpenContact ? contactPopoverId : undefined}
-            className="w-full"
-          >
-            Mulai dengan Pro
-          </Button>
+          {canStart ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              onClick={handleStart}
+              aria-expanded={hasContactChannel ? contactOpen : undefined}
+              aria-controls={hasContactChannel ? contactPopoverId : undefined}
+              className="w-full"
+            >
+              Mulai dengan Pro
+            </Button>
+          ) : (
+            <p role="status" className="rounded-button bg-white/10 px-4 py-3 text-center text-sm font-semibold text-white/80">Kontak upgrade belum tersedia.</p>
+          )}
           <FloatingPopover
             ref={popoverRef}
             anchorRef={triggerRef}
-            open={canOpenContact && contactOpen}
+            open={hasContactChannel && contactOpen}
             align="end"
             matchAnchorWidth={false}
             className="w-[min(20rem,calc(100vw-2rem))] rounded-card border border-border bg-surface p-4 text-text shadow-panel"
@@ -96,19 +105,19 @@ export function PricingPanel({ onStart, contacts = null, showcase = false }) {
                   <p className="text-sm font-semibold">Hubungi Wipay</p>
                   <p className="mt-1 text-xs leading-5 text-text-muted">Pilih kanal untuk mengaktifkan paket Pro.</p>
                 </div>
-                <button type="button" aria-label="Tutup pilihan kontak" onClick={() => setContactOpen(false)} className="grid size-9 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">×</button>
+                <button type="button" aria-label="Tutup pilihan kontak" onClick={() => setContactOpen(false)} className="grid size-11 shrink-0 place-items-center rounded-control text-text-muted hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">×</button>
               </div>
               <div className="mt-4 grid gap-2">
                 {contacts?.whatsapp ? (
                   <a href={contacts.whatsapp} target="_blank" rel="noreferrer" onClick={() => setContactOpen(false)} className="flex min-h-11 items-center justify-between rounded-control bg-text px-3 text-sm font-semibold text-white hover:bg-text/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
                     WhatsApp <span aria-hidden="true">↗</span>
                   </a>
-                ) : <p className="rounded-control bg-surface-muted px-3 py-2 text-xs text-text-muted">Kontak WhatsApp belum tersedia.</p>}
+                ) : null}
                 {contacts?.email ? (
                   <a href={contacts.email} onClick={() => setContactOpen(false)} className="flex min-h-11 items-center justify-between rounded-control border border-border bg-surface px-3 text-sm font-semibold text-text hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
                     Email <span aria-hidden="true">↗</span>
                   </a>
-                ) : <p className="rounded-control bg-surface-muted px-3 py-2 text-xs text-text-muted">Kontak email belum tersedia.</p>}
+                ) : null}
               </div>
             </div>
           </FloatingPopover>

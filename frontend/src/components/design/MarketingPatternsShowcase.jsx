@@ -9,7 +9,7 @@ export default function MarketingPatternsShowcase() {
       <div className="p-4 sm:p-6">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-success">Marketing page patterns</p>
         <h3 className="mt-3 text-2xl font-semibold text-text">Public display, CTA, and product frame</h3>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-text-muted">
+        <p className="mt-2 max-w-3xl text-pretty text-sm leading-[1.6] text-text-muted">
           These spacious patterns are reserved for the public landing page. Operational screens keep their compact title and control scales.
         </p>
       </div>
@@ -18,7 +18,7 @@ export default function MarketingPatternsShowcase() {
         <div className="grid gap-6 rounded-panel bg-app-bg p-5 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Fitur baru: Scan barcode langsung dari kasir</p>
-            <p className="mt-4 max-w-4xl text-[42px] font-medium leading-[0.98] tracking-[-0.055em] text-text sm:text-[56px] lg:text-[68px]">
+            <p className="mt-4 max-w-4xl text-balance text-[42px] font-medium leading-[0.98] tracking-[-0.055em] text-text sm:text-[56px] lg:text-[68px]">
               Jualan rapi. Stok terkendali. Toko lebih tenang.
             </p>
           </div>
@@ -50,16 +50,16 @@ export default function MarketingPatternsShowcase() {
         <div className="rounded-panel bg-app-bg p-5 sm:p-8">
           <div className="mb-5">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Pricing · one plan</p>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-muted">Use one clear Pro offer when there is no meaningful plan comparison to make. The primary action opens a compact contact popover for email and WhatsApp.</p>
+            <p className="mt-2 max-w-2xl text-pretty text-sm leading-[1.6] text-text-muted">Use one clear Pro offer when there is no meaningful plan comparison to make. The primary action opens a compact contact popover for email and WhatsApp.</p>
           </div>
-          <PricingPanel showcase />
+          <PricingPanel showcase contacts={{ whatsapp: "https://example.com/whatsapp", email: "mailto:hello@example.com" }} />
         </div>
 
         <div className="mx-auto grid aspect-[720/406] w-full max-w-4xl place-content-center overflow-hidden rounded-panel bg-white px-5 py-16 text-center">
-          <p className="mx-auto max-w-2xl text-[36px] font-semibold leading-none tracking-[-0.04em] text-text">
+          <p className="mx-auto max-w-2xl text-balance text-[36px] font-semibold leading-none tracking-[-0.04em] text-text">
             Closing CTA on a quiet solid surface
           </p>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-text-muted">
+          <p className="mx-auto mt-4 max-w-xl text-pretty text-sm leading-[1.6] text-text-muted">
             Keep the closing action focused with a white surface, readable text copy, and no decorative image.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -90,7 +90,7 @@ export default function MarketingPatternsShowcase() {
                 Open FAQ row
                 <span aria-hidden="true" className="faq-toggle-icon is-open text-text-muted" />
               </div>
-              <p className="mt-3 text-sm leading-6 text-text-muted">Answers expand beneath a spacing-led row without an outer accordion card.</p>
+              <p className="mt-3 text-sm leading-[1.6] text-text-muted">Answers expand beneath a spacing-led row without an outer accordion card.</p>
             </div>
           </div>
         </div>
@@ -99,9 +99,11 @@ export default function MarketingPatternsShowcase() {
           Landing copy follows StoryBrand: the merchant is the protagonist, scattered operations are the problem, and
           Wipay is the practical guide. Lead with operational outcomes, use specific workflow language, and never invent
           testimonials, customer counts, pricing, guarantees, urgency, or unsupported claims. Public controls use a
-          minimum 44px touch target, visible keyboard focus, and immediate press feedback. The floating public header
-          is a full-radius translucent pill inset 12px from the viewport edges and capped at the same 1152px container
-          as the hero visual.
+          minimum 44px touch target, visible keyboard focus, and immediate press feedback. Header anchor labels use the
+          primary text token and an 88% surface veil over the retail hero; header and footer anchor links use the same
+          96px-offset scroll behavior, including the reduced-motion fallback. The first keyboard stop is a skip-to-content
+          link. The floating public header is a full-radius pill using the same 16px compact / 24px small-screen gutters
+          and 1152px container as the hero visual. Missing upgrade channels are omitted rather than rendered as dead ends.
         </p>
       </div>
     </section>

@@ -79,6 +79,8 @@ export default function RetailPosPage() {
   const store = usePOSStore();
   const shouldReduceMotion = useReducedMotion();
   const searchInputRef = React.useRef(null);
+  const cashInputRef = React.useRef(null);
+  const mobileCashInputRef = React.useRef(null);
   const cartTriggerRef = React.useRef(null);
   const cartCloseRef = React.useRef(null);
   const cartMenuTriggerRef = React.useRef(null);
@@ -141,10 +143,22 @@ export default function RetailPosPage() {
       : cashError || (cashReceived.trim() && !cashState.valid ? cashState.error : "")
     : "";
 
+  const focusVisibleCashInput = React.useCallback(() => {
+    const input = [cashInputRef.current, mobileCashInputRef.current].find((candidate) => (
+      candidate
+      && candidate.isConnected
+      && !candidate.closest("[inert]")
+      && candidate.getClientRects().length > 0
+    ));
+    input?.focus({ preventScroll: true });
+    input?.select();
+  }, []);
+
   const checkout = async () => {
     if (checkoutPending) return;
     if (paymentMethod === "cash" && !cashState.valid) {
       setCashError(cashState.error);
+      window.requestAnimationFrame(focusVisibleCashInput);
       return;
     }
     setCashError("");
@@ -159,7 +173,10 @@ export default function RetailPosPage() {
         setMobileCheckoutExpanded(false);
         toast.success("Transaksi selesai", { description: result.transaction?.number });
       } else {
-        toast.error(result.error || "Checkout gagal");
+        toast.error(result.error || "Transaksi belum berhasil.", {
+          description: "Periksa keranjang lalu coba lagi.",
+          duration: Infinity,
+        });
       }
     } finally {
       setCheckoutPending(false);
@@ -414,6 +431,13 @@ export default function RetailPosPage() {
       }
     };
     const handleMenuKeyDown = (event) => {
+      if (event.key === "Tab") {
+        event.preventDefault();
+        event.stopPropagation();
+        setCartMenuOpen(false);
+        cartMenuTriggerRef.current?.focus({ preventScroll: true });
+        return;
+      }
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopPropagation();
@@ -440,7 +464,6 @@ export default function RetailPosPage() {
     if (!(isCompactCart && cartExpanded)) return undefined;
     const handleCartKeyDown = (event) => {
       if (clearCartOpen) return;
-      if (cartMenuOpen) return;
       if (event.key === "Escape") {
         event.preventDefault();
         if (mobileCheckoutExpanded) {
@@ -452,7 +475,10 @@ export default function RetailPosPage() {
         return;
       }
       if (event.key !== "Tab") return;
-      const elements = focusableElements(cartPaneRef.current);
+      const elements = [
+        ...focusableElements(cartPaneRef.current),
+        ...focusableElements(cartMenuRef.current),
+      ].filter((element, index, all) => all.indexOf(element) === index);
       if (elements.length === 0) return;
       const first = elements[0];
       const last = elements.at(-1);
@@ -474,6 +500,33 @@ export default function RetailPosPage() {
     isCompactCart,
     mobileCheckoutExpanded,
   ]);
+
+  React.useEffect(() => {
+    if (!cartPresent) return undefined;
+
+    const content = document.querySelector(".app-shell-content");
+    const shell = content?.closest(".h-svh");
+    if (!content || !shell) return undefined;
+    const backgroundNodes = [];
+    let current = content;
+    while (current && current !== shell) {
+      const parent = current.parentElement;
+      if (!parent) break;
+      backgroundNodes.push(...Array.from(parent.children).filter((node) => node !== current));
+      current = parent;
+    }
+    const previousStates = backgroundNodes.map((node) => ({
+      node,
+      hadInert: node.hasAttribute("inert"),
+    }));
+
+    backgroundNodes.forEach((node) => node.setAttribute("inert", ""));
+    return () => {
+      previousStates.forEach(({ node, hadInert }) => {
+        if (!hadInert) node.removeAttribute("inert");
+      });
+    };
+  }, [cartPresent]);
 
   React.useEffect(() => () => {
     window.clearTimeout(cartCloseTimerRef.current);
@@ -560,7 +613,7 @@ export default function RetailPosPage() {
                 type="button"
                 aria-label="Hapus pencarian"
                 onClick={() => setQuery("")}
-                className="grid size-8 shrink-0 place-items-center rounded-control text-text-muted transition-[transform,background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                className="pos-touch-target grid size-11 shrink-0 place-items-center rounded-control text-text-muted transition-[transform,background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
                 <Icon name="x" className="size-4" />
               </button>
@@ -678,13 +731,13 @@ export default function RetailPosPage() {
                 aria-controls="retail-pos-cart-menu"
                 onClick={() => setCartMenuOpen((open) => !open)}
                 onKeyDown={(event) => {
-                  if (event.key === "ArrowDown") {
+                  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
                     event.preventDefault();
                     setCartMenuOpen(true);
                   }
                 }}
                 disabled={store.cart.length === 0}
-                className="pos-touch-target grid min-w-9 place-items-center rounded-button text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-35"
+                className="pos-touch-target grid size-11 place-items-center rounded-button text-text-muted transition-colors duration-fast hover:bg-surface-muted hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-35"
               >
                 <Icon name="more" className="size-4" />
               </button>
@@ -768,7 +821,9 @@ export default function RetailPosPage() {
                 placeholder="Contoh: 150.000…"
                 error={visibleCashError}
                 inputProps={{
+                  ref: cashInputRef,
                   name: "cashReceived",
+                  className: "font-mono tabular-nums",
                   autoComplete: "off",
                   value: cashReceived ? formatThousands(cashReceived) : cashReceived,
                   onChange: (event) => {
@@ -836,7 +891,9 @@ export default function RetailPosPage() {
                     placeholder="Contoh: 150.000…"
                     error={visibleCashError}
                     inputProps={{
+                      ref: mobileCashInputRef,
                       name: "mobileCashReceived",
+                      className: "font-mono tabular-nums",
                       autoComplete: "off",
                       value: cashReceived ? formatThousands(cashReceived) : cashReceived,
                       onChange: (event) => {
@@ -889,8 +946,8 @@ export default function RetailPosPage() {
         title="Kosongkan keranjang?"
         footer={
           <>
-            <Button className="pos-touch-target" disabled={checkoutPending} onClick={() => setClearCartOpen(false)}>Tetap simpan</Button>
-            <Button variant="danger" className="pos-touch-target" disabled={checkoutPending} onClick={clearCart}>Kosongkan</Button>
+            <Button className="pos-touch-target" disabled={checkoutPending} onClick={() => setClearCartOpen(false)}>Pertahankan keranjang</Button>
+            <Button variant="danger" className="pos-touch-target" disabled={checkoutPending} onClick={clearCart}>Kosongkan keranjang</Button>
           </>
         }
       >

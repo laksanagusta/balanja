@@ -6,7 +6,7 @@ const tokens = [
   ["Card Radius", "--radius-card", "16px"],
   ["Low Shadow", "--shadow-low", "0 1px 2px rgb(0 0 0 / 0.05)"],
   ["Muted Surface", "--color-surface-muted", "#f6f6f6"],
-  ["Text Subtle", "--color-text-subtle", "#a1a1a1"],
+  ["Text Subtle", "--color-text-subtle", "#6f6f6f"],
 ];
 
 export default function TabListShowcase() {

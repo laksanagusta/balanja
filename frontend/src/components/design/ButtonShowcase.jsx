@@ -4,7 +4,7 @@ import { Button, Icon, Panel } from "../primitives.jsx";
 const tokens = [
   ["Accent", "--color-accent", "#1d1d1f"],
   ["Accent Hover", "--color-accent-hover", "#151517"],
-  ["Danger", "--color-danger", "#ef4444"],
+  ["Danger", "--color-danger", "#d32f2f"],
   ["Danger Soft", "--color-danger-soft", "#fff1f1"],
   ["Control radius", "--radius-control", "10px"],
   ["Utility radius", "--radius-button", "12px"],

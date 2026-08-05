@@ -52,6 +52,12 @@ export default function POSPatterns() {
         <p className="mt-2 text-sm text-text-muted">
           Feedback tunai memakai satu live region yang melakukan blend hanya ketika status berpindah antara Uang kurang dan Kembalian. Nilai yang berubah di dalam status yang sama tetap instan agar pengetikan terasa cepat.
         </p>
+        <p className="mt-2 text-sm text-text-muted">
+          Hasil pencarian dan kategori mengumumkan jumlah produk melalui live region polite yang stabil, sementara filter kosong menjelaskan bahwa tidak ada produk yang cocok dan menyediakan Atur ulang filter. Harga kartu POS memakai JetBrains Mono dengan angka tabular, dan nominal tunai mengikuti format angka yang sama. Ringkasan pembayaran memakai label Total akhir secara konsisten. Saat cart terbuka, seluruh latar app-shell dibuat inert; focus trap mencakup cart serta overflow menu yang dirender melalui portal, dan error checkout tetap tampil sampai ditutup atau dipulihkan.
+        </p>
+        <p className="mt-2 text-sm text-text-muted">
+          Grid katalog memakai gap 8px pada settled dan loading states. Checkout surface tidak menjadi scroll container kedua; jika disclosure panjang, overflow dibatasi pada detailnya sementara heading dan action tetap terlihat. Nama produk POS memakai balanced wrapping, dan feedback ring mengikuti radius foto agar tidak membentuk sudut konsentris yang berbeda.
+        </p>
       </div>
       <div className="grid gap-3 rounded-panel bg-black/90 p-4 sm:grid-cols-2">
         <ScanResultConfirmation

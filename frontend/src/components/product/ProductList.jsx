@@ -80,7 +80,7 @@ function ProductListRow({
                 </span>
               )}
               <span
-              className={`inline-flex h-5 items-center rounded-full px-2 text-[10px] font-semibold ${
+              className={`inline-flex h-5 items-center rounded-full px-2 text-xs font-semibold ${
                 isActive ? "bg-success-soft text-success" : "bg-danger-soft text-danger"
               }`}
             >
@@ -88,7 +88,7 @@ function ProductListRow({
             </span>
           </span>
         </span>
-        <ProductThumbnail product={product} size="xl" />
+        <ProductThumbnail product={product} size="xl" radius="control" />
       </button>
     </li>
   );

@@ -35,6 +35,8 @@ test("design system page includes the production stock overview pattern", async 
   assert.match(showcase, /badge ikon status/i);
   assert.match(showcase, /floating action di kanan bawah/i);
   assert.match(showcase, /delta bertanda/i);
+  assert.match(showcase, /radius input standar/i);
+  assert.match(showcase, /tanpa border tambahan/i);
 });
 
 test("design system reuses the production Settings skeleton", async () => {
