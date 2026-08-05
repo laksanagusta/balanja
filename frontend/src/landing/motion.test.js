@@ -34,7 +34,7 @@ test("scroll helpers pass the preferred behavior to browser APIs", () => {
   ]);
 });
 
-test("scrollToSectionRespectingMotion lands with the sticky header offset and preferred behavior", () => {
+test("scrollToSectionRespectingMotion lands with the section offset and preferred behavior", () => {
   const calls = [];
   const matchMedia = () => ({ matches: false });
   const element = { getBoundingClientRect: () => ({ top: 500 }) };

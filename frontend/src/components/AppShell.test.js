@@ -6,28 +6,52 @@ test("app shell keeps the smartphone chrome and caps the canvas at 1200px", asyn
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
   const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
-  assert.match(source, /className="h-svh overflow-hidden bg-app-bg"/);
+  assert.match(source, /className="h-dvh overflow-hidden bg-app-bg"/);
   assert.match(source, /className="mx-auto flex h-full w-full max-w-\[1200px\] overflow-hidden bg-surface"/);
   assert.doesNotMatch(source, /md:hidden|md:flex|md:p-2|md:gap-2/);
   assert.match(designGuide, /capped at 1200px/);
   assert.match(designGuide, /Do not introduce a desktop sidebar/);
 });
 
-test("app shell locks document scrolling while pages own internal scroll", async () => {
+test("app shell keeps internal workspace scroll while exposing a mobile root-scroll channel", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
   const showcase = await readFile(new URL("./design/NavigationPatternsShowcase.jsx", import.meta.url), "utf8");
   const designGuide = await readFile(new URL("../../DESIGN.md", import.meta.url), "utf8");
 
-  assert.match(source, /const appShellScrollLockClass = "app-shell-scroll-lock";/);
-  assert.match(source, /document\.documentElement\.classList\.add\(appShellScrollLockClass\)/);
-  assert.match(source, /document\.body\.classList\.add\(appShellScrollLockClass\)/);
-  assert.match(source, /document\.documentElement\.classList\.remove\(appShellScrollLockClass\)/);
-  assert.match(source, /document\.body\.classList\.remove\(appShellScrollLockClass\)/);
-  assert.match(css, /html\.app-shell-scroll-lock,\s*body\.app-shell-scroll-lock\s*\{[\s\S]*overflow:\s*hidden/);
-  assert.match(showcase, /document scrolling is locked/i);
-  assert.match(designGuide, /document scrolling is locked/i);
+  assert.match(source, /const appShellScrollChannelClass = "app-shell-scroll-channel";/);
+  assert.match(source, /document\.documentElement\.classList\.add\(appShellScrollChannelClass\)/);
+  assert.match(source, /document\.body\.classList\.add\(appShellScrollChannelClass\)/);
+  assert.match(source, /document\.documentElement\.classList\.remove\(appShellScrollChannelClass\)/);
+  assert.match(source, /document\.body\.classList\.remove\(appShellScrollChannelClass\)/);
+  assert.match(css, /html\.app-shell-scroll-channel\s*\{[\s\S]*overflow-y:\s*auto/);
+  assert.match(css, /body\.app-shell-scroll-channel\s*\{[\s\S]*min-block-size:\s*calc\(100dvh \+ 1px\)/);
+  assert.match(css, /scrollbar-width:\s*none/);
+  assert.match(showcase, /address\/toolbar/i);
+  assert.match(designGuide, /address\/toolbar/i);
   assert.match(designGuide, /internal scroller/i);
+});
+
+test("shared top bar collapses with workspace scrolling instead of staying sticky", async () => {
+  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
+
+  assert.match(source, /function useAppShellScrollBridge/);
+  assert.match(source, /topBarRef/);
+  assert.match(source, /topBar\.style\.setProperty\(\s*"--app-shell-topbar-collapse-distance"/);
+  assert.match(source, /window\.scrollTo\(0, delta > 0 \? 1 : 0\)/);
+  assert.doesNotMatch(source, /mobile-app-bar[^\"]*sticky/);
+  assert.match(css, /\.mobile-app-bar\s*\{[\s\S]*block-size:\s*calc\(/);
+  assert.match(css, /--app-shell-topbar-block-size/);
+});
+
+test("internal touch scrolling gives mobile browser chrome a root-scroll signal", async () => {
+  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /function useAppShellScrollBridge/);
+  assert.match(source, /topBarHeight/);
+  assert.match(source, /window\.scrollTo\(0, delta > 0 \? 1 : 0\)/);
+  assert.match(source, /Math\.abs\(delta\) >= 0\.5/);
 });
 
 test("outer app shell stays shadow-free and has no desktop sidebar", async () => {
@@ -70,10 +94,10 @@ test("settings lives inside the shared account popover", async () => {
   assert.match(source, /aria-label="Buka menu akun"/);
 });
 
-test("account control stays in the persistent top bar", async () => {
+test("account control stays in the mounted top bar", async () => {
   const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
 
-  assert.match(source, /<header className="mobile-app-bar/);
+  assert.match(source, /<header ref=\{topBarRef\} className="mobile-app-bar/);
   assert.match(source, /id="app-top-bar-actions"/);
   assert.match(source, /aria-label="Buka menu akun"/);
   assert.match(source, /mobile-account-menu absolute right-3/);
@@ -188,6 +212,15 @@ test("bottom navigation tracks internal scrolling and settles in the scroll dire
   assert.match(designGuide, /masked frosted halo/);
   assert.match(designGuide, /fade through a soft radial mask/);
   assert.match(designGuide, /Reduced-motion contexts remove translation and scale/);
+});
+
+test("bottom navigation reinitializes after leaving the immersive product editor", async () => {
+  const source = await readFile(new URL("./AppShell.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /function useCollapsibleBottomNavigation\(\{ contentRef, navigationRef, pathname, expanded, enabled \}/);
+  assert.match(source, /if \(!enabled \|\| !content \|\| !navigation\) return undefined/);
+  assert.match(source, /enabled: !immersive/);
+  assert.match(source, /\[contentRef, enabled, expanded, navigationRef, pathname\]/);
 });
 
 test("bottom navigation active background slides as a pill between items", async () => {

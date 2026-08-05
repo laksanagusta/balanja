@@ -88,3 +88,13 @@ test("scanner defers stream teardown so React StrictMode does not reset camera p
   assert.match(source, /setTimeout\([\s\S]*controlsRef\.current\?\.stop\(\)/);
   assert.match(source, /if \(controlsRef\.current\)\s*\{\s*setScanning\(true\);\s*return;\s*\}/);
 });
+
+test("scanner shares one in-flight camera request and cancels stale teardown on reopen", async () => {
+  const source = await readFile(new URL("./BarcodeScanner.jsx", import.meta.url), "utf8");
+
+  assert.match(source, /const readerRef = React\.useRef\(null\)/);
+  assert.match(source, /const startPromiseRef = React\.useRef\(null\)/);
+  assert.match(source, /if \(!startPromiseRef\.current\)/);
+  assert.match(source, /const request = reader\.decodeFromConstraints/);
+  assert.match(source, /clearTimeout\(streamStopTimerRef\.current\);\s*streamStopTimerRef\.current = null/);
+});

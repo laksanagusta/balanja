@@ -78,11 +78,22 @@
     font-family: var(--font-sans);
   }
 
-  html.app-shell-scroll-lock,
-  body.app-shell-scroll-lock {
+  html.app-shell-scroll-channel {
     block-size: 100%;
-    overflow: hidden;
-    overscroll-behavior: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-x: none;
+    scrollbar-width: none;
+  }
+
+  html.app-shell-scroll-channel::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.app-shell-scroll-channel {
+    min-block-size: calc(100dvh + 1px);
+    overflow: visible;
+    overscroll-behavior-x: none;
   }
 
   button,
@@ -205,11 +216,21 @@
   }
 
   .mobile-app-bar {
+    block-size: var(--app-shell-topbar-block-size, auto);
+    min-block-size: 0;
+    overflow: hidden;
     padding-block-start: max(0.75rem, env(safe-area-inset-top, 0px));
+    transition: block-size var(--duration-base) var(--ease-standard);
   }
 
   .mobile-account-menu {
     inset-block-start: calc(env(safe-area-inset-top, 0px) + 4.75rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-app-bar {
+      transition: none;
+    }
   }
 
   .app-shell-content {

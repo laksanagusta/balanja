@@ -53,39 +53,39 @@ export default function ProductEditorWorkspace({
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-surface text-text">
-      <header className="product-editor-material sticky top-0 z-20 shrink-0 bg-surface/92 px-4 pb-4 pt-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78 sm:px-6">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-            <button
-              type="button"
-              disabled={savingProduct}
-              onClick={onBack}
-              aria-label="Kembali ke daftar produk"
-              className="inline-flex min-h-11 justify-self-start items-center gap-1.5 rounded-control px-2 text-sm font-semibold text-text-muted transition-[transform,background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
-            >
-              <Icon name="chevron-left" className="size-4" />
-              Kembali ke daftar
-            </button>
-            <h1 className="max-w-[45vw] truncate text-center text-sm font-semibold uppercase tracking-[0.14em] text-text sm:max-w-none">{title}</h1>
-            <span aria-hidden="true" />
-          </div>
-
-          {!discardConfirmOpen && (
-            <div className="mt-3">
-              <h2 ref={headingRef} tabIndex={-1} className="text-sm font-semibold text-text outline-none">
-                {isVariantsStep ? "Atur variasi" : "Informasi produk"}
-              </h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-text-muted">
-                {isVariantsStep
-                  ? "Setiap kombinasi pilihan menjadi satu variasi dengan harga, stok, dan barcode sendiri."
-                  : "Lengkapi informasi utama yang digunakan di katalog dan transaksi."}
-              </p>
-            </div>
-          )}
-        </div>
-      </header>
-
       <main id="product-editor-content" className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6">
+        <header className="product-editor-material z-20 shrink-0 bg-surface/92 pb-4 pt-3 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78">
+          <div className="mx-auto w-full max-w-7xl">
+            <div className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+              <button
+                type="button"
+                disabled={savingProduct}
+                onClick={onBack}
+                aria-label="Kembali ke daftar produk"
+                className="inline-flex min-h-11 justify-self-start items-center gap-1.5 rounded-control px-2 text-sm font-semibold text-text-muted transition-[transform,background-color,color] duration-fast ease-standard hover:bg-surface-muted hover:text-text active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+              >
+                <Icon name="chevron-left" className="size-4" />
+                Kembali ke daftar
+              </button>
+              <h1 className="max-w-[45vw] truncate text-center text-sm font-semibold uppercase tracking-[0.14em] text-text sm:max-w-none">{title}</h1>
+              <span aria-hidden="true" />
+            </div>
+
+            {!discardConfirmOpen && (
+              <div className="mt-3">
+                <h2 ref={headingRef} tabIndex={-1} className="text-sm font-semibold text-text outline-none">
+                  {isVariantsStep ? "Atur variasi" : "Informasi produk"}
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-text-muted">
+                  {isVariantsStep
+                    ? "Setiap kombinasi pilihan menjadi satu variasi dengan harga, stok, dan barcode sendiri."
+                    : "Lengkapi informasi utama yang digunakan di katalog dan transaksi."}
+                </p>
+              </div>
+            )}
+          </div>
+        </header>
+
         {discardConfirmOpen ? (
           <section className="mx-auto grid min-h-full w-full max-w-xl content-center gap-1 py-8" aria-labelledby="discard-product-title">
             <h2 id="discard-product-title" ref={headingRef} tabIndex={-1} className="text-sm font-semibold outline-none">Buang perubahan?</h2>

@@ -33,7 +33,7 @@ import ProductVariantShowcase from "../components/design/ProductVariantShowcase.
 export default function DesignSystemPage({ onNavigate }) {
   return (
     <main className="min-h-screen bg-app-bg">
-      <header className="sticky top-0 z-30 bg-surface/95 px-4 py-3 backdrop-blur sm:px-6">
+      <header className="z-30 bg-surface/95 px-4 py-3 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-4">
           <Logo />
           <div className="flex items-center gap-2">
