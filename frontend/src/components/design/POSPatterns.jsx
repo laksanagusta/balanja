@@ -89,7 +89,7 @@ export default function POSPatterns() {
         <div className="grid content-start gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Kontrol katalog dan top bar</p>
           <div className="grid gap-2 rounded-card border border-border bg-surface p-3">
-            <div className="mobile-search-control flex h-11 min-w-0 items-center gap-3 rounded-card border border-border px-3.5">
+            <div className="mobile-search-control flex h-11 min-w-0 items-center gap-3 rounded-card bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20">
               <Icon name="search" className="size-4 text-text-muted" />
               <input
                 aria-label="Cari produk contoh"

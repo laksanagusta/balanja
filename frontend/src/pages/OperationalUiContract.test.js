@@ -3,13 +3,17 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 test("operational search fields use the thin shared focus treatment", async () => {
-  const files = ["ProductsPage.jsx", "StockPage.jsx", "TransactionsPage.jsx"];
+  const files = ["ProductsPage.jsx", "StockPage.jsx"];
   const sources = await Promise.all(files.map((file) => readFile(new URL(`./${file}`, import.meta.url), "utf8")));
+  const transactions = await readFile(new URL("./TransactionsPage.jsx", import.meta.url), "utf8");
+  const products = sources[0];
   sources.push(await readFile(new URL("../components/pos/PosFilterDrawer.jsx", import.meta.url), "utf8"));
 
   for (const source of sources) {
-    assert.match(source, /focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus\/30/);
+    assert.match(source, /focus-within:outline-1 focus-within:outline-focus\/30/);
   }
+  assert.match(products, /bg-surface px-3\.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300\/20 focus-within:outline-1/);
+  assert.match(transactions, /bg-surface px-3\.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300\/20 focus-within:outline-1/);
 });
 
 test("stock creation matches the round product add action", async () => {
@@ -21,7 +25,7 @@ test("stock creation matches the round product add action", async () => {
   assert.match(button, /rounded-full bg-accent text-white/);
   assert.match(button, /<Icon name="plus" className="size-5"/);
   assert.match(button, /strokeWidth=\{3\} strokeLinecap="round" strokeLinejoin="round"/);
-  assert.match(button, /app-shell-floating-action absolute right-4/);
+  assert.match(button, /app-shell-floating-action fixed right-4/);
 });
 
 test("stock activity fills the canvas and appends six rows without a footer", async () => {
@@ -85,7 +89,7 @@ test("stock keeps filtered, announced, and loading states aligned with the settl
   assert.match(overview, /title="Tidak ada aktivitas yang cocok"/);
   assert.match(overview, /role="alert"/);
   assert.match(skeleton, /export function StockPageSkeleton/);
-  assert.match(skeleton, /<main className="min-h-0 flex-1 overflow-auto bg-app-bg p-4">/);
+  assert.match(skeleton, /<main className="bg-app-bg p-4">/);
   assert.match(skeleton, /\[5, 6\]/);
 });
 
@@ -153,7 +157,7 @@ test("all operational forms use eight-pixel field spacing", async () => {
 test("stock movement dialog follows shared input radius and borderless preview surface", async () => {
   const stock = await readFile(new URL("./StockPage.jsx", import.meta.url), "utf8");
 
-  assert.match(stock, /mobile-search-control flex h-11 items-center gap-3 rounded-control border/);
+  assert.match(stock, /mobile-search-control flex h-11 items-center gap-3 rounded-control bg-surface px-3\.5 smooth-shadow-ring-xs/);
   assert.doesNotMatch(stock, /mobile-search-control flex h-11 items-center gap-3 rounded-card border/);
   assert.match(stock, /grid grid-cols-3 gap-2 rounded-card bg-surface-muted p-3/);
   assert.doesNotMatch(stock, /grid grid-cols-3 gap-2 rounded-card border border-border bg-surface-muted p-3/);

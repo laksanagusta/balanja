@@ -120,7 +120,7 @@ export function PosFilterDrawer({
             <div className="grid gap-4">
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-text">Cari produk</span>
-                <span className="flex h-12 min-w-0 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+                <span className="flex h-12 min-w-0 items-center gap-3 rounded-card bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20 focus-within:outline-1 focus-within:outline-focus/30">
                   <Icon name="search" className="size-4 shrink-0 text-text-muted" />
                   <input
                     ref={searchInputRef}

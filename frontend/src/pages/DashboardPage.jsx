@@ -46,7 +46,7 @@ function localizedDashboardError(error) {
 
 function DashboardErrorState({ message, onRetry }) {
   return (
-    <div className="h-full overflow-auto bg-app-bg">
+    <div className="min-h-full bg-app-bg">
       <main className="grid min-h-full place-items-center p-4" aria-labelledby="dashboard-error-heading">
         <EmptyState
           icon="help"
@@ -139,7 +139,7 @@ export default function DashboardPage({ onNavigate }) {
   }
 
   return (
-    <div className="h-full overflow-auto bg-app-bg">
+    <div className="min-h-full bg-app-bg">
       <main className="grid gap-4 p-4" aria-busy={isSummaryLoading} aria-labelledby="dashboard-heading">
         <section className="flex flex-wrap items-center justify-between gap-3" aria-label="Periode ringkasan">
           <h2 id="dashboard-heading" className="min-w-0 truncate text-sm font-semibold text-text">

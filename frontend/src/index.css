@@ -14,6 +14,7 @@
   --color-surface-muted: #f6f6f6;
   --color-border: #ececec;
   --color-border-strong: #d9d9d9;
+  --color-border-control: #949494;
   --color-text: #242424;
   --color-text-muted: #6f6f6f;
   --color-text-subtle: #6f6f6f;
@@ -127,7 +128,7 @@
   }
 
   .transaction-detail-drawer[data-state="open"] {
-    animation: transaction-receipt-open 520ms cubic-bezier(0.2, 0.84, 0.24, 1) both;
+    animation: transaction-receipt-open 280ms cubic-bezier(0.2, 0.84, 0.24, 1) both;
   }
 
   .transaction-detail-drawer[data-state="closed"] {
@@ -216,21 +217,11 @@
   }
 
   .mobile-app-bar {
-    block-size: var(--app-shell-topbar-block-size, auto);
-    min-block-size: 0;
-    overflow: hidden;
     padding-block-start: max(0.75rem, env(safe-area-inset-top, 0px));
-    transition: block-size var(--duration-base) var(--ease-standard);
   }
 
   .mobile-account-menu {
     inset-block-start: calc(env(safe-area-inset-top, 0px) + 4.75rem);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .mobile-app-bar {
-      transition: none;
-    }
   }
 
   .app-shell-content {
@@ -499,6 +490,7 @@
 
   .master-data-actions {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
   }
 
@@ -510,15 +502,11 @@
     min-block-size: 2.75rem;
   }
 
-  .master-data-field-action {
-    align-items: flex-end !important;
-  }
-
   .retail-pos-query {
     container-name: retail-pos;
     container-type: inline-size;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .retail-pos-catalog-pane {
@@ -556,10 +544,6 @@
     transition-delay: 0s;
   }
 
-  .retail-pos-workspace {
-    overflow-y: auto;
-  }
-
   .category-tabs {
     overscroll-behavior-inline: contain;
     scrollbar-width: thin;
@@ -583,7 +567,7 @@
 
   .retail-pos-cart-open {
     display: flex;
-    position: absolute;
+    position: fixed;
     z-index: 20;
     inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 1rem);
     inset-inline-start: 50%;

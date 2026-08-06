@@ -32,64 +32,6 @@ const appPageTitles = {
   [routes.settings]: "Pengaturan",
 };
 
-function useAppShellScrollBridge({ contentRef, topBarRef, pathname, immersive }) {
-  React.useEffect(() => {
-    const content = contentRef.current;
-    const topBar = topBarRef.current;
-    if (!content) return undefined;
-
-    const scrollPositions = new WeakMap();
-    let topBarHeight = 0;
-    let topBarCollapsed = false;
-    const setTopBarCollapsed = (collapsed) => {
-      if (!topBar) return;
-      topBarCollapsed = collapsed;
-      topBar.style.setProperty(
-        "--app-shell-topbar-collapse-distance",
-        collapsed ? `${topBarHeight}px` : "0px",
-      );
-      topBar.style.setProperty(
-        "--app-shell-topbar-block-size",
-        collapsed ? "0px" : `${topBarHeight}px`,
-      );
-    };
-    const measureTopBar = () => {
-      if (!topBar) return;
-      const wasCollapsed = topBarCollapsed;
-      topBarCollapsed = false;
-      topBar.style.removeProperty("--app-shell-topbar-block-size");
-      topBarHeight = topBar.offsetHeight;
-      setTopBarCollapsed(wasCollapsed);
-    };
-    const handleScroll = (event) => {
-      const scrollRegion = event.target;
-      if (
-        !(scrollRegion instanceof HTMLElement)
-        || !content.contains(scrollRegion)
-        || scrollRegion.closest('[role="dialog"], [role="listbox"], [aria-modal="true"]')
-        || scrollRegion.scrollHeight <= scrollRegion.clientHeight + 1
-      ) return;
-
-      const scrollTop = Math.max(0, scrollRegion.scrollTop);
-      const previousScrollTop = scrollPositions.get(scrollRegion) ?? 0;
-      scrollPositions.set(scrollRegion, scrollTop);
-      const delta = scrollTop - previousScrollTop;
-      if (Math.abs(delta) < 0.5 || document.activeElement?.closest(".mobile-bottom-navigation")) return;
-      setTopBarCollapsed(delta > 0);
-      window.scrollTo(0, delta > 0 ? 1 : 0);
-    };
-
-    measureTopBar();
-    content.addEventListener("scroll", handleScroll, true);
-    window.addEventListener("resize", measureTopBar);
-    return () => {
-      content.removeEventListener("scroll", handleScroll, true);
-      window.removeEventListener("resize", measureTopBar);
-      setTopBarCollapsed(false);
-    };
-  }, [contentRef, immersive, pathname, topBarRef]);
-}
-
 function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, expanded, enabled }) {
   React.useEffect(() => {
     const content = contentRef.current;
@@ -107,6 +49,12 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
     let travelDistance = 96;
     let frame = 0;
     let settleTimer = 0;
+
+    const rootScrollRegion = document.scrollingElement;
+    if (rootScrollRegion) {
+      scrollPositions.set(rootScrollRegion, Math.max(0, rootScrollRegion.scrollTop));
+      isScrolledAway = rootScrollRegion.scrollTop > 4;
+    }
 
     const measureTravelDistance = () => {
       const bounds = navigation.getBoundingClientRect();
@@ -186,6 +134,29 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
       settleTimer = window.setTimeout(settleNavigation, 110);
     };
 
+    const handleRootScroll = () => {
+      if (!rootScrollRegion || expanded) return;
+      const scrollTop = Math.max(0, rootScrollRegion.scrollTop);
+      const previousScrollTop = scrollPositions.get(rootScrollRegion) ?? 0;
+      scrollPositions.set(rootScrollRegion, scrollTop);
+      isScrolledAway = scrollTop > 4;
+      if (navigation.contains(document.activeElement)) {
+        renderProgress(scrollTop <= 4 ? 0 : progress);
+        return;
+      }
+      const delta = scrollTop - previousScrollTop;
+      if (Math.abs(delta) < 0.5) return;
+      lastDirection = delta > 0 ? "down" : "up";
+      upwardScrollDistance = delta > 0 ? 0 : upwardScrollDistance - delta;
+      const nextProgress = lastDirection === "up" && upwardScrollDistance < 48 && progress > 0
+        ? progress
+        : nextBottomNavigationProgress({ progress, delta, scrollTop });
+      if (nextProgress === progress) return;
+      window.clearTimeout(settleTimer);
+      scheduleProgress(nextProgress);
+      settleTimer = window.setTimeout(settleNavigation, 110);
+    };
+
     const handleResize = () => {
       measureTravelDistance();
       renderProgress(progress);
@@ -194,11 +165,13 @@ function useCollapsibleBottomNavigation({ contentRef, navigationRef, pathname, e
     measureTravelDistance();
     renderProgress(0);
     content.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("scroll", handleRootScroll, { passive: true });
     navigation.addEventListener("focusin", showNavigation);
     window.addEventListener("resize", handleResize);
 
     return () => {
       content.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("scroll", handleRootScroll);
       navigation.removeEventListener("focusin", showNavigation);
       window.removeEventListener("resize", handleResize);
       window.clearTimeout(settleTimer);
@@ -247,7 +220,7 @@ function MobileBottomNavigation({ navigationRef, pathname, onNavigate, moreOpen,
     <nav
       ref={setNavigationRef}
       aria-label="Navigasi utama mobile"
-      className="mobile-bottom-navigation absolute z-30 grid grid-cols-5 bg-surface/88 p-1 backdrop-blur-xl"
+      className="mobile-bottom-navigation fixed z-30 grid grid-cols-5 bg-surface/88 p-1 backdrop-blur-xl"
     >
       <span
         ref={pillRef}
@@ -333,11 +306,8 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
   const [accountOpen, setAccountOpen] = React.useState(false);
   const contentRef = React.useRef(null);
   const bottomNavigationRef = React.useRef(null);
-  const topBarRef = React.useRef(null);
   const avatarSeed = user?.primaryEmailAddress?.emailAddress || user?.fullName || user?.id || "cashier";
   const pageTitle = appPageTitles[pathname] || "Wipay";
-
-  useAppShellScrollBridge({ contentRef, topBarRef, pathname, immersive });
 
   useCollapsibleBottomNavigation({
     contentRef,
@@ -363,7 +333,7 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
 
   React.useEffect(() => {
     if (!notice) return;
-    if (notice === "Transaction completed" || notice === "Settings saved") {
+    if (notice === "Transaksi selesai" || notice === "Pengaturan tersimpan") {
       toast.success(notice);
     } else {
       toast.error(notice);
@@ -390,11 +360,11 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
   }, [immersive]);
 
   return (
-    <div className="h-dvh overflow-hidden bg-app-bg">
+    <div className="app-shell min-h-dvh bg-app-bg">
       <a href="#app-main-content" className="app-skip-link">Lewati ke konten utama</a>
-      <div className="mx-auto flex h-full w-full max-w-[1200px] overflow-hidden bg-surface">
-        <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-surface">
-          {!immersive && <header ref={topBarRef} className="mobile-app-bar shrink-0 bg-surface px-4 pb-3 w-full">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] bg-surface">
+        <section className="relative flex min-w-0 flex-1 flex-col bg-surface">
+          {!immersive && <header className="mobile-app-bar bg-surface px-4 pb-3 w-full">
             <div className="flex min-h-14 items-center justify-between w-full min-w-0">
               <h1 className={`min-w-0 truncate text-lg tracking-normal text-text ${pageTitle === "Wipay" ? "font-sora font-bold" : "font-extrabold"}`}>
                 {pageTitle}
@@ -468,7 +438,7 @@ export default function AppShell({ children, pathname, onNavigate, immersive = f
             </div>
           )}
 
-          <div ref={contentRef} id="app-main-content" tabIndex={-1} className="app-shell-content min-h-0 flex-1 overflow-hidden">{children}</div>
+          <div ref={contentRef} id="app-main-content" tabIndex={-1} className={`app-shell-content ${immersive ? "min-h-dvh" : "min-h-[calc(100dvh-5.75rem)]"}`}>{children}</div>
 
           {!immersive && <MobileBottomNavigation
             navigationRef={bottomNavigationRef}

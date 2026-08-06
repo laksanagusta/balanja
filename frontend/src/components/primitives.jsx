@@ -492,6 +492,7 @@ export function Input({
     id = generatedId,
     "aria-describedby": describedBy,
     className: inputPropsClassName = "",
+    disabled = false,
     ...restInputProps
   } = inputProps;
   const errorId = `${id}-error`;
@@ -512,17 +513,22 @@ export function Input({
           data-ui-size={size}
           className={`ui-input-surface flex ${
             size === "large" ? "h-12" : density === "compact" ? "h-9" : "h-11"
-          } w-full min-w-0 items-center gap-3 rounded-control border bg-surface px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 transition-colors duration-base ease-standard motion-reduce:transition-none ${
-            error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
+          } w-full min-w-0 items-center gap-3 rounded-control border px-3.5 text-text-muted shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 transition-colors duration-base ease-standard motion-reduce:transition-none ${
+            error
+              ? "border-danger bg-surface focus-within:border-danger"
+              : disabled
+                ? "border-border/70 bg-surface-muted text-text-subtle"
+                : "border-border bg-surface focus-within:border-border-strong"
           }`}
         >
           {leftSlot}
           <input
             id={id}
-            className={`w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle ${inputClassName} ${inputPropsClassName}`}
+            className={`w-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text outline-none placeholder:text-text-subtle disabled:cursor-not-allowed disabled:text-text-subtle ${inputClassName} ${inputPropsClassName}`}
             placeholder={placeholder}
             aria-invalid={Boolean(error)}
             aria-describedby={descriptionIds}
+            disabled={disabled}
             {...restInputProps}
           />
           {rightSlot}

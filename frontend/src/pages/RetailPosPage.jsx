@@ -505,7 +505,7 @@ export default function RetailPosPage() {
     if (!cartPresent) return undefined;
 
     const content = document.querySelector(".app-shell-content");
-    const shell = content?.closest(".h-dvh");
+    const shell = content?.closest(".app-shell");
     if (!content || !shell) return undefined;
     const backgroundNodes = [];
     let current = content;
@@ -591,11 +591,11 @@ export default function RetailPosPage() {
   return (
     <>
     {topBarActions}
-    <div className="retail-pos-query h-full min-h-0">
-      <div className="retail-pos-workspace grid h-full min-h-0 bg-app-bg">
+    <div className="retail-pos-query min-h-full">
+      <div className="retail-pos-workspace grid min-h-full bg-app-bg">
         <main inert={isCompactCart && cartPresent ? true : undefined} className="retail-pos-catalog-pane flex min-w-0 flex-col border-border bg-surface">
         <header className="grid flex-none gap-2 px-4 py-3">
-          <div className="mobile-search-control flex h-11 min-w-0 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+          <div className="mobile-search-control flex h-11 min-w-0 items-center gap-3 rounded-control bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20 focus-within:outline-1 focus-within:outline-focus/30">
             <Icon name="search" className="size-4 shrink-0 text-text-muted" />
             <input
               ref={searchInputRef}

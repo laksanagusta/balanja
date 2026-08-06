@@ -681,7 +681,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
   if (editorVisible) {
     if (!editing) {
       return (
-        <div className="flex h-full min-h-0 flex-col bg-surface text-text">
+        <div className="flex min-h-full flex-col bg-surface text-text">
           <header className="z-20 flex min-h-16 shrink-0 items-center gap-3 bg-surface/92 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78 sm:px-6">
             <button
               type="button"
@@ -694,7 +694,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
             </button>
             <h1 className="text-lg font-semibold tracking-[-0.01em]">{pathname === routes.productNew ? "Tambah produk" : "Ubah produk"}</h1>
           </header>
-          <main className="grid min-h-0 flex-1 place-items-center px-4 py-10" aria-busy={!editorRouteError}>
+          <main className="grid min-h-full place-items-center px-4 py-10" aria-busy={!editorRouteError}>
             {editorRouteError ? (
               <div className="grid max-w-md justify-items-center gap-3 text-center">
                 <div className="grid size-10 place-items-center rounded-full bg-danger-soft text-danger" aria-hidden="true"><Icon name="x" className="size-5" /></div>
@@ -832,11 +832,11 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
   return (
     <>
       {topBarActions}
-      <main id="products-main" tabIndex={-1} className="relative flex h-full min-h-0 flex-col bg-surface">
+      <main id="products-main" tabIndex={-1} className="relative min-h-full bg-surface">
         <header className="px-4 py-3">
           <div className="grid w-full">
             <div className="flex w-full min-w-0 items-center gap-2">
-              <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+              <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-control bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20 focus-within:outline-1 focus-within:outline-focus/30">
                 <Icon name="search" className="size-4 text-text-muted" />
                 <input
                   aria-label="Cari produk"
@@ -851,7 +851,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-auto p-4">
+        <div className="p-4">
           <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">{resultAnnouncement}</div>
           <div className="grid w-full gap-3">
             <div className="overflow-hidden rounded-panel bg-surface smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30">
@@ -916,7 +916,7 @@ export default function ProductsPage({ pathname = routes.products, onNavigate = 
           title="Tambah produk"
           disabled={isProductsMutating}
           onClick={() => openEditor(emptyProduct())}
-          className="app-shell-floating-action absolute right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
+          className="app-shell-floating-action fixed right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
         >
           <Icon name="plus" className="size-5" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         </button>

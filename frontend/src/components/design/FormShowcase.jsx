@@ -4,6 +4,7 @@ import { Icon, Input, Panel, SelectField, Switch } from "../primitives.jsx";
 const tokens = [
   ["Border", "--color-border", "#ececec"],
   ["Strong Border", "--color-border-strong", "#d9d9d9"],
+  ["Control Border", "--color-border-control", "#949494"],
   ["Focus", "--color-focus", "#4a4a4d"],
   ["Success Control", "--color-success-control", "#34c759"],
   ["Radius", "--radius-card", "16px"],

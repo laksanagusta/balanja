@@ -194,6 +194,7 @@ export const tokenGroups = [
       ["Muted Surface", "--color-surface-muted", "#f6f6f6"],
       ["Border", "--color-border", "#ececec"],
       ["Strong Border", "--color-border-strong", "#d9d9d9"],
+      ["Control Border", "--color-border-control", "#949494"],
       ["Text", "--color-text", "#242424"],
       ["Muted Text", "--color-text-muted", "#6f6f6f"],
       ["Subtle Text", "--color-text-subtle", "#6f6f6f"],

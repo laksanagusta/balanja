@@ -58,7 +58,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     }
   }, [api]);
 
-  const loadCategories = React.useCallback(async ({ includeArchived = false, force = false, signal } = {}) => {
+  const loadCategories = React.useCallback(async ({ includeArchived = false, force = false, signal, silent = false } = {}) => {
     if (!force && !includeArchived && (loadedRef.current.categories || loadingRef.current.categories)) return categoriesRef.current;
     loadingRef.current = { ...loadingRef.current, categories: true };
     setLoading((current) => ({ ...current, categories: true }));
@@ -72,7 +72,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
       setNotice("");
       return result;
     } catch (error) {
-      if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load categories");
+      if (!silent && error.code !== "REQUEST_TIMEOUT" && error.name !== "AbortError") setNotice("Kategori belum berhasil dimuat. Coba lagi.");
       return null;
     } finally {
       loadingRef.current = { ...loadingRef.current, categories: false };
@@ -84,7 +84,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     return fetchProductSearch(api, { q, limit, signal });
   }, [api]);
 
-  const loadSettings = React.useCallback(async ({ force = false, signal } = {}) => {
+  const loadSettings = React.useCallback(async ({ force = false, signal, silent = false } = {}) => {
     if (!force && (loadedRef.current.settings || loadingRef.current.settings)) return settingsRef.current;
     loadingRef.current = { ...loadingRef.current, settings: true };
     setLoading((current) => ({ ...current, settings: true }));
@@ -98,7 +98,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
       setNotice("");
       return result;
     } catch (error) {
-      if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load settings");
+      if (!silent && error.code !== "REQUEST_TIMEOUT" && error.name !== "AbortError") setNotice("Pengaturan belum berhasil dimuat. Coba lagi.");
       return null;
     } finally {
       loadingRef.current = { ...loadingRef.current, settings: false };
@@ -106,7 +106,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
     }
   }, [api]);
 
-  const loadUnits = React.useCallback(async ({ includeArchived = false, force = false, signal } = {}) => {
+  const loadUnits = React.useCallback(async ({ includeArchived = false, force = false, signal, silent = false } = {}) => {
     if (!force && !includeArchived && (loadedRef.current.units || loadingRef.current.units)) return unitsRef.current;
     loadingRef.current = { ...loadingRef.current, units: true };
     setLoading((current) => ({ ...current, units: true }));
@@ -120,7 +120,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
       setNotice("");
       return result;
     } catch (error) {
-      if (error.code !== "REQUEST_TIMEOUT") setNotice(error.message || "Failed to load units");
+      if (!silent && error.code !== "REQUEST_TIMEOUT" && error.name !== "AbortError") setNotice("Satuan belum berhasil dimuat. Coba lagi.");
       return null;
     } finally {
       loadingRef.current = { ...loadingRef.current, units: false };
@@ -305,7 +305,7 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
   }, [api]);
 
   const checkout = React.useCallback(async (payment) => {
-    if (cart.length === 0) { setNotice("Cart is empty"); return { ok: false, error: "Cart is empty" }; }
+    if (cart.length === 0) return { ok: false, error: "Cart is empty" };
     try {
       const result = await api.checkout({ cart, payment, cashierName });
       setProducts((current) => applyCheckoutResult(current, result));
@@ -314,13 +314,11 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
       setEntitlementError("");
       setCart([]);
       clearCartStorage();
-      setNotice("Transaction completed");
       return { ok: true, transaction: result.transaction, entitlement: result.entitlement };
     } catch (error) {
       const message = error.code === "PLAN_TRANSACTION_LIMIT_REACHED"
         ? "Kuota trial telah habis"
         : error.message || "Checkout failed";
-      setNotice(message);
       if (error.code === "PLAN_TRANSACTION_LIMIT_REACHED") await loadEntitlement({ force: true });
       return { ok: false, code: error.code, error: message };
     }
@@ -342,9 +340,9 @@ export function POSStoreProvider({ children, api, cashierName = "" }) {
       setSettings(saved);
       setLoaded((current) => ({ ...current, settings: true }));
       lastLoadedAt.current.settings = Date.now();
-      setNotice("Settings saved");
+      setNotice("Pengaturan tersimpan");
       return saved;
-    } catch (error) { setNotice(error.message || "Failed to save settings"); return null; }
+    } catch { return null; }
   }, [api]);
 
   const activeProducts = React.useMemo(() => products.filter((item) => item.active), [products]);

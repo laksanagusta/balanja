@@ -92,7 +92,7 @@ test("product creation is a floating action button at bottom-right", async () =>
   const css = await readFile(new URL("../index.css", import.meta.url), "utf8");
   assert.match(source, /aria-label="Tambah produk"/);
   assert.match(source, /<Icon name="plus" className="size-5" strokeWidth=\{3\} strokeLinecap="round" strokeLinejoin="round" \/>/);
-  assert.match(source, /app-shell-floating-action absolute right-4/);
+  assert.match(source, /app-shell-floating-action fixed right-4/);
   assert.match(css, /--app-bottom-navigation-clearance: calc\(4\.75rem \+ env\(safe-area-inset-bottom, 0px\)\)/);
   assert.doesNotMatch(source, /mobile-search-control[\s\S]{0,1200}aria-label="Tambah produk"/);
 });

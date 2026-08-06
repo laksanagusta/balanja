@@ -133,7 +133,7 @@ export default function MasterDataSelectField({
           className="overflow-hidden rounded-card border border-border bg-surface shadow-panel"
         >
           <div className="p-2">
-            <div className="mobile-search-control flex h-9 items-center gap-2 rounded-control bg-surface-muted px-3">
+            <div className="mobile-search-control flex h-9 items-center gap-2 rounded-control bg-surface-muted px-3 smooth-shadow-xs shadow-black/10">
               <Icon name={createMode ? "plus" : "search"} className="size-4 shrink-0 text-text-subtle" />
               <input
                 ref={searchRef}
