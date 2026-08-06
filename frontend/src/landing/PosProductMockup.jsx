@@ -62,7 +62,7 @@ export default function PosProductMockup({ compact = false, cropBottom = false }
           </div>
 
           <div className="px-4">
-            <div className="flex h-11 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft">
+            <div className="flex h-11 items-center gap-3 rounded-control bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20">
               <Icon name="search" className="size-4 shrink-0 text-text-muted" />
               <span className="truncate text-text-subtle">Cari produk atau barcode...</span>
             </div>

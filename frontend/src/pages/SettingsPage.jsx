@@ -1,6 +1,5 @@
 import React from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { toast } from "sonner";
 import { Button, Input, Panel, Switch } from "../components/primitives.jsx";
 import BackgroundUpdateStatus from "../components/feedback/BackgroundUpdateStatus.jsx";
 import { SettingsPageSkeleton } from "../components/page-loading.jsx";
@@ -22,6 +21,26 @@ const settingsTabs = [
   { id: "units", label: "Satuan", href: "?tab=units" },
 ];
 
+const settingsLoadMessages = {
+  profile: "Pengaturan toko belum berhasil dimuat. Coba lagi.",
+  categories: "Kategori belum berhasil dimuat. Coba lagi.",
+  units: "Satuan belum berhasil dimuat. Coba lagi.",
+};
+
+function SettingsLoadError({ tab, onRetry }) {
+  return (
+    <Panel role="alert" className="grid gap-3 border-danger/30 bg-danger-soft/35 p-4 !shadow-none">
+      <div className="grid gap-1">
+        <h2 className="text-sm font-semibold text-text">Pengaturan belum tersedia</h2>
+        <p className="text-sm leading-5 text-danger">{settingsLoadMessages[tab]}</p>
+      </div>
+      <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
+        Coba lagi
+      </Button>
+    </Panel>
+  );
+}
+
 export default function SettingsPage({ search = "", onTabChange = () => {} }) {
   const store = usePOSStore();
   const { loadCategories, loadSettings, loadUnits } = store;
@@ -33,29 +52,41 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
   const shouldAnimate = hasRenderedTabRef.current && direction !== 0;
   const [draft, setDraft] = React.useState(store.settings);
   const [isPageLoading, setIsPageLoading] = React.useState(() => !store.loaded.settings);
+  const [loadError, setLoadError] = React.useState("");
+  const [retryKey, setRetryKey] = React.useState(0);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [saveError, setSaveError] = React.useState("");
   const [scanSoundEnabled, setScanSoundEnabled] = useScanSoundPreference();
-  const isInitialLoad = tab === "profile" ? isPageLoading : !store.loaded[tab];
+  const isInitialLoad = tab === "profile"
+    ? isPageLoading || !store.loaded.settings
+    : !store.loaded[tab];
   const isUpdatingSettings = store.loading.settings && store.loaded.settings;
   const isUpdatingMasterData = tab !== "profile" && store.loading[tab];
 
   React.useEffect(() => {
     const controller = new AbortController();
+    setLoadError("");
     if (tab === "profile") {
       if (!store.loaded.settings) setIsPageLoading(true);
-      loadSettings({ force: true, signal: controller.signal }).finally(() => {
+      loadSettings({ force: true, signal: controller.signal, silent: true }).then((result) => {
+        if (!controller.signal.aborted && !result) setLoadError(settingsLoadMessages.profile);
+      }).finally(() => {
         if (!controller.signal.aborted) setIsPageLoading(false);
       });
       return () => controller.abort();
     }
     if (tab === "categories") {
-      loadCategories({ includeArchived: true, force: true, signal: controller.signal });
+      loadCategories({ includeArchived: true, force: true, signal: controller.signal, silent: true }).then((result) => {
+        if (!controller.signal.aborted && !result) setLoadError(settingsLoadMessages.categories);
+      });
     }
     if (tab === "units") {
-      loadUnits({ includeArchived: true, force: true, signal: controller.signal });
+      loadUnits({ includeArchived: true, force: true, signal: controller.signal, silent: true }).then((result) => {
+        if (!controller.signal.aborted && !result) setLoadError(settingsLoadMessages.units);
+      });
     }
     return () => controller.abort();
-  }, [loadCategories, loadSettings, loadUnits, tab]);
+  }, [loadCategories, loadSettings, loadUnits, retryKey, tab]);
 
   React.useEffect(() => {
     setDraft(store.settings);
@@ -71,31 +102,48 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
     event.preventDefault();
     if (isSaving) return;
     setIsSaving(true);
+    setSaveError("");
     try {
-      await store.updateSettings({
+      const saved = await store.updateSettings({
         ...draft,
         taxRate: Number(draft.taxRate) || 0,
         taxEnabled: Boolean(draft.taxEnabled),
       });
+      if (!saved) setSaveError("Pengaturan belum berhasil disimpan. Coba lagi.");
+    } catch {
+      setSaveError("Pengaturan belum berhasil disimpan. Coba lagi.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (isInitialLoad) {
-    return <SettingsPageSkeleton />;
+  const retryLoad = () => {
+    setLoadError("");
+    if (tab === "profile" && !store.loaded.settings) setIsPageLoading(true);
+    setRetryKey((current) => current + 1);
+  };
+
+  if (isInitialLoad && !loadError) {
+    return <SettingsPageSkeleton tab={tab} />;
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface">
+    <div className="min-h-full bg-surface">
       <BackgroundUpdateStatus active={isUpdatingSettings || isUpdatingMasterData} label="Memperbarui pengaturan" />
 
-      <main className="settings-workspace min-h-0 flex-1 overflow-auto">
+      <main className="settings-workspace">
         <div className="settings-workspace-layout">
           <SettingsNavigation items={settingsTabs} activeId={tab} onChange={onTabChange} />
 
           <div className="settings-content mx-auto grid w-full max-w-3xl gap-4">
-            <motion.div
+            {isInitialLoad && loadError ? <SettingsLoadError tab={tab} onRetry={retryLoad} /> : null}
+            {!isInitialLoad && loadError ? (
+              <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-danger/30 bg-danger-soft/35 px-3 py-2 text-sm">
+                <span className="font-medium text-danger">{loadError}</span>
+                <Button type="button" size="sm" variant="secondary" onClick={retryLoad}>Coba lagi</Button>
+              </div>
+            ) : null}
+            {!isInitialLoad ? <motion.div
               key={tab}
               className="min-w-0"
               initial={shouldAnimate
@@ -107,13 +155,13 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                 : { type: "spring", bounce: 0, duration: 0.28 }}
             >
               {tab === "profile" ? (
-                <Panel className="p-4">
+                <Panel className="mx-1 p-4 !border-0 !smooth-shadow-ring-xs !shadow-black !smooth-ring-neutral-300/30">
                   <form onSubmit={save} className="settings-profile-form grid gap-4">
                     <div className="grid gap-2">
                       <div className="pb-2">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
-                            <p className="text-sm font-semibold text-text">Profil toko</p>
+                            <h2 className="text-sm font-semibold text-text">Profil toko</h2>
                             <p className="text-xs text-text-muted">Digunakan di layar kasir dan konteks transaksi.</p>
                           </div>
                         </div>
@@ -123,8 +171,13 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                         label="Nama toko"
                         placeholder="Toko Wipay"
                         inputProps={{
+                          name: "storeName",
+                          autoComplete: "organization",
                           value: draft.storeName,
-                          onChange: (event) => setDraft({ ...draft, storeName: event.target.value }),
+                          onChange: (event) => {
+                            setSaveError("");
+                            setDraft({ ...draft, storeName: event.target.value });
+                          },
                           required: true,
                           disabled: isSaving,
                         }}
@@ -133,8 +186,13 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                         label="Alamat toko"
                         placeholder="Jl. UMKM No. 1"
                         inputProps={{
+                          name: "storeAddress",
+                          autoComplete: "street-address",
                           value: draft.storeAddress,
-                          onChange: (event) => setDraft({ ...draft, storeAddress: event.target.value }),
+                          onChange: (event) => {
+                            setSaveError("");
+                            setDraft({ ...draft, storeAddress: event.target.value });
+                          },
                           disabled: isSaving,
                         }}
                       />
@@ -142,8 +200,13 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                         label="Label QRIS"
                         placeholder="QRIS Toko Wipay"
                         inputProps={{
+                          name: "qrisLabel",
+                          autoComplete: "off",
                           value: draft.qrisLabel,
-                          onChange: (event) => setDraft({ ...draft, qrisLabel: event.target.value }),
+                          onChange: (event) => {
+                            setSaveError("");
+                            setDraft({ ...draft, qrisLabel: event.target.value });
+                          },
                           disabled: isSaving,
                         }}
                       />
@@ -155,7 +218,10 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                         role="switch"
                         aria-checked={Boolean(draft.taxEnabled)}
                         disabled={isSaving}
-                        onClick={() => setDraft({ ...draft, taxEnabled: !draft.taxEnabled })}
+                        onClick={() => {
+                          setSaveError("");
+                          setDraft({ ...draft, taxEnabled: !draft.taxEnabled });
+                        }}
                         className="flex min-h-11 min-w-0 items-center justify-between gap-4 rounded-button text-left text-sm font-semibold text-text transition-[background-color,transform] duration-fast ease-standard hover:bg-surface-muted active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-45"
                       >
                         <span className="min-w-0">Aktifkan pajak</span>
@@ -167,9 +233,17 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                         label="Tarif pajak"
                         placeholder="11"
                         inputProps={{
+                          name: "taxRate",
+                          type: "number",
+                          min: 0,
+                          max: 100,
+                          step: "0.01",
                           value: draft.taxRate,
-                          onChange: (event) => setDraft({ ...draft, taxRate: event.target.value }),
-                          inputMode: "numeric",
+                          onChange: (event) => {
+                            setSaveError("");
+                            setDraft({ ...draft, taxRate: event.target.value });
+                          },
+                          inputMode: "decimal",
                           disabled: !draft.taxEnabled || isSaving,
                         }}
                       />
@@ -196,6 +270,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                         {isSaving ? "Menyimpan..." : "Simpan pengaturan"}
                       </Button>
                     </div>
+                    {saveError ? <p role="alert" className="text-sm font-medium text-danger">{saveError}</p> : null}
                   </form>
                 </Panel>
               ) : null}
@@ -223,7 +298,7 @@ export default function SettingsPage({ search = "", onTabChange = () => {} }) {
                   onRestore={store.restoreUnit}
                 />
               ) : null}
-            </motion.div>
+            </motion.div> : null}
           </div>
         </div>
       </main>

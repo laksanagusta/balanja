@@ -108,8 +108,8 @@ function ChartPanelSkeleton({ delay = 0, titleWidth = "w-28", bodyRows = 3, char
 
 export function RetailPosSkeleton() {
   return (
-    <div className="retail-pos-query h-full min-h-0">
-      <div className="retail-pos-workspace grid h-full min-h-0 bg-app-bg">
+    <div className="retail-pos-query min-h-full">
+      <div className="retail-pos-workspace grid min-h-full bg-app-bg">
       <main className="retail-pos-catalog-pane flex min-w-0 flex-col border-border bg-surface">
         <header className="grid flex-none gap-2 px-4 py-3">
           <Skeleton className="h-11 w-full rounded-card bg-surface-muted/80" />
@@ -196,7 +196,7 @@ export function RetailPosSkeleton() {
 
 export function DashboardPageSkeleton({ showSubscription = true }) {
   return (
-    <div className="h-full overflow-auto bg-app-bg">
+    <div className="min-h-full bg-app-bg">
       <main className="grid gap-4 p-4">
         <section className="flex flex-wrap items-center justify-between gap-3" aria-label="Memuat periode dashboard">
           <Skeleton className="h-4 w-40 bg-surface-muted/80" />
@@ -278,7 +278,7 @@ export function DashboardPageSkeleton({ showSubscription = true }) {
 
 export function SalesReportPageSkeleton() {
   return (
-    <div className="h-full overflow-auto bg-app-bg" aria-busy="true">
+    <div className="min-h-full bg-app-bg" aria-busy="true">
       <header className="bg-surface px-4 py-3">
         <Skeleton className="h-3.5 w-72 bg-surface-muted/80" />
       </header>
@@ -303,7 +303,7 @@ export function TablePageSkeleton({
   showActionButton = true,
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface">
+    <div className="min-h-full bg-surface">
       <header className="grid gap-3 px-4 py-3">
         <div className="flex w-full min-w-0">
           <Skeleton className="h-9 w-full rounded-card bg-surface-muted/80" />
@@ -316,7 +316,7 @@ export function TablePageSkeleton({
         )}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-auto p-4">
+      <div className="p-4">
         <Panel className="grid gap-0 overflow-hidden">
           <div className="px-4 py-3">
             <Skeleton className="h-4 w-32 bg-surface-muted/80" />
@@ -345,7 +345,7 @@ export function TablePageSkeleton({
 
 export function ProductsPageSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface" aria-busy="true">
+    <div className="min-h-full bg-surface" aria-busy="true">
       <header className="px-4 py-3">
         <div className="grid w-full gap-3">
           <div className="flex items-center gap-2">
@@ -354,7 +354,7 @@ export function ProductsPageSkeleton() {
         </div>
       </header>
 
-      <main className="min-h-0 flex-1 overflow-auto p-4">
+      <main className="p-4">
         <div className="w-full overflow-hidden rounded-panel border border-border bg-surface divide-y divide-border">
           {Array.from({ length: 6 }, (_, index) => (
             <div key={index} className="grid min-h-32 grid-cols-[minmax(0,1fr)_5rem] items-center gap-4 px-4 py-4">
@@ -377,7 +377,7 @@ export function ProductsPageSkeleton() {
 
 export function TransactionsPageSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface" aria-busy="true">
+    <div className="min-h-full bg-surface" aria-busy="true">
       <header className="px-4 py-3">
         <Skeleton className="h-11 w-full rounded-card bg-surface-muted/80" />
       </header>
@@ -423,12 +423,12 @@ export function TransactionsPageSkeleton() {
 
 export function StockPageSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface" aria-busy="true">
+    <div className="min-h-full bg-surface" aria-busy="true">
       <header className="px-4 py-3">
         <Skeleton className="h-11 min-w-0 w-full rounded-card bg-surface-muted/80" />
       </header>
 
-      <main className="min-h-0 flex-1 overflow-auto bg-app-bg p-4">
+      <main className="bg-app-bg p-4">
         <div className="grid w-full gap-6">
           {[5, 6].map((rowCount, sectionIndex) => (
             <section key={rowCount}>
@@ -464,10 +464,81 @@ export function StockPageSkeleton() {
   );
 }
 
-export function SettingsPageSkeleton() {
+function SettingsProfileSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface" aria-busy="true">
-      <main className="settings-workspace min-h-0 flex-1 overflow-auto">
+    <Panel className="mx-1 p-4 !border-0 !smooth-shadow-ring-xs !shadow-black !smooth-ring-neutral-300/30">
+      <div className="settings-profile-form grid gap-4">
+        <div className="grid gap-2 pb-2">
+          <Skeleton className="h-4 w-24 bg-surface-muted/80" />
+          <Skeleton className="h-3.5 w-full max-w-80 bg-surface-muted/80" />
+        </div>
+        {["w-20", "w-24", "w-20"].map((labelWidth) => (
+          <div key={labelWidth} className="grid gap-2">
+            <Skeleton className={`h-3.5 ${labelWidth} bg-surface-muted/80`} />
+            <Skeleton className="h-11 w-full rounded-card bg-surface-muted/80" />
+          </div>
+        ))}
+        <div className="grid gap-2 rounded-card border border-border bg-surface-muted p-4">
+          <div className="flex min-h-11 items-center justify-between gap-4">
+            <Skeleton className="h-3.5 w-28 bg-surface-muted/80" />
+            <Skeleton className="h-6 w-11 rounded-full bg-surface-muted/80" />
+          </div>
+          <div className="grid gap-2">
+            <Skeleton className="h-3.5 w-24 bg-surface-muted/80" />
+            <Skeleton className="h-11 w-full rounded-card bg-surface-muted/80" />
+          </div>
+        </div>
+        <div className="flex min-h-11 items-center justify-between gap-4 rounded-card border border-border bg-surface p-4">
+          <div className="grid min-w-0 gap-2">
+            <Skeleton className="h-3.5 w-32 bg-surface-muted/80" />
+            <Skeleton className="h-3 w-full max-w-72 bg-surface-muted/80" />
+          </div>
+          <Skeleton className="h-6 w-11 shrink-0 rounded-full bg-surface-muted/80" />
+        </div>
+        <div className="form-actions">
+          <Skeleton className="h-11 w-full rounded-control bg-surface-muted/80" />
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function SettingsMasterDataSkeleton() {
+  return (
+    <Panel className="master-data-manager !shadow-none">
+      <div className="p-4">
+        <Skeleton className="h-4 w-24 bg-surface-muted/80" />
+        <Skeleton className="mt-2 h-3.5 w-full max-w-80 bg-surface-muted/80" />
+      </div>
+
+      <div className="master-data-create p-4">
+        <div className="grid gap-2">
+          <Skeleton className="h-3.5 w-24 bg-surface-muted/80" />
+          <Skeleton className="h-9 w-full rounded-card bg-surface-muted/80" />
+        </div>
+        <div className="master-data-actions-single">
+          <div className="settings-touch-target flex items-center justify-center">
+            <Skeleton className="h-9 w-20 rounded-control bg-surface-muted/80" />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        {Array.from({ length: 3 }, (_, index) => (
+          <div key={index} className="master-data-item-row min-h-13 px-4 py-1">
+            <Skeleton className={`h-4 bg-surface-muted/80 ${index === 1 ? "w-2/5" : "w-1/3"}`} />
+            <Skeleton className="settings-touch-target size-11 rounded-control bg-surface-muted/80" />
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+export function SettingsPageSkeleton({ tab = "profile" }) {
+  return (
+    <div className="min-h-full bg-surface" aria-busy="true">
+      <main className="settings-workspace">
         <div className="settings-workspace-layout">
           <div className="settings-navigation">
             {Array.from({ length: 3 }, (_, index) => (
@@ -479,33 +550,7 @@ export function SettingsPageSkeleton() {
           </div>
 
           <div className="settings-content mx-auto w-full max-w-3xl">
-            <Panel className="master-data-manager">
-              <div className="p-4">
-                <Skeleton className="h-4 w-24 bg-surface-muted/80" />
-                <Skeleton className="mt-2 h-3.5 w-full max-w-80 bg-surface-muted/80" />
-              </div>
-
-              <div className="master-data-create p-4">
-                <div className="grid gap-2">
-                  <Skeleton className="h-3.5 w-24 bg-surface-muted/80" />
-                  <Skeleton className="h-9 w-full rounded-card bg-surface-muted/80" />
-                </div>
-                <div className="master-data-actions-single">
-                  <div className="settings-touch-target flex items-center justify-center">
-                    <Skeleton className="h-9 w-20 rounded-control bg-surface-muted/80" />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                {Array.from({ length: 3 }, (_, index) => (
-                  <div key={index} className="master-data-item-row min-h-13 px-4 py-1">
-                    <Skeleton className={`h-4 bg-surface-muted/80 ${index === 1 ? "w-2/5" : "w-1/3"}`} />
-                    <Skeleton className="settings-touch-target size-11 rounded-control bg-surface-muted/80" />
-                  </div>
-                ))}
-              </div>
-            </Panel>
+            {tab === "profile" ? <SettingsProfileSkeleton /> : <SettingsMasterDataSkeleton />}
           </div>
         </div>
       </main>

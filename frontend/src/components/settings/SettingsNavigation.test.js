@@ -7,6 +7,9 @@ test("settings navigation remains an overflow-safe horizontal tab row", async ()
   const css = await readFile(new URL("../../index.css", import.meta.url), "utf8");
   assert.match(source, /aria-label="Navigasi pengaturan"/);
   assert.match(source, /aria-current=\{isActive \? "page" : undefined\}/);
+  assert.match(source, /<a/);
+  assert.match(source, /href=\{item\.href\}/);
+  assert.doesNotMatch(source, /data-href/);
   assert.match(source, /className="settings-navigation"/);
   assert.match(source, /settings-navigation-item/);
   assert.match(source, /scrollWidth > navigation\.clientWidth/);

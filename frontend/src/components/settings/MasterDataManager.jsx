@@ -7,26 +7,31 @@ function ItemActionsMenu({ itemName, disabled, onRename, onArchive }) {
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef(null);
   const triggerRef = React.useRef(null);
-  const firstItemRef = React.useRef(null);
+  const menuItemRefs = React.useRef([]);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const menuItems = [
+    { label: "Ubah nama", action: onRename },
+    { label: "Arsipkan", action: onArchive },
+  ];
+
+  const focusMenuItem = (index) => {
+    const nextIndex = (index + menuItems.length) % menuItems.length;
+    setActiveIndex(nextIndex);
+    menuItemRefs.current[nextIndex]?.focus();
+  };
 
   React.useEffect(() => {
     if (!open) return undefined;
 
-    firstItemRef.current?.focus();
+    setActiveIndex(0);
+    requestAnimationFrame(() => menuItemRefs.current[0]?.focus());
     const closeOnOutsidePress = (event) => {
       if (!containerRef.current?.contains(event.target)) setOpen(false);
     };
-    const closeOnEscape = (event) => {
-      if (event.key !== "Escape") return;
-      setOpen(false);
-      triggerRef.current?.focus();
-    };
-
     document.addEventListener("pointerdown", closeOnOutsidePress);
-    document.addEventListener("keydown", closeOnEscape);
     return () => {
       document.removeEventListener("pointerdown", closeOnOutsidePress);
-      document.removeEventListener("keydown", closeOnEscape);
     };
   }, [open]);
 
@@ -55,24 +60,39 @@ function ItemActionsMenu({ itemName, disabled, onRename, onArchive }) {
           role="menu"
           aria-label={`Tindakan untuk ${itemName}`}
           className="absolute right-0 top-full z-20 mt-1 min-w-40 rounded-card border border-border bg-surface p-1 shadow-panel"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setOpen(false);
+              triggerRef.current?.focus();
+            } else if (event.key === "ArrowDown") {
+              event.preventDefault();
+              focusMenuItem(activeIndex + 1);
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              focusMenuItem(activeIndex - 1);
+            } else if (event.key === "Home") {
+              event.preventDefault();
+              focusMenuItem(0);
+            } else if (event.key === "End") {
+              event.preventDefault();
+              focusMenuItem(menuItems.length - 1);
+            }
+          }}
         >
-          <button
-            ref={firstItemRef}
-            type="button"
-            role="menuitem"
-            onClick={() => choose(onRename)}
-            className="flex h-10 w-full items-center rounded-button px-3 text-left text-sm font-medium text-text transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
-          >
-            Ubah nama
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => choose(onArchive)}
-            className="flex h-10 w-full items-center rounded-button px-3 text-left text-sm font-medium text-danger transition-colors duration-fast ease-standard hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
-          >
-            Arsipkan
-          </button>
+          {menuItems.map((item, index) => (
+            <button
+              key={item.label}
+              ref={(node) => { menuItemRefs.current[index] = node; }}
+              type="button"
+              role="menuitem"
+              tabIndex={index === activeIndex ? 0 : -1}
+              onClick={() => choose(item.action)}
+              className={`flex h-10 w-full items-center rounded-button px-3 text-left text-sm font-medium transition-colors duration-fast ease-standard hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus ${index === 1 ? "text-danger hover:bg-danger-soft" : "text-text"}`}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       ) : null}
     </div>
@@ -126,21 +146,30 @@ export default function MasterDataManager({
   }
 
   return (
-    <Panel className="master-data-manager shadow-none">
+    <Panel className="master-data-manager !shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3 p-4">
         <div>
-          <p className="text-sm font-semibold text-text">{pluralLabel}</p>
+          <h2 className="text-sm font-semibold text-text">{pluralLabel}</h2>
           <p className="mt-0.5 text-xs leading-5 text-text-muted">Kelola pilihan yang digunakan pada data produk.</p>
         </div>
         <BackgroundUpdateStatus active={loading} label={`Memperbarui ${pluralLabel.toLowerCase()}`} />
       </div>
 
-      <div className="master-data-create p-4">
+      <form
+        className="master-data-create p-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const created = await run(() => onCreate?.({ name: draft }), "");
+          if (created) setDraft("");
+        }}
+      >
         <Input
           label={`Tambah ${singularLabel.toLowerCase()}`}
           placeholder={`Nama ${singularLabel.toLowerCase()}`}
           density="compact"
           inputProps={{
+            name: "new-master-data",
+            autoComplete: "off",
             value: draft,
             onChange: (event) => {
               setDraft(event.target.value);
@@ -151,35 +180,40 @@ export default function MasterDataManager({
         />
         <div className="master-data-actions-single">
           <Button
-            className="header-compact-action master-data-field-action settings-touch-target"
-            type="button"
+            className="settings-touch-target w-full"
+            type="submit"
             variant="primary"
-            size="base"
-            compactVisual
+            size="sm"
+            radius="rounded-full"
             disabled={!draft.trim() || pendingId === "__create__"}
-            onClick={async () => {
-              const created = await run(() => onCreate?.({ name: draft }), "");
-              if (created) setDraft("");
-            }}
           >
             <Icon name="plus" className="size-4" />
             Tambah
           </Button>
         </div>
         {error ? <p aria-live="polite" className="master-data-create-error text-xs font-medium text-danger">{error}</p> : null}
-      </div>
+      </form>
 
-      <div className={`master-data-list ${loading ? "opacity-70" : ""}`}>
+      <div className="master-data-list" aria-busy={loading}>
         {activeItems.length === 0 ? (
           <p className="px-4 py-5 text-sm text-text-muted">Belum ada {pluralLabel.toLowerCase()}.</p>
         ) : activeItems.map((item) => (
           <div key={item.id} className="master-data-list-item">
             {renamingId === item.id ? (
-              <div className="master-data-rename bg-surface-muted/50 p-4">
+              <form
+                className="master-data-rename bg-surface-muted/50 p-4"
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  const renamed = await run(() => onRename?.(item.id, { name: renameValue }), item.id);
+                  if (renamed) setRenamingId("");
+                }}
+              >
                 <Input
                   label={`Ubah nama ${singularLabel.toLowerCase()}`}
                   density="compact"
                   inputProps={{
+                    name: "rename-master-data",
+                    autoComplete: "off",
                     autoFocus: true,
                     value: renameValue,
                     onChange: (event) => setRenameValue(event.target.value),
@@ -195,19 +229,15 @@ export default function MasterDataManager({
                   </Button>
                   <Button
                     className="header-compact-action settings-touch-target w-full"
-                    type="button"
+                    type="submit"
                     size="sm"
                     variant="primary"
                     disabled={!renameValue.trim() || pendingId === item.id}
-                    onClick={async () => {
-                      const renamed = await run(() => onRename?.(item.id, { name: renameValue }), item.id);
-                      if (renamed) setRenamingId("");
-                    }}
                   >
                     Simpan
                   </Button>
                 </div>
-              </div>
+              </form>
             ) : (
               <div className="master-data-item-row min-h-13 items-center px-4 py-1">
                 <p className="master-data-item-name text-sm font-medium text-text">{item.name}</p>

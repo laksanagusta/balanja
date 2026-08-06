@@ -110,10 +110,10 @@ export default function StockPage() {
   return (
     <>
       {topBarActions}
-      <div className="relative flex h-full min-h-0 flex-col bg-surface">
+      <div className="relative min-h-full bg-surface">
         <header className="px-4 py-3">
           <div className="flex w-full min-w-0 items-center gap-2">
-            <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+            <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-control bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20 focus-within:outline-1 focus-within:outline-focus/30">
               <Icon name="search" className="size-4 text-text-muted" />
               <input
                 aria-label="Cari aktivitas stok"
@@ -126,7 +126,7 @@ export default function StockPage() {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-auto bg-app-bg p-4">
+        <main className="bg-app-bg p-4">
           <div className="w-full">
             <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
               {resultAnnouncement}
@@ -163,7 +163,7 @@ export default function StockPage() {
             setDialogVariantId("");
             setDialogOpen(true);
           }}
-          className="app-shell-floating-action absolute right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="app-shell-floating-action fixed right-4 z-10 grid size-11 place-items-center rounded-full bg-accent text-white shadow-panel hover:bg-accent-hover hover:shadow-panel active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           <Icon name="plus" className="size-5" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         </button>
@@ -430,8 +430,8 @@ function ProductSearchPicker({ label, products, searchProducts, value, onChange,
     <div ref={containerRef} className="relative grid gap-2 text-sm font-semibold text-text">
       <label id={labelId} htmlFor={inputId}>{label}</label>
       <div
-        className={`mobile-search-control flex h-11 items-center gap-3 rounded-control border bg-surface px-3.5 shadow-inner-soft focus-within:outline-1 focus-within:outline-focus/30 transition-colors duration-base ease-standard motion-reduce:transition-none ${
-          error ? "border-danger focus-within:border-danger" : "border-border focus-within:border-border-strong"
+        className={`mobile-search-control flex h-11 items-center gap-3 rounded-control bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20 focus-within:outline-1 focus-within:outline-focus/30 transition-[outline-color] duration-base ease-standard motion-reduce:transition-none ${
+          error ? "smooth-ring-danger/40 focus-within:outline-danger" : ""
         }`}
       >
         <Icon name="search" className="size-4 shrink-0 text-text-muted" />

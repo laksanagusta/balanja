@@ -31,7 +31,7 @@ function Pills({ label, value, options, onChange }) {
               <span className={`pointer-events-none inline-flex h-8 items-center rounded-full border px-3 text-xs font-semibold transition-[transform,background-color,border-color,color] duration-fast ease-standard group-active:scale-[0.97] motion-reduce:group-active:scale-100 ${
                 selected
                   ? "border-accent bg-accent text-white"
-                  : "border-border bg-surface text-text group-hover:bg-surface-muted"
+                  : "border-border-control bg-surface text-text group-hover:bg-surface-muted"
               }`}>
                 {option.label}
               </span>
@@ -43,17 +43,20 @@ function Pills({ label, value, options, onChange }) {
   );
 }
 
-function DateField({ label, value, min, max, onChange }) {
+function DateField({ label, value, min, max, onChange, inputRef, errorId, invalid }) {
   return (
     <label className="grid gap-2 text-sm font-semibold text-text">
       <span>{label}</span>
       <input
+        ref={inputRef}
         type="date"
         value={value}
         min={min || undefined}
         max={max || undefined}
+        aria-invalid={invalid || undefined}
+        aria-describedby={invalid ? errorId : undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-card border border-border bg-surface px-3 text-sm font-medium text-text shadow-inner-soft outline-none focus:border-border-strong focus:outline-1 focus:outline-focus/30"
+        className={`h-11 w-full rounded-card border bg-surface px-3 text-sm font-medium text-text shadow-inner-soft outline-none focus:outline-2 focus:outline-offset-[-1px] focus:outline-focus ${invalid ? "border-danger focus:border-danger" : "border-border-control focus:border-focus"}`}
       />
     </label>
   );
@@ -77,8 +80,12 @@ export function TransactionFilterDrawer({
   const [draftPaymentMethod, setDraftPaymentMethod] = React.useState(paymentMethod);
   const [draftDateFrom, setDraftDateFrom] = React.useState(dateFrom);
   const [draftDateTo, setDraftDateTo] = React.useState(dateTo);
+  const dateToRef = React.useRef(null);
   const activeDraftCount = [draftPaymentMethod, draftDateFrom, draftDateTo].filter(Boolean).length
     + Number(draftSort !== DEFAULT_TRANSACTION_SORT);
+  const dateRangeError = draftDateFrom && draftDateTo && draftDateFrom > draftDateTo
+    ? "Tanggal dari tidak boleh melewati tanggal sampai."
+    : "";
 
   const syncDraft = React.useCallback(() => {
     setDraftSort(sort);
@@ -96,7 +103,12 @@ export function TransactionFilterDrawer({
     onOpenChange(nextOpen);
   };
 
-  const applyFilters = () => {
+  const applyFilters = (event) => {
+    event?.preventDefault();
+    if (dateRangeError) {
+      dateToRef.current?.focus();
+      return;
+    }
     onSortChange?.(draftSort);
     onPaymentMethodChange?.(draftPaymentMethod);
     onDateFromChange?.(draftDateFrom);
@@ -146,43 +158,64 @@ export function TransactionFilterDrawer({
             </Drawer.Close>
           </div>
 
-          <div className="relative z-0 min-h-0 flex-1 overflow-y-auto px-6 pt-6">
-            <div className="grid gap-4">
-              <Pills label="Urutkan" value={draftSort} options={SORT_OPTIONS} onChange={setDraftSort} />
-              <Pills
-                label="Metode pembayaran"
-                value={draftPaymentMethod}
-                options={[
-                  { value: "", label: "Semua metode" },
-                  { value: "cash", label: "Tunai" },
-                  { value: "qris", label: "QRIS" },
-                ]}
-                onChange={setDraftPaymentMethod}
-              />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <DateField label="Tanggal dari" value={draftDateFrom} max={draftDateTo} onChange={setDraftDateFrom} />
-                <DateField label="Tanggal sampai" value={draftDateTo} min={draftDateFrom} onChange={setDraftDateTo} />
+          <form onSubmit={applyFilters} className="contents">
+            <div className="relative z-0 min-h-0 flex-1 overflow-y-auto px-6 pt-6">
+              <div className="grid gap-4">
+                <Pills label="Urutkan" value={draftSort} options={SORT_OPTIONS} onChange={setDraftSort} />
+                <Pills
+                  label="Metode pembayaran"
+                  value={draftPaymentMethod}
+                  options={[
+                    { value: "", label: "Semua metode" },
+                    { value: "cash", label: "Tunai" },
+                    { value: "qris", label: "QRIS" },
+                  ]}
+                  onChange={setDraftPaymentMethod}
+                />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <DateField
+                    label="Tanggal dari"
+                    value={draftDateFrom}
+                    max={draftDateTo}
+                    onChange={setDraftDateFrom}
+                    errorId="transaction-date-range-error"
+                    invalid={Boolean(dateRangeError)}
+                  />
+                  <DateField
+                    label="Tanggal sampai"
+                    value={draftDateTo}
+                    min={draftDateFrom}
+                    onChange={setDraftDateTo}
+                    inputRef={dateToRef}
+                    errorId="transaction-date-range-error"
+                    invalid={Boolean(dateRangeError)}
+                  />
+                </div>
+                {dateRangeError && (
+                  <p id="transaction-date-range-error" role="alert" className="text-xs font-medium text-danger">
+                    {dateRangeError}
+                  </p>
+                )}
               </div>
             </div>
-          </div>
 
-          <div className="product-filter-drawer-footer grid grid-cols-[auto_minmax(0,1fr)] gap-2 bg-surface px-6 pt-6">
-            <button
-              type="button"
-              disabled={activeDraftCount === 0}
-              onClick={resetDraft}
-              className="min-h-11 rounded-card border border-border bg-surface px-4 text-sm font-semibold text-text transition-[transform,background-color] duration-fast ease-standard hover:bg-surface-muted active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-40"
-            >
-              Atur ulang
-            </button>
-            <button
-              type="button"
-              onClick={applyFilters}
-              className="min-h-11 rounded-card bg-accent px-4 text-sm font-semibold text-white transition-[transform,background-color] duration-fast ease-standard hover:bg-accent-hover active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-            >
-              Terapkan
-            </button>
-          </div>
+            <div className="product-filter-drawer-footer grid grid-cols-[auto_minmax(0,1fr)] gap-2 bg-surface px-6 pt-6">
+              <button
+                type="button"
+                disabled={activeDraftCount === 0}
+                onClick={resetDraft}
+                className="min-h-11 rounded-card border border-border-control bg-surface px-4 text-sm font-semibold text-text transition-[transform,background-color] duration-fast ease-standard hover:bg-surface-muted active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-40"
+              >
+                Atur ulang
+              </button>
+              <button
+                type="submit"
+                className="min-h-11 rounded-card bg-accent px-4 text-sm font-semibold text-white transition-[transform,background-color] duration-fast ease-standard hover:bg-accent-hover active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              >
+                Terapkan
+              </button>
+            </div>
+          </form>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

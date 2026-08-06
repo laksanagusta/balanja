@@ -46,6 +46,18 @@ test("status copy and background refresh follow the interface contract", async (
   assert.doesNotMatch(source, /Cari produk atau barcode\.\.\.|Menyelesaikan\.\.\./);
 });
 
+test("checkout feedback is emitted once by the cashier page", async () => {
+  const [page, store] = await Promise.all([
+    readFile(new URL("./RetailPosPage.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../pos/store.jsx", import.meta.url), "utf8"),
+  ]);
+  const checkoutBody = store.slice(store.indexOf("const checkout = React.useCallback"), store.indexOf("const createStockMovement"));
+
+  assert.match(page, /toast\.success\("Transaksi selesai"/);
+  assert.match(page, /toast\.error\(result\.error/);
+  assert.doesNotMatch(checkoutBody, /setNotice\(/);
+});
+
 test("cashier loading skeleton mirrors visible search and category pills", async () => {
   const skeleton = await readFile(new URL("../components/page-loading.jsx", import.meta.url), "utf8");
   const section = skeleton.slice(

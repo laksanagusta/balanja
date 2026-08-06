@@ -109,7 +109,7 @@ export default function SalesReportPage({ onNavigate }) {
   ];
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-app-bg">
+    <div className="min-h-full bg-app-bg">
       <header className="bg-surface px-4 py-3">
         <p className="text-xs text-text-muted">Analisis transaksi selesai dan void berdasarkan kalender WIB.</p>
       </header>
@@ -129,7 +129,7 @@ export default function SalesReportPage({ onNavigate }) {
         onExport={exportCSV}
         onHandoff={() => resolvedFilters && onNavigate(transactionHandoff(resolvedFilters))}
       />
-      <main className="min-h-0 flex-1 overflow-auto p-4" aria-busy={loading}>
+      <main className="p-4" aria-busy={loading}>
         <div className="grid gap-4">
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Metrik laporan penjualan">
             {cards.map(([label, value, key, formatter]) => <ReportMetricCard key={key} label={label} value={value} comparison={comparisons[key]} formatAbsolute={formatter} />)}

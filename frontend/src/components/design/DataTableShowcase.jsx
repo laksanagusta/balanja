@@ -72,6 +72,11 @@ export default function DataTableShowcase() {
   return (
     <div>
       <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-accent">Transaction cards</h3>
+      <p className="mb-3 max-w-3xl text-sm leading-6 text-text-muted">
+        Kartu transaksi menyertakan metadata yang dapat dibaca assistive technology, filter tetap tersedia selama loading,
+        dan drawer rincian menampilkan kasir serta metode pembayaran tanpa memotong nama produk. Frame receipt memakai
+        radius concentric responsif 24px/28px terhadap paper 16px dengan inset 8px/12px.
+      </p>
       <div className="mb-2 grid gap-3">
         <div className="flex items-center justify-between gap-3">
           <p className="text-base font-semibold text-text">Transaksi</p>
@@ -94,10 +99,12 @@ export default function DataTableShowcase() {
           />
         </div>
         <div className="flex w-full min-w-0">
-          <div className="mobile-search-control flex h-9 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+          <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-card bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20 focus-within:outline-1 focus-within:outline-focus/30">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
               aria-label="Cari transaksi contoh"
+              name="transaction-showcase-search"
+              type="search"
               className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
               placeholder="Transaksi, kasir, pembayaran"
             />
@@ -154,7 +161,7 @@ export default function DataTableShowcase() {
           />
         </div>
         <div className="flex w-full min-w-0 items-center gap-2">
-          <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-card border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+          <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-card bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20 focus-within:outline-1 focus-within:outline-focus/30">
             <Icon name="search" className="size-4 text-text-muted" />
             <input
               aria-label="Cari produk contoh"

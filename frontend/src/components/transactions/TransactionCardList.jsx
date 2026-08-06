@@ -57,35 +57,45 @@ export function TransactionCardList({ transactions, formatDate, onSelect }) {
     <ul aria-label="Daftar transaksi" className="grid gap-3">
       {transactions.map((transaction) => {
         const status = statusPresentation(transaction.status);
+        const transactionKey = transaction.id || transaction.number || "unknown";
+        const accessibleId = `transaction-${transactionKey}`;
+        const accessibleLabelledBy = [
+          `${accessibleId}-action`,
+          `${accessibleId}-amount`,
+          `${accessibleId}-details`,
+          `${accessibleId}-cashier`,
+          status ? `${accessibleId}-status` : "",
+        ].filter(Boolean).join(" ");
         return (
-          <li key={transaction.id || transaction.number} className="min-w-0">
+          <li key={transactionKey} className="min-w-0">
             <button
               type="button"
-              aria-label={`Lihat detail transaksi ${transaction.number}`}
+              aria-labelledby={accessibleLabelledBy}
               onClick={() => onSelect?.(transaction)}
               className="group grid min-h-32 w-full gap-4 rounded-card bg-surface p-4 text-left smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30 transition-[background-color,transform] duration-fast ease-standard hover:bg-surface-muted/45 active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
+              <span id={`${accessibleId}-action`} className="sr-only">Lihat detail transaksi</span>
               <span className="flex min-w-0 items-start justify-between gap-3">
-                <span className="min-w-0">
+                <span id={`${accessibleId}-amount`} className="min-w-0">
                   <span className="block font-mono text-lg font-semibold tracking-[-0.01em] tabular-nums text-text">
                     {formatPrice(transaction.total)}
                   </span>
                   <span className="mt-1 block text-sm text-text-muted">{formatDate(transaction.createdAt)}</span>
                 </span>
                 <span className="grid shrink-0 justify-items-end gap-2">
-                  {status && <Badge tone={status.tone}>{status.label}</Badge>}
+                  {status && <span id={`${accessibleId}-status`}><Badge tone={status.tone}>{status.label}</Badge></span>}
                   <TransactionProductStack items={transaction.items} />
                 </span>
               </span>
 
               <span className="mt-auto flex min-w-0 items-end justify-between gap-3">
                 <span className="grid min-w-0 gap-1">
-                  <span className="truncate text-sm text-text-muted">
+                  <span id={`${accessibleId}-details`} className="truncate text-sm text-text-muted">
                     <span className="font-mono text-xs font-medium tabular-nums">{transaction.number}</span>
                     {" · "}
                     {itemCount(transaction)} item · {paymentLabel(transaction.paymentMethod)}
                   </span>
-                  <span className="truncate text-xs text-text-subtle">
+                  <span id={`${accessibleId}-cashier`} className="truncate text-xs text-text-subtle">
                     Kasir: {transaction.cashierName || "Tidak diketahui"}
                   </span>
                 </span>

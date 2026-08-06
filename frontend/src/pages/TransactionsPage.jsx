@@ -11,6 +11,7 @@ import { useCursorTable } from "../hooks/useCursorTable.js";
 import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { usePOSStore } from "../pos/store.jsx";
 import { loadTransactionPage } from "../pos/store-data.js";
+import { getTransactionErrorMessage } from "../transactions/transaction-errors.js";
 import { dateBoundaryWIB, readTransactionFilters } from "../transactions/transaction-filters.js";
 
 function formatDate(value) {
@@ -49,14 +50,12 @@ export default function TransactionsPage() {
     initialPageSize: 6,
   });
   const activeFilterCount = [paymentMethod, dateFrom, dateTo].filter(Boolean).length;
+  const hasTransactionFilters = Boolean(query.trim() || activeFilterCount);
+  const resultAnnouncement = table.error ? "" : `${table.rows.length} transaksi ditampilkan.`;
 
   React.useEffect(() => {
     setTopBarActionsTarget(document.getElementById("app-top-bar-actions"));
   }, []);
-
-  if (table.isInitialLoading) {
-    return <TransactionsPageSkeleton />;
-  }
 
   const topBarActions = topBarActionsTarget
     ? createPortal(
@@ -82,16 +81,27 @@ export default function TransactionsPage() {
     )
     : null;
 
+  if (table.isInitialLoading) {
+    return (
+      <>
+        {topBarActions}
+        <TransactionsPageSkeleton />
+      </>
+    );
+  }
+
   return (
     <>
       {topBarActions}
-      <div className="flex h-full min-h-0 flex-col bg-surface">
+      <main id="transactions-main" tabIndex={-1} className="min-h-full bg-surface">
         <header className="px-4 py-3">
           <div className="flex w-full min-w-0">
-            <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-control border border-border bg-surface px-3.5 shadow-inner-soft focus-within:border-border-strong focus-within:outline-1 focus-within:outline-focus/30">
+            <div className="mobile-search-control flex h-11 min-w-0 flex-1 items-center gap-3 rounded-control bg-surface px-3.5 smooth-shadow-ring-xs shadow-black smooth-ring-neutral-300/20 focus-within:outline-1 focus-within:outline-focus/30">
               <Icon name="search" className="size-4 text-text-muted" />
               <input
                 aria-label="Cari transaksi"
+                name="transaction-search"
+                type="search"
                 className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-text-subtle"
                 placeholder="Transaksi, kasir, pembayaran"
                 value={query}
@@ -101,17 +111,25 @@ export default function TransactionsPage() {
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-auto p-4">
+        <div className="p-4">
+          <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">{resultAnnouncement}</div>
           {table.rows.length ? (
             <TransactionCardList transactions={table.rows} formatDate={formatDate} onSelect={setSelected} />
           ) : (
             <EmptyState
-              icon={query || activeFilterCount ? "search" : "receipt"}
-              title={table.error ? "Transaksi gagal dimuat" : query || activeFilterCount ? "Transaksi tidak ditemukan" : "Belum ada transaksi"}
-              description={table.error ? table.error.message : query || activeFilterCount ? "Coba kata kunci atau filter lain." : "Transaksi yang selesai akan muncul di sini."}
+              icon={hasTransactionFilters ? "search" : "receipt"}
+              title={table.error ? "Transaksi gagal dimuat" : hasTransactionFilters ? "Transaksi tidak ditemukan" : "Belum ada transaksi"}
+              description={table.error ? getTransactionErrorMessage(table.error) : hasTransactionFilters ? "Coba kata kunci atau filter lain." : "Transaksi yang selesai akan muncul di sini."}
               action={table.error ? <Button size="sm" variant="secondary" onClick={table.retry}>Coba lagi</Button> : undefined}
+              role={table.error ? "alert" : undefined}
               className="m-4 min-h-[240px]"
             />
+          )}
+          {table.error && table.rows.length > 0 && (
+            <div role="alert" className="mt-4 grid gap-1 rounded-card border border-danger/30 bg-danger-soft px-4 py-3 text-sm">
+              <p className="font-semibold text-text">Sebagian transaksi belum termuat.</p>
+              <p className="leading-6 text-text-muted">{getTransactionErrorMessage(table.error)} Data yang terlihat mungkin belum lengkap.</p>
+            </div>
           )}
           {(table.hasMore || (table.error && table.rows.length > 0)) && (
             <div className="mt-4 flex justify-center">
@@ -122,14 +140,14 @@ export default function TransactionsPage() {
                 disabled={table.loading}
                 onClick={() => table.loadMore()}
               >
-                {table.loading ? "Memuat..." : table.error ? "Coba lagi" : "Muat lebih banyak"}
+                {table.loading ? "Memuat…" : table.error ? "Coba lagi" : "Muat lebih banyak"}
               </Button>
             </div>
           )}
         </div>
 
         <TransactionReceiptDrawer transaction={selected} onClose={() => setSelected(null)} />
-      </div>
+      </main>
     </>
   );
 }

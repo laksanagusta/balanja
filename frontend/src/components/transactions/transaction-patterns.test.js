@@ -14,6 +14,25 @@ test("transaction filters keep changes as drafts until apply", async () => {
   assert.match(source, /onDateToChange\?\.\(draftDateTo\)/);
   assert.match(source, />\s*Terapkan\s*</);
   assert.match(source, />\s*Atur ulang\s*</);
+  assert.match(source, /dateRangeError/);
+  assert.match(source, /aria-invalid={invalid \|\| undefined}/);
+  assert.match(source, /type="submit"/);
+});
+
+test("transaction states stay announced and localized", async () => {
+  const [page, errors] = await Promise.all([
+    readFile(new URL("../../pages/TransactionsPage.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../../transactions/transaction-errors.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(page, /<main id="transactions-main"/);
+  assert.match(page, /role="status" aria-live="polite" aria-atomic="true"/);
+  assert.match(page, /role={table\.error \? "alert" : undefined}/);
+  assert.match(page, /Sebagian transaksi belum termuat/);
+  assert.match(page, /getTransactionErrorMessage/);
+  assert.match(page, /topBarActions[\s\S]*TransactionsPageSkeleton/);
+  assert.match(errors, /INVALID_TRANSACTION_FILTER/);
+  assert.match(errors, /Koneksi bermasalah/);
 });
 
 test("transaction history uses full-width cards with amount-first hierarchy", async () => {
@@ -24,6 +43,7 @@ test("transaction history uses full-width cards with amount-first hierarchy", as
   assert.doesNotMatch(source, /rounded-panel/);
   assert.doesNotMatch(source, /grid-cols-/);
   assert.match(source, /Lihat detail transaksi/);
+  assert.match(source, /aria-labelledby={accessibleLabelledBy}/);
   assert.match(source, /formatPrice\(transaction\.total\)/);
   assert.match(source, /transaction\.cashierName/);
   assert.match(source, /Tidak diketahui/);
@@ -47,13 +67,18 @@ test("transaction detail uses a centered receipt drawer without print action", a
   assert.match(page, /<TransactionReceiptDrawer transaction=\{selected\}/);
   assert.match(source, /<Drawer\.Root/);
   assert.match(source, /transaction-detail-drawer fixed inset-0 z-\[80\] m-auto/);
-  assert.match(source, /px-2 py-2 outline-none shadow-panel sm:px-3 sm:py-3/);
+  assert.match(source, /overflow-hidden rounded-\[24px\] border border-border bg-surface-muted px-2 py-2 outline-none shadow-panel sm:rounded-\[28px\] sm:px-3 sm:py-3/);
   assert.match(source, /transaction-receipt-scroll relative min-h-0 h-full overflow-y-auto px-5 py-8 sm:px-8 sm:py-10/);
   assert.match(source, /transaction-receipt-handle mx-auto mb-3 mt-0/);
   assert.match(source, /transaction-receipt-paper/);
   assert.match(source, /<Drawer\.Handle[\s\S]*<header className="transaction-receipt-controls[^\"]*"[\s\S]*<div className="transaction-receipt-paper/);
   assert.match(source, /<\/div>\s*<\/div>\s*<footer className="transaction-receipt-controls[^\"]*"/);
   assert.match(source, /transaction-receipt-close[\s\S]*hover:underline/);
+  assert.match(source, /Rincian transaksi/);
+  assert.match(source, /Metode pembayaran/);
+  assert.match(source, /Kasir/);
+  assert.match(source, /break-words font-medium text-text/);
+  assert.match(source, /min-h-11 justify-self-center/);
   assert.match(source, /font-mono text-sm font-semibold tracking-\[0\.24em\]/);
   assert.match(source, /grid gap-3 font-mono text-sm/);
   assert.match(source, /grid gap-2 font-mono text-sm/);
@@ -72,6 +97,7 @@ test("transaction detail uses a centered receipt drawer without print action", a
   assert.match(styles, /transaction-receipt-paper-frame::before,[\s\S]*block-size: 6px/);
   assert.match(styles, /clip-path: polygon\(0 0, 2% 100%,[\s\S]*98% 100%, 100% 0\)/);
   assert.match(styles, /transaction-detail-drawer\[data-state="open"\][\s\S]*transaction-receipt-open/);
+  assert.match(styles, /animation: transaction-receipt-open 280ms/);
   assert.doesNotMatch(source, /mt-4 grid gap-4/);
   assert.doesNotMatch(source, /<Dialog/);
 });
